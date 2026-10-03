@@ -1,0 +1,20 @@
+# secrets: kawt itself needs none, keep it that way
+.env
+.env.*
+*.key
+*.pem
+
+# backups made by install.sh
+*.bak.*
+
+# runtime state (settings, notes, generated colors) lives in ~/.local/state/kawt,
+# but just in case it gets copied in here
+settings.json
+notes.txt
+launcher.json
+
+# editors / qml tooling
+.qmlls.ini
+*.swp
+.vscode/
+.idea/

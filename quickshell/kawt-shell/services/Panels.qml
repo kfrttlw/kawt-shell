@@ -1,0 +1,108 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import qs.config
+
+// Which popover / sidebar is open, and on which screen.
+// Only one popover can be open at a time; the sidebar is independent.
+//
+//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|calendar|player|volume|brightness|battery|wifi|notifs
+//   qs -c kawt-shell ipc call kawt sidebar
+//   qs -c kawt-shell ipc call kawt run
+//   qs -c kawt-shell ipc call kawt close
+//   qs -c kawt-shell ipc call kawt dnd
+//   qs -c kawt-shell ipc call kawt toggleLight
+//   qs -c kawt-shell ipc call kawt clearNotifs
+Singleton {
+    id: root
+
+    property string current: ""
+    property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
+    property string screen: ""
+    property bool sidebarOpen: false
+    property string sidebarScreen: ""
+
+    readonly property string focusedScreen: Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? ""
+
+    function isOpen(name: string, s: ShellScreen): bool {
+        return current === name && screen === s?.name;
+    }
+
+    function toggle(name: string, s: ShellScreen): void {
+        if (isOpen(name, s)) {
+            close();
+        } else {
+            screen = s.name;
+            current = name;
+        }
+    }
+
+    function close(): void {
+        current = "";
+    }
+
+    function isSidebarOpen(s: ShellScreen): bool {
+        return sidebarOpen && sidebarScreen === s?.name;
+    }
+
+    function toggleSidebar(s: ShellScreen): void {
+        if (isSidebarOpen(s)) {
+            sidebarOpen = false;
+        } else {
+            sidebarScreen = s.name;
+            sidebarOpen = true;
+        }
+    }
+
+    IpcHandler {
+        target: "kawt"
+
+        function toggle(name: string): void {
+            if (root.current === name && root.screen === root.focusedScreen) {
+                root.close();
+            } else {
+                root.screen = root.focusedScreen;
+                root.current = name;
+            }
+        }
+
+        function close(): void {
+            root.close();
+            root.sidebarOpen = false;
+        }
+
+        // win+r: the launcher straight in run mode, like the Windows "Run" box
+        function run(): void {
+            if (root.current === "launcher" && root.screen === root.focusedScreen) {
+                root.close();
+            } else {
+                root.launcherPrefix = "!";
+                root.screen = root.focusedScreen;
+                root.current = "launcher";
+            }
+        }
+
+        function toggleLight(): void {
+            Settings.light = !Settings.light;
+        }
+
+        function dnd(): void {
+            Settings.dnd = !Settings.dnd;
+        }
+
+        function clearNotifs(): void {
+            Notifs.clear();
+        }
+
+        function sidebar(): void {
+            if (root.sidebarOpen && root.sidebarScreen === root.focusedScreen) {
+                root.sidebarOpen = false;
+            } else {
+                root.sidebarScreen = root.focusedScreen;
+                root.sidebarOpen = true;
+            }
+        }
+    }
+}
