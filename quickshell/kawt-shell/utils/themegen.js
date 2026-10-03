@@ -4,8 +4,15 @@
 // and config snippets for other programs. Pure functions, no QML.
 
 const names = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"];
-// green yellow blue magenta cyan; red comes from the theme's own `warn`
-const hues = ["#7cb36b", "#d9b45b", "#6a93d4", "#b07ad1", "#5fb2b0"];
+// green yellow blue magenta cyan: [real hue, brightness on the theme's ink ramp, how much hue shows]
+// red is the theme's own `warn`
+const inks = [
+    ["#7cb36b", 1.0, 0.22],
+    ["#d9b45b", 0.85, 0.28],
+    ["#6a93d4", 0.62, 0.2],
+    ["#b07ad1", 0.72, 0.2],
+    ["#5fb2b0", 0.5, 0.2]
+];
 
 function rgb(h) {
     return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -21,13 +28,13 @@ function isLight(t) {
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
 }
 
-// color0..15. Hues are pulled toward the theme's text color so each theme keeps its tint
-// (phosphor stays greenish, amber warm, mono gray).
+// color0..15, like an old monochrome monitor: every color is the theme's own ink at a
+// different brightness (dim -> fg), with just a hint of the real hue so ls/git/diff stay
+// readable. Amber stays amber, phosphor stays green, mono stays gray; only red is red.
 function ansi(t) {
     const light = isLight(t);
-    const normal = [t.warn, ...hues.map(h => mix(h, t.fg, light ? 0.5 : 0.35))];
-    const bright = normal.map(c => mix(c, light ? "#000000" : "#ffffff", 0.2));
-    // (bright black, color8, is used for comments/hints, so it stays mid-gray in both)
+    const normal = [t.warn, ...inks.map(([hue, level, tint]) => mix(mix(t.dim, t.fg, level), hue, tint))];
+    const bright = normal.map(c => mix(c, t.fg, 0.4));
     // Light: swap the roles (like PaperColor), since programs print "white" text assuming a
     // dark terminal. "white" becomes dark ink, "black" a light gray, so everything stays readable.
     if (light)
