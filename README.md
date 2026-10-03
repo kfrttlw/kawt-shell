@@ -39,17 +39,28 @@ install.sh
 ## Install
 
 ```sh
-git clone https://github.com/kfrttlw/kawt-shell ~/kawt-shell
-cd ~/kawt-shell
+git clone https://github.com/kfrttlw/kawt-shell ~/kawt
+cd ~/kawt
 ./install.sh --dry-run   # see what it would do
 ./install.sh
 ```
 
-The installer symlinks the configs, so `git pull` updates everything in place.
-Existing files are renamed to `*.bak.<date>`, never deleted. Your `hyprland.lua`
-gets one extra line that loads `hypr/kawt.lua`.
+The installer checks everything first (packages, font, icons, your Hyprland config) and
+changes nothing if something is missing; it prints one `pacman` line with what to install.
+Then it symlinks the configs, so `git pull` updates everything in place. Configs that are
+already there are replaced but kept in `~/.local/state/kawt/backups/<date>/`, and your
+`hyprland.lua` gets one line that loads `hypr/kawt.lua` (wrapped in `pcall`, so a broken
+kawt can never take Hyprland down). Running it again is safe.
 
-**Needs:** `quickshell` `hyprland` `kitty` `brightnessctl` `ttf-jetbrains-mono-nerd` `papirus-icon-theme`
+```sh
+./install.sh --uninstall   # remove the links and the line, put your old configs back
+./install.sh --help
+```
+
+Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
+Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
+
+**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme`, `brightnessctl` on laptops
 **Optional:** `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
 
 ## Keys
