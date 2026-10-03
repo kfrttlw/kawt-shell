@@ -11,6 +11,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|calendar|player|volume|brightness|battery|wifi|notifs
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run
+//   qs -c kawt-shell ipc call kawt lock | lockTest
 //   qs -c kawt-shell ipc call kawt close
 //   qs -c kawt-shell ipc call kawt dnd
 //   qs -c kawt-shell ipc call kawt toggleLight
@@ -20,6 +21,8 @@ Singleton {
 
     property string current: ""
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
+    property bool locked: false // modules/lock: the session lock screen
+    property bool lockTest: false // that lock unlocks by itself after 30 s
     property string screen: ""
     property bool sidebarOpen: false
     property string sidebarScreen: ""
@@ -82,6 +85,17 @@ Singleton {
                 root.screen = root.focusedScreen;
                 root.current = "launcher";
             }
+        }
+
+        function lock(): void {
+            root.lockTest = false;
+            root.locked = true;
+        }
+
+        // locks, then unlocks by itself after 30 s: try the lock screen safely
+        function lockTest(): void {
+            root.lockTest = true;
+            root.locked = true;
         }
 
         function toggleLight(): void {

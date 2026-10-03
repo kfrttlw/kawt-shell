@@ -25,6 +25,8 @@ configs, all in one monospace, square-cornered, text-first style.
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
 | style | wallpapers + themes: `mono` `amber` `phosphor` `thinkpad`, each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
+| lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
+| osd | volume / brightness pop up when they change |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
 ## Layout
@@ -74,6 +76,7 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
 | `super + n` / `super + shift + n` | notifications / do not disturb |
 | `super + i` | profile |
+| `super + shift + l` | kawt lock screen |
 
 In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.
 Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`.

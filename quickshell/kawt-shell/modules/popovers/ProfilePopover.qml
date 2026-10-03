@@ -20,7 +20,9 @@ Popover {
         if (action === "lock" || action === "sleep" || armed === action) {
             armed = "";
             Panels.close();
-            if (action === "logout")
+            if (action === "lock")
+                Panels.locked = true;
+            else if (action === "logout")
                 Hypr.exit();
             else
                 Quickshell.execDetached(cmd);
@@ -200,7 +202,7 @@ Popover {
 
             BracketButton {
                 label: "lock"
-                onClicked: root.power("lock", ["loginctl", "lock-session"])
+                onClicked: root.power("lock", [])
             }
 
             BracketButton {

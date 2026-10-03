@@ -11,6 +11,7 @@ import "../notifs"
 import "../launcher"
 import "../style"
 import "../background"
+import "../osd"
 
 Variants {
     model: Quickshell.screens
@@ -208,6 +209,10 @@ Variants {
         }
 
         Toasts {
+            forScreen: root.modelData
+        }
+
+        OsdWindow {
             forScreen: root.modelData
         }
     }

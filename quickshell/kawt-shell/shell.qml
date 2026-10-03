@@ -5,9 +5,12 @@ import QtQuick
 import Quickshell
 import qs.services
 import "modules/bar"
+import "modules/lock"
 
 ShellRoot {
     Bar {}
+
+    Lock {}
 
     // singletons start lazily; this one has to run without anything on screen using it
     Component.onCompleted: ThemeExport.dir
