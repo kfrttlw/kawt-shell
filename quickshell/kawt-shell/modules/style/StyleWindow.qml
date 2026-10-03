@@ -174,6 +174,25 @@ PanelWindow {
                 Layout.fillWidth: true
                 spacing: Metrics.spacing
 
+                // soft: muted, crt: bright like an old monitor
+                Label {
+                    text: "terminal:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: ["soft", "crt"]
+
+                    BracketButton {
+                        required property string modelData
+
+                        label: modelData
+                        active: Settings.termColors === modelData
+                        textColor: Settings.termColors === modelData ? Colors.accent : Colors.dim
+                        onClicked: Settings.termColors = modelData
+                    }
+                }
+
                 BracketButton {
                     label: Settings.themeTerminals ? "x" : " "
                     bordered: false

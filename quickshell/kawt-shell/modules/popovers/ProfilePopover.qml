@@ -20,7 +20,9 @@ Popover {
         if (action === "lock" || action === "sleep" || armed === action) {
             armed = "";
             Panels.close();
-            if (action === "logout")
+            if (action === "lock")
+                Panels.locked = true;
+            else if (action === "logout")
                 Hypr.exit();
             else
                 Quickshell.execDetached(cmd);
@@ -43,7 +45,7 @@ Popover {
     Tabs {
         id: tabs
 
-        tabs: ["sys", "top", "notes", "cfg"]
+        tabs: ["sys", "top", "todo", "notes", "cfg"]
     }
 
     // the process list is only sampled while its tab is on screen
@@ -200,7 +202,7 @@ Popover {
 
             BracketButton {
                 label: "lock"
-                onClicked: root.power("lock", ["loginctl", "lock-session"])
+                onClicked: root.power("lock", [])
             }
 
             BracketButton {
@@ -336,10 +338,169 @@ Popover {
         }
     }
 
-    // -------------------------------------------------------------- notes
+    // --------------------------------------------------------------- todo
+    //  + 14:30 call mom█
+    //  [ ] 14:30           call mom
+    //  [ ] tomorrow 09:00  dentist
+    //  [x]                 buy milk
     ColumnLayout {
         Layout.fillWidth: true
         visible: tabs.current === 2
+        spacing: 2
+
+        TermInput {
+            id: todoInput
+
+            property string feedback: ""
+
+            Layout.fillWidth: true
+            Layout.topMargin: Metrics.spacing
+            prompt: "+"
+            placeholder: "14:30 call mom · +30m tea · 05.10 10:00 dentist · buy milk"
+            onAccepted: t => {
+                todoInput.feedback = Todo.add(t);
+                todoInput.text = "";
+                feedbackTimer.restart();
+            }
+
+            Timer {
+                id: feedbackTimer
+
+                interval: 3000
+                onTriggered: todoInput.feedback = ""
+            }
+        }
+
+        Label {
+            Layout.alignment: Qt.AlignRight
+            text: todoInput.feedback
+            visible: text !== ""
+            color: Colors.accent
+            font.pixelSize: Metrics.fontSize - 2
+        }
+
+        Label {
+            visible: Todo.tasks.length === 0
+            Layout.topMargin: Metrics.spacing
+            text: "-- nothing to do --"
+            color: Colors.dim
+        }
+
+        Flickable {
+            id: todoFlick
+
+            Layout.fillWidth: true
+            Layout.topMargin: Metrics.spacing
+            Layout.preferredHeight: Math.min(260, todoList.implicitHeight)
+            visible: Todo.tasks.length > 0
+            clip: true
+            contentHeight: todoList.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+
+            Column {
+                id: todoList
+
+                width: todoFlick.width
+
+                Repeater {
+                    model: Todo.sorted
+
+                    Item {
+                        id: task
+
+                        required property var modelData
+                        readonly property bool overdue: !modelData.done && modelData.due > 0 && modelData.due < Time.now.getTime()
+
+                        width: todoList.width
+                        implicitHeight: taskRow.implicitHeight + 4
+
+                        Rectangle {
+                            anchors.fill: parent
+                            visible: taskArea.containsMouse
+                            color: Colors.hoverFill
+                        }
+
+                        RowLayout {
+                            id: taskRow
+
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 2
+                            anchors.rightMargin: 2
+                            spacing: Metrics.spacing
+
+                            Label {
+                                text: task.modelData.done ? "[x]" : "[ ]"
+                                color: task.modelData.done ? Colors.dim : Colors.accent
+                            }
+
+                            Label {
+                                Layout.preferredWidth: Metrics.fontSize * 0.6 * 14
+                                text: task.modelData.due ? Todo.when(task.modelData.due) : ""
+                                color: task.overdue ? Colors.warn : Colors.dim
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                text: task.modelData.text
+                                color: task.modelData.done ? Colors.dim : Colors.fg
+                                font.strikeout: task.modelData.done
+                            }
+
+                            Label {
+                                visible: taskArea.containsMouse
+                                text: "x"
+                                color: Colors.warn
+                            }
+                        }
+
+                        // click: done / not done; click on the x (right edge) or right click: delete
+                        MouseArea {
+                            id: taskArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton || mouse.x > width - 20)
+                                    Todo.remove(task.modelData.id);
+                                else
+                                    Todo.toggle(task.modelData.id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: Metrics.spacing
+            visible: Todo.tasks.length > 0
+
+            Label {
+                Layout.fillWidth: true
+                text: `-- ${Todo.open} open · reminders go to [log] --`
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 3
+            }
+
+            BracketButton {
+                visible: Todo.open < Todo.tasks.length
+                label: "clear done"
+                bordered: false
+                onClicked: Todo.clearDone()
+            }
+        }
+    }
+
+    // -------------------------------------------------------------- notes
+    ColumnLayout {
+        Layout.fillWidth: true
+        visible: tabs.current === 3
         spacing: 2
 
         Rectangle {
@@ -404,7 +565,7 @@ Popover {
     // ---------------------------------------------------------------- cfg
     ColumnLayout {
         Layout.fillWidth: true
-        visible: tabs.current === 3
+        visible: tabs.current === 4
         spacing: Metrics.spacing
         onVisibleChanged: if (visible)
             Ai.checkStatus()
@@ -423,6 +584,84 @@ Popover {
                 textColor: Colors.accent
                 onClicked: Panels.toggle("style", root.forScreen)
             }
+        }
+
+        // ------------------------------------------------------------ clock
+        //  clock  [24h] 12h  [x] seconds  [ ] date
+        //  time>  14:30 / +3h / -30m   [real time]
+        Label {
+            Layout.topMargin: Metrics.spacing
+            text: "clock"
+            color: Colors.dim
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: Metrics.spacing
+
+            BracketButton {
+                label: "24h"
+                active: Settings.clock24
+                textColor: Settings.clock24 ? Colors.accent : Colors.dim
+                onClicked: Settings.clock24 = true
+            }
+
+            BracketButton {
+                label: "12h"
+                active: !Settings.clock24
+                textColor: !Settings.clock24 ? Colors.accent : Colors.dim
+                onClicked: Settings.clock24 = false
+            }
+
+            BracketButton {
+                tag: Settings.clockSeconds ? "x" : " "
+                label: "seconds"
+                bordered: false
+                onClicked: Settings.clockSeconds = !Settings.clockSeconds
+            }
+
+            BracketButton {
+                tag: Settings.clockDate ? "x" : " "
+                label: "date"
+                bordered: false
+                onClicked: Settings.clockDate = !Settings.clockDate
+            }
+        }
+
+        // shell-only time: the system clock is never touched
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Metrics.spacing
+
+            TermInput {
+                id: clockInput
+
+                property string error: ""
+
+                Layout.fillWidth: true
+                prompt: "time>"
+                placeholder: "14:30 · +3h · -30m  (only kawt's clock)"
+                onAccepted: t => {
+                    clockInput.error = Time.set(t);
+                    if (!clockInput.error)
+                        clockInput.text = "";
+                }
+            }
+
+            BracketButton {
+                visible: Time.offset !== 0
+                label: "real time"
+                onClicked: Time.reset()
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            text: clockInput.error !== "" ? clockInput.error
+                : Time.offset !== 0 ? `kawt runs ${Time.offsetText} from the system clock (todo reminders too)` : ""
+            color: clockInput.error !== "" ? Colors.warn : Colors.dim
+            font.pixelSize: Metrics.fontSize - 2
         }
 
         Label {

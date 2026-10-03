@@ -57,11 +57,12 @@ Singleton {
         }
     }
 
-    // sysfs doesn't emit inotify events, so poll (cheap: just a file read)
+    // sysfs doesn't emit inotify events, so poll (cheap: just a file read).
+    // Fast enough that the osd follows the brightness keys without a visible lag.
     Timer {
         running: root.available
         repeat: true
-        interval: 1000
+        interval: 250
         onTriggered: file.reload()
     }
 

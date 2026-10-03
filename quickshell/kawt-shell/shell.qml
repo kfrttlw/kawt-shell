@@ -5,10 +5,17 @@ import QtQuick
 import Quickshell
 import qs.services
 import "modules/bar"
+import "modules/lock"
 
 ShellRoot {
     Bar {}
 
-    // singletons start lazily; this one has to run without anything on screen using it
-    Component.onCompleted: ThemeExport.dir
+    Lock {}
+
+    // singletons start lazily; these have to run without anything on screen using them
+    // (theme files for other apps, todo reminders)
+    Component.onCompleted: {
+        ThemeExport.dir;
+        Todo.open;
+    }
 }

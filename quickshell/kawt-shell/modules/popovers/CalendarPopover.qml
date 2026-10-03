@@ -106,6 +106,33 @@ Popover {
         }
     }
 
+    // today's timed tasks from the todo tab
+    ColumnLayout {
+        Layout.fillWidth: true
+        Layout.topMargin: Metrics.spacing
+        visible: Todo.today.length > 0
+        spacing: 0
+
+        Label {
+            text: "-- today --"
+            color: Colors.dim
+            font.pixelSize: Metrics.fontSize - 2
+        }
+
+        Repeater {
+            model: Todo.today.slice(0, 5)
+
+            Label {
+                required property var modelData
+
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: `${Qt.formatTime(new Date(modelData.due), "hh:mm")}  ${modelData.text}`
+                color: modelData.due < Time.now.getTime() ? Colors.warn : Colors.fg
+            }
+        }
+    }
+
     Label {
         Layout.alignment: Qt.AlignHCenter
         text: `week ${root.weekNumber()} · ${Qt.formatTime(root.today, "hh:mm:ss")}`

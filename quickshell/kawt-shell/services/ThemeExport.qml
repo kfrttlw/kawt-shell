@@ -20,12 +20,12 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         for (const name in f)
             args.push(name, f[name]);
         if (live && Settings.themeTerminals)
-            args.push("@pts", Gen.sequences(Colors.palette));
+            args.push("@pts", Gen.sequences(Colors.palette, Settings.termColors));
         if (live && Hypr.lua)
             args.push("@hyprreload", "");
         proc.command = args;
@@ -33,6 +33,14 @@ Singleton {
     }
 
     Component.onCompleted: apply(false)
+
+    Connections {
+        target: Settings
+
+        function onTermColorsChanged(): void {
+            root.apply(true);
+        }
+    }
 
     Connections {
         target: Colors

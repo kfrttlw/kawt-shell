@@ -11,6 +11,11 @@ Singleton {
 
     property alias theme: adapter.theme
     property alias light: adapter.light
+    property alias termColors: adapter.termColors
+    property alias clock24: adapter.clock24
+    property alias clockSeconds: adapter.clockSeconds
+    property alias clockDate: adapter.clockDate
+    property alias timeOffset: adapter.timeOffset
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
     property alias device: adapter.device
@@ -40,6 +45,11 @@ Singleton {
 
             property string theme: "mono"
             property bool light: false // light (paper) variant of the theme
+            property string termColors: "soft" // terminal colors: "soft" | "crt" (utils/themegen.js)
+            property bool clock24: true
+            property bool clockSeconds: false
+            property bool clockDate: false // weekday and date in the bar clock
+            property int timeOffset: 0 // minutes the shell clock runs ahead (+) or behind (-) the system clock
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop

@@ -8,8 +8,6 @@ import qs.services
 Popover {
     id: root
 
-    readonly property int columns: 4
-
     name: "dock"
     title: "apps"
     cardWidth: 380
@@ -23,13 +21,16 @@ Popover {
         color: Colors.dim
     }
 
-    GridLayout {
+    // two columns of  [icon] name  rows; a fixed width, so one pinned app doesn't stretch
+    Flow {
+        id: grid
+
+        readonly property int cell: Math.floor((width - spacing) / 2)
+
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
         visible: Apps.pinned.length > 0
-        columns: root.columns
-        rowSpacing: Metrics.spacing
-        columnSpacing: Metrics.spacing
+        spacing: Metrics.spacing
 
         Repeater {
             model: Apps.pinned
@@ -39,36 +40,31 @@ Popover {
 
                 required property var modelData
 
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1 // equal columns
-                implicitHeight: tileCol.implicitHeight + Metrics.padding * 2
+                width: grid.cell
+                height: Metrics.fontSize + 16
                 color: tileArea.containsMouse ? Colors.hoverFill : "transparent"
                 border.width: Metrics.borderWidth
                 border.color: tileArea.containsMouse ? Colors.dim : Colors.border
 
-                Column {
-                    id: tileCol
-
-                    anchors.centerIn: parent
-                    width: parent.width - Metrics.padding
-                    spacing: 4
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 6
+                    anchors.rightMargin: 6
+                    spacing: Metrics.spacing
 
                     AppIcon {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 32
-                        height: 32
+                        Layout.preferredWidth: 18
+                        Layout.preferredHeight: 18
                         icon: tile.modelData.icon
                         name: tile.modelData.name
                         colored: tileArea.containsMouse
                     }
 
                     Label {
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
+                        Layout.fillWidth: true
                         elide: Text.ElideRight
                         text: tile.modelData.name.toLowerCase()
                         color: tileArea.containsMouse ? Colors.accent : Colors.fg
-                        font.pixelSize: Metrics.fontSize - 2
                     }
                 }
 

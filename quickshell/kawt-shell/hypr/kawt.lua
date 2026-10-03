@@ -37,13 +37,26 @@ try("binds", function()
     hl.bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
     hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
     hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle profile")) -- sys / top / notes / cfg
+    hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- kawt lock screen
+end)
+
+-- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over
+-- the rounding in hyprland.lua; delete this block to keep your own.
+-- allow_session_lock_restore: if the kawt lock screen ever crashes, restarting quickshell
+-- (from a tty: qs -c kawt-shell -d) brings it back instead of leaving the screen stuck.
+-- (two separate calls: if one option doesn't exist in your Hyprland version, the other still applies)
+try("square windows", function()
+    hl.config({ decoration = { rounding = 0 } })
+end)
+try("lock restore", function()
+    hl.config({ misc = { allow_session_lock_restore = true } })
 end)
 
 -- kawt animates its panels itself
 try("layer rule", function()
     hl.layer_rule({
         name = "kawt-no-anim",
-        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar)$" },
+        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd)$" },
         no_anim = true,
     })
 end)
