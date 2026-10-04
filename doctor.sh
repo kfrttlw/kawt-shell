@@ -79,5 +79,25 @@ else
     info "no .zshrc"
 fi
 
+echo "-- ai (ollama)"
+model=$(setting ollamaModel)
+url=$(setting ollamaUrl)
+url=${url:-http://localhost:11434}
+if ! command -v ollama > /dev/null; then
+    fail "ollama is not installed" "sudo pacman -S ollama   (or ollama-rocm / ollama-cuda for the gpu)"
+elif ! tags=$(curl -s -m 3 "$url/api/tags"); then
+    fail "ollama doesn't answer at $url" "start it: sudo systemctl enable --now ollama"
+else
+    good "ollama answers at $url"
+    pulled=$(printf '%s' "$tags" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' ')
+    if [[ -z $pulled ]]; then
+        fail "no models downloaded" "ollama pull ${model:-llama3.2}"
+    elif [[ " $pulled " == *" ${model:-llama3.2} "* || " $pulled " == *" ${model:-llama3.2}:latest "* ]]; then
+        good "model ${model:-llama3.2} is downloaded"
+    else
+        fail "kawt uses model '${model:-llama3.2}', but it isn't downloaded" "ollama pull ${model:-llama3.2}   (downloaded: $pulled)"
+    fi
+fi
+
 echo
 if ((problems)); then echo "$problems problem(s) above"; else echo "all good. colors still off? run ./colortest.sh"; fi

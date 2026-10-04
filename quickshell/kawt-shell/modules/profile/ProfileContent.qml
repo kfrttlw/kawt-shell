@@ -1448,11 +1448,27 @@ ColumnLayout {
             color: Colors.dim
         }
 
-        BracketButton {
-            tag: Settings.wifiName ? "x" : " "
-            label: "show the wifi name (off: only the signal)"
-            bordered: false
-            onClicked: Settings.wifiName = !Settings.wifiName
+        // wifi button: [name] bars hidden
+        RowLayout {
+            spacing: Metrics.spacing
+
+            Label {
+                text: "wifi:"
+                color: Colors.dim
+            }
+
+            Repeater {
+                model: [["name", "name"], ["bars", "▂▄▆_"], ["hidden", "hidden (click the graph)"]]
+
+                BracketButton {
+                    required property var modelData
+
+                    label: modelData[1]
+                    active: Settings.wifiStyle === modelData[0]
+                    textColor: Settings.wifiStyle === modelData[0] ? Colors.accent : Colors.dim
+                    onClicked: Settings.wifiStyle = modelData[0]
+                }
+            }
         }
 
         Label {

@@ -73,6 +73,7 @@ Variants {
             }
 
             NetGraph {
+                id: netGraph
                 active: Panels.isOpen("wifi", root.modelData)
                 onClicked: Panels.toggle("wifi", root.modelData)
             }
@@ -169,7 +170,8 @@ Variants {
 
         WifiPopover {
             forScreen: root.modelData
-            anchorItem: wifi
+            // with the wifi button hidden, the panel opens under the net graph
+            anchorItem: wifi.visible ? wifi : netGraph
         }
 
         VolumePopover {

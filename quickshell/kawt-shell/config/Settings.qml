@@ -19,7 +19,7 @@ Singleton {
     property alias motto: adapter.motto
     property alias profileArt: adapter.profileArt
     property alias screenshotDir: adapter.screenshotDir
-    property alias wifiName: adapter.wifiName
+    property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
@@ -58,7 +58,7 @@ Singleton {
             property string motto: "stay curious" // profile header line; "fortune" = a new one each time, "" = none
             property string profileArt: "auto" // "auto": ~/.face as ascii if it exists, "machine": always the thinkpad/pc
             property string screenshotDir: "~/Pictures/screenshots"
-            property bool wifiName: true // the network name in the bar; off: just the signal bars
+            property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the "wallpaper" theme: { source, dark, light } from utils/wallpalette.js
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"
