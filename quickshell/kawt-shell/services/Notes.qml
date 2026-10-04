@@ -4,37 +4,97 @@ import Quickshell
 import Quickshell.Io
 import qs.config
 
-// Scratchpad notes, saved to ~/.local/state/kawt/notes.txt (debounced)
+// Notes in folders, saved to ~/.local/state/kawt/notes.json.
+// A note's title is simply its first line. The old single scratchpad (notes.txt) becomes
+// the first note the first time this runs; the file itself is left in place.
 Singleton {
     id: root
 
-    property string text: ""
-    property bool loaded: false
+    readonly property var notes: adapter.notes
+    readonly property list<string> folders: adapter.folders
+    // newest edit first
+    readonly property var sorted: notes.slice().sort((a, b) => b.updated - a.updated)
 
-    function set(t: string): void {
-        if (t === text)
+    // notes of a folder ("all" = every folder), optionally filtered by a search text
+    function inFolder(folder: string, search: string): var {
+        const q = (search || "").trim().toLowerCase();
+        return sorted.filter(n => (folder === "all" || n.folder === folder) && (!q || n.body.toLowerCase().includes(q)));
+    }
+
+    function count(folder: string): int {
+        return folder === "all" ? notes.length : notes.filter(n => n.folder === folder).length;
+    }
+
+    function title(note: var): string {
+        const first = (note?.body ?? "").split("\n").find(l => l.trim() !== "") ?? "";
+        return first.trim().replace(/^#+\s*/, "") || "untitled";
+    }
+
+    // returns the new note's id
+    function create(folder: string): real {
+        const id = Date.now();
+        adapter.notes = [...adapter.notes, {
+            id,
+            body: "",
+            folder: folder && folder !== "all" ? folder : "notes",
+            updated: id
+        }];
+        return id;
+    }
+
+    function update(id: real, fields: var): void {
+        adapter.notes = adapter.notes.map(n => n.id === id ? Object.assign({}, n, fields, { updated: Date.now() }) : n);
+    }
+
+    function remove(id: real): void {
+        adapter.notes = adapter.notes.filter(n => n.id !== id);
+    }
+
+    function addFolder(name: string): string {
+        name = name.trim().toLowerCase().replace(/\s+/g, "-");
+        if (name && name !== "all" && !adapter.folders.includes(name))
+            adapter.folders = [...adapter.folders, name];
+        return name;
+    }
+
+    // its notes move to "notes", nothing is lost
+    function removeFolder(name: string): void {
+        if (name === "notes")
             return;
-        text = t;
-        saveTimer.restart();
+        adapter.notes = adapter.notes.map(n => n.folder === name ? Object.assign({}, n, { folder: "notes" }) : n);
+        adapter.folders = adapter.folders.filter(f => f !== name);
     }
 
     FileView {
-        id: file
-
-        path: `${Settings.dir}/notes.txt`
-        blockLoading: true
-        printErrors: false
-        onLoaded: {
-            root.text = text();
-            root.loaded = true;
+        path: `${Settings.dir}/notes.json`
+        printErrors: false // missing on first run
+        onAdapterUpdated: writeAdapter()
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound) {
+                writeAdapter();
+                legacy.reload();
+            }
         }
-        onLoadFailed: root.loaded = true
+
+        JsonAdapter {
+            id: adapter
+
+            property var notes: [] // [{ id, body, folder, updated (ms) }]
+            property var folders: ["notes"]
+        }
     }
 
-    Timer {
-        id: saveTimer
+    // the scratchpad from before folders: imported once, when notes.json doesn't exist yet
+    FileView {
+        id: legacy
 
-        interval: 600
-        onTriggered: file.setText(root.text)
+        path: `${Settings.dir}/notes.txt`
+        preload: false
+        printErrors: false
+        onLoaded: {
+            const body = text();
+            if (body.trim() !== "")
+                adapter.notes = [...adapter.notes, { id: Date.now(), body, folder: "notes", updated: Date.now() }];
+        }
     }
 }

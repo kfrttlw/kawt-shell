@@ -10,7 +10,7 @@ import qs.config
 //
 //   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|calendar|player|volume|brightness|battery|wifi|notifs
 //   qs -c kawt-shell ipc call kawt sidebar
-//   qs -c kawt-shell ipc call kawt run
+//   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen
 //   qs -c kawt-shell ipc call kawt close
@@ -47,6 +47,17 @@ Singleton {
         current = "";
     }
 
+    // open the launcher with a mode prefix typed in, or close it if it's open
+    function launcherWith(prefix: string): void {
+        if (current === "launcher" && screen === focusedScreen) {
+            close();
+        } else {
+            launcherPrefix = prefix;
+            screen = focusedScreen;
+            current = "launcher";
+        }
+    }
+
     function isSidebarOpen(s: ShellScreen): bool {
         return sidebarOpen && sidebarScreen === s?.name;
     }
@@ -79,13 +90,12 @@ Singleton {
 
         // win+r: the launcher straight in run mode, like the Windows "Run" box
         function run(): void {
-            if (root.current === "launcher" && root.screen === root.focusedScreen) {
-                root.close();
-            } else {
-                root.launcherPrefix = "!";
-                root.screen = root.focusedScreen;
-                root.current = "launcher";
-            }
+            root.launcherWith("!");
+        }
+
+        // the launcher straight in clipboard history mode
+        function clipboard(): void {
+            root.launcherWith(":");
         }
 
         function lock(): void {

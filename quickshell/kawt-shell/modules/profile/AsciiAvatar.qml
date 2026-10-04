@@ -29,11 +29,12 @@ Item {
             canvas.requestPaint()
     }
 
-    // only used to read the picture's pixels, never shown
+    // only used to read the picture's pixels: opacity 0, not visible: false, because a
+    // canvas that isn't visible never paints
     Canvas {
         id: canvas
 
-        visible: false
+        opacity: 0
         width: root.cols
         height: root.rows
 

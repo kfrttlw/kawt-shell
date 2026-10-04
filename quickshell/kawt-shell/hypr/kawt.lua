@@ -30,6 +30,7 @@ end)
 try("binds", function()
     hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- rofi-style launcher
     hl.bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- launcher in run mode, like windows' win+r
+    hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
     hl.bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle dock")) -- pinned apps
     hl.bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
     hl.bind(mod .. " + W", hl.dsp.exec_cmd(kawt .. "toggle style")) -- wallpaper & themes

@@ -5,18 +5,21 @@
 
 const names = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"];
 // Two looks for the terminal colors, picked in the style panel:
-//   soft: muted, the ink ramp goes deep into the dim end
-//   crt:  bright and crisp, like an old monochrome monitor turned up
-// Each entry: green yellow blue magenta cyan as [real hue, brightness on the dim -> fg ramp,
-// how much of the real hue shows]. Red is always the theme's own `warn`.
+//   soft: light and pleasant: pastel versions of the real colors, tuned to the theme
+//   crt:  an old monochrome monitor: everything in the theme's own ink, only a hint of hue
+// Each entry: green yellow blue magenta cyan as [hue, brightness on the dim -> fg ramp,
+// how much of the hue shows]. Red is always the theme's own `warn`.
+// `extTint`: the same "how much hue" for the 256-color palette.
 const styles = {
     soft: {
-        inks: [["#7cb36b", 1.0, 0.22], ["#d9b45b", 0.85, 0.28], ["#6a93d4", 0.62, 0.2], ["#b07ad1", 0.72, 0.2], ["#5fb2b0", 0.5, 0.2]],
-        comment: 0 // color8: how far from dim toward fg
+        inks: [["#8fd18a", 1.0, 0.55], ["#e8cf7d", 1.0, 0.55], ["#8eb4ef", 0.95, 0.55], ["#c79be6", 0.95, 0.55], ["#7fd3cf", 0.95, 0.55]],
+        comment: 0.15, // color8: how far from dim toward fg
+        extTint: 0.35
     },
     crt: {
-        inks: [["#7cb36b", 1.0, 0.22], ["#d9b45b", 0.92, 0.28], ["#6a93d4", 0.8, 0.22], ["#b07ad1", 0.86, 0.22], ["#5fb2b0", 0.74, 0.22]],
-        comment: 0.3
+        inks: [["#7cb36b", 1.0, 0.1], ["#d9b45b", 0.9, 0.12], ["#6a93d4", 0.75, 0.1], ["#b07ad1", 0.82, 0.1], ["#5fb2b0", 0.68, 0.1]],
+        comment: 0.3,
+        extTint: 0.1
     }
 };
 const styleNames = Object.keys(styles);
@@ -60,7 +63,7 @@ function ansi(t, style) {
 // (dark stays dark, light stays light, so it still reads) but becomes the theme's ink, with a
 // hint of the original hue. On light themes brightness flips, like the 16 colors do.
 function extended(t, style) {
-    const tint = style === "soft" ? 0.15 : 0.22;
+    const tint = (styles[style] || styles.crt).extTint;
     const light = isLight(t);
     const cube = [0, 95, 135, 175, 215, 255];
     const out = [];

@@ -17,5 +17,6 @@ ShellRoot {
     Component.onCompleted: {
         ThemeExport.dir;
         Todo.open;
+        Clipboard.available; // starts the clipboard history watcher
     }
 }

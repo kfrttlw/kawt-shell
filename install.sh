@@ -26,6 +26,11 @@ qs_dst=$config/quickshell/kawt-shell
 kitty_dst=$config/kitty/kitty.conf
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
+# zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
+# ZSH_THEME wherever oh-my-zsh is installed (or without it)
+zshrc=${ZDOTDIR:-$HOME}/.zshrc
+marker_zsh="kawt-shell/zsh/kawt.zsh-theme"
+line_zsh='[[ -r ~/.config/quickshell/kawt-shell/zsh/kawt.zsh-theme ]] && source ~/.config/quickshell/kawt-shell/zsh/kawt.zsh-theme # kawt prompt'
 marker_lua="kawt-shell/hypr/kawt.lua"
 marker_conf="kawt-shell/hypr/kawt.conf"
 line_lua='pcall(dofile, os.getenv("HOME") .. "/.config/quickshell/kawt-shell/hypr/kawt.lua")'
@@ -106,6 +111,21 @@ stash_copy() {
     run cp -p -- "$path" "$backup/$rel" || return 1
 }
 
+# an older kawt set ZSH_THEME="kawt" (keeping the old value in a comment) and linked the theme
+# into oh-my-zsh's custom folder; that missed oh-my-zsh installs outside ~/.oh-my-zsh.
+# Put the old ZSH_THEME back and drop the link.
+undo_old_zsh_setup() {
+    local d
+    for d in "${ZSH_CUSTOM:-}" "${ZSH:-$HOME/.oh-my-zsh}/custom" "$HOME/.oh-my-zsh/custom"; do
+        if [[ -n $d && -L $d/themes/kawt.zsh-theme ]]; then
+            run rm -- "$d/themes/kawt.zsh-theme" && step "rm" "$d/themes/kawt.zsh-theme (old link)"
+        fi
+    done
+    if [[ -f $zshrc ]] && grep -E '^ZSH_THEME="kawt" # kawt, was: ' "$zshrc" > /dev/null; then
+        stash_copy "$zshrc" && run sed -i -E 's/^ZSH_THEME="kawt" # kawt, was: (.*)$/ZSH_THEME=\1/' "$zshrc" && step "edit" "$zshrc (ZSH_THEME back to what it was)"
+    fi
+}
+
 # ------------------------------------------------------------------ uninstall
 if [[ $mode == uninstall ]]; then
     say "${acc}kawt${off} ${dim}// uninstalling${off}"
@@ -132,6 +152,11 @@ if [[ $mode == uninstall ]]; then
         fi
     done
 
+    undo_old_zsh_setup
+    if [[ -f $zshrc ]] && grep -F "$marker_zsh" "$zshrc" > /dev/null; then
+        stash_copy "$zshrc" && run sed -i "\|$marker_zsh|d" "$zshrc" && step "edit" "$zshrc (kawt prompt line removed)"
+    fi
+
     for f in "$hypr_lua" "$hypr_conf"; do
         [[ -f $f ]] || continue
         if grep -F -e "$marker_lua" -e "$marker_conf" "$f" > /dev/null; then
@@ -151,7 +176,7 @@ say "${dim}-- checks --${off}"
 
 # the repo itself
 missing_files=()
-for f in quickshell/kawt-shell/shell.qml quickshell/kawt-shell/hypr/kawt.lua quickshell/kawt-shell/hypr/kawt.conf kitty/kitty.conf; do
+for f in quickshell/kawt-shell/shell.qml quickshell/kawt-shell/hypr/kawt.lua quickshell/kawt-shell/hypr/kawt.conf kitty/kitty.conf quickshell/kawt-shell/zsh/kawt.zsh-theme; do
     [[ -f $repo/$f ]] || missing_files+=("$f")
 done
 if ((${#missing_files[@]})); then
@@ -198,6 +223,7 @@ need "$(has notify-send)" "notify-send" libnotify "todo reminders"
 need "$(has grim)" "grim" grim "screenshots"
 need "$(has slurp)" "slurp" slurp "picking a screenshot area"
 need "$(has wl-copy)" "wl-clipboard" wl-clipboard "screenshots and copies to the clipboard"
+need "$(has cliphist)" "cliphist" cliphist "clipboard history (super+shift+v)"
 # brightness only matters where there is a backlight (laptops)
 if compgen -G "/sys/class/backlight/*" > /dev/null; then
     need "$(has brightnessctl)" "brightnessctl" brightnessctl "screen brightness"
@@ -219,6 +245,13 @@ elif [[ -f $hypr_conf ]]; then
     pass "hyprland.conf"
 else
     warn "no hyprland config found" "kawt binds won't be added"
+fi
+
+# zsh is optional: with it, kawt also brings its prompt
+if command -v zsh > /dev/null; then
+    pass "zsh (the kawt prompt will be added to ${zshrc/#$HOME/\~})"
+else
+    warn "no zsh" "the kawt prompt is skipped"
 fi
 
 # leftovers from older kawt setups: harmless on their own
@@ -304,12 +337,22 @@ elif [[ -f $hypr_conf ]]; then
     hook "$hypr_conf" "$marker_conf" "$line_conf" || { fail "could not edit $hypr_conf"; failed=1; }
 fi
 
+# zsh: the prompt line at the end of .zshrc (created if there is none yet)
+if command -v zsh > /dev/null; then
+    undo_old_zsh_setup
+    [[ -f $zshrc ]] || run touch "$zshrc"
+    hook "$zshrc" "$marker_zsh" "$line_zsh" || { fail "could not edit $zshrc"; failed=1; }
+fi
+
 # ------------------------------------------------------------------ 3. verify
 if ((!dry)); then
     say ""
     say "${dim}-- verify --${off}"
     if [[ -f $qs_dst/shell.qml ]]; then pass "quickshell finds kawt"; else fail "$qs_dst/shell.qml is not reachable"; failed=1; fi
     if [[ -f $kitty_dst ]]; then pass "kitty finds its config"; else fail "$kitty_dst is not reachable"; failed=1; fi
+    if command -v zsh > /dev/null; then
+        if loads_kawt "$zshrc" "$marker_zsh" && [[ -r $qs_dst/zsh/kawt.zsh-theme ]]; then pass "zsh loads the kawt prompt"; else fail "the kawt prompt is not reachable from $zshrc"; failed=1; fi
+    fi
     if [[ -f $hypr_lua ]]; then
         if loads_kawt "$hypr_lua" "$marker_lua"; then pass "hyprland loads kawt"; else fail "hyprland.lua doesn't load kawt"; failed=1; fi
     elif [[ -f $hypr_conf ]]; then
@@ -328,3 +371,7 @@ if ((dry)); then
 fi
 [[ -d $backup ]] && say "${dim}old configs are in $(short "$backup")  (undo: ./install.sh --uninstall)${off}"
 say "done. restart the shell:  ${acc}qs kill -c kawt-shell; qs -c kawt-shell -d${off}"
+if command -v zsh > /dev/null; then
+    say "the new prompt shows up in new terminals ${dim}(or now: exec zsh)${off}"
+fi
+exit 0

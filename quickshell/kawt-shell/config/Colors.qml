@@ -6,7 +6,10 @@ import QtQuick
 QtObject {
     id: root
 
-    readonly property var themes: ({
+    // the fixed themes, plus "wallpaper" once a palette was taken from the wallpaper
+    readonly property var themes: Settings.wallPalette?.dark ? Object.assign({}, fixed, { wallpaper: { dark: Settings.wallPalette.dark, light: Settings.wallPalette.light } }) : fixed
+
+    readonly property var fixed: ({
         mono: {
             dark: {
                 bg: "#0a0a0a",

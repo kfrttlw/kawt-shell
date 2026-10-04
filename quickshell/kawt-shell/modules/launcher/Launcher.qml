@@ -26,7 +26,8 @@ PanelWindow {
         { prefix: "!", name: "run" },
         { prefix: ">", name: "term" },
         { prefix: "=", name: "calc" },
-        { prefix: "?", name: "ai" }
+        { prefix: "?", name: "ai" },
+        { prefix: ":", name: "clip" }
     ]
     readonly property string query: input.text
     readonly property string mode: modes.some(m => m.prefix && query.startsWith(m.prefix)) ? query[0] : ""
@@ -34,6 +35,9 @@ PanelWindow {
     readonly property string arg: mode ? query.slice(1).trim() : query
     readonly property string calcResult: mode === "=" ? Apps.calc(arg) : ""
     readonly property var results: open && !mode ? Apps.search(query).slice(0, 60) : []
+    readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
+    // how many rows the current mode lists (apps or clipboard entries)
+    readonly property int rows: mode === ":" ? clips.length : results.length
     property int current: 0
 
     screen: forScreen
@@ -58,11 +62,13 @@ PanelWindow {
         fadeIn.restart();
     }
     onQueryChanged: current = 0
-    onCurrentChanged: list.positionViewAtIndex(current, ListView.Contain)
+    onCurrentChanged: (mode === ":" ? clipList : list).positionViewAtIndex(current, ListView.Contain)
+    onModeChanged: if (mode === ":")
+        Clipboard.refresh()
 
     function move(delta: int): void {
-        if (results.length > 0)
-            current = (current + delta + results.length) % results.length;
+        if (rows > 0)
+            current = (current + delta + rows) % rows;
     }
 
     function setMode(i: int): void {
@@ -83,6 +89,8 @@ PanelWindow {
             } catch (e) {
                 Quickshell.execDetached(["wl-copy", calcResult]); // older quickshell
             }
+        } else if (mode === ":" && clips[current]) {
+            Clipboard.copy(clips[current]);
         } else if (mode === "?" && arg) {
             Panels.sidebarScreen = forScreen.name;
             Panels.sidebarOpen = true;
@@ -209,6 +217,8 @@ PanelWindow {
                         root.move(1);
                     else if (ctrl && (event.key === Qt.Key_P || event.key === Qt.Key_K))
                         root.move(-1);
+                    else if (ctrl && event.key === Qt.Key_D && root.mode === ":" && root.clips[root.current])
+                        Clipboard.remove(root.clips[root.current]);
                     else if (ctrl && event.key === Qt.Key_S && root.results[root.current])
                         Apps.togglePin(root.results[root.current]);
                     else
@@ -237,15 +247,90 @@ PanelWindow {
                         return root.arg ? `${Settings.terminal} ${root.arg}` : "run a command in a terminal";
                     if (root.mode === "=")
                         return root.calcResult ? `= ${root.calcResult}   (enter: copy)` : "calculator: 2*(3+4), 2^10, 15%4";
+                    if (root.mode === ":")
+                        return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
+                            : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
                     return root.arg ? `ask ${Settings.ollamaModel}: ${root.arg}` : "ask the local ai";
                 }
                 color: root.mode === "=" && root.calcResult ? Colors.accent : root.arg ? Colors.fg : Colors.dim
             }
 
             Label {
-                visible: root.mode === "" && root.results.length === 0
-                text: "-- no match --"
+                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0)
+                text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : "-- no match --"
                 color: Colors.dim
+            }
+
+            // clipboard history: newest first
+            ListView {
+                id: clipList
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === ":" && count > 0
+                clip: true
+                model: root.clips
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: clipRow
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+                    readonly property bool image: modelData.text.startsWith("[[ binary data")
+
+                    width: clipList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: clipRow.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: clipRow.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        Label {
+                            text: clipRow.image ? "img" : "txt"
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            // one line: newlines and tabs shown as spaces
+                            text: clipRow.modelData.text.replace(/\s+/g, " ")
+                            color: clipRow.selected ? Colors.accent : Colors.fg
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = clipRow.index
+                        onClicked: mouse => {
+                            root.current = clipRow.index;
+                            if (mouse.button === Qt.RightButton)
+                                Clipboard.remove(clipRow.modelData);
+                            else
+                                root.accept();
+                        }
+                    }
+                }
             }
 
             ListView {
@@ -335,7 +420,8 @@ PanelWindow {
 
             Label {
                 Layout.alignment: Qt.AlignRight
-                text: "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
+                text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
+                    : "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }

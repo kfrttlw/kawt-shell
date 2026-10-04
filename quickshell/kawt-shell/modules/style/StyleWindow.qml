@@ -29,6 +29,7 @@ PanelWindow {
     anchors.bottom: true
 
     onOpenChanged: if (open) {
+        grid.currentIndex = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
         Wallpapers.refresh();
         box.forceActiveFocus();
         fadeIn.restart();
@@ -54,7 +55,29 @@ PanelWindow {
         title: "style"
         hint: "esc"
 
+        // arrows walk the wallpapers, enter sets the selected one; [ and ] cycle the themes,
+        // t flips dark/light
         Keys.onEscapePressed: Panels.close()
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Left)
+                grid.moveCurrentIndexLeft();
+            else if (event.key === Qt.Key_Right)
+                grid.moveCurrentIndexRight();
+            else if (event.key === Qt.Key_Up)
+                grid.moveCurrentIndexUp();
+            else if (event.key === Qt.Key_Down)
+                grid.moveCurrentIndexDown();
+            else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) && grid.count > 0)
+                Wallpapers.set(Wallpapers.files[grid.currentIndex]);
+            else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight) {
+                const i = Colors.names.indexOf(Colors.mode) + (event.key === Qt.Key_BracketRight ? 1 : -1);
+                Settings.theme = Colors.names[(i + Colors.names.length) % Colors.names.length];
+            } else if (event.key === Qt.Key_T)
+                Settings.light = !Settings.light;
+            else
+                return;
+            event.accepted = true;
+        }
 
         NumberAnimation {
             id: fadeIn
@@ -69,6 +92,12 @@ PanelWindow {
         MouseArea {
             anchors.fill: parent
             onClicked: box.forceActiveFocus()
+        }
+
+        // keeps the "wallpaper" theme in step with the chosen wallpaper
+        WallpaperSampler {
+            x: 0
+            y: 0
         }
 
         ColumnLayout {
@@ -251,6 +280,14 @@ PanelWindow {
                 color: Colors.dim
             }
 
+            Label {
+                Layout.alignment: Qt.AlignRight
+                visible: grid.count > 0
+                text: "←↑↓→ pick · enter set · [ ] theme · t dark/light"
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 3
+            }
+
             GridView {
                 id: grid
 
@@ -269,7 +306,9 @@ PanelWindow {
                     id: thumb
 
                     required property string modelData
+                    required property int index
                     readonly property bool current: Settings.wallpaper === modelData
+                    readonly property bool selected: GridView.isCurrentItem && box.activeFocus
 
                     width: grid.cellWidth
                     height: grid.cellHeight
@@ -282,8 +321,9 @@ PanelWindow {
                         width: parent.width - 8
                         height: Math.round(width * 9 / 16)
                         color: Colors.hoverFill
-                        border.width: thumb.current ? 2 : 1
-                        border.color: thumb.current ? Colors.accent : thumbArea.containsMouse ? Colors.dim : Colors.border
+                        // set wallpaper: accent; keyboard cursor: thick fg frame; hover: dim
+                        border.width: thumb.current || thumb.selected ? 2 : 1
+                        border.color: thumb.current ? Colors.accent : thumb.selected ? Colors.fg : thumbArea.containsMouse ? Colors.dim : Colors.border
 
                         Image {
                             anchors.fill: parent
@@ -313,7 +353,11 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Wallpapers.set(thumb.modelData)
+                        onClicked: {
+                            grid.currentIndex = thumb.index;
+                            box.forceActiveFocus();
+                            Wallpapers.set(thumb.modelData);
+                        }
                     }
                 }
             }

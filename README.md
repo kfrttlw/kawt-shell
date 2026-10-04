@@ -18,16 +18,17 @@ configs, all in one monospace, square-cornered, text-first style.
 
 | | |
 |---|---|
-| `[~]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo with reminders, notes, settings, power buttons |
+| `[~]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo (folders, importance, icons, notes inside, reminders), notes in folders with search, settings, power buttons |
 | `[$]` dock | pinned apps |
-| launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai |
+| launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `:` clipboard history |
 | `[>_]` ai | local chat with an [ollama](https://ollama.com) model, streamed; nothing leaves the machine |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
-| style | wallpapers + themes: `mono` `amber` `phosphor` `thinkpad`, each dark (CRT) or light (paper) |
+| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper), each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
 | osd | volume / brightness pop up when they change |
 | screenshots | area / window / screen, saved and copied to the clipboard |
+| prompt | an oh-my-zsh theme: `┌[user@host]─[~/dir]─[branch*]` / `└$`, greeting with your motto; uses the 16 terminal colors, so it follows the theme |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
 ## Layout
@@ -36,6 +37,7 @@ configs, all in one monospace, square-cornered, text-first style.
 quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua)
 kitty/kitty.conf         terminal         -> ~/.config/kitty/kitty.conf
+zsh/kawt.zsh-theme       prompt           -> oh-my-zsh custom themes (if oh-my-zsh is installed)
 install.sh
 ```
 
@@ -63,8 +65,8 @@ kawt can never take Hyprland down). Running it again is safe.
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
-**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard`, `brightnessctl` on laptops
-**Optional:** `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
+**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist`, `brightnessctl` on laptops
+**Optional:** `oh-my-zsh` (prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
 
 ## Keys
 
@@ -72,6 +74,7 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 |---|---|
 | `super + space` | launcher |
 | `super + r` | run a command |
+| `super + shift + v` | clipboard history |
 | `super + d` | pinned apps |
 | `super + a` | ai panel |
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
@@ -95,3 +98,11 @@ local ollama.
 - `~/.local/state/kawt/settings.json`: theme, wallpaper, ai model...
 - `~/.local/state/kawt/theme/`: generated color files, rewritten on every theme switch
 - `quickshell/kawt-shell/config/Colors.qml`: the themes themselves; edit colors here
+
+## Hacking
+
+```sh
+python3 tools/check.py   # catches the mistakes that stop the shell from loading
+./doctor.sh              # where the "theme -> files -> apps" chain breaks on this machine
+./colortest.sh           # which kind of terminal color something uses
+```

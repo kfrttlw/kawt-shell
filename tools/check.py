@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Finds QML files that use a type without importing the module it comes from
-("Popover is not a type", "Type X unavailable"). Run from anywhere:
-    python3 tools/check-imports.py
-Exits 1 if something is missing."""
+"""Static checks for the kawt QML, the two mistakes that stop the whole shell from loading:
+  - a type used without importing its module   ("Popover is not a type", "Type X unavailable")
+  - the same property set twice in one object  ("Property value set multiple times")
+Run from anywhere, best before every commit:
+    python3 tools/check.py
+Exits 1 if something is wrong."""
 import os
 import re
 import sys
@@ -61,5 +63,27 @@ for dirpath, _, files in os.walk("."):
                 print(f"{path}: uses {t} but doesn't import {need}")
                 problems += 1
 
-print(f"{problems} problem(s)" if problems else "imports ok")
+# the same property assigned twice inside one object
+for dirpath, _, files in os.walk("."):
+    for f in files:
+        if not f.endswith(".qml"):
+            continue
+        path = os.path.join(dirpath, f)
+        stack = [set()]
+        for n, line in enumerate(open(path).read().split("\n"), 1):
+            code = re.sub(r"//.*", "", line)
+            m = re.match(r"\s*([a-zA-Z][\w.]*)\s*:\s*\S", code)
+            if m and not code.strip().startswith(("property", "readonly", "required", "signal", "function", "case", "default")):
+                key = m.group(1)
+                if key in stack[-1] and not key.startswith("on"):
+                    print(f"{path}:{n}: {key} is set twice in one object")
+                    problems += 1
+                stack[-1].add(key)
+            for ch in code:
+                if ch == "{":
+                    stack.append(set())
+                elif ch == "}" and len(stack) > 1:
+                    stack.pop()
+
+print(f"{problems} problem(s)" if problems else "all checks ok")
 sys.exit(1 if problems else 0)

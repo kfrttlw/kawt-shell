@@ -29,6 +29,25 @@ ColumnLayout {
     property string todoFolder: "inbox"
     property real todoOpen: 0
     readonly property var todoTasks: Todo.inFolder(todoFolder)
+    // notes tab: folder, opened note, the filtered list
+    property string notesFolder: "notes"
+    property real noteOpen: 0
+    property bool noteLoaded: false
+    readonly property var notesList: Notes.inFolder(notesFolder, noteSearch.text)
+
+    // open a note in the editor (0 = close). Saves the one being left first.
+    function openNote(id: real): void {
+        if (noteSave.running) {
+            noteSave.stop();
+            Notes.update(noteOpen, { body: noteEdit.text });
+        }
+        noteLoaded = false;
+        noteOpen = id;
+        noteEdit.text = Notes.notes.find(n => n.id === id)?.body ?? "";
+        noteLoaded = true;
+        if (id)
+            noteEdit.forceActiveFocus();
+    }
 
     // 25m / 2h 10m / 3d
     function until(ms: real): string {
@@ -928,67 +947,342 @@ ColumnLayout {
     }
 
     // -------------------------------------------------------------- notes
-    ColumnLayout {
+    //  folders        │ / search█                      [+ new]
+    //  > notes     4  │ > shopping list         04.10 14:30
+    //    ideas     2  │   kawt ideas            03.10 09:12   x
+    //    all       6  │ ┌─────────────────────────────────────┐
+    //  + folder       │ │ shopping list                        │
+    //                 │ │ - milk█                              │
+    //                 │ └─────────────────────────────────────┘
+    //                 │  notes ideas                 [delete]
+    RowLayout {
         Layout.fillWidth: true
+        Layout.topMargin: Metrics.spacing
         visible: tabs.current === 3
-        spacing: 2
+        spacing: Metrics.padding
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.topMargin: Metrics.spacing
-            implicitHeight: 240
-            color: Colors.hoverFill
-            border.color: notes.activeFocus ? Colors.dim : Colors.border
-            border.width: Metrics.borderWidth
+        // folders
+        ColumnLayout {
+            Layout.preferredWidth: root.wide ? 190 : 140
+            Layout.maximumWidth: root.wide ? 190 : 140
+            Layout.alignment: Qt.AlignTop
+            spacing: 0
 
-            Flickable {
-                id: flick
+            Label {
+                text: "folders"
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
+            }
 
-                anchors.fill: parent
-                anchors.margins: Metrics.spacing
-                clip: true
-                contentHeight: notes.contentHeight
-                boundsBehavior: Flickable.StopAtBounds
+            Repeater {
+                model: [...Notes.folders, "all"]
 
-                TextEdit {
-                    id: notes
+                Item {
+                    id: nfRow
 
-                    width: flick.width
-                    color: Colors.fg
-                    font.family: Metrics.fontFamily
-                    font.pixelSize: Metrics.fontSize
-                    wrapMode: TextEdit.Wrap
-                    selectByMouse: true
-                    selectionColor: Colors.accent
-                    selectedTextColor: Colors.bg
-                    cursorDelegate: BlockCursor {
-                        visible: notes.activeFocus
-                    }
+                    required property string modelData
+                    readonly property bool current: root.notesFolder === modelData
+                    readonly property bool removable: modelData !== "notes" && modelData !== "all"
 
-                    Component.onCompleted: text = Notes.text
-                    onTextChanged: Notes.set(text)
-                    // keep the cursor in view while typing
-                    onCursorRectangleChanged: {
-                        if (cursorRectangle.y < flick.contentY)
-                            flick.contentY = cursorRectangle.y;
-                        else if (cursorRectangle.y + cursorRectangle.height > flick.contentY + flick.height)
-                            flick.contentY = cursorRectangle.y + cursorRectangle.height - flick.height;
+                    Layout.fillWidth: true
+                    implicitHeight: nfLabel.implicitHeight + 4
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: nfRow.current || nfArea.containsMouse
+                        color: Colors.hoverFill
                     }
 
                     Label {
-                        visible: !notes.text && !notes.activeFocus
-                        text: "# todo\n- ..."
-                        color: Colors.dim
+                        id: nfLabel
+
+                        anchors.left: parent.left
+                        anchors.right: nfCount.left
+                        anchors.leftMargin: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
+                        text: (nfRow.current ? "> " : "  ") + nfRow.modelData
+                        color: nfRow.current ? Colors.accent : Colors.fg
                     }
+
+                    Label {
+                        id: nfCount
+
+                        anchors.right: parent.right
+                        anchors.rightMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: nfArea.containsMouse && nfRow.removable ? "x" : String(Notes.count(nfRow.modelData) || "")
+                        color: text === "x" ? Colors.warn : Colors.dim
+                    }
+
+                    MouseArea {
+                        id: nfArea
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: mouse => {
+                            if (nfRow.removable && mouse.x > width - 20) {
+                                if (root.notesFolder === nfRow.modelData)
+                                    root.notesFolder = "notes";
+                                Notes.removeFolder(nfRow.modelData);
+                            } else {
+                                root.notesFolder = nfRow.modelData;
+                            }
+                        }
+                    }
+                }
+            }
+
+            TermInput {
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                prompt: "+"
+                placeholder: "folder"
+                onAccepted: t => {
+                    const name = Notes.addFolder(t);
+                    if (name)
+                        root.notesFolder = name;
+                    text = "";
                 }
             }
         }
 
-        Label {
-            Layout.alignment: Qt.AlignRight
-            text: `-- ${notes.lineCount} lines · ~/.local/state/kawt/notes.txt --`
-            color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+        Rectangle {
+            Layout.fillHeight: true
+            implicitWidth: Metrics.borderWidth
+            color: Colors.border
+        }
+
+        // list + editor
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            Layout.alignment: Qt.AlignTop
+            spacing: 2
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Metrics.spacing
+
+                TermInput {
+                    id: noteSearch
+
+                    Layout.fillWidth: true
+                    prompt: "/"
+                    placeholder: "search"
+                }
+
+                BracketButton {
+                    label: "+ new"
+                    textColor: Colors.accent
+                    onClicked: root.openNote(Notes.create(root.notesFolder))
+                }
+            }
+
+            Label {
+                visible: root.notesList.length === 0
+                Layout.topMargin: Metrics.spacing
+                text: noteSearch.text ? "-- nothing found --" : "-- no notes here: [+ new] --"
+                color: Colors.dim
+            }
+
+            // the list: title · date · x
+            Flickable {
+                id: notesFlick
+
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                Layout.preferredHeight: Math.min(root.wide ? 200 : 132, notesListCol.implicitHeight)
+                visible: root.notesList.length > 0
+                clip: true
+                contentHeight: notesListCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                Column {
+                    id: notesListCol
+
+                    width: notesFlick.width
+
+                    Repeater {
+                        model: root.notesList
+
+                        Item {
+                            id: noteRow
+
+                            required property var modelData
+                            readonly property bool current: root.noteOpen === modelData.id
+
+                            width: notesListCol.width
+                            implicitHeight: noteTitle.implicitHeight + 6
+
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: noteRow.current || noteArea.containsMouse
+                                color: Colors.hoverFill
+                            }
+
+                            RowLayout {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.leftMargin: 2
+                                anchors.rightMargin: 4
+                                spacing: Metrics.spacing
+
+                                Label {
+                                    id: noteTitle
+
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: (noteRow.current ? "> " : "  ") + Notes.title(noteRow.modelData)
+                                    color: noteRow.current ? Colors.accent : Colors.fg
+                                }
+
+                                Label {
+                                    visible: root.notesFolder === "all"
+                                    text: noteRow.modelData.folder
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                Label {
+                                    text: Qt.formatDateTime(new Date(noteRow.modelData.updated), "dd.MM hh:mm")
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                Label {
+                                    text: "x"
+                                    opacity: noteArea.containsMouse ? 1 : 0
+                                    color: Colors.warn
+                                }
+                            }
+
+                            // click: open · the x on the right: delete
+                            MouseArea {
+                                id: noteArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: mouse => {
+                                    if (mouse.x > width - 20) {
+                                        if (root.noteOpen === noteRow.modelData.id)
+                                            root.openNote(0);
+                                        Notes.remove(noteRow.modelData.id);
+                                    } else {
+                                        root.openNote(noteRow.modelData.id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // the editor of the opened note
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                visible: root.noteOpen !== 0
+                implicitHeight: root.wide ? 300 : 220
+                color: Colors.bg
+                border.color: noteEdit.activeFocus ? Colors.dim : Colors.border
+                border.width: Metrics.borderWidth
+
+                Flickable {
+                    id: noteFlick
+
+                    anchors.fill: parent
+                    anchors.margins: Metrics.spacing
+                    clip: true
+                    contentHeight: noteEdit.contentHeight
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    TextEdit {
+                        id: noteEdit
+
+                        width: noteFlick.width
+                        color: Colors.fg
+                        font.family: Metrics.fontFamily
+                        font.pixelSize: Metrics.fontSize
+                        wrapMode: TextEdit.Wrap
+                        selectByMouse: true
+                        selectionColor: Colors.accent
+                        selectedTextColor: Colors.bg
+                        cursorDelegate: BlockCursor {
+                            visible: noteEdit.activeFocus
+                        }
+
+                        // the text is set only when a note is opened (root.openNote), never bound:
+                        // a binding would jump the cursor on every save
+                        onTextChanged: if (root.noteLoaded)
+                            noteSave.restart()
+
+                        // keep the cursor in view while typing
+                        onCursorRectangleChanged: {
+                            if (cursorRectangle.y < noteFlick.contentY)
+                                noteFlick.contentY = cursorRectangle.y;
+                            else if (cursorRectangle.y + cursorRectangle.height > noteFlick.contentY + noteFlick.height)
+                                noteFlick.contentY = cursorRectangle.y + cursorRectangle.height - noteFlick.height;
+                        }
+
+                        Label {
+                            visible: !noteEdit.text && !noteEdit.activeFocus
+                            text: "first line = title\n..."
+                            color: Colors.dim
+                        }
+                    }
+                }
+
+                Timer {
+                    id: noteSave
+
+                    interval: 500
+                    onTriggered: Notes.update(root.noteOpen, { body: noteEdit.text })
+                }
+            }
+
+            // move to a folder · delete
+            Flow {
+                Layout.fillWidth: true
+                visible: root.noteOpen !== 0
+                spacing: Metrics.spacing
+
+                Repeater {
+                    model: Notes.folders
+
+                    BracketButton {
+                        required property string modelData
+                        readonly property var note: Notes.notes.find(n => n.id === root.noteOpen)
+
+                        label: modelData
+                        bordered: false
+                        active: note?.folder === modelData
+                        textColor: note?.folder === modelData ? Colors.accent : Colors.dim
+                        onClicked: Notes.update(root.noteOpen, { folder: modelData })
+                    }
+                }
+
+                BracketButton {
+                    label: "delete"
+                    textColor: Colors.warn
+                    bordered: false
+                    onClicked: {
+                        const id = root.noteOpen;
+                        root.openNote(0);
+                        Notes.remove(id);
+                    }
+                }
+            }
+
+            Label {
+                Layout.alignment: Qt.AlignRight
+                text: `-- ${Notes.count("all")} notes · ~/.local/state/kawt/notes.json --`
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 3
+            }
         }
     }
 
@@ -1146,6 +1440,19 @@ ColumnLayout {
             prompt: "dir>"
             text: Settings.screenshotDir
             onAccepted: t => Settings.screenshotDir = t.trim() || Settings.screenshotDir
+        }
+
+        Label {
+            Layout.topMargin: Metrics.spacing
+            text: "bar"
+            color: Colors.dim
+        }
+
+        BracketButton {
+            tag: Settings.wifiName ? "x" : " "
+            label: "show the wifi name (off: only the signal)"
+            bordered: false
+            onClicked: Settings.wifiName = !Settings.wifiName
         }
 
         Label {
