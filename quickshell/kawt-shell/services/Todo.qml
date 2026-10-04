@@ -7,6 +7,7 @@ import qs.config
 // Tasks with optional reminders, saved in ~/.local/state/kawt/todo.json.
 // A task is typed as one line, the time is read from its start:
 //   14:30 call mom            today at 14:30 (tomorrow if that already passed)
+//   2:30pm call mom / 9am gym the same in 12-hour form
 //   +30m tea  /  +2h meeting  in 30 minutes / 2 hours
 //   05.10 10:00 dentist       on 5 october at 10:00
 //   buy milk                  no time
@@ -55,17 +56,20 @@ Singleton {
             const ms = parseInt(m[1]) * (m[2].toLowerCase() === "h" ? 3600000 : 60000);
             return { due: now.getTime() + ms, text: m[3] };
         }
-        if ((m = line.match(/^(\d{1,2})\.(\d{1,2})\s+(\d{1,2}):(\d{2})\s+(.+)$/))) {
-            const d = new Date(now.getFullYear(), parseInt(m[2]) - 1, parseInt(m[1]), parseInt(m[3]), parseInt(m[4]));
+        // a time token: 14:30 · 2:30pm · 2:30 pm · 9am  (checked by Time.parseClock)
+        const tm = "(\\d{1,2}(?::\\d{2})?(?:\\s*(?:am|pm|a\\.m\\.|p\\.m\\.))?)";
+        let c;
+        if ((m = line.match(new RegExp(`^(\\d{1,2})\\.(\\d{1,2})\\s+${tm}\\s+(.+)$`, "i"))) && (c = Time.parseClock(m[3]))) {
+            const d = new Date(now.getFullYear(), parseInt(m[2]) - 1, parseInt(m[1]), c.h, c.m);
             if (d < now)
                 d.setFullYear(d.getFullYear() + 1); // "05.01" in december means next january
-            return { due: d.getTime(), text: m[5] };
+            return { due: d.getTime(), text: m[4] };
         }
-        if ((m = line.match(/^(\d{1,2}):(\d{2})\s+(.+)$/))) {
-            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(m[1]), parseInt(m[2]));
+        if ((m = line.match(new RegExp(`^${tm}\\s+(.+)$`, "i"))) && (c = Time.parseClock(m[1]))) {
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), c.h, c.m);
             if (d < now)
                 d.setDate(d.getDate() + 1);
-            return { due: d.getTime(), text: m[3] };
+            return { due: d.getTime(), text: m[2] };
         }
         return { due: 0, text: line };
     }
@@ -78,7 +82,7 @@ Singleton {
     function when(ms: real): string {
         const d = new Date(ms), now = Time.now;
         const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        const time = Qt.formatTime(d, "hh:mm");
+        const time = Time.fmt(d);
         if (sameDay(d, now))
             return time;
         if (sameDay(d, tomorrow))
@@ -98,7 +102,7 @@ Singleton {
             if (due.length === 0)
                 return;
             for (const t of due)
-                Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Qt.formatTime(new Date(t.due), "hh:mm")}`]);
+                Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Time.fmt(new Date(t.due))}`]);
             const ids = due.map(t => t.id);
             adapter.tasks = root.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
         }

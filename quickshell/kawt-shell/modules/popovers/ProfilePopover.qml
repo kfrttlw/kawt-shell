@@ -356,7 +356,7 @@ Popover {
             Layout.fillWidth: true
             Layout.topMargin: Metrics.spacing
             prompt: "+"
-            placeholder: "14:30 call mom · +30m tea · 05.10 10:00 dentist · buy milk"
+            placeholder: "14:30 call mom · 9am gym · +30m tea · 05.10 10:00 dentist"
             onAccepted: t => {
                 todoInput.feedback = Todo.add(t);
                 todoInput.text = "";
@@ -640,7 +640,7 @@ Popover {
 
                 Layout.fillWidth: true
                 prompt: "time>"
-                placeholder: "14:30 · +3h · -30m  (only kawt's clock)"
+                placeholder: "14:30 · 2:30pm · +3h · -30m  (only kawt's clock)"
                 onAccepted: t => {
                     clockInput.error = Time.set(t);
                     if (!clockInput.error)

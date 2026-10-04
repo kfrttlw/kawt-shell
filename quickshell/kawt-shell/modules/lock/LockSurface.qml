@@ -61,7 +61,7 @@ WlSessionLockSurface {
 
                 Label {
                     Layout.alignment: Qt.AlignRight
-                    text: Qt.formatTime(Time.now, "hh:mm")
+                    text: Time.fmt(Time.now)
                     font.pixelSize: Metrics.fontSize * 4
                 }
 

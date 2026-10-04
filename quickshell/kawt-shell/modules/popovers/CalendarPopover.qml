@@ -127,7 +127,7 @@ Popover {
 
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: `${Qt.formatTime(new Date(modelData.due), "hh:mm")}  ${modelData.text}`
+                text: `${Time.fmt(new Date(modelData.due))}  ${modelData.text}`
                 color: modelData.due < Time.now.getTime() ? Colors.warn : Colors.fg
             }
         }
@@ -135,7 +135,7 @@ Popover {
 
     Label {
         Layout.alignment: Qt.AlignHCenter
-        text: `week ${root.weekNumber()} · ${Qt.formatTime(root.today, "hh:mm:ss")}`
+        text: `week ${root.weekNumber()} · ${Settings.clock24 ? Qt.formatTime(root.today, "hh:mm:ss") : Qt.formatTime(root.today, "h:mm:ss AP").toLowerCase()}`
         color: Colors.dim
         font.pixelSize: Metrics.fontSize - 2
     }
