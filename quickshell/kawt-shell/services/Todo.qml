@@ -11,41 +11,98 @@ import qs.config
 //   +30m tea  /  +2h meeting  in 30 minutes / 2 hours
 //   05.10 10:00 dentist       on 5 october at 10:00
 //   buy milk                  no time
+// Tags anywhere in the line:
+//   #work                     put it in the "work" folder (created if it doesn't exist)
+//   !  !!  !!!                importance: low / medium / high
+// Each task also has an icon and a free-text note, edited in the todo tab.
 // When a task is due, a notification is sent (it shows up in [log] like any other).
 // Times follow the shell clock (services/Time.qml), the same one the bar shows.
 Singleton {
     id: root
 
-    readonly property var tasks: adapter.tasks
-    // open tasks by time (timed first), then open without time, then done
-    readonly property var sorted: tasks.slice().sort((a, b) => (a.done - b.done) || ((a.due || Infinity) - (b.due || Infinity)) || (a.id - b.id))
+    // older tasks (before folders/importance/icons/notes) get the defaults
+    readonly property var tasks: adapter.tasks.map(t => Object.assign({ folder: "inbox", prio: 0, icon: "", note: "" }, t))
+    readonly property list<string> folders: adapter.folders
+    // nerd font glyphs to pick from: none, note, home, work, book, cart, heart, bolt, code, phone, star, bug
+    readonly property list<string> icons: ["", "\uf0f6", "\uf015", "\uf0b1", "\uf02d", "\uf07a", "\uf004", "\uf0e7", "\uf121", "\uf095", "\uf005", "\uf188"]
+    // open first; then important first; then by time (timed before untimed); then oldest first
+    readonly property var sorted: tasks.slice().sort((a, b) => (a.done - b.done) || (b.prio - a.prio) || ((a.due || Infinity) - (b.due || Infinity)) || (a.id - b.id))
     readonly property int open: tasks.filter(t => !t.done).length
     readonly property var today: sorted.filter(t => !t.done && t.due && sameDay(new Date(t.due), Time.now))
 
-    function add(line: string): string {
-        const parsed = parse(line.trim());
+    // tasks of one folder; "all" = every folder
+    function inFolder(folder: string): var {
+        return folder === "all" ? sorted : sorted.filter(t => t.folder === folder);
+    }
+
+    function openIn(folder: string): int {
+        return inFolder(folder).filter(t => !t.done).length;
+    }
+
+    // add a task from one typed line; `folder` is where it goes unless the line has a #tag
+    function add(line: string, folder: string): string {
+        let text = line.trim();
+        let prio = 0;
+        let tag = "";
+        text = text.replace(/(^|\s)#([^\s#]+)/g, (all, sp, name) => {
+            tag = name.toLowerCase();
+            return sp;
+        });
+        text = text.replace(/(^|\s)(!{1,3})(?=\s|$)/g, (all, sp, marks) => {
+            prio = marks.length;
+            return sp;
+        });
+        const parsed = parse(text.replace(/\s+/g, " ").trim());
         if (!parsed.text)
             return "";
-        adapter.tasks = [...tasks, {
+        const target = tag || (folder && folder !== "all" ? folder : "inbox");
+        if (!adapter.folders.includes(target))
+            adapter.folders = [...adapter.folders, target];
+        adapter.tasks = [...adapter.tasks, {
             id: Date.now(), // just a unique id, real time is fine
             text: parsed.text,
             due: parsed.due,
             done: false,
-            notified: parsed.due > 0 && parsed.due <= Time.ms()
+            notified: parsed.due > 0 && parsed.due <= Time.ms(),
+            folder: target,
+            prio,
+            icon: "",
+            note: ""
         }];
-        return parsed.due ? `reminder: ${when(parsed.due)}` : "added";
+        return [`added to ${target}`, parsed.due ? `reminder ${when(parsed.due)}` : ""].filter(s => s).join(" · ");
+    }
+
+    // change some fields of a task: update(id, { note: "...", prio: 2 })
+    function update(id: real, fields: var): void {
+        adapter.tasks = adapter.tasks.map(t => t.id === id ? Object.assign({}, t, fields) : t);
+    }
+
+    function addFolder(name: string): void {
+        name = name.trim().toLowerCase().replace(/\s+/g, "-");
+        if (name && name !== "all" && !adapter.folders.includes(name))
+            adapter.folders = [...adapter.folders, name];
+    }
+
+    // the folder's tasks move to inbox, nothing is lost
+    function removeFolder(name: string): void {
+        if (name === "inbox")
+            return;
+        adapter.tasks = adapter.tasks.map(t => t.folder === name ? Object.assign({}, t, { folder: "inbox" }) : t);
+        adapter.folders = adapter.folders.filter(f => f !== name);
     }
 
     function toggle(id: real): void {
-        adapter.tasks = tasks.map(t => t.id === id ? Object.assign({}, t, { done: !t.done }) : t);
+        const t = tasks.find(t => t.id === id);
+        if (t)
+            update(id, { done: !t.done });
     }
 
     function remove(id: real): void {
-        adapter.tasks = tasks.filter(t => t.id !== id);
+        adapter.tasks = adapter.tasks.filter(t => t.id !== id);
     }
 
-    function clearDone(): void {
-        adapter.tasks = tasks.filter(t => !t.done);
+    function clearDone(folder: string): void {
+        adapter.tasks = adapter.tasks.filter(t => !t.done || (folder !== "all" && (t.folder ?? "inbox") !== folder));
     }
 
     // "14:30 text" | "+30m text" | "+2h text" | "05.10 10:00 text" | "text"  ->  { due (ms, 0 = none), text }
@@ -104,7 +161,7 @@ Singleton {
             for (const t of due)
                 Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Time.fmt(new Date(t.due))}`]);
             const ids = due.map(t => t.id);
-            adapter.tasks = root.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
+            adapter.tasks = adapter.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
         }
     }
 
@@ -120,7 +177,8 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, notified }]
+            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, notified, folder, prio 0-3, icon, note }]
+            property var folders: ["inbox"]
         }
     }
 }

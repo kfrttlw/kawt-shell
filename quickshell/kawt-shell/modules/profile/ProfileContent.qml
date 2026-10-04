@@ -25,6 +25,10 @@ ColumnLayout {
     readonly property var upcoming: Todo.sorted.filter(t => !t.done)
     readonly property var next: Todo.sorted.find(t => !t.done && t.due > Time.now.getTime()) ?? null
     property string fortune: ""
+    // todo tab: the folder on the left, and which task is opened
+    property string todoFolder: "inbox"
+    property real todoOpen: 0
+    readonly property var todoTasks: Todo.inFolder(todoFolder)
 
     // 25m / 2h 10m / 3d
     function until(ms: real): string {
@@ -209,8 +213,6 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.topMargin: Metrics.spacing
                     visible: text !== ""
-                    wrapMode: Text.Wrap
-                    maximumLineCount: 3
                     elide: Text.ElideRight
                     text: Settings.motto === "" ? "" : `> ${Settings.motto === "fortune" ? root.fortune : Settings.motto}`
                     color: Colors.fg
@@ -518,160 +520,409 @@ ColumnLayout {
     }
 
     // --------------------------------------------------------------- todo
-    //  + 14:30 call mom█
-    //  [ ] 14:30           call mom
-    //  [ ] tomorrow 09:00  dentist
-    //  [x]                 buy milk
-    ColumnLayout {
+    //  folders        │ + 2pm call mom #family !!█
+    //  > inbox     3  │ !!  2:00 pm  call mom
+    //    work      2  │ ·            buy milk
+    //    all       5  │   ┌ note ────────────────────────┐
+    //  + folder       │   │ take the blue bag            │
+    //                 │   └──────────────────────────────┘
+    //                 │   icon  · ! !! !!!  inbox work  [delete]
+    RowLayout {
         Layout.fillWidth: true
+        Layout.topMargin: Metrics.spacing
         visible: tabs.current === 2
-        spacing: 2
+        spacing: Metrics.padding
 
-        TermInput {
-            id: todoInput
+        // folders
+        ColumnLayout {
+            Layout.preferredWidth: root.wide ? 190 : 140
+            Layout.maximumWidth: root.wide ? 190 : 140
+            Layout.alignment: Qt.AlignTop
+            spacing: 0
 
-            property string feedback: ""
-
-            Layout.fillWidth: true
-            Layout.topMargin: Metrics.spacing
-            prompt: "+"
-            placeholder: "14:30 call mom · 9am gym · +30m tea · 05.10 10:00 dentist"
-            onAccepted: t => {
-                todoInput.feedback = Todo.add(t);
-                todoInput.text = "";
-                feedbackTimer.restart();
+            Label {
+                text: "folders"
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
             }
 
-            Timer {
-                id: feedbackTimer
+            Repeater {
+                model: [...Todo.folders, "all"]
 
-                interval: 3000
-                onTriggered: todoInput.feedback = ""
-            }
-        }
+                Item {
+                    id: folderRow
 
-        Label {
-            Layout.alignment: Qt.AlignRight
-            text: todoInput.feedback
-            visible: text !== ""
-            color: Colors.accent
-            font.pixelSize: Metrics.fontSize - 2
-        }
+                    required property string modelData
+                    readonly property bool current: root.todoFolder === modelData
 
-        Label {
-            visible: Todo.tasks.length === 0
-            Layout.topMargin: Metrics.spacing
-            text: "-- nothing to do --"
-            color: Colors.dim
-        }
+                    Layout.fillWidth: true
+                    implicitHeight: folderLabel.implicitHeight + 4
 
-        Flickable {
-            id: todoFlick
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: folderRow.current || folderArea.containsMouse
+                        color: Colors.hoverFill
+                    }
 
-            Layout.fillWidth: true
-            Layout.topMargin: Metrics.spacing
-            Layout.preferredHeight: Math.min(260, todoList.implicitHeight)
-            visible: Todo.tasks.length > 0
-            clip: true
-            contentHeight: todoList.implicitHeight
-            boundsBehavior: Flickable.StopAtBounds
+                    Label {
+                        id: folderLabel
 
-            Column {
-                id: todoList
+                        anchors.left: parent.left
+                        anchors.right: folderCount.left
+                        anchors.leftMargin: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
+                        text: (folderRow.current ? "> " : "  ") + folderRow.modelData
+                        color: folderRow.current ? Colors.accent : Colors.fg
+                    }
 
-                width: todoFlick.width
+                    Label {
+                        id: folderCount
 
-                Repeater {
-                    model: Todo.sorted
+                        anchors.right: parent.right
+                        anchors.rightMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        // hovering a removable folder shows its x
+                        text: folderArea.containsMouse && folderRow.modelData !== "inbox" && folderRow.modelData !== "all" ? "x" : String(Todo.openIn(folderRow.modelData) || "")
+                        color: folderArea.containsMouse && text === "x" ? Colors.warn : Colors.dim
+                    }
 
-                    Item {
-                        id: task
+                    MouseArea {
+                        id: folderArea
 
-                        required property var modelData
-                        readonly property bool overdue: !modelData.done && modelData.due > 0 && modelData.due < Time.now.getTime()
-
-                        width: todoList.width
-                        implicitHeight: taskRow.implicitHeight + 4
-
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: taskArea.containsMouse
-                            color: Colors.hoverFill
-                        }
-
-                        RowLayout {
-                            id: taskRow
-
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 2
-                            anchors.rightMargin: 2
-                            spacing: Metrics.spacing
-
-                            Label {
-                                text: task.modelData.done ? "[x]" : "[ ]"
-                                color: task.modelData.done ? Colors.dim : Colors.accent
-                            }
-
-                            Label {
-                                Layout.preferredWidth: Metrics.fontSize * 0.6 * 14
-                                text: task.modelData.due ? Todo.when(task.modelData.due) : ""
-                                color: task.overdue ? Colors.warn : Colors.dim
-                            }
-
-                            Label {
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                text: task.modelData.text
-                                color: task.modelData.done ? Colors.dim : Colors.fg
-                                font.strikeout: task.modelData.done
-                            }
-
-                            Label {
-                                visible: taskArea.containsMouse
-                                text: "x"
-                                color: Colors.warn
-                            }
-                        }
-
-                        // click: done / not done; click on the x (right edge) or right click: delete
-                        MouseArea {
-                            id: taskArea
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                if (mouse.button === Qt.RightButton || mouse.x > width - 20)
-                                    Todo.remove(task.modelData.id);
-                                else
-                                    Todo.toggle(task.modelData.id);
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: mouse => {
+                            if (folderCount.text === "x" && mouse.x > width - 20) {
+                                if (root.todoFolder === folderRow.modelData)
+                                    root.todoFolder = "inbox";
+                                Todo.removeFolder(folderRow.modelData);
+                            } else {
+                                root.todoFolder = folderRow.modelData;
                             }
                         }
                     }
                 }
             }
+
+            TermInput {
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                prompt: "+"
+                placeholder: "folder"
+                onAccepted: t => {
+                    Todo.addFolder(t);
+                    root.todoFolder = t.trim().toLowerCase().replace(/\s+/g, "-") || root.todoFolder;
+                    text = "";
+                }
+            }
         }
 
-        RowLayout {
+        Rectangle {
+            Layout.fillHeight: true
+            implicitWidth: Metrics.borderWidth
+            color: Colors.border
+        }
+
+        // tasks of the folder
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.topMargin: Metrics.spacing
-            visible: Todo.tasks.length > 0
+            Layout.preferredWidth: 0
+            Layout.alignment: Qt.AlignTop
+            spacing: 2
+
+            TermInput {
+                id: todoInput
+
+                property string feedback: ""
+
+                Layout.fillWidth: true
+                prompt: "+"
+                placeholder: "2pm call mom #family !!"
+                onAccepted: t => {
+                    todoInput.feedback = Todo.add(t, root.todoFolder);
+                    todoInput.text = "";
+                    feedbackTimer.restart();
+                }
+
+                Timer {
+                    id: feedbackTimer
+
+                    interval: 3000
+                    onTriggered: todoInput.feedback = ""
+                }
+            }
 
             Label {
                 Layout.fillWidth: true
-                text: `-- ${Todo.open} open · reminders go to [log] --`
-                color: Colors.dim
+                elide: Text.ElideRight
+                text: todoInput.feedback || "time first: 14:30 · 9am · +30m · 05.10 10:00   tags: #folder  ! !! !!!"
+                color: todoInput.feedback ? Colors.accent : Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }
 
-            BracketButton {
-                visible: Todo.open < Todo.tasks.length
-                label: "clear done"
-                bordered: false
-                onClicked: Todo.clearDone()
+            Label {
+                visible: root.todoTasks.length === 0
+                Layout.topMargin: Metrics.spacing
+                text: "-- nothing here --"
+                color: Colors.dim
+            }
+
+            Flickable {
+                id: todoFlick
+
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                Layout.preferredHeight: Math.min(root.wide ? 460 : 320, todoList.implicitHeight)
+                visible: root.todoTasks.length > 0
+                clip: true
+                contentHeight: todoList.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                Column {
+                    id: todoList
+
+                    width: todoFlick.width
+                    spacing: 1
+
+                    Repeater {
+                        model: root.todoTasks
+
+                        Column {
+                            id: task
+
+                            required property var modelData
+                            readonly property bool expanded: root.todoOpen === modelData.id
+                            readonly property bool overdue: !modelData.done && modelData.due > 0 && modelData.due < Time.now.getTime()
+
+                            width: todoList.width
+
+                            // ---- the task line: [ ] icon !!  2:00 pm  text            note x
+                            Item {
+                                width: parent.width
+                                implicitHeight: taskRow.implicitHeight + 6
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    visible: taskArea.containsMouse || task.expanded
+                                    color: Colors.hoverFill
+                                }
+
+                                RowLayout {
+                                    id: taskRow
+
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.leftMargin: 2
+                                    anchors.rightMargin: 4
+                                    spacing: Metrics.spacing
+
+                                    Label {
+                                        text: task.modelData.done ? "[x]" : "[ ]"
+                                        color: task.modelData.done ? Colors.dim : Colors.accent
+                                    }
+
+                                    Label {
+                                        Layout.preferredWidth: Metrics.fontSize
+                                        text: task.modelData.icon
+                                        color: task.modelData.done ? Colors.dim : Colors.fg
+                                    }
+
+                                    Label {
+                                        Layout.preferredWidth: Metrics.fontSize * 0.6 * 3
+                                        text: "!".repeat(task.modelData.prio)
+                                        color: task.modelData.done ? Colors.dim : task.modelData.prio >= 3 ? Colors.warn : Colors.accent
+                                        font.bold: true
+                                    }
+
+                                    Label {
+                                        visible: task.modelData.due > 0
+                                        text: task.modelData.due ? Todo.when(task.modelData.due) : ""
+                                        color: task.overdue ? Colors.warn : Colors.dim
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                        text: task.modelData.text
+                                        color: task.modelData.done ? Colors.dim : Colors.fg
+                                        font.strikeout: task.modelData.done
+                                    }
+
+                                    // a note is inside
+                                    Label {
+                                        visible: task.modelData.note !== ""
+                                        text: ""
+                                        color: Colors.dim
+                                    }
+
+                                    Label {
+                                        visible: root.todoFolder === "all"
+                                        text: task.modelData.folder
+                                        color: Colors.dim
+                                        font.pixelSize: Metrics.fontSize - 2
+                                    }
+                                }
+
+                                // the box toggles done; anywhere else opens the task
+                                MouseArea {
+                                    id: taskArea
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: mouse => {
+                                        if (mouse.x < Metrics.fontSize * 2.4)
+                                            Todo.toggle(task.modelData.id);
+                                        else
+                                            root.todoOpen = task.expanded ? 0 : task.modelData.id;
+                                    }
+                                }
+                            }
+
+                            // ---- opened: note, icon, importance, folder, delete
+                            ColumnLayout {
+                                visible: task.expanded
+                                x: Metrics.fontSize * 2
+                                width: parent.width - x - 4
+                                spacing: Metrics.spacing
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: 4
+                                    implicitHeight: Math.max(60, note.contentHeight + 12)
+                                    color: Colors.bg
+                                    border.color: note.activeFocus ? Colors.dim : Colors.border
+                                    border.width: Metrics.borderWidth
+
+                                    TextEdit {
+                                        id: note
+
+                                        anchors.fill: parent
+                                        anchors.margins: 6
+                                        text: task.modelData.note
+                                        color: Colors.fg
+                                        font.family: Metrics.fontFamily
+                                        font.pixelSize: Metrics.fontSize - 1
+                                        wrapMode: TextEdit.Wrap
+                                        selectByMouse: true
+                                        selectionColor: Colors.accent
+                                        selectedTextColor: Colors.bg
+                                        cursorDelegate: BlockCursor {
+                                            visible: note.activeFocus
+                                        }
+                                        // saved when you click away: saving on every key would
+                                        // rebuild the list under the cursor
+                                        onActiveFocusChanged: if (!activeFocus && text !== task.modelData.note)
+                                            Todo.update(task.modelData.id, { note: text })
+
+                                        Label {
+                                            visible: !note.text && !note.activeFocus
+                                            text: "note..."
+                                            color: Colors.dim
+                                            font.pixelSize: Metrics.fontSize - 1
+                                        }
+                                    }
+                                }
+
+                                // icon
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    Repeater {
+                                        model: Todo.icons
+
+                                        BracketButton {
+                                            required property string modelData
+
+                                            label: modelData || " "
+                                            bordered: false
+                                            active: task.modelData.icon === modelData
+                                            textColor: task.modelData.icon === modelData ? Colors.accent : Colors.dim
+                                            onClicked: Todo.update(task.modelData.id, { icon: modelData })
+                                        }
+                                    }
+                                }
+
+                                // importance · folder · delete
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: Metrics.spacing
+
+                                    Repeater {
+                                        model: ["·", "!", "!!", "!!!"]
+
+                                        BracketButton {
+                                            required property string modelData
+                                            required property int index
+
+                                            label: modelData
+                                            active: task.modelData.prio === index
+                                            textColor: task.modelData.prio === index ? (index >= 3 ? Colors.warn : Colors.accent) : Colors.dim
+                                            onClicked: Todo.update(task.modelData.id, { prio: index })
+                                        }
+                                    }
+
+                                    Label {
+                                        text: " "
+                                    }
+
+                                    Repeater {
+                                        model: Todo.folders
+
+                                        BracketButton {
+                                            required property string modelData
+
+                                            label: modelData
+                                            bordered: false
+                                            active: task.modelData.folder === modelData
+                                            textColor: task.modelData.folder === modelData ? Colors.accent : Colors.dim
+                                            onClicked: Todo.update(task.modelData.id, { folder: modelData })
+                                        }
+                                    }
+
+                                    BracketButton {
+                                        label: "delete"
+                                        textColor: Colors.warn
+                                        bordered: false
+                                        onClicked: {
+                                            root.todoOpen = 0;
+                                            Todo.remove(task.modelData.id);
+                                        }
+                                    }
+                                }
+
+                                Item {
+                                    implicitHeight: 4
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Metrics.spacing
+                visible: root.todoTasks.length > 0
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: `-- ${Todo.openIn(root.todoFolder)} open · click a task to open it · reminders go to [log] --`
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 3
+                }
+
+                BracketButton {
+                    visible: root.todoTasks.some(t => t.done)
+                    label: "clear done"
+                    bordered: false
+                    onClicked: Todo.clearDone(root.todoFolder)
+                }
             }
         }
     }
@@ -837,6 +1088,7 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             visible: text !== ""
+            elide: Text.ElideRight
             text: clockInput.error !== "" ? clockInput.error
                 : Time.offset !== 0 ? `kawt runs ${Time.offsetText} from the system clock (todo reminders too)` : ""
             color: clockInput.error !== "" ? Colors.warn : Colors.dim
@@ -883,7 +1135,9 @@ ColumnLayout {
 
         Label {
             Layout.topMargin: Metrics.spacing
-            text: "screenshots  (print · super+shift+s area · shift+print screen · alt+print window)"
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: "screenshots  (print / super+shift+s: area · shift+print: screen · alt+print: window)"
             color: Colors.dim
         }
 
@@ -952,8 +1206,16 @@ ColumnLayout {
         Label {
             Layout.topMargin: Metrics.spacing
             Layout.fillWidth: true
-            wrapMode: Text.Wrap
-            text: "[?] hyprland binds: see hypr/kawt.lua in the config folder\n[?] in the ai panel: /model <name>, /models"
+            elide: Text.ElideRight
+            text: "[?] hyprland binds: see hypr/kawt.lua in the config folder"
+            color: Colors.dim
+            font.pixelSize: Metrics.fontSize - 2
+        }
+
+        Label {
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: "[?] in the ai panel: /model <name>, /models"
             color: Colors.dim
             font.pixelSize: Metrics.fontSize - 2
         }
