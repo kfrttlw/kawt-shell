@@ -12,6 +12,7 @@ import "../launcher"
 import "../style"
 import "../background"
 import "../osd"
+import "../profile"
 
 Variants {
     model: Quickshell.screens
@@ -205,6 +206,10 @@ Variants {
         }
 
         StyleWindow {
+            forScreen: root.modelData
+        }
+
+        Dashboard {
             forScreen: root.modelData
         }
 

@@ -18,7 +18,7 @@ configs, all in one monospace, square-cornered, text-first style.
 
 | | |
 |---|---|
-| `[~]` profile | neofetch-style system info, live cpu/mem graphs, a `top` with kill, notes, settings, power buttons |
+| `[~]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo with reminders, notes, settings, power buttons |
 | `[$]` dock | pinned apps |
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai |
 | `[>_]` ai | local chat with an [ollama](https://ollama.com) model, streamed; nothing leaves the machine |
@@ -27,6 +27,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
 | osd | volume / brightness pop up when they change |
+| screenshots | area / window / screen, saved and copied to the clipboard |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
 ## Layout
@@ -62,7 +63,7 @@ kawt can never take Hyprland down). Running it again is safe.
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
-**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme`, `brightnessctl` on laptops
+**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard`, `brightnessctl` on laptops
 **Optional:** `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
 
 ## Keys
@@ -75,8 +76,9 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 | `super + a` | ai panel |
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
 | `super + n` / `super + shift + n` | notifications / do not disturb |
-| `super + i` | profile |
+| `super + i` | profile, full screen (`[~]` opens the small one) |
 | `super + l` | lock screen |
+| `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window) |
 
 In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.
 Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`.

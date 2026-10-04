@@ -16,6 +16,9 @@ Singleton {
     property alias clockSeconds: adapter.clockSeconds
     property alias clockDate: adapter.clockDate
     property alias timeOffset: adapter.timeOffset
+    property alias motto: adapter.motto
+    property alias profileArt: adapter.profileArt
+    property alias screenshotDir: adapter.screenshotDir
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
     property alias device: adapter.device
@@ -50,6 +53,9 @@ Singleton {
             property bool clockSeconds: false
             property bool clockDate: false // weekday and date in the bar clock
             property int timeOffset: 0 // minutes the shell clock runs ahead (+) or behind (-) the system clock
+            property string motto: "stay curious" // profile header line; "fortune" = a new one each time, "" = none
+            property string profileArt: "auto" // "auto": ~/.face as ascii if it exists, "machine": always the thinkpad/pc
+            property string screenshotDir: "~/Pictures/screenshots"
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop

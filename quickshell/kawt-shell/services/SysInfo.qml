@@ -9,7 +9,7 @@ import qs.config
 Singleton {
     id: root
 
-    readonly property bool active: Panels.current === "profile"
+    readonly property bool active: Panels.current === "profile" || Panels.current === "dashboard"
 
     readonly property string user: Quickshell.env("USER") ?? "user"
     property string host: ""

@@ -109,6 +109,11 @@ Popover {
             onClicked: Panels.toggle("style", root.forScreen)
         }
 
+        BracketButton {
+            label: "shot"
+            onClicked: Screenshot.take("region")
+        }
+
         Label {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignRight

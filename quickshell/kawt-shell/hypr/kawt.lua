@@ -36,8 +36,13 @@ try("binds", function()
     hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(kawt .. "toggleLight")) -- dark <-> light
     hl.bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
     hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
-    hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle profile")) -- sys / top / notes / cfg
+    hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
     hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- kawt lock screen
+    -- screenshots: saved to the folder from the profile's cfg tab, and copied
+    hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region"))
+    hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region"))
+    hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen"))
+    hl.bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window"))
 end)
 
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over

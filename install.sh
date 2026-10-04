@@ -195,6 +195,9 @@ need "$(has kitty)" "kitty" kitty "the terminal kawt configures"
 need "$font_ok" "JetBrainsMono Nerd Font" ttf-jetbrains-mono-nerd "the font of the bar and of kitty"
 need "$icons_ok" "Papirus icons" papirus-icon-theme "app icons in the launcher, dock and tray"
 need "$(has notify-send)" "notify-send" libnotify "todo reminders"
+need "$(has grim)" "grim" grim "screenshots"
+need "$(has slurp)" "slurp" slurp "picking a screenshot area"
+need "$(has wl-copy)" "wl-clipboard" wl-clipboard "screenshots and copies to the clipboard"
 # brightness only matters where there is a backlight (laptops)
 if compgen -G "/sys/class/backlight/*" > /dev/null; then
     need "$(has brightnessctl)" "brightnessctl" brightnessctl "screen brightness"
