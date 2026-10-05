@@ -1444,15 +1444,58 @@ ColumnLayout {
 
         Label {
             Layout.topMargin: Metrics.spacing
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: "recordings  (super+shift+r area · super+alt+r screen · again: stop)"
+            color: Colors.dim
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Metrics.spacing
+
+            TermInput {
+                Layout.fillWidth: true
+                prompt: "dir>"
+                text: Settings.recordDir
+                onAccepted: t => Settings.recordDir = t.trim() || Settings.recordDir
+            }
+
+            BracketButton {
+                tag: Settings.recordAudio ? "x" : " "
+                label: "mic audio"
+                bordered: false
+                onClicked: Settings.recordAudio = !Settings.recordAudio
+            }
+        }
+
+        Label {
+            Layout.topMargin: Metrics.spacing
             text: "bar"
             color: Colors.dim
         }
 
-        BracketButton {
-            tag: Settings.wifiName ? "x" : " "
-            label: "show the wifi name (off: only the signal)"
-            bordered: false
-            onClicked: Settings.wifiName = !Settings.wifiName
+        // wifi button: [name] bars hidden
+        RowLayout {
+            spacing: Metrics.spacing
+
+            Label {
+                text: "wifi:"
+                color: Colors.dim
+            }
+
+            Repeater {
+                model: [["name", "name"], ["bars", "▂▄▆_"], ["hidden", "hidden (click the graph)"]]
+
+                BracketButton {
+                    required property var modelData
+
+                    label: modelData[1]
+                    active: Settings.wifiStyle === modelData[0]
+                    textColor: Settings.wifiStyle === modelData[0] ? Colors.accent : Colors.dim
+                    onClicked: Settings.wifiStyle = modelData[0]
+                }
+            }
         }
 
         Label {

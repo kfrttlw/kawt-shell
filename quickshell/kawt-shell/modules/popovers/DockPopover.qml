@@ -114,6 +114,12 @@ Popover {
             onClicked: Screenshot.take("region")
         }
 
+        BracketButton {
+            label: Recorder.recording ? "stop rec" : "rec"
+            textColor: Recorder.recording ? Colors.warn : Colors.fg
+            onClicked: Recorder.toggle("region")
+        }
+
         Label {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignRight

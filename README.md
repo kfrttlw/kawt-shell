@@ -26,7 +26,10 @@ configs, all in one monospace, square-cornered, text-first style.
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper), each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
-| osd | volume / brightness pop up when they change |
+| osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
+| bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
+| mic | `[mic ● discord]` appears while an app records you (red), click to mute |
+| recording | `[● rec 0:42]` in the bar; area or whole screen, optional mic audio |
 | screenshots | area / window / screen, saved and copied to the clipboard |
 | prompt | an oh-my-zsh theme: `┌[user@host]─[~/dir]─[branch*]` / `└$`, greeting with your motto; uses the 16 terminal colors, so it follows the theme |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
@@ -65,7 +68,7 @@ kawt can never take Hyprland down). Running it again is safe.
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
-**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist`, `brightnessctl` on laptops
+**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder`, `brightnessctl` on laptops
 **Optional:** `oh-my-zsh` (prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
 
 ## Keys
@@ -81,7 +84,9 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 | `super + n` / `super + shift + n` | notifications / do not disturb |
 | `super + i` | profile, full screen (`[~]` opens the small one) |
 | `super + l` | lock screen |
+| `super + escape` | power menu: shutdown / reboot / suspend / logout / lock, with a 5 s countdown |
 | `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window) |
+| `super + shift + r` / `super + alt + r` | record an area / the screen (same key again: stop) |
 
 In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.
 Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`.

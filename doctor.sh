@@ -79,5 +79,45 @@ else
     info "no .zshrc"
 fi
 
+echo "-- features"
+# kawt.lua is loaded with dofile: hyprland doesn't see edits to it until a reload
+if command -v hyprctl > /dev/null; then
+    if hyprctl binds 2> /dev/null | grep -F "kawt record" > /dev/null; then
+        good "hyprland has the current kawt binds"
+    else
+        fail "hyprland runs older kawt binds (recording keys are missing)" "hyprctl reload"
+    fi
+fi
+for tool in wf-recorder:recording grim:screenshots slurp:"area selection" cliphist:"clipboard history"; do
+    command -v "${tool%%:*}" > /dev/null && good "${tool%%:*}" || fail "${tool%%:*} is missing (${tool#*:})" "sudo pacman -S ${tool%%:*}"
+done
+if ls /sys/class/bluetooth 2> /dev/null | grep -q .; then
+    if systemctl is-active --quiet bluetooth 2> /dev/null; then
+        good "bluetooth service is running"
+    else
+        fail "bluetooth service isn't running" "sudo pacman -S --needed bluez bluez-utils && sudo systemctl enable --now bluetooth"
+    fi
+fi
+
+echo "-- ai (ollama)"
+model=$(setting ollamaModel)
+url=$(setting ollamaUrl)
+url=${url:-http://localhost:11434}
+if ! command -v ollama > /dev/null; then
+    fail "ollama is not installed" "sudo pacman -S ollama   (or ollama-rocm / ollama-cuda for the gpu)"
+elif ! tags=$(curl -s -m 3 "$url/api/tags"); then
+    fail "ollama doesn't answer at $url" "start it: sudo systemctl enable --now ollama"
+else
+    good "ollama answers at $url"
+    pulled=$(printf '%s' "$tags" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' ')
+    if [[ -z $pulled ]]; then
+        fail "no models downloaded" "ollama pull ${model:-llama3.2}"
+    elif [[ " $pulled " == *" ${model:-llama3.2} "* || " $pulled " == *" ${model:-llama3.2}:latest "* ]]; then
+        good "model ${model:-llama3.2} is downloaded"
+    else
+        fail "kawt uses model '${model:-llama3.2}', but it isn't downloaded" "ollama pull ${model:-llama3.2}   (downloaded: $pulled)"
+    fi
+fi
+
 echo
 if ((problems)); then echo "$problems problem(s) above"; else echo "all good. colors still off? run ./colortest.sh"; fi

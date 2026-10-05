@@ -13,6 +13,7 @@ import "../style"
 import "../background"
 import "../osd"
 import "../profile"
+import "../power"
 
 Variants {
     model: Quickshell.screens
@@ -73,6 +74,7 @@ Variants {
             }
 
             NetGraph {
+                id: netGraph
                 active: Panels.isOpen("wifi", root.modelData)
                 onClicked: Panels.toggle("wifi", root.modelData)
             }
@@ -103,6 +105,8 @@ Variants {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Metrics.spacing
 
+            RecButton {}
+
             Tray {
                 id: tray
                 active: Panels.isOpen("tray", root.modelData)
@@ -110,6 +114,14 @@ Variants {
             }
 
             KbButton {}
+
+            BtButton {
+                id: bluetooth
+                active: Panels.isOpen("bluetooth", root.modelData)
+                onClicked: Panels.toggle("bluetooth", root.modelData)
+            }
+
+            MicButton {}
 
             VolumeButton {
                 id: volume
@@ -169,7 +181,8 @@ Variants {
 
         WifiPopover {
             forScreen: root.modelData
-            anchorItem: wifi
+            // with the wifi button hidden, the panel opens under the net graph
+            anchorItem: wifi.visible ? wifi : netGraph
         }
 
         VolumePopover {
@@ -180,6 +193,11 @@ Variants {
         BrightnessPopover {
             forScreen: root.modelData
             anchorItem: brightness
+        }
+
+        BluetoothPopover {
+            forScreen: root.modelData
+            anchorItem: bluetooth
         }
 
         BatteryPopover {
@@ -210,6 +228,10 @@ Variants {
         }
 
         Dashboard {
+            forScreen: root.modelData
+        }
+
+        PowerMenu {
             forScreen: root.modelData
         }
 
