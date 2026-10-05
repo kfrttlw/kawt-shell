@@ -10,6 +10,10 @@
 
 setopt prompt_subst
 
+# zsh shows pasted text inverted (paste:standout) until the next key, which looks like the
+# terminal blinking on every paste. Keep the other highlights, drop that one.
+zle_highlight=(${zle_highlight:#paste:*} paste:none)
+
 # ─[branch*] inside a git repo, nothing outside. Plain git, no oh-my-zsh needed.
 kawt_git() {
     local branch

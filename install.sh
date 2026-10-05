@@ -224,6 +224,7 @@ need "$(has grim)" "grim" grim "screenshots"
 need "$(has slurp)" "slurp" slurp "picking a screenshot area"
 need "$(has wl-copy)" "wl-clipboard" wl-clipboard "screenshots and copies to the clipboard"
 need "$(has cliphist)" "cliphist" cliphist "clipboard history (super+shift+v)"
+need "$(has wf-recorder)" "wf-recorder" wf-recorder "screen recording (super+shift+r)"
 # brightness only matters where there is a backlight (laptops)
 if compgen -G "/sys/class/backlight/*" > /dev/null; then
     need "$(has brightnessctl)" "brightnessctl" brightnessctl "screen brightness"

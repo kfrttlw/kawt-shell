@@ -10,7 +10,7 @@ Singleton {
     id: root
 
     // polls only while something shows it: the profile, the dashboard, the lock screen
-    readonly property bool active: Panels.current === "profile" || Panels.current === "dashboard" || Panels.locked
+    readonly property bool active: Panels.current === "profile" || Panels.current === "dashboard" || Panels.current === "power" || Panels.locked
 
     readonly property string user: Quickshell.env("USER") ?? "user"
     property string host: ""

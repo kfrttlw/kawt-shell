@@ -70,26 +70,28 @@ function palette(px) {
     const d = dominant(px);
     const h = d.hue;
     // gray wallpaper: no tint, a light-gray accent like mono
-    const tint = d.colorful ? 1 : 0;
-    const accentSat = d.colorful ? Math.max(0.45, Math.min(0.8, d.sat)) : 0;
+    const t = d.colorful ? 1 : 0;
+    const accentSat = d.colorful ? Math.max(0.55, Math.min(0.85, d.sat)) : 0;
+    // the whole theme is tinted, not just the accent: background, text, borders and highlights
+    // all carry the wallpaper's hue, strong enough to see at a glance, still calm enough to read
     return {
         dark: {
-            bg: hsl2hex(h, 0.14 * tint, 0.06),
-            fg: hsl2hex(h, 0.1 * tint, 0.87),
-            dim: hsl2hex(h, 0.08 * tint, 0.5),
-            border: hsl2hex(h, 0.12 * tint, 0.22),
+            bg: hsl2hex(h, 0.35 * t, 0.07),
+            fg: hsl2hex(h, 0.3 * t, 0.86),
+            dim: hsl2hex(h, 0.22 * t, 0.55),
+            border: hsl2hex(h, 0.32 * t, 0.26),
             accent: d.colorful ? hsl2hex(h, accentSat, 0.62) : "#e6e6e2",
             warn: "#e06c60",
-            hoverFill: hsl2hex(h, 0.12 * tint, 0.11)
+            hoverFill: hsl2hex(h, 0.32 * t, 0.13)
         },
         light: {
-            bg: hsl2hex(h, 0.18 * tint, 0.93),
-            fg: hsl2hex(h, 0.12 * tint, 0.1),
-            dim: hsl2hex(h, 0.08 * tint, 0.44),
-            border: hsl2hex(h, 0.12 * tint, 0.74),
-            accent: d.colorful ? hsl2hex(h, accentSat, 0.3) : "#121212",
+            bg: hsl2hex(h, 0.4 * t, 0.91),
+            fg: hsl2hex(h, 0.35 * t, 0.13),
+            dim: hsl2hex(h, 0.22 * t, 0.42),
+            border: hsl2hex(h, 0.3 * t, 0.72),
+            accent: d.colorful ? hsl2hex(h, accentSat, 0.32) : "#121212",
             warn: "#b3261e",
-            hoverFill: hsl2hex(h, 0.15 * tint, 0.86)
+            hoverFill: hsl2hex(h, 0.38 * t, 0.84)
         }
     };
 }

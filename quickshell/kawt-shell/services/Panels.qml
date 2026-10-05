@@ -8,11 +8,12 @@ import qs.config
 // Which popover / sidebar is open, and on which screen.
 // Only one popover can be open at a time; the sidebar is independent.
 //
-//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|calendar|player|volume|brightness|battery|wifi|notifs
+//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|power|calendar|player|volume|brightness|battery|wifi|notifs
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen
+//   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
 //   qs -c kawt-shell ipc call kawt close
 //   qs -c kawt-shell ipc call kawt dnd
 //   qs -c kawt-shell ipc call kawt toggleLight
@@ -107,6 +108,10 @@ Singleton {
         function lockTest(): void {
             root.lockTest = true;
             root.locked = true;
+        }
+
+        function record(mode: string): void {
+            Recorder.toggle(mode || "region");
         }
 
         function screenshot(mode: string): void {

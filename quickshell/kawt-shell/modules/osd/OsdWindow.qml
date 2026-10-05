@@ -19,7 +19,7 @@ PanelWindow {
     screen: forScreen
     visible: (Osd.shown || box.opacity > 0) && forScreen.name === Panels.focusedScreen
     color: "transparent"
-    implicitWidth: 320
+    implicitWidth: Math.max(320, line.implicitWidth + Metrics.padding * 4)
     implicitHeight: box.height + box.titleOverhang + 2
 
     WlrLayershell.namespace: "kawt-osd"
@@ -36,7 +36,7 @@ PanelWindow {
         y: titleOverhang
         width: parent.width
         height: line.implicitHeight + Metrics.padding * 2 + titleOverhang
-        title: Osd.kind === "br" ? "brightness" : "volume"
+        title: ({ br: "brightness", charge: "charging", unplug: "on battery" })[Osd.kind] ?? "volume"
         hint: Osd.muted ? "muted" : ""
         opacity: Osd.shown ? 1 : 0
 
@@ -52,7 +52,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Metrics.padding
-            text: `[${Fmt.bar(Osd.muted ? 0 : Osd.value, 24)}] ${String(Math.round(Osd.value * 100)).padStart(3)}%`
+            text: `[${Fmt.bar(Osd.muted ? 0 : Osd.value, 24)}] ${String(Math.round(Osd.value * 100)).padStart(3)}%` + (Osd.extra ? ` · ${Osd.extra}` : "")
             color: Osd.muted ? Colors.dim : Colors.fg
         }
     }

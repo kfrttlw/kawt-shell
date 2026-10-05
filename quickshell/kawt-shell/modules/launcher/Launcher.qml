@@ -261,6 +261,42 @@ PanelWindow {
                 color: Colors.dim
             }
 
+            // clipboard: [clear history] (second click: sure?)
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.mode === ":" && root.clips.length > 0
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                BracketButton {
+                    id: wipeButton
+
+                    property bool armed: false
+
+                    label: armed ? "sure? click again" : "clear history"
+                    textColor: Colors.warn
+                    bordered: false
+                    onClicked: {
+                        if (armed) {
+                            armed = false;
+                            Clipboard.wipe();
+                        } else {
+                            armed = true;
+                            wipeDisarm.restart();
+                        }
+                    }
+
+                    Timer {
+                        id: wipeDisarm
+
+                        interval: 3000
+                        onTriggered: wipeButton.armed = false
+                    }
+                }
+            }
+
             // clipboard history: newest first
             ListView {
                 id: clipList

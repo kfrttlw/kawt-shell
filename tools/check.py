@@ -32,7 +32,8 @@ external = {
     "Pipewire": "Quickshell.Services.Pipewire", "PwObjectTracker": "Quickshell.Services.Pipewire",
     "Mpris": "Quickshell.Services.Mpris", "SystemTray": "Quickshell.Services.SystemTray",
     "NotificationServer": "Quickshell.Services.Notifications", "Hyprland": "Quickshell.Hyprland",
-    "Networking": "Quickshell.Networking",
+    "Networking": "Quickshell.Networking", "Bluetooth": "Quickshell.Bluetooth",
+    "BluetoothDeviceState": "Quickshell.Bluetooth",
     "RowLayout": "QtQuick.Layouts", "ColumnLayout": "QtQuick.Layouts", "GridLayout": "QtQuick.Layouts",
     "MultiEffect": "QtQuick.Effects",
 }

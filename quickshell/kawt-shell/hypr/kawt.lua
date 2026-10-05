@@ -39,11 +39,15 @@ try("binds", function()
     hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
     hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
     hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- kawt lock screen
+    hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
     -- screenshots: saved to the folder from the profile's cfg tab, and copied
     hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region"))
     hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region"))
     hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen"))
     hl.bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window"))
+    -- screen recording: the same key again stops it
+    hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(kawt .. "record region"))
+    hl.bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen"))
 end)
 
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over
@@ -62,7 +66,7 @@ end)
 try("layer rule", function()
     hl.layer_rule({
         name = "kawt-no-anim",
-        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd)$" },
+        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd|power|dashboard)$" },
         no_anim = true,
     })
 end)
