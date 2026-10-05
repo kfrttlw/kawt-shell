@@ -8,6 +8,7 @@
 -- The launcher sits on SUPER + SPACE (where rofi usually is) and SUPER + R opens it in
 -- run mode: comment out your own SUPER + SPACE / SUPER + R lines, otherwise both fire.
 
+-- every bind ends with a "-- comment": the key list (super + /) is read from them
 local kawt = "qs -c kawt-shell ipc call kawt "
 local mod = "SUPER"
 
@@ -38,16 +39,17 @@ try("binds", function()
     hl.bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
     hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
     hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
-    hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- kawt lock screen
+    hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
+    hl.bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
     hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
     -- screenshots: saved to the folder from the profile's cfg tab, and copied
-    hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region"))
-    hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region"))
-    hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen"))
-    hl.bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window"))
+    hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
+    hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
+    hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen")) -- screenshot of the screen
+    hl.bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window")) -- screenshot of the window
     -- screen recording: the same key again stops it
-    hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(kawt .. "record region"))
-    hl.bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen"))
+    hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(kawt .. "record region")) -- record an area (again: stop)
+    hl.bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen")) -- record the screen (again: stop)
 end)
 
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over

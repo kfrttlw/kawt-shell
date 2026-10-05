@@ -22,6 +22,26 @@ Singleton {
     property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
     property alias recordDir: adapter.recordDir
+    property alias aiProvider: adapter.aiProvider
+    property alias aiCtx: adapter.aiCtx
+    property alias aiThreads: adapter.aiThreads
+    property alias aiGpuLayers: adapter.aiGpuLayers
+    property alias aiKeepAlive: adapter.aiKeepAlive
+    property alias aiTemperature: adapter.aiTemperature
+    property alias aiHistory: adapter.aiHistory
+    property alias aiSystem: adapter.aiSystem
+    property alias apiUrl: adapter.apiUrl
+    property alias apiModel: adapter.apiModel
+    property alias aiWide: adapter.aiWide
+    property alias aiFolder: adapter.aiFolder
+    property alias aiPersona: adapter.aiPersona
+    property alias aiMaxAnswer: adapter.aiMaxAnswer
+    property alias aiCompare: adapter.aiCompare
+    property alias aiCompareModel: adapter.aiCompareModel
+    property alias aiZoom: adapter.aiZoom
+    property alias aiSide: adapter.aiSide
+    property alias aiUserLabel: adapter.aiUserLabel
+    property alias aiBotLabel: adapter.aiBotLabel
     property alias recordAudio: adapter.recordAudio
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
@@ -63,6 +83,27 @@ Singleton {
             property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the "wallpaper" theme: { source, dark, light } from utils/wallpalette.js
             property string recordDir: "~/Videos/recordings"
+            // ai (services/Ai.qml): provider, and how much the local model may take
+            property string aiProvider: "ollama" // "ollama" | "api"
+            property int aiCtx: 4096 // context window (num_ctx): memory grows with it
+            property int aiThreads: 0 // cpu threads for ollama, 0 = it decides
+            property int aiGpuLayers: -1 // layers on the gpu, -1 = ollama decides, 0 = cpu only
+            property string aiKeepAlive: "5m" // how long the model stays loaded after an answer; "0" = free at once
+            property real aiTemperature: 0.7
+            property int aiHistory: 20 // earlier messages sent along as context
+            property string aiSystem: "Answer briefly and informatively. Get straight to the point, skip filler and repetition. Use a list or a code block only when it really helps. Answer in the language of the question." // system prompt
+            property string apiUrl: "https://api.openai.com/v1" // any OpenAI-compatible service
+            property string apiModel: "gpt-4o-mini"
+            property bool aiWide: false // the ai panel opened wide, with the files column
+            property string aiFolder: "" // the only folder the ai panel can attach files from
+            property string aiPersona: "short" // Ai.personas; "custom" = aiSystem
+            property int aiMaxAnswer: 2048 // longest answer in tokens (num_predict)
+            property bool aiCompare: false // ask a second model the same question
+            property string aiCompareModel: ""
+            property int aiZoom: 0 // chat text size: ctrl + / ctrl - / ctrl 0 in the panel
+            property string aiSide: "right" // "right" | "left"
+            property string aiUserLabel: "you"
+            property string aiBotLabel: "ai"
             property bool recordAudio: false // record the microphone too
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"

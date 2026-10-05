@@ -8,7 +8,7 @@ import qs.config
 // Which popover / sidebar is open, and on which screen.
 // Only one popover can be open at a time; the sidebar is independent.
 //
-//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|power|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs
+//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest
@@ -23,6 +23,7 @@ Singleton {
 
     property string current: ""
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
+    property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
     property bool locked: false // modules/lock: the session lock screen
     property bool lockTest: false // that lock unlocks by itself after 30 s
     property string screen: ""

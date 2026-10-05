@@ -1292,7 +1292,7 @@ ColumnLayout {
         visible: tabs.current === 4
         spacing: Metrics.spacing
         onVisibleChanged: if (visible)
-            Ai.checkStatus()
+            Ai.refresh()
 
         RowLayout {
             Layout.topMargin: Metrics.spacing
@@ -1521,43 +1521,33 @@ ColumnLayout {
             }
         }
 
-        Label {
+        // the ai has its own settings now, in its panel
+        RowLayout {
             Layout.topMargin: Metrics.spacing
-            text: Ai.online ? "ollama model" : "ollama model (offline)"
-            color: Colors.dim
-        }
-
-        // pulled models
-        Flow {
-            Layout.fillWidth: true
-            visible: Ai.models.length > 0
             spacing: Metrics.spacing
 
-            Repeater {
-                model: Ai.models
+            Label {
+                text: `ai: ${Ai.useApi ? "api" : "ollama"} · ${Ai.modelName}`
+                color: Colors.dim
+            }
 
-                BracketButton {
-                    required property string modelData
-
-                    label: modelData.replace(/:latest$/, "")
-                    active: Settings.ollamaModel === modelData || Settings.ollamaModel + ":latest" === modelData
-                    onClicked: Settings.ollamaModel = modelData
+            BracketButton {
+                label: "ai settings"
+                textColor: Colors.accent
+                onClicked: {
+                    Panels.sidebarScreen = root.forScreen?.name ?? Panels.focusedScreen;
+                    Panels.sidebarOpen = true;
+                    Panels.aiTab = 3;
+                    Panels.close();
                 }
             }
-        }
-
-        TermInput {
-            Layout.fillWidth: true
-            prompt: "$"
-            text: Settings.ollamaModel
-            onAccepted: t => Settings.ollamaModel = t.trim() || Settings.ollamaModel
         }
 
         Label {
             Layout.topMargin: Metrics.spacing
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: "[?] hyprland binds: see hypr/kawt.lua in the config folder"
+            text: "[?] all keys: super + /"
             color: Colors.dim
             font.pixelSize: Metrics.fontSize - 2
         }

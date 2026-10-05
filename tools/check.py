@@ -2,6 +2,7 @@
 """Static checks for the kawt QML, the two mistakes that stop the whole shell from loading:
   - a type used without importing its module   ("Popover is not a type", "Type X unavailable")
   - the same property set twice in one object  ("Property value set multiple times")
+  - JavaScript newer than Qt's engine            (matchAll, flatMap, ...)
 Run from anywhere, best before every commit:
     python3 tools/check.py
 Exits 1 if something is wrong."""
@@ -85,6 +86,21 @@ for dirpath, _, files in os.walk("."):
                     stack.append(set())
                 elif ch == "}" and len(stack) > 1:
                     stack.pop()
+
+# JavaScript newer than Qt's engine understands (it stops the file from loading)
+too_new = {r"\.matchAll\(": "matchAll", r"\.flatMap\(": "flatMap", r"\.flat\(": "flat", r"\.replaceAll\(": "replaceAll",
+           r"Object\.fromEntries": "Object.fromEntries", r"\?\?=|\|\|=|&&=": "logical assignment", r"\.at\(-?\d": ".at()", r"\?\.\[": "?.[ (write it out with && or ||)"}
+for dirpath, _, files in os.walk("."):
+    for f in files:
+        if not f.endswith((".qml", ".js")):
+            continue
+        path = os.path.join(dirpath, f)
+        for n, line in enumerate(open(path).read().split("\n"), 1):
+            code = re.sub(r"//.*", "", line)
+            for pattern, name in too_new.items():
+                if re.search(pattern, code):
+                    print(f"{path}:{n}: {name} is too new for Qt's JavaScript engine")
+                    problems += 1
 
 print(f"{problems} problem(s)" if problems else "all checks ok")
 sys.exit(1 if problems else 0)

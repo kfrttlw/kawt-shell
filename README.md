@@ -21,7 +21,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | `[~]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo (folders, importance, icons, notes inside, reminders), notes in folders with search, settings, power buttons |
 | `[$]` dock | pinned apps |
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `:` clipboard history |
-| `[>_]` ai | local chat with an [ollama](https://ollama.com) model, streamed; nothing leaves the machine |
+| `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper), each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
@@ -84,6 +84,7 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 | `super + n` / `super + shift + n` | notifications / do not disturb |
 | `super + i` | profile, full screen (`[~]` opens the small one) |
 | `super + l` | lock screen |
+| `super + /` | all keys (read from `hypr/kawt.lua`) |
 | `super + escape` | power menu: shutdown / reboot / suspend / logout / lock, with a 5 s countdown |
 | `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window) |
 | `super + shift + r` / `super + alt + r` | record an area / the screen (same key again: stop) |

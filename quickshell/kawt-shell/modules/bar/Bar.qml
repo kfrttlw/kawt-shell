@@ -14,6 +14,7 @@ import "../background"
 import "../osd"
 import "../profile"
 import "../power"
+import "../help"
 
 Variants {
     model: Quickshell.screens
@@ -241,6 +242,10 @@ Variants {
         }
 
         PowerMenu {
+            forScreen: root.modelData
+        }
+
+        KeysWindow {
             forScreen: root.modelData
         }
 

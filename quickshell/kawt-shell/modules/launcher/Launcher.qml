@@ -250,7 +250,7 @@ PanelWindow {
                     if (root.mode === ":")
                         return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
                             : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
-                    return root.arg ? `ask ${Settings.ollamaModel}: ${root.arg}` : "ask the local ai";
+                    return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
                 }
                 color: root.mode === "=" && root.calcResult ? Colors.accent : root.arg ? Colors.fg : Colors.dim
             }
