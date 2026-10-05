@@ -121,7 +121,11 @@ Variants {
                 onClicked: Panels.toggle("bluetooth", root.modelData)
             }
 
-            MicButton {}
+            MicButton {
+                id: mic
+                active: Panels.isOpen("mic", root.modelData)
+                onClicked: Panels.toggle("mic", root.modelData)
+            }
 
             VolumeButton {
                 id: volume
@@ -193,6 +197,11 @@ Variants {
         BrightnessPopover {
             forScreen: root.modelData
             anchorItem: brightness
+        }
+
+        MicPopover {
+            forScreen: root.modelData
+            anchorItem: mic
         }
 
         BluetoothPopover {

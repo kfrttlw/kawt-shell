@@ -13,7 +13,7 @@ BracketButton {
     visible: Recorder.recording
     tag: blink ? "●" : " "
     label: `rec ${Fmt.mmss(Recorder.elapsed)}`
-    textColor: Colors.warn
+    textColor: Colors.accent
     onClicked: Recorder.stop()
 
     Timer {
