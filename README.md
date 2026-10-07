@@ -25,6 +25,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper), each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
+| coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. Wide mode shows its thinking as a small ascii network |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |

@@ -42,6 +42,8 @@ Singleton {
     property alias aiSide: adapter.aiSide
     property alias aiUserLabel: adapter.aiUserLabel
     property alias aiBotLabel: adapter.aiBotLabel
+    property alias aiMode: adapter.aiMode
+    property alias aiCoderSteps: adapter.aiCoderSteps
     property alias recordAudio: adapter.recordAudio
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
@@ -104,6 +106,8 @@ Singleton {
             property string aiSide: "right" // "right" | "left"
             property string aiUserLabel: "you"
             property string aiBotLabel: "ai"
+            property string aiMode: "chat" // "chat" | "coder" (services/Coder.qml)
+            property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
             property bool recordAudio: false // record the microphone too
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"

@@ -20,6 +20,9 @@ PanelWindow {
     readonly property bool open: Panels.isSidebarOpen(forScreen)
     property real progress: open ? 1 : 0
     readonly property int tab: Panels.aiTab
+    readonly property bool coder: Settings.aiMode === "coder"
+    property var catalogOpen: null // null: decide by itself (open while no model is installed)
+    readonly property bool catalogShown: catalogOpen === null ? Ai.online && Ai.models.length === 0 : catalogOpen
     // a short, curated list with the download size
     readonly property var catalog: [
         ["qwen2.5:0.5b", "0.4G", "tiny and fast, simple questions"],
@@ -171,10 +174,13 @@ PanelWindow {
                 }
 
                 BracketButton {
-                    label: "new"
+                    label: "+" // new chat / new coder session
                     bordered: false
                     onClicked: {
-                        Ai.newChat();
+                        if (root.coder)
+                            Coder.reset();
+                        else
+                            Ai.newChat();
                         Panels.aiTab = 0;
                         input.input.forceActiveFocus();
                     }
@@ -187,9 +193,32 @@ PanelWindow {
                 }
             }
 
-            // what's running, and what it costs
+            // [chat] coder   ·   what's running, and what it costs
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 0
+
+                Repeater {
+                    model: [["chat", "chat"], ["coder", "coder"]]
+
+                    BracketButton {
+                        required property var modelData
+
+                        label: modelData[1]
+                        active: Settings.aiMode === modelData[0]
+                        textColor: Settings.aiMode === modelData[0] ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: {
+                            Settings.aiMode = modelData[0];
+                            Panels.aiTab = 0;
+                            input.input.forceActiveFocus();
+                        }
+                    }
+                }
+
             Label {
                 Layout.fillWidth: true
+                Layout.leftMargin: Metrics.spacing
                 elide: Text.ElideRight
                 text: {
                     if (Ai.useApi)
@@ -201,6 +230,7 @@ PanelWindow {
                 }
                 color: !Ai.useApi && !Ai.online ? Colors.warn : Colors.dim
                 font.pixelSize: Metrics.fontSize - 2
+            }
             }
 
             Rectangle {
@@ -215,7 +245,7 @@ PanelWindow {
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.tab === 0
+                visible: root.tab === 0 && !root.coder
                 clip: true
                 spacing: Metrics.padding
                 model: Ai.messages
@@ -268,10 +298,111 @@ PanelWindow {
                 }
             }
 
+            // ------------------------------------------------------------ coder
+            // the network, wide only; narrow gets one line
+            NeuralArt {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Metrics.spacing
+                visible: root.tab === 0 && root.coder && Settings.aiWide
+                active: Coder.running
+                label: Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action
+            }
+
+            Label {
+                Layout.fillWidth: true
+                visible: root.tab === 0 && root.coder && !Settings.aiWide && Coder.running
+                elide: Text.ElideRight
+                text: `~ ${Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action}`
+                color: Colors.accent
+                font.pixelSize: Metrics.fontSize - 1
+            }
+
+            Label {
+                Layout.fillWidth: true
+                visible: root.tab === 0 && root.coder
+                elide: Text.ElideMiddle
+                text: Settings.aiFolder ? `project: ${Settings.aiFolder}` : "no project folder: open wide [<>] and set dir>"
+                color: Settings.aiFolder ? Colors.dim : Colors.warn
+                font.pixelSize: Metrics.fontSize - 2
+            }
+
+            ListView {
+                id: coderLog
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.tab === 0 && root.coder
+                clip: true
+                spacing: Metrics.spacing
+                model: Coder.steps
+                boundsBehavior: Flickable.StopAtBounds
+                onCountChanged: Qt.callLater(positionViewAtEnd)
+                onContentHeightChanged: Qt.callLater(positionViewAtEnd)
+
+                header: Label {
+                    width: coderLog.width
+                    visible: coderLog.count === 0
+                    height: visible ? implicitHeight : 0
+                    text: "  coder: tell it what to do in the project.\n\n  it can list, search and read files on its own;\n  every change is shown as a diff: [apply] or [skip].\n  [undo] puts back everything it changed.\n\n  works best with qwen2.5 / qwen2.5-coder / llama3.1+"
+                    color: Colors.dim
+                }
+
+                // the task and the final answer look like chat; the rest are steps
+                delegate: Loader {
+                    required property var modelData
+
+                    width: coderLog.width
+                    sourceComponent: modelData.kind === "task" || modelData.kind === "answer" ? chatStep : toolStep
+
+                    Component {
+                        id: chatStep
+
+                        ChatLine {
+                            kind: parent?.modelData?.kind === "task" ? "user" : "assistant"
+                            text: parent?.modelData?.text ?? ""
+                            time: parent?.modelData?.time ?? 0
+                        }
+                    }
+
+                    Component {
+                        id: toolStep
+
+                        StepLine {
+                            step: parent?.modelData ?? ({})
+                        }
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.tab === 0 && root.coder && (Coder.running || Coder.canUndo)
+                spacing: Metrics.spacing
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                BracketButton {
+                    visible: Coder.running
+                    label: "stop"
+                    bordered: false
+                    onClicked: Coder.stop()
+                }
+
+                BracketButton {
+                    visible: Coder.canUndo
+                    label: `undo (${Object.keys(Coder.touched).length})`
+                    textColor: Colors.warn
+                    bordered: false
+                    onClicked: Coder.undo()
+                }
+            }
+
             // one click on the clipboard: clip: [explain] [translate] [fix] [summary]
             RowLayout {
                 Layout.fillWidth: true
-                visible: root.tab === 0
+                visible: root.tab === 0 && !root.coder
                 spacing: 0
 
                 Label {
@@ -297,7 +428,7 @@ PanelWindow {
             // files going with the next message: [@notes.md x]
             Flow {
                 Layout.fillWidth: true
-                visible: root.tab === 0 && Ai.attachments.length > 0
+                visible: root.tab === 0 && !root.coder && Ai.attachments.length > 0
                 spacing: Metrics.spacing
 
                 Repeater {
@@ -323,9 +454,16 @@ PanelWindow {
                     id: input
 
                     Layout.fillWidth: true
-                    prompt: Ai.busy ? "~" : ">"
-                    placeholder: Ai.busy ? "thinking..." : "ask something..."
+                    prompt: root.coder ? "task>" : Ai.busy ? "~" : ">"
+                    placeholder: root.coder ? (Coder.running ? "working..." : "what should it do in the project?") : Ai.busy ? "thinking..." : "ask something..."
                     onAccepted: t => {
+                        if (root.coder) {
+                            if (Coder.running)
+                                return;
+                            Coder.start(t);
+                            input.text = "";
+                            return;
+                        }
                         // keep the draft while a reply is streaming; commands always go through
                         if (Ai.busy && !t.trim().startsWith("/"))
                             return;
@@ -335,7 +473,7 @@ PanelWindow {
                 }
 
                 BracketButton {
-                    visible: Ai.busy
+                    visible: Ai.busy && !root.coder
                     label: "stop"
                     bordered: false
                     onClicked: Ai.stop()
@@ -619,16 +757,25 @@ PanelWindow {
                             }
                         }
 
-                        // a short, curated catalog; anything else goes through pull> by name
-                        Label {
+                        // a short, curated catalog behind one button; open by itself when
+                        // nothing is installed yet. anything else goes through pull> by name
+                        BracketButton {
                             Layout.topMargin: Metrics.spacing
-                            text: "-- get one (sizes are the download) --"
+                            label: root.catalogShown ? "get a model ▾" : "get a model ▸"
+                            textColor: Colors.accent
+                            bordered: false
+                            onClicked: root.catalogOpen = !root.catalogShown
+                        }
+
+                        Label {
+                            visible: root.catalogShown
+                            text: "  sizes are the download · small first"
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.fontSize - 3
                         }
 
                         Repeater {
-                            model: root.catalog
+                            model: root.catalogShown ? root.catalog : []
 
                             RowLayout {
                                 id: catalogRow
@@ -828,6 +975,14 @@ PanelWindow {
                         options: Ai.personas.map(p => [p[0], p[1]])
                         value: Settings.aiPersona
                         onPicked: v => Settings.aiPersona = v
+                    }
+
+                    Choice {
+                        title: "coder steps"
+                        hintText: "the agent stops after this many; ∞ = never (stop it yourself)"
+                        options: [[15, "15"], [30, "30"], [50, "50"], [0, "∞"]]
+                        value: Settings.aiCoderSteps
+                        onPicked: v => Settings.aiCoderSteps = v
                     }
 
                     Choice {

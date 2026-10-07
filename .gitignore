@@ -4,6 +4,12 @@
 *.key
 *.pem
 
+# local dumps / logs that never belong in the repo
+opencode-api.json
+opencode-probe.txt
+*.qslog
+*.log
+
 # backups made by install.sh
 *.bak.*
 
