@@ -50,12 +50,17 @@ Singleton {
         }
     }
 
+    // Stores one copy, unless it's a password: password managers (KeePassXC, Bitwarden, ...)
+    // mark those with the x-kde-passwordManagerHint type, and newer wl-clipboard also says so
+    // in CLIPBOARD_STATE. Skipped copies are still read to the end, or wl-paste would stop.
+    readonly property string store: 'case "$CLIPBOARD_STATE" in sensitive | clear) cat > /dev/null; exit 0 ;; esac; if wl-paste --list-types 2> /dev/null | grep -qx x-kde-passwordManagerHint; then cat > /dev/null; exit 0; fi; exec cliphist store'
+
     // the watchers: one for text, one for images. Restarted if they ever exit.
     Process {
         id: textWatch
 
         running: root.available
-        command: ["wl-paste", "--type", "text", "--watch", "cliphist", "store"]
+        command: ["wl-paste", "--type", "text", "--watch", "sh", "-c", root.store]
         onExited: restart.start()
     }
 
@@ -63,7 +68,7 @@ Singleton {
         id: imageWatch
 
         running: root.available
-        command: ["wl-paste", "--type", "image", "--watch", "cliphist", "store"]
+        command: ["wl-paste", "--type", "image", "--watch", "sh", "-c", root.store]
         onExited: restart.start()
     }
 

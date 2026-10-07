@@ -52,6 +52,20 @@ try("binds", function()
     hl.bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen")) -- record the screen (again: stop)
 end)
 
+-- Media keys through kawt (optional): the osd shows at once and kawt doesn't have to poll the
+-- brightness. Remove your own XF86 binds first (both would fire), then uncomment:
+-- try("media keys", function()
+--     hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(kawt .. "volume up"), { locked = true })
+--     hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(kawt .. "volume down"), { locked = true })
+--     hl.bind("XF86AudioMute", hl.dsp.exec_cmd(kawt .. "volume mute"), { locked = true })
+--     hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
+--     hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true })
+--     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true })
+-- end)
+-- Locking: kawt locks by itself before sleep (the lid too), on `loginctl lock-session` and after
+-- 10 idle minutes (profile -> cfg). No hypridle / hyprlock needed; if you keep them, turn
+-- kawt's off there, or two lockers fight.
+
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over
 -- the rounding in hyprland.lua; delete this block to keep your own.
 -- allow_session_lock_restore: if the kawt lock screen ever crashes, restarting quickshell
@@ -68,7 +82,7 @@ end)
 try("layer rule", function()
     hl.layer_rule({
         name = "kawt-no-anim",
-        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd|power|dashboard)$" },
+        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd|power|dashboard|keys)$" },
         no_anim = true,
     })
 end)

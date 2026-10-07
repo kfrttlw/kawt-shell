@@ -50,6 +50,11 @@ Singleton {
     property alias ollamaModel: adapter.ollamaModel
     property alias device: adapter.device
     property alias dnd: adapter.dnd
+    property alias lockDetails: adapter.lockDetails
+    property alias lockOnSleep: adapter.lockOnSleep
+    property alias idleLock: adapter.idleLock
+    property alias nightLight: adapter.nightLight
+    property alias nightTemp: adapter.nightTemp
     property alias terminal: adapter.terminal
     property alias wallpaper: adapter.wallpaper
     property alias wallpaperDir: adapter.wallpaperDir
@@ -115,6 +120,11 @@ Singleton {
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop
             property bool dnd: false // do not disturb: no notification toasts
+            property bool lockDetails: true // the lock screen shows the next task and what's playing (anyone at the screen sees them)
+            property bool lockOnSleep: true // lock before the machine sleeps and on `loginctl lock-session` (services/Session.qml)
+            property int idleLock: 10 // lock after this many minutes without input, 0 = never (services/Idle.qml)
+            property bool nightLight: false // warmer colors through hyprsunset (services/Night.qml)
+            property int nightTemp: 4500 // night light color temperature, kelvin
             property string terminal: "kitty" // command is appended; for alacritty use "alacritty -e"
             property string wallpaper: "" // empty: kawt draws no wallpaper (use hyprpaper/swww)
             property string wallpaperDir: "~/Pictures/wallpapers"

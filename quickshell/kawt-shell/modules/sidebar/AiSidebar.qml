@@ -255,7 +255,11 @@ PanelWindow {
                 visible: root.tab === 0 && !root.coder
                 clip: true
                 spacing: Metrics.padding
-                model: Ai.messages
+                // ScriptModel: a new message adds one line; with the plain array every message
+                // was laid out again (markdown and all) each time one came in
+                model: ScriptModel {
+                    values: Ai.messages
+                }
                 boundsBehavior: Flickable.StopAtBounds
                 // follows new content only while you're at the bottom; scroll up and it stays put
                 property bool follow: true
@@ -313,7 +317,7 @@ PanelWindow {
                     height: visible ? implicitHeight : 0
                     topPadding: log.count > 0 ? log.spacing : 0
                     kind: "assistant"
-                    text: Ai.partial
+                    text: Ai.partialShown
                     model: Ai.askedModel
                     streaming: true
                 }
@@ -365,7 +369,9 @@ PanelWindow {
                 visible: root.tab === 0 && root.coder
                 clip: true
                 spacing: Metrics.spacing
-                model: Coder.steps
+                model: ScriptModel {
+                    values: Coder.steps
+                }
                 boundsBehavior: Flickable.StopAtBounds
                 // follows new content only while you're at the bottom; scroll up and it stays put
                 property bool follow: true
@@ -540,648 +546,682 @@ PanelWindow {
             }
 
             // ----------------------------------------------------------- chats
-            Flickable {
-                id: chatsFlick
-
+            // chats, models and cfg are each in a Loader: only the open tab exists (a hundred
+            // saved chats, the model lists and every setting were made on each open before)
+            Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.tab === 1
-                clip: true
-                contentHeight: chatsCol.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
+                active: root.tab === 1
+                visible: active
 
-                ColumnLayout {
-                    id: chatsCol
+                sourceComponent: Component {
+                    Flickable {
+                        id: chatsFlick
 
-                    width: chatsFlick.width
-                    spacing: 1
+                        clip: true
+                        contentHeight: chatsCol.implicitHeight
+                        boundsBehavior: Flickable.StopAtBounds
 
-                    Label {
-                        visible: Ai.chats.length === 0
-                        text: "-- no saved chats --"
-                        color: Colors.dim
-                    }
+                        ColumnLayout {
+                            id: chatsCol
 
-                    Repeater {
-                        model: Ai.chats
+                            width: chatsFlick.width
+                            spacing: 1
 
-                        Item {
-                            id: chatRow
-
-                            required property var modelData
-                            readonly property bool current: Ai.chat?.id === modelData.id
-
-                            Layout.fillWidth: true
-                            implicitHeight: chatLine.implicitHeight + 6
-
-                            Rectangle {
-                                anchors.fill: parent
-                                visible: chatRow.current || chatArea.containsMouse
-                                color: Colors.hoverFill
+                            Label {
+                                visible: Ai.chats.length === 0
+                                text: "-- no saved chats --"
+                                color: Colors.dim
                             }
 
-                            RowLayout {
-                                id: chatLine
+                            Repeater {
+                                model: ScriptModel {
+                                    values: Ai.chats
+                                }
 
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.leftMargin: 2
-                                anchors.rightMargin: 4
-                                spacing: Metrics.spacing
+                                Item {
+                                    id: chatRow
 
-                                Label {
+                                    required property var modelData
+                                    readonly property bool current: Ai.chat?.id === modelData.id
+
                                     Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                    text: (chatRow.current ? "> " : "  ") + (chatRow.modelData.title || "(empty)")
-                                    color: chatRow.current ? Colors.accent : Colors.fg
-                                }
+                                    implicitHeight: chatLine.implicitHeight + 6
 
-                                Label {
-                                    text: `${chatRow.modelData.messages.length} · ${Qt.formatDateTime(new Date(chatRow.modelData.updated), "dd.MM hh:mm")}`
-                                    color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
-                                }
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        visible: chatRow.current || chatArea.containsMouse
+                                        color: Colors.hoverFill
+                                    }
 
-                                Label {
-                                    text: "x"
-                                    opacity: chatArea.containsMouse ? 1 : 0
-                                    color: Colors.warn
-                                }
-                            }
+                                    RowLayout {
+                                        id: chatLine
 
-                            MouseArea {
-                                id: chatArea
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.leftMargin: 2
+                                        anchors.rightMargin: 4
+                                        spacing: Metrics.spacing
 
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: mouse => {
-                                    if (mouse.x > width - 20) {
-                                        Ai.deleteChat(chatRow.modelData.id);
-                                    } else {
-                                        Ai.openChat(chatRow.modelData.id);
-                                        Panels.aiTab = 0;
+                                        Label {
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            text: (chatRow.current ? "> " : "  ") + (chatRow.modelData.title || "(empty)")
+                                            color: chatRow.current ? Colors.accent : Colors.fg
+                                        }
+
+                                        Label {
+                                            text: `${chatRow.modelData.messages.length} · ${Qt.formatDateTime(new Date(chatRow.modelData.updated), "dd.MM hh:mm")}`
+                                            color: Colors.dim
+                                            font.pixelSize: Metrics.fontSize - 2
+                                        }
+
+                                        Label {
+                                            text: "x"
+                                            opacity: chatArea.containsMouse ? 1 : 0
+                                            color: Colors.warn
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: chatArea
+
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: mouse => {
+                                            if (mouse.x > width - 20) {
+                                                Ai.deleteChat(chatRow.modelData.id);
+                                            } else {
+                                                Ai.openChat(chatRow.modelData.id);
+                                                Panels.aiTab = 0;
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
 
-                    BracketButton {
-                        id: wipeChats
+                            BracketButton {
+                                id: wipeChats
 
-                        property bool armed: false
+                                property bool armed: false
 
-                        Layout.topMargin: Metrics.spacing
-                        visible: Ai.chats.length > 0
-                        label: armed ? "sure? click again" : "delete all chats"
-                        textColor: Colors.warn
-                        bordered: false
-                        onClicked: {
-                            if (armed) {
-                                armed = false;
-                                Ai.clearChats();
-                            } else {
-                                armed = true;
-                                wipeChatsTimer.restart();
+                                Layout.topMargin: Metrics.spacing
+                                visible: Ai.chats.length > 0
+                                label: armed ? "sure? click again" : "delete all chats"
+                                textColor: Colors.warn
+                                bordered: false
+                                onClicked: {
+                                    if (armed) {
+                                        armed = false;
+                                        Ai.clearChats();
+                                    } else {
+                                        armed = true;
+                                        wipeChatsTimer.restart();
+                                    }
+                                }
+
+                                Timer {
+                                    id: wipeChatsTimer
+
+                                    interval: 3000
+                                    onTriggered: wipeChats.armed = false
+                                }
                             }
-                        }
-
-                        Timer {
-                            id: wipeChatsTimer
-
-                            interval: 3000
-                            onTriggered: wipeChats.armed = false
                         }
                     }
                 }
             }
 
             // ---------------------------------------------------------- models
-            Flickable {
-                id: modelsFlick
-
+            Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.tab === 2
-                clip: true
-                contentHeight: modelsCol.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
+                active: root.tab === 2
+                visible: active
 
-                ColumnLayout {
-                    id: modelsCol
+                sourceComponent: Component {
+                    Flickable {
+                        id: modelsFlick
 
-                    width: modelsFlick.width
-                    spacing: Metrics.spacing
+                        clip: true
+                        contentHeight: modelsCol.implicitHeight
+                        boundsBehavior: Flickable.StopAtBounds
 
-                    Choice {
-                        title: "provider"
-                        options: [["ollama", "ollama (local)"], ["api", "api"]]
-                        value: Settings.aiProvider
-                        onPicked: v => Settings.aiProvider = v
-                    }
+                        ColumnLayout {
+                            id: modelsCol
 
-                    // ---- ollama
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        visible: !Ai.useApi
-                        spacing: 2
+                            width: modelsFlick.width
+                            spacing: Metrics.spacing
 
-                        Label {
-                            Layout.topMargin: Metrics.spacing
-                            text: "-- in memory now --"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
+                            Choice {
+                                title: "provider"
+                                options: [["ollama", "ollama (local)"], ["api", "api"]]
+                                value: Settings.aiProvider
+                                onPicked: v => Settings.aiProvider = v
+                            }
 
-                        Label {
-                            visible: Ai.loaded.length === 0
-                            text: "  nothing loaded: 0 MB"
-                            color: Colors.dim
-                        }
-
-                        Repeater {
-                            model: Ai.loaded
-
-                            RowLayout {
-                                required property var modelData
-
+                            // ---- ollama
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: Metrics.spacing
+                                visible: !Ai.useApi
+                                spacing: 2
 
                                 Label {
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                    text: `  ${modelData.name}  ${Ai.size(modelData.ram)}${modelData.vram > 0 ? ` (gpu ${Ai.size(modelData.vram)})` : ""} · ${root.until(modelData.until)}`
-                                    color: Colors.fg
+                                    Layout.topMargin: Metrics.spacing
+                                    text: "-- in memory now --"
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
                                 }
 
-                                BracketButton {
-                                    label: "unload"
-                                    bordered: false
-                                    onClicked: Ai.unload(modelData.name)
-                                }
-                            }
-                        }
-
-                        Label {
-                            Layout.topMargin: Metrics.spacing
-                            text: "-- installed (click: use, x: delete) --"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
-
-                        Label {
-                            visible: Ai.online && Ai.models.length === 0
-                            text: "  none yet: pull one below"
-                            color: Colors.dim
-                        }
-
-                        Repeater {
-                            model: Ai.models
-
-                            Item {
-                                id: modelRow
-
-                                required property var modelData
-                                readonly property bool current: Settings.ollamaModel === modelData.name || Settings.ollamaModel + ":latest" === modelData.name
-                                property bool armed: false
-
-                                Layout.fillWidth: true
-                                implicitHeight: modelLine.implicitHeight + 4
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    visible: modelRow.current || modelArea.containsMouse
-                                    color: Colors.hoverFill
+                                Label {
+                                    visible: Ai.loaded.length === 0
+                                    text: "  nothing loaded: 0 MB"
+                                    color: Colors.dim
                                 }
 
-                                RowLayout {
-                                    id: modelLine
+                                Repeater {
+                                    model: Ai.loaded
 
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.rightMargin: 4
-                                    spacing: Metrics.spacing
+                                    RowLayout {
+                                        required property var modelData
 
-                                    Label {
                                         Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        text: (modelRow.current ? "> " : "  ") + modelRow.modelData.name.replace(/:latest$/, "")
-                                        color: modelRow.current ? Colors.accent : Colors.fg
-                                    }
+                                        spacing: Metrics.spacing
 
-                                    Label {
-                                        text: [modelRow.modelData.params, modelRow.modelData.quant.toLowerCase(), Ai.size(modelRow.modelData.size)].filter(s => s).join(" · ")
-                                        color: Colors.dim
-                                        font.pixelSize: Metrics.fontSize - 2
-                                    }
+                                        Label {
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            text: `  ${modelData.name}  ${Ai.size(modelData.ram)}${modelData.vram > 0 ? ` (gpu ${Ai.size(modelData.vram)})` : ""} · ${root.until(modelData.until)}`
+                                            color: Colors.fg
+                                        }
 
-                                    Label {
-                                        text: modelRow.armed ? "sure?" : "x"
-                                        opacity: modelArea.containsMouse || modelRow.armed ? 1 : 0
-                                        color: Colors.warn
-                                    }
-                                }
-
-                                Timer {
-                                    id: disarmModel
-
-                                    interval: 3000
-                                    onTriggered: modelRow.armed = false
-                                }
-
-                                MouseArea {
-                                    id: modelArea
-
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: mouse => {
-                                        if (mouse.x > width - 50) {
-                                            if (modelRow.armed) {
-                                                modelRow.armed = false;
-                                                Ai.remove(modelRow.modelData.name);
-                                            } else {
-                                                modelRow.armed = true;
-                                                disarmModel.restart();
-                                            }
-                                        } else {
-                                            Settings.ollamaModel = modelRow.modelData.name;
+                                        BracketButton {
+                                            label: "unload"
+                                            bordered: false
+                                            onClicked: Ai.unload(modelData.name)
                                         }
                                     }
                                 }
-                            }
-                        }
-
-                        // a short, curated catalog behind one button; open by itself when
-                        // nothing is installed yet. anything else goes through pull> by name
-                        BracketButton {
-                            Layout.topMargin: Metrics.spacing
-                            label: root.catalogShown ? "get a model ▾" : "get a model ▸"
-                            textColor: Colors.accent
-                            bordered: false
-                            onClicked: root.catalogOpen = !root.catalogShown
-                        }
-
-                        Label {
-                            visible: root.catalogShown
-                            text: "  sizes are the download · small first"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 3
-                        }
-
-                        Repeater {
-                            model: root.catalogShown ? root.catalog : []
-
-                            RowLayout {
-                                id: catalogRow
-
-                                required property var modelData
-                                readonly property bool installed: Ai.models.some(m => m.name === modelData[0] || m.name === modelData[0] + ":latest")
-
-                                Layout.fillWidth: true
-                                spacing: Metrics.spacing
 
                                 Label {
-                                    Layout.preferredWidth: Metrics.fontSize * 0.6 * 17
-                                    elide: Text.ElideRight
-                                    text: `  ${catalogRow.modelData[0]}`
-                                    color: Colors.fg
+                                    Layout.topMargin: Metrics.spacing
+                                    text: "-- installed (click: use, x: delete) --"
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
                                 }
 
                                 Label {
-                                    Layout.preferredWidth: Metrics.fontSize * 0.6 * 5
-                                    text: catalogRow.modelData[1]
+                                    visible: Ai.online && Ai.models.length === 0
+                                    text: "  none yet: pull one below"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                Repeater {
+                                    model: Ai.models
+
+                                    Item {
+                                        id: modelRow
+
+                                        required property var modelData
+                                        readonly property bool current: Settings.ollamaModel === modelData.name || Settings.ollamaModel + ":latest" === modelData.name
+                                        property bool armed: false
+
+                                        Layout.fillWidth: true
+                                        implicitHeight: modelLine.implicitHeight + 4
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            visible: modelRow.current || modelArea.containsMouse
+                                            color: Colors.hoverFill
+                                        }
+
+                                        RowLayout {
+                                            id: modelLine
+
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.rightMargin: 4
+                                            spacing: Metrics.spacing
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                                text: (modelRow.current ? "> " : "  ") + modelRow.modelData.name.replace(/:latest$/, "")
+                                                color: modelRow.current ? Colors.accent : Colors.fg
+                                            }
+
+                                            Label {
+                                                text: [modelRow.modelData.params, modelRow.modelData.quant.toLowerCase(), Ai.size(modelRow.modelData.size)].filter(s => s).join(" · ")
+                                                color: Colors.dim
+                                                font.pixelSize: Metrics.fontSize - 2
+                                            }
+
+                                            Label {
+                                                text: modelRow.armed ? "sure?" : "x"
+                                                opacity: modelArea.containsMouse || modelRow.armed ? 1 : 0
+                                                color: Colors.warn
+                                            }
+                                        }
+
+                                        Timer {
+                                            id: disarmModel
+
+                                            interval: 3000
+                                            onTriggered: modelRow.armed = false
+                                        }
+
+                                        MouseArea {
+                                            id: modelArea
+
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: mouse => {
+                                                if (mouse.x > width - 50) {
+                                                    if (modelRow.armed) {
+                                                        modelRow.armed = false;
+                                                        Ai.remove(modelRow.modelData.name);
+                                                    } else {
+                                                        modelRow.armed = true;
+                                                        disarmModel.restart();
+                                                    }
+                                                } else {
+                                                    Settings.ollamaModel = modelRow.modelData.name;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // a short, curated catalog behind one button; open by itself when
+                                // nothing is installed yet. anything else goes through pull> by name
+                                BracketButton {
+                                    Layout.topMargin: Metrics.spacing
+                                    label: root.catalogShown ? "get a model ▾" : "get a model ▸"
+                                    textColor: Colors.accent
+                                    bordered: false
+                                    onClicked: root.catalogOpen = !root.catalogShown
+                                }
+
+                                Label {
+                                    visible: root.catalogShown
+                                    text: "  sizes are the download · small first"
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 3
+                                }
+
+                                Repeater {
+                                    model: root.catalogShown ? root.catalog : []
+
+                                    RowLayout {
+                                        id: catalogRow
+
+                                        required property var modelData
+                                        readonly property bool installed: Ai.models.some(m => m.name === modelData[0] || m.name === modelData[0] + ":latest")
+
+                                        Layout.fillWidth: true
+                                        spacing: Metrics.spacing
+
+                                        Label {
+                                            Layout.preferredWidth: Metrics.fontSize * 0.6 * 17
+                                            elide: Text.ElideRight
+                                            text: `  ${catalogRow.modelData[0]}`
+                                            color: Colors.fg
+                                        }
+
+                                        Label {
+                                            Layout.preferredWidth: Metrics.fontSize * 0.6 * 5
+                                            text: catalogRow.modelData[1]
+                                            color: Colors.dim
+                                            font.pixelSize: Metrics.fontSize - 2
+                                        }
+
+                                        Label {
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            text: catalogRow.modelData[2]
+                                            color: Colors.dim
+                                            font.pixelSize: Metrics.fontSize - 2
+                                        }
+
+                                        BracketButton {
+                                            label: catalogRow.installed ? "have" : "get"
+                                            enabled: !catalogRow.installed && !Ai.pulling
+                                            textColor: catalogRow.installed ? Colors.dim : Colors.accent
+                                            bordered: false
+                                            onClicked: Ai.pull(catalogRow.modelData[0])
+                                        }
+                                    }
+                                }
+
+                                TermInput {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: Metrics.spacing
+                                    prompt: "pull>"
+                                    // gray completion: models you have (accent), the catalog, popular ones
+                                    completions: [...Ai.models.map(m => m.name.replace(/:latest$/, "")), ...root.catalog.map(c => c[0]), ...root.popular]
+                                    highlight: Ai.models.map(m => m.name.replace(/:latest$/, ""))
+                                    placeholder: "model name, e.g. llama3.2:1b"
+                                    onAccepted: t => {
+                                        Ai.pull(t);
+                                        text = "";
+                                    }
                                 }
 
                                 Label {
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
-                                    text: catalogRow.modelData[2]
+                                    text: Ai.pullStatus || "any other model by name: see ollama.com/library"
+                                    color: Ai.pulling ? Colors.accent : Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+                            }
+
+                            // ---- api
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                visible: Ai.useApi
+                                spacing: Metrics.spacing
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: Metrics.spacing
+                                    elide: Text.ElideRight
+                                    text: "any OpenAI-compatible service: openai, openrouter, groq, lm studio..."
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                TermInput {
+                                    Layout.fillWidth: true
+                                    prompt: "url>"
+                                    text: Settings.apiUrl
+                                    onAccepted: t => Settings.apiUrl = t.trim() || Settings.apiUrl
+                                }
+
+                                // the key goes along with every request: over plain http to another machine anyone on the
+                                // way can read it
+                                Label {
+                                    Layout.fillWidth: true
+                                    visible: /^http:\/\//i.test(Settings.apiUrl) && !/^http:\/\/(localhost|127\.|\[::1\])/i.test(Settings.apiUrl)
+                                    wrapMode: Text.Wrap
+                                    text: "http:// sends the key unencrypted. use https, or keep it on this machine (localhost)"
+                                    color: Colors.warn
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                TermInput {
+                                    Layout.fillWidth: true
+                                    prompt: "model>"
+                                    text: Settings.apiModel
+                                    onAccepted: t => Settings.apiModel = t.trim() || Settings.apiModel
+                                }
+
+                                TermInput {
+                                    id: keyInput
+
+                                    Layout.fillWidth: true
+                                    prompt: "key>"
+                                    echoMode: TextInput.Password
+                                    placeholder: Ai.apiKey ? "saved · enter a new one to replace" : "paste the api key, enter"
+                                    onAccepted: t => {
+                                        Ai.setApiKey(t);
+                                        keyInput.text = "";
+                                    }
+                                }
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: Ai.apiKey ? `key saved (…${Ai.apiKey.slice(-4)}) · ~/.local/state/kawt/secrets.json, only you can read it` : "no key yet"
                                     color: Colors.dim
                                     font.pixelSize: Metrics.fontSize - 2
                                 }
 
                                 BracketButton {
-                                    label: catalogRow.installed ? "have" : "get"
-                                    enabled: !catalogRow.installed && !Ai.pulling
-                                    textColor: catalogRow.installed ? Colors.dim : Colors.accent
+                                    visible: Ai.apiKey !== ""
+                                    label: "forget the key"
+                                    textColor: Colors.warn
                                     bordered: false
-                                    onClicked: Ai.pull(catalogRow.modelData[0])
+                                    onClicked: Ai.setApiKey("")
                                 }
                             }
-                        }
-
-                        TermInput {
-                            Layout.fillWidth: true
-                            Layout.topMargin: Metrics.spacing
-                            prompt: "pull>"
-                            // gray completion: models you have (accent), the catalog, popular ones
-                            completions: [...Ai.models.map(m => m.name.replace(/:latest$/, "")), ...root.catalog.map(c => c[0]), ...root.popular]
-                            highlight: Ai.models.map(m => m.name.replace(/:latest$/, ""))
-                            placeholder: "model name, e.g. llama3.2:1b"
-                            onAccepted: t => {
-                                Ai.pull(t);
-                                text = "";
-                            }
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: Ai.pullStatus || "any other model by name: see ollama.com/library"
-                            color: Ai.pulling ? Colors.accent : Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
-                    }
-
-                    // ---- api
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        visible: Ai.useApi
-                        spacing: Metrics.spacing
-
-                        Label {
-                            Layout.fillWidth: true
-                            Layout.topMargin: Metrics.spacing
-                            elide: Text.ElideRight
-                            text: "any OpenAI-compatible service: openai, openrouter, groq, lm studio..."
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
-
-                        TermInput {
-                            Layout.fillWidth: true
-                            prompt: "url>"
-                            text: Settings.apiUrl
-                            onAccepted: t => Settings.apiUrl = t.trim() || Settings.apiUrl
-                        }
-
-                        TermInput {
-                            Layout.fillWidth: true
-                            prompt: "model>"
-                            text: Settings.apiModel
-                            onAccepted: t => Settings.apiModel = t.trim() || Settings.apiModel
-                        }
-
-                        TermInput {
-                            id: keyInput
-
-                            Layout.fillWidth: true
-                            prompt: "key>"
-                            echoMode: TextInput.Password
-                            placeholder: Ai.apiKey ? "saved · enter a new one to replace" : "paste the api key, enter"
-                            onAccepted: t => {
-                                Ai.setApiKey(t);
-                                keyInput.text = "";
-                            }
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: Ai.apiKey ? `key saved (…${Ai.apiKey.slice(-4)}) · ~/.local/state/kawt/secrets.json, only you can read it` : "no key yet"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
-
-                        BracketButton {
-                            visible: Ai.apiKey !== ""
-                            label: "forget the key"
-                            textColor: Colors.warn
-                            bordered: false
-                            onClicked: Ai.setApiKey("")
                         }
                     }
                 }
             }
 
             // ------------------------------------------------------------- cfg
-            Flickable {
-                id: cfgFlick
-
+            Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.tab === 3
-                clip: true
-                contentHeight: cfgCol.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
+                active: root.tab === 3
+                visible: active
 
-                ColumnLayout {
-                    id: cfgCol
+                sourceComponent: Component {
+                    Flickable {
+                        id: cfgFlick
 
-                    width: cfgFlick.width
-                    spacing: Metrics.spacing
+                        clip: true
+                        contentHeight: cfgCol.implicitHeight
+                        boundsBehavior: Flickable.StopAtBounds
 
-                    Label {
-                        Layout.fillWidth: true
-                        visible: !Ai.useApi
-                        elide: Text.ElideRight
-                        text: "-- how much the local model may take --"
-                        color: Colors.dim
-                    }
+                        ColumnLayout {
+                            id: cfgCol
 
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "context"
-                        hintText: "more = remembers more, takes more ram"
-                        options: [[2048, "2k"], [4096, "4k"], [8192, "8k"], [16384, "16k"]]
-                        value: Settings.aiCtx
-                        onPicked: v => Settings.aiCtx = v
-                    }
-
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "keep in ram"
-                        hintText: "after an answer; 0 = free the memory at once"
-                        options: [["0", "0"], ["1m", "1m"], ["5m", "5m"], ["30m", "30m"], ["-1", "always"]]
-                        value: Settings.aiKeepAlive
-                        onPicked: v => Settings.aiKeepAlive = v
-                    }
-
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "cpu threads"
-                        hintText: `fewer = slower answers, the system stays smooth (${SysInfo.cores || "?"} total)`
-                        options: [[0, "auto"], [2, "2"], [4, "4"], [6, "6"], [8, "8"]].filter(o => o[0] === 0 || !SysInfo.cores || o[0] <= SysInfo.cores)
-                        value: Settings.aiThreads
-                        onPicked: v => Settings.aiThreads = v
-                    }
-
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "gpu"
-                        hintText: "cpu only keeps the gpu free, but is slower"
-                        options: [[-1, "auto"], [0, "cpu only"]]
-                        value: Settings.aiGpuLayers
-                        onPicked: v => Settings.aiGpuLayers = v
-                    }
-
-                    Label {
-                        Layout.topMargin: Metrics.spacing
-                        text: "-- answers --"
-                        color: Colors.dim
-                    }
-
-                    Choice {
-                        title: "persona"
-                        hintText: ((Ai.personas.find(p => p[0] === Settings.aiPersona) || [])[2] || "your own prompt, below").slice(0, 90)
-                        options: Ai.personas.map(p => [p[0], p[1]])
-                        value: Settings.aiPersona
-                        onPicked: v => Settings.aiPersona = v
-                    }
-
-                    Choice {
-                        title: "coder steps"
-                        hintText: "the agent stops after this many; ∞ = never (stop it yourself)"
-                        options: [[15, "15"], [30, "30"], [50, "50"], [0, "∞"]]
-                        value: Settings.aiCoderSteps
-                        onPicked: v => Settings.aiCoderSteps = v
-                    }
-
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "max answer"
-                        hintText: "in tokens; stops runaway answers"
-                        options: [[512, "512"], [1024, "1k"], [2048, "2k"], [4096, "4k"]]
-                        value: Settings.aiMaxAnswer
-                        onPicked: v => Settings.aiMaxAnswer = v
-                    }
-
-                    Choice {
-                        title: "temperature"
-                        hintText: "low = precise, high = creative"
-                        options: [[0.2, "0.2"], [0.7, "0.7"], [1.0, "1.0"]]
-                        value: Settings.aiTemperature
-                        onPicked: v => Settings.aiTemperature = v
-                    }
-
-                    Choice {
-                        title: "history"
-                        hintText: "earlier messages sent along as context"
-                        options: [[6, "6"], [20, "20"], [50, "50"]]
-                        value: Settings.aiHistory
-                        onPicked: v => Settings.aiHistory = v
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.topMargin: Metrics.spacing
-                        visible: Settings.aiPersona === "custom"
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: "your prompt  (saved when you click away)"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
-                        }
-
-                        BracketButton {
-                            visible: Settings.aiSystem !== root.defaultSystem
-                            label: "default"
-                            bordered: false
-                            onClicked: {
-                                Settings.aiSystem = root.defaultSystem;
-                                systemEdit.text = root.defaultSystem;
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        visible: Settings.aiPersona === "custom"
-                        implicitHeight: Math.max(70, systemEdit.contentHeight + 12)
-                        color: Colors.bg
-                        border.color: systemEdit.activeFocus ? Colors.dim : Colors.border
-                        border.width: Metrics.borderWidth
-
-                        TextEdit {
-                            id: systemEdit
-
-                            anchors.fill: parent
-                            anchors.margins: 6
-                            text: Settings.aiSystem
-                            color: Colors.fg
-                            font.family: Metrics.fontFamily
-                            font.pixelSize: Metrics.fontSize - 1
-                            wrapMode: TextEdit.Wrap
-                            selectByMouse: true
-                            selectionColor: Colors.accent
-                            selectedTextColor: Colors.bg
-                            onActiveFocusChanged: if (!activeFocus && text !== Settings.aiSystem)
-                                Settings.aiSystem = text
+                            width: cfgFlick.width
+                            spacing: Metrics.spacing
 
                             Label {
-                                visible: !systemEdit.text && !systemEdit.activeFocus
-                                text: "e.g. answer briefly, in russian"
+                                Layout.fillWidth: true
+                                visible: !Ai.useApi
+                                elide: Text.ElideRight
+                                text: "-- how much the local model may take --"
                                 color: Colors.dim
-                                font.pixelSize: Metrics.fontSize - 1
                             }
-                        }
-                    }
 
-                    Label {
-                        Layout.topMargin: Metrics.spacing
-                        visible: !Ai.useApi
-                        text: "-- compare --"
-                        color: Colors.dim
-                    }
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "context"
+                                hintText: "more = remembers more, takes more ram"
+                                options: [[2048, "2k"], [4096, "4k"], [8192, "8k"], [16384, "16k"]]
+                                value: Settings.aiCtx
+                                onPicked: v => Settings.aiCtx = v
+                            }
 
-                    Choice {
-                        visible: !Ai.useApi
-                        title: "2nd model"
-                        hintText: "the same question goes to it too, after the main one"
-                        options: [["", "off"], ...Ai.models.filter(m => m.name !== Settings.ollamaModel && m.name !== Settings.ollamaModel + ":latest").map(m => [m.name, m.name.replace(/:latest$/, "")])]
-                        value: Settings.aiCompare ? Settings.aiCompareModel : ""
-                        onPicked: v => {
-                            Settings.aiCompareModel = v;
-                            Settings.aiCompare = v !== "";
-                        }
-                    }
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "keep in ram"
+                                hintText: "after an answer; 0 = free the memory at once"
+                                options: [["0", "0"], ["1m", "1m"], ["5m", "5m"], ["30m", "30m"], ["-1", "always"]]
+                                value: Settings.aiKeepAlive
+                                onPicked: v => Settings.aiKeepAlive = v
+                            }
 
-                    Label {
-                        Layout.topMargin: Metrics.spacing
-                        text: "-- panel --"
-                        color: Colors.dim
-                    }
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "cpu threads"
+                                hintText: `fewer = slower answers, the system stays smooth (${SysInfo.cores || "?"} total)`
+                                options: [[0, "auto"], [2, "2"], [4, "4"], [6, "6"], [8, "8"]].filter(o => o[0] === 0 || !SysInfo.cores || o[0] <= SysInfo.cores)
+                                value: Settings.aiThreads
+                                onPicked: v => Settings.aiThreads = v
+                            }
 
-                    Choice {
-                        title: "side"
-                        options: [["right", "right"], ["left", "left"]]
-                        value: Settings.aiSide
-                        onPicked: v => Settings.aiSide = v
-                    }
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "gpu"
+                                hintText: "cpu only keeps the gpu free, but is slower"
+                                options: [[-1, "auto"], [0, "cpu only"]]
+                                value: Settings.aiGpuLayers
+                                onPicked: v => Settings.aiGpuLayers = v
+                            }
 
-                    Choice {
-                        title: "text size"
-                        hintText: "or ctrl + / ctrl - / ctrl 0 in the panel"
-                        options: [[-2, "small"], [0, "normal"], [2, "big"], [4, "bigger"]]
-                        value: Settings.aiZoom
-                        onPicked: v => Settings.aiZoom = v
-                    }
+                            Label {
+                                Layout.topMargin: Metrics.spacing
+                                text: "-- answers --"
+                                color: Colors.dim
+                            }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Metrics.spacing
+                            Choice {
+                                title: "persona"
+                                hintText: ((Ai.personas.find(p => p[0] === Settings.aiPersona) || [])[2] || "your own prompt, below").slice(0, 90)
+                                options: Ai.personas.map(p => [p[0], p[1]])
+                                value: Settings.aiPersona
+                                onPicked: v => Settings.aiPersona = v
+                            }
 
-                        TermInput {
-                            Layout.fillWidth: true
-                            prompt: "you>"
-                            text: Settings.aiUserLabel
-                            onAccepted: t => Settings.aiUserLabel = t.trim() || "you"
-                        }
+                            Choice {
+                                title: "coder steps"
+                                hintText: "the agent stops after this many; ∞ = never (stop it yourself)"
+                                options: [[15, "15"], [30, "30"], [50, "50"], [0, "∞"]]
+                                value: Settings.aiCoderSteps
+                                onPicked: v => Settings.aiCoderSteps = v
+                            }
 
-                        TermInput {
-                            Layout.fillWidth: true
-                            prompt: "ai>"
-                            text: Settings.aiBotLabel
-                            onAccepted: t => Settings.aiBotLabel = t.trim() || "ai"
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "max answer"
+                                hintText: "in tokens; stops runaway answers"
+                                options: [[512, "512"], [1024, "1k"], [2048, "2k"], [4096, "4k"]]
+                                value: Settings.aiMaxAnswer
+                                onPicked: v => Settings.aiMaxAnswer = v
+                            }
+
+                            Choice {
+                                title: "temperature"
+                                hintText: "low = precise, high = creative"
+                                options: [[0.2, "0.2"], [0.7, "0.7"], [1.0, "1.0"]]
+                                value: Settings.aiTemperature
+                                onPicked: v => Settings.aiTemperature = v
+                            }
+
+                            Choice {
+                                title: "history"
+                                hintText: "earlier messages sent along as context"
+                                options: [[6, "6"], [20, "20"], [50, "50"]]
+                                value: Settings.aiHistory
+                                onPicked: v => Settings.aiHistory = v
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.topMargin: Metrics.spacing
+                                visible: Settings.aiPersona === "custom"
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: "your prompt  (saved when you click away)"
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.fontSize - 2
+                                }
+
+                                BracketButton {
+                                    visible: Settings.aiSystem !== root.defaultSystem
+                                    label: "default"
+                                    bordered: false
+                                    onClicked: {
+                                        Settings.aiSystem = root.defaultSystem;
+                                        systemEdit.text = root.defaultSystem;
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                visible: Settings.aiPersona === "custom"
+                                implicitHeight: Math.max(70, systemEdit.contentHeight + 12)
+                                color: Colors.bg
+                                border.color: systemEdit.activeFocus ? Colors.dim : Colors.border
+                                border.width: Metrics.borderWidth
+
+                                TextEdit {
+                                    id: systemEdit
+
+                                    textFormat: TextEdit.PlainText // text, never html
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    text: Settings.aiSystem
+                                    color: Colors.fg
+                                    font.family: Metrics.fontFamily
+                                    font.pixelSize: Metrics.fontSize - 1
+                                    wrapMode: TextEdit.Wrap
+                                    selectByMouse: true
+                                    selectionColor: Colors.accent
+                                    selectedTextColor: Colors.bg
+                                    onActiveFocusChanged: if (!activeFocus && text !== Settings.aiSystem)
+                                        Settings.aiSystem = text
+
+                                    Label {
+                                        visible: !systemEdit.text && !systemEdit.activeFocus
+                                        text: "e.g. answer briefly, in russian"
+                                        color: Colors.dim
+                                        font.pixelSize: Metrics.fontSize - 1
+                                    }
+                                }
+                            }
+
+                            Label {
+                                Layout.topMargin: Metrics.spacing
+                                visible: !Ai.useApi
+                                text: "-- compare --"
+                                color: Colors.dim
+                            }
+
+                            Choice {
+                                visible: !Ai.useApi
+                                title: "2nd model"
+                                hintText: "the same question goes to it too, after the main one"
+                                options: [["", "off"], ...Ai.models.filter(m => m.name !== Settings.ollamaModel && m.name !== Settings.ollamaModel + ":latest").map(m => [m.name, m.name.replace(/:latest$/, "")])]
+                                value: Settings.aiCompare ? Settings.aiCompareModel : ""
+                                onPicked: v => {
+                                    Settings.aiCompareModel = v;
+                                    Settings.aiCompare = v !== "";
+                                }
+                            }
+
+                            Label {
+                                Layout.topMargin: Metrics.spacing
+                                text: "-- panel --"
+                                color: Colors.dim
+                            }
+
+                            Choice {
+                                title: "side"
+                                options: [["right", "right"], ["left", "left"]]
+                                value: Settings.aiSide
+                                onPicked: v => Settings.aiSide = v
+                            }
+
+                            Choice {
+                                title: "text size"
+                                hintText: "or ctrl + / ctrl - / ctrl 0 in the panel"
+                                options: [[-2, "small"], [0, "normal"], [2, "big"], [4, "bigger"]]
+                                value: Settings.aiZoom
+                                onPicked: v => Settings.aiZoom = v
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Metrics.spacing
+
+                                TermInput {
+                                    Layout.fillWidth: true
+                                    prompt: "you>"
+                                    text: Settings.aiUserLabel
+                                    onAccepted: t => Settings.aiUserLabel = t.trim() || "you"
+                                }
+
+                                TermInput {
+                                    Layout.fillWidth: true
+                                    prompt: "ai>"
+                                    text: Settings.aiBotLabel
+                                    onAccepted: t => Settings.aiBotLabel = t.trim() || "ai"
+                                }
+                            }
                         }
                     }
                 }

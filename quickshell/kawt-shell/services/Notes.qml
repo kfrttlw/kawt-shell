@@ -47,7 +47,45 @@ Singleton {
     }
 
     function remove(id: real): void {
+        if (id === draftId)
+            saveTimer.stop();
         adapter.notes = adapter.notes.filter(n => n.id !== id);
+    }
+
+    // ---- the editor's text, saved half a second after the last key.
+    // The timer lives here and not in the profile: the profile window is destroyed the moment
+    // it closes, and a timer inside it would die with the last words unsaved.
+    property real draftId: 0
+    property string draftBody: ""
+
+    function edit(id: real, body: string): void {
+        if (saveTimer.running && id !== draftId)
+            flush(); // another note is still waiting: save that one first
+        draftId = id;
+        draftBody = body;
+        saveTimer.restart();
+    }
+
+    // save now instead of in a moment
+    function flush(): void {
+        if (!saveTimer.running)
+            return;
+        saveTimer.stop();
+        update(draftId, { body: draftBody });
+    }
+
+    // a note's text, including what's typed but not saved yet
+    function bodyOf(id: real): string {
+        if (saveTimer.running && id === draftId)
+            return draftBody;
+        return notes.find(n => n.id === id)?.body ?? "";
+    }
+
+    Timer {
+        id: saveTimer
+
+        interval: 500
+        onTriggered: root.update(root.draftId, { body: root.draftBody })
     }
 
     function addFolder(name: string): string {

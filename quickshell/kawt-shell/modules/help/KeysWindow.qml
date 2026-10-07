@@ -18,7 +18,7 @@ PanelWindow {
     property var binds: [] // [{ keys, what }]
 
     readonly property var inside: [
-        ["launcher", "↑↓ pick · enter run · ctrl+tab mode · ctrl+s pin · prefixes ! > = ? :"],
+        ["launcher", "↑↓ pick · enter run · ctrl+tab mode · ctrl+s pin · prefixes ! > = ? : ;"],
         ["style (super+w)", "arrows pick a wallpaper · enter set · [ ] theme · t dark/light"],
         ["power (super+esc)", "↑↓ pick · enter run · enter again: now · esc cancel"],
         ["todo", "14:30 / 9am / +30m / 05.10 10:00 · #folder · ! !! !!!"],

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.config
 import qs.components
 import qs.services
@@ -8,7 +9,12 @@ Popover {
     id: root
 
     property int monthOffset: 0
-    readonly property date today: Time.now
+    // from Time.day, not Time.now: the grid below is built again only when the date changes,
+    // not on every tick of the clock
+    readonly property date today: {
+        const [y, m, d] = Time.day.split("-").map(Number);
+        return new Date(y, m - 1, d);
+    }
     readonly property date shown: new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
     readonly property bool isCurrentMonth: monthOffset === 0
     readonly property var cells: {
@@ -119,7 +125,9 @@ Popover {
         }
 
         Repeater {
-            model: Todo.today.slice(0, 5)
+            model: ScriptModel {
+                values: Todo.today.slice(0, 5)
+            }
 
             Label {
                 required property var modelData
@@ -134,7 +142,7 @@ Popover {
 
     Label {
         Layout.alignment: Qt.AlignHCenter
-        text: `week ${root.weekNumber()} · ${Settings.clock24 ? Qt.formatTime(root.today, "hh:mm:ss") : Qt.formatTime(root.today, "h:mm:ss AP").toLowerCase()}`
+        text: `week ${root.weekNumber()} · ${Settings.clock24 ? Qt.formatTime(Time.now, "hh:mm:ss") : Qt.formatTime(Time.now, "h:mm:ss AP").toLowerCase()}`
         color: Colors.dim
         font.pixelSize: Metrics.fontSize - 2
     }

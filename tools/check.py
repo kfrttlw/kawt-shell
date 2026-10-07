@@ -37,6 +37,9 @@ external = {
     "BluetoothDeviceState": "Quickshell.Bluetooth",
     "RowLayout": "QtQuick.Layouts", "ColumnLayout": "QtQuick.Layouts", "GridLayout": "QtQuick.Layouts",
     "MultiEffect": "QtQuick.Effects",
+    "ScriptModel": "Quickshell", "SystemClock": "Quickshell", "QsWindow": "Quickshell", "DesktopEntries": "Quickshell",
+    "IdleMonitor": "Quickshell.Wayland", "IdleInhibitor": "Quickshell.Wayland",
+    "HyprlandFocusGrab": "Quickshell.Hyprland", "PwNode": "Quickshell.Services.Pipewire",
 }
 
 problems = 0

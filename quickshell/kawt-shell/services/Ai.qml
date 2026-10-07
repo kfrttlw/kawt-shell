@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.config
+import qs.utils
 
 // The ai panel's brain. Two providers:
 //   ollama  a local model (localhost:11434 by default; nothing leaves the machine)
@@ -31,6 +32,9 @@ Singleton {
     // [{ role: "user" | "assistant" | "error", text, time (ms), took (ms, answers), tps (answers, ollama) }]
     readonly property var messages: chat?.messages ?? []
     property string partial: ""
+    // what the panel shows of `partial`: at most ten updates a second. Each update lays the
+    // whole answer out again, so following every token (20-50 a second) was mostly wasted work
+    property string partialShown: ""
     property string draft: "" // unsent text of the panel's input, kept while the panel is closed
     property bool busy: false
     property real sentAt: 0 // when the question went out, for "3.2s"
@@ -103,6 +107,18 @@ Singleton {
     function setMessages(list: var): void {
         if (!chat)
             newChat();
+        // `content` (the attached files, the clipboard text of a quick action) can be big, and
+        // it only matters while the message can still go back to the model: the last
+        // Settings.aiHistory messages. Older ones keep just what the chat shows, so chats.json
+        // doesn't grow by whole files and isn't rewritten with them on every message
+        const keep = list.length - Settings.aiHistory;
+        list = list.map((m, i) => {
+            if (i >= keep || m.content === undefined)
+                return m;
+            const short = Object.assign({}, m);
+            delete short.content;
+            return short;
+        });
         const title = chat.title || (list.find(m => m.role === "user")?.text ?? "").slice(0, 60);
         chatStore.chats = chatStore.chats.map(c => c.id === chatStore.current ? Object.assign({}, c, { messages: list, title, updated: Date.now() }) : c);
     }
@@ -190,6 +206,7 @@ Singleton {
         req = xhr;
         offset = 0;
         partial = "";
+        partialShown = "";
         gotError = false;
         looped = false;
         busy = true;
@@ -396,6 +413,7 @@ Singleton {
         if (partial !== "")
             setMessages([...messages, { role: "assistant", text: partial, time: Date.now(), took: Date.now() - sentAt, tps: Math.round(tps), model: askedModel, alt: second }]);
         partial = "";
+        partialShown = "";
         checkedAt = 0;
         busy = false;
         if (looped) {
@@ -425,7 +443,7 @@ Singleton {
     ]
 
     function quick(name: string): void {
-        if (busy)
+        if (busy || clipReader.running)
             return;
         clipAction = name;
         clipReader.running = true;
@@ -433,15 +451,13 @@ Singleton {
 
     property string clipAction: ""
 
-    Process {
+    // Job: waits until the clipboard is read to the end (a plain onExited could see half of it)
+    Job {
         id: clipReader
 
         command: ["wl-paste", "--no-newline", "--type", "text"]
-        stdout: StdioCollector {
-            id: clipText
-        }
-        onExited: code => {
-            const t = clipText.text.trim();
+        onDone: (code, out) => {
+            const t = out.trim();
             const a = root.actions.find(a => a[0] === root.clipAction);
             if (code !== 0 || !t) {
                 root.note("the clipboard is empty (copy some text first)");
@@ -489,7 +505,7 @@ Singleton {
     }
 
     function nextAttach(): void {
-        if (reader.running || attachQueue.length === 0)
+        if (reader.running || !reader.reported || attachQueue.length === 0)
             return;
         reader.path = attachQueue[0];
         attachQueue = attachQueue.slice(1);
@@ -512,18 +528,15 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         onExited: code => root.fileStatus = code === 4 ? "can't open that folder" : ""
     }
 
-    Process {
+    Job {
         id: reader
 
         property string path: ""
 
-        stdout: StdioCollector {
-            id: readerOut
-        }
-        onExited: code => {
+        onDone: (code, out) => {
             if (code === 0) {
-                root.attachments = [...root.attachments, { path: reader.path, text: readerOut.text }];
-                root.fileStatus = readerOut.text.length >= root.fileLimit ? `${reader.path}: only the first ${root.fileLimit / 1000}k characters` : "";
+                root.attachments = [...root.attachments, { path: reader.path, text: out }];
+                root.fileStatus = out.length >= root.fileLimit ? `${reader.path}: only the first ${root.fileLimit / 1000}k characters` : "";
             } else {
                 root.fileStatus = `${reader.path}: ${({ 3: "outside the folder, not allowed", 6: "not a text file" })[code] ?? "can't read it"}`;
             }
@@ -649,13 +662,33 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
     // ------------------------------------------------------------------ api key
 
     function setApiKey(key: string): void {
-        secretStore.apiKey = key.trim();
-        // keep the file private: only you can read it
-        chmod.running = true;
+        key = key.trim();
+        secretStore.apiKey = key; // used at once; the file follows
+        saveKey.input = JSON.stringify({ apiKey: key }, null, 4);
+        saveKey.stdinEnabled = true;
+        saveKey.running = true;
     }
 
+    // The only writer of secrets.json. Created private (umask 077) as a temp file and renamed
+    // into place, so the key is never readable by others, not even for a moment (writing it
+    // first and chmod-ing after left a gap). The key goes in on stdin: arguments of a process
+    // can be read by anyone in /proc.
     Process {
-        id: chmod
+        id: saveKey
+
+        property string input: ""
+
+        command: ["sh", "-c", 'umask 077 && mkdir -p "$1" && cat > "$1/secrets.json.tmp" && mv -f "$1/secrets.json.tmp" "$1/secrets.json"', "sh", Settings.dir]
+        onStarted: {
+            write(input);
+            input = "";
+            stdinEnabled = false;
+        }
+    }
+
+    // a key file saved by an older kawt may still be readable by others
+    Process {
+        id: fixPerms
 
         command: ["chmod", "600", `${Settings.dir}/secrets.json`]
     }
@@ -664,6 +697,14 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         id: removeProc
 
         onExited: root.refresh()
+    }
+
+    Timer {
+        running: root.busy
+        repeat: true
+        interval: 100
+        onTriggered: if (root.partialShown !== root.partial)
+            root.partialShown = root.partial
     }
 
     // a big model can take a while to load, but give up if nothing arrives for 2 minutes
@@ -709,16 +750,13 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         }
     }
 
+    // read only: saving goes through saveKey above, never through the adapter
     FileView {
         path: `${Settings.dir}/secrets.json`
-        printErrors: false
-        onAdapterUpdated: writeAdapter()
-        onLoadFailed: err => {
-            if (err === FileViewError.FileNotFound) {
-                writeAdapter();
-                chmod.running = true;
-            }
-        }
+        printErrors: false // missing until a key is saved
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: fixPerms.running = true
 
         JsonAdapter {
             id: secretStore

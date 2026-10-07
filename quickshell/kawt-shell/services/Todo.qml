@@ -20,15 +20,18 @@ import qs.config
 Singleton {
     id: root
 
-    // older tasks (before folders/importance/icons/notes) get the defaults
-    readonly property var tasks: adapter.tasks.map(t => Object.assign({ folder: "inbox", prio: 0, icon: "", note: "" }, t))
+    // older tasks (before folders/importance/icons/notes) get the defaults. Complete ones are
+    // passed through as they are: the same object stays the same object, so the lists keep their
+    // rows (ScriptModel) instead of building every one again on each change
+    readonly property var tasks: adapter.tasks.map(t => t.folder !== undefined && t.prio !== undefined && t.icon !== undefined && t.note !== undefined ? t : Object.assign({ folder: "inbox", prio: 0, icon: "", note: "" }, t))
     readonly property list<string> folders: adapter.folders
     // nerd font glyphs to pick from: none, note, home, work, book, cart, heart, bolt, code, phone, star, bug
     readonly property list<string> icons: ["", "\uf0f6", "\uf015", "\uf0b1", "\uf02d", "\uf07a", "\uf004", "\uf0e7", "\uf121", "\uf095", "\uf005", "\uf188"]
     // open first; then important first; then by time (timed before untimed); then oldest first
     readonly property var sorted: tasks.slice().sort((a, b) => (a.done - b.done) || (b.prio - a.prio) || ((a.due || Infinity) - (b.due || Infinity)) || (a.id - b.id))
     readonly property int open: tasks.filter(t => !t.done).length
-    readonly property var today: sorted.filter(t => !t.done && t.due && sameDay(new Date(t.due), Time.now))
+    // Time.day changes once a day: this isn't rebuilt every second
+    readonly property var today: Time.day ? sorted.filter(t => !t.done && t.due && sameDay(new Date(t.due), new Date(Time.ms()))) : []
 
     // tasks of one folder; "all" = every folder
     function inFolder(folder: string): var {
@@ -98,7 +101,46 @@ Singleton {
     }
 
     function remove(id: real): void {
+        if (id === noteDraftId)
+            noteDraftId = 0;
         adapter.tasks = adapter.tasks.filter(t => t.id !== id);
+    }
+
+    // ---- a task's note while it's typed. Saved when the editor loses the focus (saving on every
+    // key would rebuild the list under the cursor), or when the profile closes: the draft is
+    // kept here, so it isn't lost with the window.
+    property real noteDraftId: 0
+    property string noteDraft: ""
+
+    function editNote(id: real, text: string): void {
+        if (noteDraftId && noteDraftId !== id)
+            saveNote();
+        noteDraftId = id;
+        noteDraft = text;
+    }
+
+    function saveNote(): void {
+        if (!noteDraftId)
+            return;
+        const id = noteDraftId;
+        noteDraftId = 0;
+        const t = tasks.find(t => t.id === id);
+        if (t && t.note !== noteDraft)
+            update(id, { note: noteDraft });
+    }
+
+    // the same, a moment later: for an editor that is being destroyed right now (its list
+    // can't be rebuilt in the middle of that)
+    function saveNoteSoon(): void {
+        if (noteDraftId)
+            noteSaver.restart();
+    }
+
+    Timer {
+        id: noteSaver
+
+        interval: 0
+        onTriggered: root.saveNote()
     }
 
     function clearDone(folder: string): void {

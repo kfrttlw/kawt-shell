@@ -10,7 +10,13 @@ Singleton {
     id: root
 
     readonly property int offset: Settings.timeOffset
-    property date now: new Date(Date.now() + offset * 60000)
+    // ticks on the second only while seconds are on screen (the bar with seconds, the calendar);
+    // otherwise once a minute, right on the minute
+    readonly property bool seconds: Settings.clockSeconds || Panels.current === "calendar"
+    readonly property date now: new Date(clock.date.getTime() + offset * 60000)
+    // "2026-10-07": changes once a day, for things that only care about the date (the calendar
+    // grid, today's tasks), so they aren't rebuilt on every tick
+    readonly property string day: Qt.formatDate(now, "yyyy-MM-dd")
 
     // bar clock text, from the clock settings
     readonly property string barText: {
@@ -75,25 +81,16 @@ Singleton {
         } else {
             return "format: 14:30, 2:30pm, +3h, -30m, +1h30m";
         }
-        tick();
         return "";
     }
 
     function reset(): void {
         Settings.timeOffset = 0;
-        tick();
     }
 
-    function tick(): void {
-        now = new Date(ms());
-    }
+    SystemClock {
+        id: clock
 
-    onOffsetChanged: tick()
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: root.tick()
+        precision: root.seconds ? SystemClock.Seconds : SystemClock.Minutes
     }
 }

@@ -12,7 +12,10 @@ import qs.services
 // │ > ▣ Firefox *                   web browser │
 // └─────────────────────────────────────────────┘
 // rofi-style launcher. Modes are just prefixes: !cmd shell, >cmd terminal, =expr calc, ?text ai,
-// so they can be typed directly or picked with ctrl+tab / a click on the tab.
+// :text clipboard, ;text open windows, so they can be typed directly or picked with ctrl+tab /
+// a click on the tab.
+// The lists are ScriptModels with reused rows: typing a letter re-sorts the rows that are
+// already there instead of making all of them (and their icons) again.
 PanelWindow {
     id: root
 
@@ -27,7 +30,8 @@ PanelWindow {
         { prefix: ">", name: "term" },
         { prefix: "=", name: "calc" },
         { prefix: "?", name: "ai" },
-        { prefix: ":", name: "clip" }
+        { prefix: ":", name: "clip" },
+        { prefix: ";", name: "win" }
     ]
     readonly property string query: input.text
     readonly property string mode: modes.some(m => m.prefix && query.startsWith(m.prefix)) ? query[0] : ""
@@ -36,8 +40,10 @@ PanelWindow {
     readonly property string calcResult: mode === "=" ? Apps.calc(arg) : ""
     readonly property var results: open && !mode ? Apps.search(query).slice(0, 60) : []
     readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
-    // how many rows the current mode lists (apps or clipboard entries)
-    readonly property int rows: mode === ":" ? clips.length : results.length
+    // open windows whose title or class has the typed text
+    readonly property var wins: open && mode === ";" ? Hypr.windows.filter(w => `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase().includes(arg.toLowerCase())) : []
+    // how many rows the current mode lists (apps, clipboard entries or windows)
+    readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : results.length
     property int current: 0
 
     screen: forScreen
@@ -65,9 +71,13 @@ PanelWindow {
         }
     }
     onQueryChanged: current = 0
-    onCurrentChanged: (mode === ":" ? clipList : list).positionViewAtIndex(current, ListView.Contain)
-    onModeChanged: if (mode === ":")
-        Clipboard.refresh()
+    onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : list).positionViewAtIndex(current, ListView.Contain)
+    onModeChanged: {
+        if (mode === ":")
+            Clipboard.refresh();
+        else if (mode === ";")
+            Hypr.refreshWindows();
+    }
 
     function move(delta: int): void {
         if (rows > 0)
@@ -94,6 +104,8 @@ PanelWindow {
             }
         } else if (mode === ":" && clips[current]) {
             Clipboard.copy(clips[current]);
+        } else if (mode === ";" && wins[current]) {
+            Hypr.focusWindow(wins[current]);
         } else if (mode === "?" && arg) {
             Panels.sidebarScreen = forScreen.name;
             Panels.sidebarOpen = true;
@@ -253,14 +265,20 @@ PanelWindow {
                     if (root.mode === ":")
                         return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
                             : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
-                    return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
+                    if (root.mode === ";")
+                        return `${root.wins.length} window${root.wins.length === 1 ? "" : "s"} · enter: go there`;
+                    // only in "?" mode: just naming Ai here would load the whole ai service (and
+                    // all saved chats) on the first letter typed into the launcher
+                    if (root.mode === "?")
+                        return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
+                    return "";
                 }
                 color: root.mode === "=" && root.calcResult ? Colors.accent : root.arg ? Colors.fg : Colors.dim
             }
 
             Label {
-                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0)
-                text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : "-- no match --"
+                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0) || (root.mode === ";" && root.wins.length === 0)
+                text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : root.mode === ";" && !root.arg ? "-- no windows --" : "-- no match --"
                 color: Colors.dim
             }
 
@@ -308,7 +326,10 @@ PanelWindow {
                 implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
                 visible: root.mode === ":" && count > 0
                 clip: true
-                model: root.clips
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.clips
+                }
                 boundsBehavior: Flickable.StopAtBounds
 
                 delegate: Item {
@@ -379,7 +400,10 @@ PanelWindow {
                 implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
                 visible: count > 0
                 clip: true
-                model: root.results
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.results
+                }
                 boundsBehavior: Flickable.StopAtBounds
 
                 delegate: Item {
@@ -418,8 +442,10 @@ PanelWindow {
                             colored: entry.selected
                         }
 
+                        // the typed letters stand out
                         Label {
-                            text: entry.modelData.name
+                            textFormat: Text.StyledText
+                            text: Apps.highlight(entry.modelData.name, root.query, entry.selected ? Colors.fg : Colors.accent)
                             color: entry.selected ? Colors.accent : Colors.fg
                         }
 
@@ -457,9 +483,88 @@ PanelWindow {
                 }
             }
 
+            // open windows: > icon title                      ws 2 · firefox
+            ListView {
+                id: winList
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === ";" && count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.wins
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: win
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+                    readonly property string cls: modelData.lastIpcObject?.class ?? ""
+
+                    width: winList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: win.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: win.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        AppIcon {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            icon: DesktopEntries.heuristicLookup(win.cls)?.icon ?? ""
+                            name: win.cls || win.modelData.title || "?"
+                            colored: win.selected
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            text: win.modelData.title || win.cls
+                            color: win.selected ? Colors.accent : Colors.fg
+                        }
+
+                        Label {
+                            text: [win.modelData.workspace ? `ws ${win.modelData.workspace.id}` : "", win.cls.toLowerCase()].filter(s => s).join(" · ")
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = win.index
+                        onClicked: {
+                            root.current = win.index;
+                            root.accept();
+                        }
+                    }
+                }
+            }
+
             Label {
                 Layout.alignment: Qt.AlignRight
                 text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
+                    : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
                     : "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3

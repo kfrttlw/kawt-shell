@@ -28,6 +28,8 @@ Singleton {
             args.push("@pts", Gen.sequences(Colors.palette, Settings.termColors));
         if (live && Hypr.lua)
             args.push("@hyprreload", "");
+        else if (live)
+            args.push("@hyprkeyword", Gen.hyprKeywords(Colors.palette));
         proc.command = args;
         proc.running = true;
     }

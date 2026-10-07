@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Layouts
 import qs.config
 import qs.components
@@ -70,7 +71,9 @@ Popover {
             spacing: 2
 
             Repeater {
-                model: Notifs.list.slice(0, 50)
+                model: ScriptModel {
+                    values: Notifs.list.slice(0, 50)
+                }
 
                 Item {
                     id: entry

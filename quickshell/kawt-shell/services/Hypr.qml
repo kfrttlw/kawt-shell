@@ -24,6 +24,38 @@ Singleton {
         dispatch("hl.dsp.exit()", "exit");
     }
 
+    // open windows, for the launcher's window mode (";"); the class comes from IPC data that
+    // Hyprland sends on request (refreshWindows)
+    readonly property var windows: Hyprland.toplevels.values
+
+    function refreshWindows(): void {
+        Hyprland.refreshToplevels();
+    }
+
+    // go to a window: through the wayland toplevel (switches the workspace too), or the dispatcher
+    function focusWindow(t: var): void {
+        if (t?.wayland) {
+            t.wayland.activate();
+            return;
+        }
+        const a = String(t?.address ?? "");
+        if (!a)
+            return;
+        const addr = a.startsWith("0x") ? a : `0x${a}`;
+        dispatch(`hl.dsp.focus({ window = "address:${addr}" })`, `focuswindow address:${addr}`);
+    }
+
+    // the special workspace (scratchpad) shown on a monitor: monitors' IPC data has it, and that
+    // data is only sent on request, so ask again whenever it may have changed
+    Connections {
+        target: Hyprland
+
+        function onRawEvent(event: HyprlandEvent): void {
+            if (event.name === "activespecial")
+                Hyprland.refreshMonitors();
+        }
+    }
+
     FileView {
         path: `${root.configDir}/hyprland.lua`
         printErrors: false

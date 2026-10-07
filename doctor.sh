@@ -88,6 +88,17 @@ else
 fi
 info "open terminals recolor on a theme switch only if 'recolor open terminals' is on in super+w"
 
+echo "-- fastfetch"
+ffc=$config/fastfetch/config.jsonc
+if ! command -v fastfetch > /dev/null; then
+    info "fastfetch isn't installed (optional: sudo pacman -S fastfetch)"
+elif [[ -L $ffc && $(readlink -f "$ffc") == "$state/theme/fastfetch.jsonc" ]]; then
+    have=$(sed -n '1s/.*kawt theme: \([^ ]*\).*/\1/p' "$state/theme/fastfetch.jsonc" 2> /dev/null)
+    [[ -n $have ]] && good "fastfetch uses kawt's colors ($have)" || info "fastfetch uses kawt's starting config: kawt rewrites it in the theme colors when it runs"
+else
+    info "fastfetch uses its own config, not kawt's (./install.sh links it to kawt's)"
+fi
+
 echo "-- hyprland"
 hl=$config/hypr/hyprland.lua
 if [[ -f $hl ]]; then
@@ -130,6 +141,19 @@ if ls /sys/class/bluetooth 2> /dev/null | grep -q .; then
         fail "bluetooth service isn't running" "sudo pacman -S --needed bluez bluez-utils && sudo systemctl enable --now bluetooth"
     fi
 fi
+
+echo "-- locking"
+# kawt locks before sleep through logind (services/Session.qml): it needs gdbus and systemd-inhibit
+if command -v gdbus > /dev/null && command -v systemd-inhibit > /dev/null; then
+    good "gdbus + systemd-inhibit: kawt locks before sleep and on loginctl lock-session"
+    [[ $(setting lockOnSleep) == false ]] && info "but 'before sleep' is off in profile -> cfg"
+else
+    fail "no gdbus or systemd-inhibit: kawt can't lock before sleep" "sudo pacman -S --needed glib2 systemd"
+fi
+# a second locker would fight kawt's over the screen
+for other in hypridle hyprlock swayidle swaylock; do
+    pgrep -x "$other" > /dev/null && info "$other is running too: let only one of them lock (kawt's switches are in profile -> cfg)"
+done
 
 echo "-- ai (ollama)"
 model=$(setting ollamaModel)

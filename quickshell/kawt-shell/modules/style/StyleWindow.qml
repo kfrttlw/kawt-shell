@@ -318,13 +318,17 @@ PanelWindow {
                 cellWidth: Math.floor(width / columns)
                 cellHeight: Math.round((cellWidth - 8) * 9 / 16) + Metrics.fontSize + 16
                 boundsBehavior: Flickable.StopAtBounds
-                model: Wallpapers.files
+                model: ScriptModel {
+                    values: Wallpapers.files
+                }
 
                 delegate: Item {
                     id: thumb
 
                     required property string modelData
                     required property int index
+                    // the small copy from Wallpapers' thumbnail cache; the picture itself until it exists
+                    property bool thumbMissing: false
                     readonly property bool current: Settings.wallpaper === modelData
                     readonly property bool selected: GridView.isCurrentItem && box.activeFocus
 
@@ -346,11 +350,22 @@ PanelWindow {
                         Image {
                             anchors.fill: parent
                             anchors.margins: frame.border.width
-                            source: `file://${thumb.modelData}`
+                            // the version makes it try the thumbnail again once new ones are made
+                            source: thumb.thumbMissing ? `file://${thumb.modelData}` : `file://${Wallpapers.thumb(thumb.modelData)}?v=${Wallpapers.thumbsVersion}`
                             sourceSize.width: 320
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: true
+                            onStatusChanged: if (status === Image.Error && !thumb.thumbMissing)
+                                thumb.thumbMissing = true
+                        }
+
+                        Connections {
+                            target: Wallpapers
+
+                            function onThumbsVersionChanged(): void {
+                                thumb.thumbMissing = false;
+                            }
                         }
                     }
 

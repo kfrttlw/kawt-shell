@@ -12,9 +12,9 @@ set -u
 state=${XDG_STATE_HOME:-$HOME/.local/state}/kawt
 model=${1:-$(sed -n 's/^ *"ollamaModel": *"\([^"]*\)".*/\1/p' "$state/settings.json" 2> /dev/null)}
 model=${model:-llama3.2}
-out=${2:-$HOME/claude_workspace/opencode-probe.txt}
+out=${2:-./opencode-probe.txt}
 port=4097
-pass="probe-$RANDOM$RANDOM"
+pass="probe-$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')" # not $RANDOM: 15 bits each, guessable
 work=$(mktemp -d)
 cfg=$work/opencode.json
 url=http://127.0.0.1:$port

@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.config
+import qs.utils
 
 // The coder agent: the same model as the ai panel, working inside one project folder
 // (Settings.aiFolder) through four tools, in a loop:
@@ -291,8 +292,10 @@ Answer in the language of the user's task.`;
             shell(["search", a.text ?? "", a.path || "."], (code, out) => done(call, id, code, out || "no matches", out ? `${out.split("\n").length} lines` : "no matches"));
         } else if (call.name === "read") {
             const args = ["read", a.path ?? ""];
+            // whole numbers only (the script checks again): the model's arguments are untrusted
+            const from = Math.max(1, parseInt(a.from) || 0);
             if (a.from)
-                args.push(String(a.from), String(a.to || a.from + 299));
+                args.push(String(from), String(Math.max(from, parseInt(a.to) || from + 299)));
             shell(args, (code, out) => done(call, id, code, out, `${out.split("\n").filter(l => /^\s*\d+\|/.test(l)).length} lines`));
         } else if (call.name === "edit") {
             prepareEdit(call, id);
@@ -364,25 +367,37 @@ Answer in the language of the user's task.`;
         });
     }
 
-    // [apply]: write it, remember the original for [undo], go on
+    // [apply]: write it, remember the original for [undo], go on.
+    // The new content was made from the file as it was when the diff was shown; if it changed
+    // since (you edited it while the diff waited), writing would throw your change away. So it's
+    // read again first, and the model is told to redo the edit instead.
     function apply(): void {
         const p = pending;
         if (!p)
             return;
         pending = null;
-        shell(["write", p.path, p.content], code => {
-            if (code !== 0) {
-                setStep(p.stepId, { status: "error", text: problem(code) });
-                reply(p.call, `error: writing failed: ${problem(code)}`);
+        shell(["cat", p.path], (code, now) => {
+            const current = code === 5 ? null : code === 0 ? now : undefined;
+            if (current !== p.original) {
+                const why = current === undefined ? problem(code) : "the file changed since the diff";
+                setStep(p.stepId, { status: "error", text: why });
+                reply(p.call, current === undefined ? `error: ${why}` : "error: the file was changed on disk after you proposed this edit. read it again and redo the edit on the new content.");
                 return;
             }
-            if (!(p.path in touched)) {
-                const t = Object.assign({}, touched);
-                t[p.path] = p.original;
-                touched = t;
-            }
-            setStep(p.stepId, { status: "applied" });
-            reply(p.call, "the edit was applied.");
+            shell(["write", p.path], code => {
+                if (code !== 0) {
+                    setStep(p.stepId, { status: "error", text: problem(code) });
+                    reply(p.call, `error: writing failed: ${problem(code)}`);
+                    return;
+                }
+                if (!(p.path in touched)) {
+                    const t = Object.assign({}, touched);
+                    t[p.path] = p.original;
+                    touched = t;
+                }
+                setStep(p.stepId, { status: "applied" });
+                reply(p.call, "the edit was applied.");
+            }, p.content);
         });
     }
 
@@ -403,7 +418,10 @@ Answer in the language of the user's task.`;
         const entries = Object.entries(touched);
         touched = ({});
         for (const [path, original] of entries)
-            shell(original === null ? ["remove", path] : ["write", path, original], () => {});
+            if (original === null)
+                shell(["remove", path], () => {});
+            else
+                shell(["write", path], () => {}, original);
         addStep({ kind: "info", text: `undo: ${entries.length} file${entries.length === 1 ? "" : "s"} put back` });
     }
 
@@ -460,35 +478,47 @@ Answer in the language of the user's task.`;
 
     // ------------------------------------------------------------------ shell jobs
 
-    function shell(args: list<string>, cb: var): void {
-        jobs = [...jobs, { args, cb }];
-        if (!proc.running)
-            nextJob();
+    // input: text for the command's stdin (the content of a write), or undefined
+    function shell(args: list<string>, cb: var, input: var): void {
+        jobs = [...jobs, { args, cb, input }];
+        nextJob();
     }
 
+    // one at a time: a callback that queues the next job starts it right away, and the
+    // nextJob() after that callback then finds the process busy
     function nextJob(): void {
-        if (jobs.length === 0)
+        if (jobs.length === 0 || proc.running || !proc.reported)
             return;
         const j = jobs[0];
         jobs = jobs.slice(1);
         proc.cb = j.cb;
+        proc.input = typeof j.input === "string" ? j.input : null;
+        proc.stdinEnabled = proc.input !== null;
         proc.command = ["sh", tool, folder, ...j.args];
+        proc.reported = false; // busy from now on, even before the process is up
         proc.running = true;
     }
 
-    Process {
+    // utils/Job.qml: reports only once the output is read to the end (a read of a long
+    // file could otherwise come back cut short)
+    Job {
         id: proc
 
         property var cb: null
+        property var input: null // written once the process is up, then stdin is closed (EOF)
 
-        stdout: StdioCollector {
-            id: procOut
+        onStarted: {
+            if (input === null)
+                return;
+            write(input);
+            input = null;
+            stdinEnabled = false;
         }
-        onExited: code => {
+        onDone: (code, out) => {
             const cb = proc.cb;
             proc.cb = null;
             if (cb)
-                cb(code, procOut.text);
+                cb(code, out);
             root.nextJob();
         }
     }

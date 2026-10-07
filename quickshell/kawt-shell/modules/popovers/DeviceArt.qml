@@ -45,8 +45,9 @@ Column {
             color: Colors.dim
         }
 
+        // the hidden picture's cursor stays still: a blinking one would still redraw the window
         Cursor {
-            running: root.blink
+            running: root.blink && root.laptop
         }
 
         Label {
@@ -108,7 +109,7 @@ Column {
         }
 
         Cursor {
-            running: root.blink
+            running: root.blink && !root.laptop
         }
 
         Label {

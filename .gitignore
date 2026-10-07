@@ -1,4 +1,4 @@
-# secrets: kawt itself needs none, keep it that way
+# secrets: the repo never holds any (an api key lives in ~/.local/state/kawt/secrets.json), keep it that way
 .env
 .env.*
 *.key
@@ -12,6 +12,9 @@ opencode-probe.txt
 
 # backups made by install.sh
 *.bak.*
+
+# the dev installer: only links the configs, never runs pacman (for testing on a ready machine)
+install-dev.sh
 
 # runtime state (settings, notes, generated colors) lives in ~/.local/state/kawt,
 # but just in case it gets copied in here

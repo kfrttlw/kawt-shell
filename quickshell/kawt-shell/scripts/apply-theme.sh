@@ -3,7 +3,9 @@
 # Writes each <content> to <dir>/<name>; an absolute <name> is written as-is if its directory exists.
 # Pseudo names:
 #   @pts        content is escape sequences, sent to every terminal we own (recolors them live)
-#   @hyprreload reload Hyprland so it picks up the new border colors
+#   @hyprreload reload Hyprland so it picks up the new border colors (hyprland.lua)
+#   @hyprkeyword content is "option value" lines, set at once with hyprctl keyword (hyprland.conf:
+#               no reload needed)
 
 dir=$1
 shift
@@ -21,6 +23,11 @@ while [ $# -ge 2 ]; do
             ;;
         @hyprreload)
             hyprctl reload > /dev/null 2>&1
+            ;;
+        @hyprkeyword)
+            printf '%s\n' "$content" | while read -r key value; do
+                [ -n "$key" ] && hyprctl keyword "$key" "$value" > /dev/null 2>&1
+            done
             ;;
         /*)
             [ -d "$(dirname "$name")" ] && printf '%s\n' "$content" > "$name"

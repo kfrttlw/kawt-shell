@@ -15,6 +15,8 @@ import qs.services
 //        14:32 · 3.2s · 24 tok/s           [copy] [note] [retry]
 // Answers render markdown (bold, lists, headings); code blocks get a frame and a copy button.
 // Text size follows Settings.aiZoom (ctrl + / ctrl - in the panel).
+// While an answer streams in it's shown as plain text with a still █ at the end: markdown is
+// laid out once, when it's complete, not ten times a second (Ai.partialShown) as it grows.
 Item {
     id: root
 
@@ -22,7 +24,6 @@ Item {
     property string text: ""
     property bool streaming: false
     property real topPadding: 0
-    property bool cursorOn: true
     property real time: 0
     property real took: 0
     property real tps: 0
@@ -56,6 +57,14 @@ Item {
     signal edit
     signal toNote
 
+    // An answer as markdown, made safe to show. Qt would load the pictures in it
+    // (![x](http://...)) and render raw html (<img src=...>), so a prompt hidden in an attached
+    // file could make the model write a link that sends your data somewhere as soon as the
+    // answer is shown. Pictures become plain links, tags plain text; `code` is left as it is.
+    function safeMarkdown(t: string): string {
+        return t.split(/(`[^`\n]*`)/).map((piece, i) => i % 2 ? piece : piece.replace(/!\[/g, "\\![").replace(/<(?=[A-Za-z\/!?])/g, "&lt;")).join("");
+    }
+
     implicitHeight: row.implicitHeight + topPadding
 
     function copy(t: string): void {
@@ -64,13 +73,6 @@ Item {
         } catch (e) {
             Quickshell.execDetached(["wl-copy", t]);
         }
-    }
-
-    Timer {
-        running: root.streaming && root.visible
-        repeat: true
-        interval: 530
-        onTriggered: root.cursorOn = !root.cursorOn
     }
 
     RowLayout {
@@ -94,18 +96,21 @@ Item {
             Layout.fillWidth: true
             spacing: 4
 
+            // a count, not the parts themselves: while an answer streams, the parts are new
+            // objects on every update, and as a model they'd make every block again. With a
+            // count the blocks stay, and only the text of the last one changes
             Repeater {
-                model: root.parts.length > 0 ? root.parts : [{ code: false, text: "" }]
+                model: Math.max(1, root.parts.length)
 
                 Loader {
                     id: part
 
-                    required property var modelData
                     required property int index
+                    readonly property var piece: root.parts[index] ?? { code: false, lang: "", text: "" }
                     readonly property bool lastPart: index === Math.max(1, root.parts.length) - 1
 
                     Layout.fillWidth: true
-                    sourceComponent: part.modelData.code ? codeBlock : textBlock
+                    sourceComponent: part.piece.code ? codeBlock : textBlock
 
                     // plain text (yours) or markdown (answers)
                     Component {
@@ -115,8 +120,8 @@ Item {
                             readOnly: true
                             selectByMouse: !root.streaming
                             wrapMode: TextEdit.Wrap
-                            textFormat: root.kind === "assistant" ? TextEdit.MarkdownText : TextEdit.PlainText
-                            text: part.modelData.text + (root.streaming && part.lastPart && root.cursorOn ? "█" : "")
+                            textFormat: root.kind === "assistant" && !root.streaming ? TextEdit.MarkdownText : TextEdit.PlainText
+                            text: root.kind === "assistant" && !root.streaming ? root.safeMarkdown(part.piece.text) : part.piece.text + (root.streaming && part.lastPart ? "█" : "")
                             color: root.kind === "error" ? Colors.dim : Colors.fg
                             selectionColor: Colors.accent
                             selectedTextColor: Colors.bg
@@ -149,7 +154,7 @@ Item {
 
                                     Label {
                                         Layout.fillWidth: true
-                                        text: part.modelData.lang || "code"
+                                        text: part.piece.lang || "code"
                                         color: Colors.dim
                                         font.pixelSize: root.size - 3
                                     }
@@ -162,7 +167,7 @@ Item {
                                         label: done ? "copied" : "copy"
                                         bordered: false
                                         onClicked: {
-                                            root.copy(part.modelData.text);
+                                            root.copy(part.piece.text);
                                             done = true;
                                             copiedTimer.restart();
                                         }
@@ -182,7 +187,7 @@ Item {
                                     selectByMouse: true
                                     wrapMode: TextEdit.WrapAnywhere
                                     textFormat: TextEdit.PlainText
-                                    text: part.modelData.text + (root.streaming && part.lastPart && root.cursorOn ? "█" : "")
+                                    text: part.piece.text + (root.streaming && part.lastPart ? "█" : "")
                                     color: Colors.fg
                                     selectionColor: Colors.accent
                                     selectedTextColor: Colors.bg

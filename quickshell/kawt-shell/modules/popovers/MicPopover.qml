@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.config
@@ -75,7 +76,9 @@ Popover {
     }
 
     Repeater {
-        model: root.apps
+        model: ScriptModel {
+            values: root.apps
+        }
 
         RowLayout {
             id: app
@@ -118,7 +121,9 @@ Popover {
         }
 
         Repeater {
-            model: root.sources
+            model: ScriptModel {
+                values: root.sources
+            }
 
             Label {
                 required property PwNode modelData

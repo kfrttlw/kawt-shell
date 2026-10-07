@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Layouts
 import Quickshell.Networking
 import qs.config
@@ -73,8 +74,12 @@ Popover {
         color: Colors.dim
     }
 
+    // ScriptModel: a new scan result moves rows instead of making them all again (the hover
+    // and a failed-connection handler stay with their network)
     Repeater {
-        model: Wifi.enabled ? Wifi.sorted.slice(0, 10) : []
+        model: ScriptModel {
+            values: Wifi.enabled ? Wifi.sorted.slice(0, 10) : []
+        }
 
         Item {
             id: row

@@ -53,6 +53,41 @@ Singleton {
         return i === q.length ? 10 : 0;
     }
 
+    // the typed letters marked in an app's name, as StyledText for the launcher:
+    // "fire" in "Firefox" -> <b><font color=..>Fire</font></b>fox; letters in order ("ffx") too
+    function highlight(name: string, query: string, color: string): string {
+        const q = query.trim().toLowerCase();
+        const lower = name.toLowerCase();
+        const hit = new Array(name.length).fill(false);
+        if (q) {
+            const at = lower.indexOf(q);
+            if (at >= 0) {
+                for (let i = at; i < at + q.length; i++)
+                    hit[i] = true;
+            } else {
+                let j = 0;
+                for (let i = 0; i < name.length && j < q.length; i++) {
+                    if (lower[i] === q[j]) {
+                        hit[i] = true;
+                        j++;
+                    }
+                }
+                if (j < q.length)
+                    hit.fill(false);
+            }
+        }
+        const esc = c => c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : c;
+        let out = "", on = false;
+        for (let i = 0; i < name.length; i++) {
+            if (hit[i] !== on) {
+                out += hit[i] ? `<b><font color="${color}">` : "</font></b>";
+                on = hit[i];
+            }
+            out += esc(name[i]);
+        }
+        return out + (on ? "</font></b>" : "");
+    }
+
     readonly property var pinned: adapter.pinned.map(id => apps.find(a => a.id === id)).filter(a => a)
 
     function isPinned(app: var): bool {

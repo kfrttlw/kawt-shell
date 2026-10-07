@@ -29,9 +29,11 @@ PanelWindow {
         source: Settings.wallpaper ? `file://${Settings.wallpaper}` : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
-        // decode at screen resolution, not the file's (a 6K jpg would eat ~100MB otherwise)
-        sourceSize.width: root.width * (root.devicePixelRatio || 1)
-        sourceSize.height: root.height * (root.devicePixelRatio || 1)
+        // decode at screen resolution, not the file's (a 6K jpg would eat ~100MB otherwise).
+        // From the screen, not the window: the window's size is 0 until the compositor sets it,
+        // and a sourceSize of 0 means "full size" for the first load
+        sourceSize.width: root.forScreen.width * (root.devicePixelRatio || 1)
+        sourceSize.height: root.forScreen.height * (root.devicePixelRatio || 1)
         opacity: status === Image.Ready ? 1 : 0
 
         Behavior on opacity {

@@ -16,8 +16,8 @@ import qs.utils
 // │   lock                            │
 // │ shutting down in 4...  esc cancel │
 // └───────────────────────────────────┘
-// super + escape. arrows / j k pick, enter runs: lock and suspend at once, the rest after a
-// 5 s countdown (enter again: now, esc: cancel).
+// super + escape. arrows / j k pick, enter runs: lock and suspend at once (suspend locks the
+// screen first), the rest after a 5 s countdown (enter again: now, esc: cancel).
 PanelWindow {
     id: root
 
@@ -67,11 +67,11 @@ PanelWindow {
         else if (i === 1)
             Quickshell.execDetached(["systemctl", "reboot"]);
         else if (i === 2)
-            Quickshell.execDetached(["systemctl", "suspend"]);
+            Panels.suspend(); // locks first: never wake up to an open desktop
         else if (i === 3)
             Hypr.exit();
         else
-            Panels.locked = true;
+            Panels.lock(false);
     }
 
     // enter on an action: the safe ones run at once, the rest start the countdown;

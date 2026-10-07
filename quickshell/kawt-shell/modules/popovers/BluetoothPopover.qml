@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import QtQuick.Layouts
 import Quickshell.Bluetooth
 import qs.config
@@ -112,7 +113,9 @@ Popover {
     }
 
     Repeater {
-        model: root.adapter?.enabled ? root.devices.slice(0, 12) : []
+        model: ScriptModel {
+            values: root.adapter?.enabled ? root.devices.slice(0, 12) : []
+        }
 
         Item {
             id: dev

@@ -33,8 +33,13 @@ PanelWindow {
         width: parent.width
         spacing: Metrics.spacing
 
+        // ScriptModel: a new toast leaves the others alone. With a plain array every toast was
+        // made again on each new one, and their timers started over: none went away while
+        // messages kept coming
         Repeater {
-            model: Notifs.popups
+            model: ScriptModel {
+                values: Notifs.popups
+            }
 
             Toast {
                 width: stack.width

@@ -149,7 +149,7 @@ WlSessionLockSurface {
         Label {
             Layout.fillWidth: true
             readonly property var next: Todo.sorted.find(t => !t.done && t.due > Time.now.getTime()) ?? null
-            visible: next !== null
+            visible: next !== null && Settings.lockDetails
             elide: Text.ElideRight
             text: next ? `next: ${Todo.when(next.due)}  ${next.text}` : ""
             color: Colors.fg
@@ -162,7 +162,7 @@ WlSessionLockSurface {
             id: media
 
             Layout.fillWidth: true
-            visible: player !== null
+            visible: player !== null && Settings.lockDetails
             spacing: Metrics.spacing
 
             Label {

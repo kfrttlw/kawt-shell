@@ -13,6 +13,7 @@ Singleton {
 
     readonly property int maxPopups: 4
     readonly property int popupTimeout: 6000
+    readonly property int maxHistory: 100 // older ones are dismissed: a chatty app can't fill the memory
 
     readonly property var list: server.trackedNotifications.values.slice().reverse()
     readonly property int count: list.length
@@ -71,7 +72,20 @@ Singleton {
                 root.unread++;
             if (!Settings.dnd || root.isCritical(n))
                 root.popups = [n, ...root.popups.filter(p => p)].slice(0, root.maxPopups);
+            root.trim();
         }
+    }
+
+    // keep the newest maxHistory; and stamps only for what's still there
+    function trim(): void {
+        const all = server.trackedNotifications.values.slice(); // oldest first
+        for (let i = 0; i < all.length - maxHistory; i++)
+            all[i].dismiss();
+        const kept = {};
+        for (const n of server.trackedNotifications.values)
+            if (stamps[n.id] !== undefined)
+                kept[n.id] = stamps[n.id];
+        stamps = kept;
     }
 
     FileView {

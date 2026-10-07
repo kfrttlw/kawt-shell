@@ -57,13 +57,29 @@ Singleton {
         }
     }
 
-    // sysfs doesn't emit inotify events, so poll (cheap: just a file read).
-    // Fast enough that the osd follows the brightness keys without a visible lag.
+    // sysfs doesn't emit inotify events, so poll: once a second while nothing happens, four
+    // times a second for a few seconds after a change (keys are pressed in bursts), so the osd
+    // follows the keys. Changes made through kawt (the bar, `kawt brightness up` on the
+    // brightness keys, see hypr/kawt.lua) show at once and need no poll at all.
+    property bool busy: false
+
+    onRawChanged: {
+        busy = true;
+        calm.restart();
+    }
+
     Timer {
         running: root.available
         repeat: true
-        interval: 250
+        interval: root.busy ? 250 : 1000
         onTriggered: file.reload()
+    }
+
+    Timer {
+        id: calm
+
+        interval: 3000
+        onTriggered: root.busy = false
     }
 
     Timer {

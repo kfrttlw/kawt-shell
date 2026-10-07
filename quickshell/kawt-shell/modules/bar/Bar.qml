@@ -108,6 +108,10 @@ Variants {
 
             RecButton {}
 
+            CastButton {}
+
+            CafButton {}
+
             Tray {
                 id: tray
                 active: Panels.isOpen("tray", root.modelData)
@@ -178,6 +182,7 @@ Variants {
             ProfilePopover {
                 forScreen: root.modelData
                 anchorItem: profile
+                barWindow: root
             }
         }
 
@@ -187,6 +192,7 @@ Variants {
             DockPopover {
                 forScreen: root.modelData
                 anchorItem: dock
+                barWindow: root
             }
         }
 
@@ -196,6 +202,7 @@ Variants {
             CalendarPopover {
                 forScreen: root.modelData
                 anchorItem: clock
+                barWindow: root
             }
         }
 
@@ -205,6 +212,7 @@ Variants {
             PlayerPopover {
                 forScreen: root.modelData
                 anchorItem: player
+                barWindow: root
             }
         }
 
@@ -215,6 +223,7 @@ Variants {
                 forScreen: root.modelData
                 // with the wifi button hidden, the panel opens under the net graph
                 anchorItem: wifi.visible ? wifi : netGraph
+                barWindow: root
             }
         }
 
@@ -224,6 +233,7 @@ Variants {
             VolumePopover {
                 forScreen: root.modelData
                 anchorItem: volume
+                barWindow: root
             }
         }
 
@@ -233,6 +243,7 @@ Variants {
             BrightnessPopover {
                 forScreen: root.modelData
                 anchorItem: brightness
+                barWindow: root
             }
         }
 
@@ -242,6 +253,7 @@ Variants {
             MicPopover {
                 forScreen: root.modelData
                 anchorItem: mic
+                barWindow: root
             }
         }
 
@@ -251,6 +263,7 @@ Variants {
             BluetoothPopover {
                 forScreen: root.modelData
                 anchorItem: bluetooth
+                barWindow: root
             }
         }
 
@@ -260,6 +273,7 @@ Variants {
             BatteryPopover {
                 forScreen: root.modelData
                 anchorItem: battery
+                barWindow: root
             }
         }
 
@@ -269,6 +283,7 @@ Variants {
             NotifsPopover {
                 forScreen: root.modelData
                 anchorItem: notifs
+                barWindow: root
             }
         }
 
@@ -278,6 +293,7 @@ Variants {
             TrayPopover {
                 forScreen: root.modelData
                 anchorItem: tray
+                barWindow: root
             }
         }
 

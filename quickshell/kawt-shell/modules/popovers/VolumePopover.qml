@@ -72,7 +72,9 @@ Popover {
         }
 
         Repeater {
-            model: root.sinks
+            model: ScriptModel {
+                values: root.sinks
+            }
 
             Label {
                 required property PwNode modelData
@@ -108,7 +110,9 @@ Popover {
         }
 
         Repeater {
-            model: root.streams
+            model: ScriptModel {
+                values: root.streams
+            }
 
             ColumnLayout {
                 required property PwNode modelData

@@ -44,7 +44,9 @@ Popover {
 
     // ------------------------------------------------------------ app list
     Repeater {
-        model: root.app ? [] : root.items
+        model: ScriptModel {
+            values: root.app ? [] : root.items
+        }
 
         Item {
             id: appRow

@@ -74,7 +74,9 @@ Singleton {
             const pct = Math.round(b.percentage * 100);
             for (const step of [5, 10, 20]) {
                 if (pct <= step && !root.warned.includes(step)) {
-                    root.warned = [...root.warned, step];
+                    // this step and every higher one: started at 8%, "plug in the charger" must
+                    // not be followed by a milder "getting low" at 7%
+                    root.warned = [5, 10, 20].filter(s => s >= step || root.warned.includes(s));
                     Quickshell.execDetached(["notify-send", "-a", "battery", "-u", step <= 10 ? "critical" : "normal", `battery ${pct}%`, step <= 10 ? "plug in the charger soon" : "getting low"]);
                     break;
                 }

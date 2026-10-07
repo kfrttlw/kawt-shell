@@ -21,6 +21,40 @@ Singleton {
         finder.running = true;
     }
 
+    // ---- thumbnails for the style window: 320 px jpgs in ~/.cache/kawt/thumbs, made by ffmpeg
+    // once per picture (and again if the picture changes). Opening super+w then reads small
+    // files instead of decoding every wallpaper at full size. Without ffmpeg, or until a
+    // thumbnail exists, the style window shows the picture itself.
+    readonly property string thumbDir: `${Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache"}/kawt/thumbs`
+    property int thumbsVersion: 0 // goes up when new thumbnails are ready: the grid loads them
+
+    function thumb(path: string): string {
+        return `${thumbDir}/${Qt.md5(path)}.jpg`;
+    }
+
+    // args: the dir, then pairs of picture and thumbnail; only missing or outdated ones are made.
+    // Prints 1 if it made any
+    readonly property string thumbScript: 'command -v ffmpeg >/dev/null || exit 0; mkdir -p "$1"; shift; made=0; while [ $# -ge 2 ]; do if [ ! -s "$2" ] || [ "$1" -nt "$2" ]; then ffmpeg -v error -nostdin -y -i "$1" -frames:v 1 -vf "scale=320:-2" -q:v 4 "$2" && made=1; fi; shift 2; done; echo $made'
+
+    function makeThumbs(): void {
+        if (thumbnailer.running || files.length === 0)
+            return;
+        const args = ["sh", "-c", thumbScript, "sh", thumbDir];
+        for (const f of files)
+            args.push(f, thumb(f));
+        thumbnailer.command = args;
+        thumbnailer.running = true;
+    }
+
+    Process {
+        id: thumbnailer
+
+        stdout: StdioCollector {
+            onStreamFinished: if (text.trim() === "1")
+                root.thumbsVersion++
+        }
+    }
+
     function set(path: string): void {
         Settings.wallpaper = path;
         if (path && (backend === "awww" || backend === "swww"))
@@ -123,6 +157,7 @@ Singleton {
             onStreamFinished: {
                 root.files = text.split("\n").filter(l => l).sort((a, b) => a.localeCompare(b));
                 root.loading = false;
+                root.makeThumbs();
             }
         }
     }

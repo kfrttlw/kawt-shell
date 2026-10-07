@@ -33,6 +33,7 @@ Scope {
         status = "";
         fails = 0;
         testLeft = 0;
+        Panels.lockTest = false;
         Panels.locked = false;
     }
 
@@ -45,6 +46,13 @@ Scope {
                 root.status = "";
                 root.testLeft = Panels.lockTest ? 30 : 0;
             }
+        }
+
+        // a real lock (super+l) during a test makes it real: no unlocking by itself.
+        // (the other way round never happens: a test can't turn a real lock into one)
+        function onLockTestChanged(): void {
+            if (Panels.locked && !Panels.lockTest)
+                root.testLeft = 0;
         }
     }
 
@@ -85,10 +93,42 @@ Scope {
         }
     }
 
+    // Panels.suspend(): sleep only once the lock is really on (the compositor confirmed it), so
+    // the machine never wakes up to an open desktop. If the lock doesn't come within 5 s it
+    // stays awake: better than sleeping unlocked.
+    function trySuspend(): void {
+        if (!Panels.suspendAfterLock || !lock.secure)
+            return;
+        Panels.suspendAfterLock = false;
+        suspendTimeout.stop();
+        Quickshell.execDetached(["systemctl", "suspend"]);
+    }
+
+    Connections {
+        target: Panels
+
+        function onSuspendAfterLockChanged(): void {
+            if (Panels.suspendAfterLock)
+                suspendTimeout.restart();
+            root.trySuspend();
+        }
+    }
+
+    Timer {
+        id: suspendTimeout
+
+        interval: 5000
+        onTriggered: Panels.suspendAfterLock = false
+    }
+
     WlSessionLock {
         id: lock
 
         locked: Panels.locked
+        onSecureChanged: {
+            Panels.lockSecure = secure;
+            root.trySuspend();
+        }
 
         LockSurface {
             lockScope: root
