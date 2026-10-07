@@ -50,8 +50,11 @@ Singleton {
         popups = [];
     }
 
+    // the log was opened: everything is seen, the toasts go too (they'd pop up again otherwise
+    // once the log closes: the toast window isn't kept around while the log is open)
     function markRead(): void {
         unread = 0;
+        popups = [];
     }
 
     NotificationServer {

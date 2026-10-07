@@ -144,4 +144,5 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 python3 tools/check.py   # catches the mistakes that stop the shell from loading
 ./doctor.sh              # where the "theme -> files -> apps" chain breaks on this machine
 ./colortest.sh           # which kind of terminal color something uses
+tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 ```

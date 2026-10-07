@@ -339,15 +339,17 @@ PanelWindow {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Metrics.spacing
                 visible: root.tab === 0 && root.coder && Settings.aiWide
-                active: Coder.running
-                label: Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action
+                // root.coder first everywhere Coder is named: in chat mode the coder service is
+                // never even loaded (a singleton starts the first time something reads it)
+                active: root.coder && Coder.running
+                label: !root.coder ? "" : Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action
             }
 
             Label {
                 Layout.fillWidth: true
                 visible: root.tab === 0 && root.coder && !Settings.aiWide && Coder.running
                 elide: Text.ElideRight
-                text: `~ ${Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action}`
+                text: !root.coder ? "" : `~ ${Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action}`
                 color: Colors.accent
                 font.pixelSize: Metrics.fontSize - 1
             }
@@ -370,7 +372,7 @@ PanelWindow {
                 clip: true
                 spacing: Metrics.spacing
                 model: ScriptModel {
-                    values: Coder.steps
+                    values: root.coder ? Coder.steps : []
                 }
                 boundsBehavior: Flickable.StopAtBounds
                 // follows new content only while you're at the bottom; scroll up and it stays put
@@ -446,15 +448,15 @@ PanelWindow {
                 }
 
                 BracketButton {
-                    visible: Coder.running
+                    visible: root.coder && Coder.running
                     label: "stop"
                     bordered: false
                     onClicked: Coder.stop()
                 }
 
                 BracketButton {
-                    visible: Coder.canUndo
-                    label: `undo (${Object.keys(Coder.touched).length})`
+                    visible: root.coder && Coder.canUndo
+                    label: root.coder ? `undo (${Object.keys(Coder.touched).length})` : ""
                     textColor: Colors.warn
                     bordered: false
                     onClicked: Coder.undo()

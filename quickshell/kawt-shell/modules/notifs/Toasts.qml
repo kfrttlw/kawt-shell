@@ -12,7 +12,7 @@ PanelWindow {
     required property ShellScreen forScreen
 
     screen: forScreen
-    visible: forScreen.name === Panels.focusedScreen && Notifs.popups.length > 0 && !Panels.isOpen("notifs", forScreen)
+    visible: true // made only while there are toasts for this screen (Bar.qml)
     color: "transparent"
     implicitWidth: Metrics.toastWidth
     implicitHeight: Math.max(1, stack.implicitHeight)

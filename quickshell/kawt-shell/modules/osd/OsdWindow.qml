@@ -17,7 +17,7 @@ PanelWindow {
     required property ShellScreen forScreen
 
     screen: forScreen
-    visible: (Osd.shown || box.opacity > 0) && forScreen.name === Panels.focusedScreen
+    visible: true // made only while the osd shows, kept a moment for the fade-out (Bar.qml)
     color: "transparent"
     implicitWidth: Math.max(320, line.implicitWidth + Metrics.padding * 4)
     implicitHeight: box.height + box.titleOverhang + 2

@@ -347,12 +347,23 @@ Variants {
             }
         }
 
-        Toasts {
-            forScreen: root.modelData
+        // only while there is something to show: otherwise every screen kept a toast stack and
+        // an osd window around all the time (the osd lingers for its fade-out)
+        Lazy {
+            when: root.modelData.name === Panels.focusedScreen && Notifs.popups.length > 0 && !Panels.isOpen("notifs", root.modelData)
+
+            Toasts {
+                forScreen: root.modelData
+            }
         }
 
-        OsdWindow {
-            forScreen: root.modelData
+        Lazy {
+            when: root.modelData.name === Panels.focusedScreen && Osd.shown
+            linger: 250
+
+            OsdWindow {
+                forScreen: root.modelData
+            }
         }
     }
 }
