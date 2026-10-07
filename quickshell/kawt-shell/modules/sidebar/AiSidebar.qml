@@ -250,9 +250,23 @@ PanelWindow {
                 spacing: Metrics.padding
                 model: Ai.messages
                 boundsBehavior: Flickable.StopAtBounds
-                onCountChanged: Qt.callLater(positionViewAtEnd)
-                onContentHeightChanged: if (Ai.busy)
-                    Qt.callLater(positionViewAtEnd)
+                // follows new content only while you're at the bottom; scroll up and it stays put
+                property bool follow: true
+                property bool autoScroll: false
+
+                function toEnd(): void {
+                    autoScroll = true;
+                    positionViewAtEnd();
+                    autoScroll = false;
+                    follow = true;
+                }
+
+                onContentYChanged: if (!autoScroll)
+                    follow = atYEnd
+                onCountChanged: if (follow)
+                    Qt.callLater(toEnd)
+                onContentHeightChanged: if (follow)
+                    Qt.callLater(toEnd)
 
                 header: Label {
                     width: log.width
@@ -298,6 +312,16 @@ PanelWindow {
                 }
             }
 
+            // you scrolled up: one click back to the newest
+            BracketButton {
+                Layout.alignment: Qt.AlignRight
+                visible: root.tab === 0 && !root.coder && !log.follow
+                label: "↓ bottom"
+                textColor: Colors.accent
+                bordered: false
+                onClicked: log.toEnd()
+            }
+
             // ------------------------------------------------------------ coder
             // the network, wide only; narrow gets one line
             NeuralArt {
@@ -336,8 +360,23 @@ PanelWindow {
                 spacing: Metrics.spacing
                 model: Coder.steps
                 boundsBehavior: Flickable.StopAtBounds
-                onCountChanged: Qt.callLater(positionViewAtEnd)
-                onContentHeightChanged: Qt.callLater(positionViewAtEnd)
+                // follows new content only while you're at the bottom; scroll up and it stays put
+                property bool follow: true
+                property bool autoScroll: false
+
+                function toEnd(): void {
+                    autoScroll = true;
+                    positionViewAtEnd();
+                    autoScroll = false;
+                    follow = true;
+                }
+
+                onContentYChanged: if (!autoScroll)
+                    follow = atYEnd
+                onCountChanged: if (follow)
+                    Qt.callLater(toEnd)
+                onContentHeightChanged: if (follow)
+                    Qt.callLater(toEnd)
 
                 header: Label {
                     width: coderLog.width
@@ -372,6 +411,16 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            // you scrolled up: one click back to the newest
+            BracketButton {
+                Layout.alignment: Qt.AlignRight
+                visible: root.tab === 0 && root.coder && !coderLog.follow
+                label: "↓ bottom"
+                textColor: Colors.accent
+                bordered: false
+                onClicked: coderLog.toEnd()
             }
 
             RowLayout {
