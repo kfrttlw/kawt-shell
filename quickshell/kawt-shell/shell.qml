@@ -2,8 +2,9 @@
 // ^ icon theme for the launcher, dock and tray (apps without one show their first letter).
 //   Overridden by the QS_ICON_THEME environment variable if that is set.
 //@ pragma DefaultEnv QS_DROP_EXPENSIVE_FONTS=1
-// ^ don't load the huge fallback fonts (color emoji, CJK) fontconfig would pull in: tens of MB
-//   for glyphs kawt never draws. "Default": setting the variable yourself still wins.
+// ^ fonts packed for the web (woff / woff2) are skipped: slow to load, heavy in memory, and
+//   some packages put them on the system. kawt's own font is a plain ttf, untouched.
+//   "Default": setting the variable yourself still wins.
 import QtQuick
 import Quickshell
 import qs.services

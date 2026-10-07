@@ -64,11 +64,16 @@ cd ~/kawt
    let me pick      part by part
 ```
 
-A menu asks what to install (arrows, space, enter). Then it shows the plan, and after a yes:
+A menu asks which system this is (it guesses: Arch-based or not) and what to install
+(arrows, space, enter). Then it shows the plan, and after a yes:
 
 - installs what's missing with `pacman` (one `sudo pacman -Syu --needed ...`: the system is
-  updated in the same go, Arch doesn't like half-updated systems; you can switch that off),
-  and what only the AUR has (quickshell, on some setups) with `paru` or `yay` if you have one
+  updated in the same go, Arch doesn't like half-updated systems; you can switch that off).
+  Quickshell comes from the AUR if the repos don't have it: with `paru` or `yay` if you have
+  one, otherwise built right there with `makepkg` (no helper needed). `pacman -Syu` never
+  updates AUR packages: run `./install.sh` again now and then and it updates quickshell when
+  the AUR has a newer one, and builds it again after a Qt update (`./doctor.sh` tells you
+  when either is due). With paru / yay, their `-Syu` does the same
 - symlinks the configs, so `git pull` updates everything in place. Configs that are already
   there are replaced but kept in `~/.local/state/kawt/backups/<date>/`
 - gives your `hyprland.lua` one line that loads `hypr/kawt.lua` (wrapped in `pcall`, so a
@@ -77,6 +82,11 @@ A menu asks what to install (arrows, space, enter). Then it shows the plan, and 
   installed for you: next to iwd or systemd-networkd it can take the network over
 
 It never runs as root (it asks for sudo itself, only for pacman), and running it again is safe.
+
+Packages are installed on Arch and what's built on it (EndeavourOS, CachyOS, Manjaro...).
+On another distro the installer still sets up everything of kawt's own (configs, binds,
+prompt, fastfetch) and lists what to install yourself; quickshell itself: see
+[quickshell.org](https://quickshell.org).
 
 ```sh
 ./install.sh --dry-run       # see what it would do

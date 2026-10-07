@@ -49,7 +49,7 @@ parts=(
     "kitty|kitty|the terminal, in the theme's colors"
     "zsh|zsh prompt|┌[user@host]─[~/dir]─[branch]  in the theme's colors"
     "fastfetch|fastfetch|system info with the little thinkpad"
-    "extras|extras|ollama (local ai), cava, fortune, wallpapers, night light, power profiles"
+    "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power"
 )
 # packages per part; "a|b" = the first of them the repos have
 pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2)
@@ -147,7 +147,23 @@ key() {
     fi
 }
 
-cursor_back() { printf '\e[?25h' 2> /dev/null > /dev/tty; } # stderr first: no tty, no message
+# the cursor back on, lines wrapping again (the menus switch both off)
+cursor_back() { printf '\e[?25h\e[?7h' 2> /dev/null > /dev/tty; } # stderr first: no tty, no message
+
+# A menu line must fit the terminal: a wrapped one takes two rows, and the menu, which moves up
+# one row per item to draw itself again, then draws over the wrong lines. So every line is cut
+# to the width (measured at each redraw: the window may change), and wrapping is off meanwhile.
+fit() { # fit <text> <room>: the text, cut with … if longer than room
+    local t=$1 room=$2
+    ((room < 1)) && return
+    ((${#t} > room)) && t="${t:0:room-1}…"
+    printf '%s' "$t"
+}
+cols() {
+    local c
+    c=$(stty size < /dev/tty 2> /dev/null | cut -d' ' -f2)
+    ((c > 0)) 2> /dev/null && echo "$c" || echo 80
+}
 trap cursor_back EXIT
 quit() {
     cursor_back
@@ -161,15 +177,16 @@ trap quit INT
 choose() {
     local -n chosen=$1
     shift
-    local items=("$@") n=$# cur=0 i name what k
-    printf '\e[?25l' > /dev/tty
+    local items=("$@") n=$# cur=${CHOOSE_AT:-0} i name what k room # CHOOSE_AT=<n>: start there
+    printf '\e[?25l\e[?7l' > /dev/tty
     while :; do
+        room=$(($(cols) - 21))
         for i in "${!items[@]}"; do
-            name=${items[i]%%|*} what=${items[i]#*|}
+            name=${items[i]%%|*} what=$(fit "${items[i]#*|}" "$room")
             if ((i == cur)); then
-                printf '\e[2K %s> %-14s%s %s\n' "$acc" "$name" "$off" "$what" > /dev/tty
+                printf '\e[2K %s> %-16s%s %s\n' "$acc" "$name" "$off" "$what" > /dev/tty
             else
-                printf '\e[2K   %-14s %s%s%s\n' "$name" "$dim" "$what" "$off" > /dev/tty
+                printf '\e[2K   %-16s %s%s%s\n' "$name" "$dim" "$what" "$off" > /dev/tty
             fi
         done
         k=$(key) || quit
@@ -189,11 +206,12 @@ choose() {
 pick() {
     local -n _on=$1 # not `on`: picking the array named on would point it at itself
     shift
-    local items=("$@") n=$# cur=0 i name what box k
-    printf '\e[?25l' > /dev/tty
+    local items=("$@") n=$# cur=0 i name what box k room
+    printf '\e[?25l\e[?7l' > /dev/tty
     while :; do
+        room=$(($(cols) - 21))
         for i in "${!items[@]}"; do
-            name=${items[i]%%|*} what=${items[i]#*|}
+            name=${items[i]%%|*} what=$(fit "${items[i]#*|}" "$room")
             box="[ ]"
             ((_on[i])) && box="[x]"
             if ((i == cur)); then
@@ -393,7 +411,35 @@ for target in "$qs_dst" "$config/kitty"; do
     done
 done
 
-# ------------------------------------------------------------------ 1. what
+# ------------------------------------------------------------------ 1. which system
+# Arch and what's built on it (EndeavourOS, CachyOS, Manjaro...) get their packages installed.
+# Anywhere else the package names are anyone's guess: kawt installs its configs there and lists
+# what to get by hand (like caelestia and most rices do outside arch). Detected from
+# /etc/os-release; the menu lets you say otherwise.
+os_id=$(. /etc/os-release 2> /dev/null && printf '%s' "${ID:-}")
+os_like=$(. /etc/os-release 2> /dev/null && printf '%s' "${ID_LIKE:-}")
+os_name=$(. /etc/os-release 2> /dev/null && printf '%s' "${PRETTY_NAME:-${ID:-}}")
+is_arch=0
+[[ " $os_id $os_like " == *" arch "* ]] && command -v pacman > /dev/null && is_arch=1
+if [[ -z $preset ]] && can_ask; then
+    section "which system is this?"
+    say "${dim}  looks like ${os_name:-an unknown one} · ↑↓ move · enter pick${off}"
+    sys=0
+    CHOOSE_AT=$((1 - is_arch)) choose sys "arch|or based on it (endeavouros, cachyos, manjaro): installs packages too" \
+        "something else|only kawt's configs, plus a list of what to install"
+    if ((sys == 0)) && ! command -v pacman > /dev/null; then
+        say "${red}no pacman here${off}, so kawt can only do its configs."
+        is_arch=0
+    else
+        is_arch=$((sys == 0))
+    fi
+fi
+if ((!is_arch)); then
+    packages=0
+    update=0
+fi
+
+# ------------------------------------------------------------------ 2. what
 # on = which parts, in the order of `parts`
 on=(1 1 1 1 1 0)
 case $preset in
@@ -427,36 +473,33 @@ want() { # want <part id>: is it picked?
     return 1
 }
 
-if ! command -v pacman > /dev/null; then
-    packages=0
-    update=0
-    no_pacman=1
-fi
 if ((packages)) && [[ -z $preset ]] && can_ask; then
     section "packages"
     say "${dim}  ↑↓ move · space on/off · enter go on${off}"
     opts=("$packages" "$update")
-    pick opts "install them|what's missing, with pacman (and paru / yay for the aur)" \
-        "update first|the whole system (pacman -Syu): arch doesn't like half-updated systems"
+    pick opts "install them|what's missing, with pacman (quickshell from the aur if needed)" \
+        "update first|the whole system too (pacman -Syu), as arch wants it"
     packages=${opts[0]}
     update=$((opts[0] && opts[1]))
 fi
 
-# ------------------------------------------------------------------ 2. packages
+# ------------------------------------------------------------------ 3. packages
 installed() { pacman -T -- "$1" > /dev/null 2>&1; } # also true for a package that provides it (quickshell-git)
 in_repos() { pacman -Si -- "$1" > /dev/null 2>&1; }
 
+# what the picked parts need (arch package names; "a|b" = the first one there is)
+wanted=()
+for id in shell hypr kitty zsh fastfetch extras; do
+    want "$id" || continue
+    declare -n list="pkgs_$id"
+    wanted+=("${list[@]}")
+    unset -n list
+done
+want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
+want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && wanted+=(bluez bluez-utils)
+
 repo_pkgs=() aur_pkgs=() have=0
 if ((packages)); then
-    wanted=()
-    for id in shell hypr kitty zsh fastfetch extras; do
-        want "$id" || continue
-        declare -n list="pkgs_$id"
-        wanted+=("${list[@]}")
-        unset -n list
-    done
-    want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
-    want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && wanted+=(bluez bluez-utils)
     for spec in "${wanted[@]}"; do
         IFS='|' read -ra alts <<< "$spec"
         found=0
@@ -482,7 +525,105 @@ if ((packages)); then
 fi
 aur_helper=$(command -v paru || command -v yay || true)
 
-# ------------------------------------------------------------------ 3. the plan
+# The AUR is a shelf of build recipes; paru and yay fetch and build them for you. kawt only needs
+# one thing from there (quickshell, when the repos don't have it), so without a helper it does
+# the same by hand: get the recipe into ~/.cache/kawt/aur/<package>, build and install it with
+# makepkg. aur_build <package> [rebuild]: rebuild = build it again although it's installed
+aur_dir=${XDG_CACHE_HOME:-$HOME/.cache}/kawt/aur
+aur_build() {
+    local pkg=$1 dir=$aur_dir/$1 flag=--needed
+    [[ ${2:-} == rebuild ]] && flag=-f
+    if [[ -d $dir/.git ]]; then
+        run git -C "$dir" pull -q --ff-only || return 1
+    else
+        run mkdir -p "$aur_dir" && run git clone -q "https://aur.archlinux.org/$pkg.git" "$dir" || return 1
+    fi
+    # -r: the build tools makepkg installs for this (cmake, ninja...) go again afterwards
+    if ((dry)); then
+        note "would run: cd $(short "$dir") && makepkg -sir $flag"
+        return 0
+    fi
+    (cd "$dir" && makepkg -sir "$flag" "${noconfirm[@]}")
+}
+
+# an arch package name -> what to look for on another system
+human() {
+    case $1 in
+        quickshell) echo "quickshell (see quickshell.org)" ;;
+        ttf-jetbrains-mono-nerd) echo "JetBrainsMono Nerd Font" ;;
+        papirus-icon-theme) echo "Papirus icons" ;;
+        libnotify) echo "notify-send (libnotify)" ;;
+        glib2) echo "gdbus (glib2)" ;;
+        fortune-mod) echo "fortune" ;;
+        "awww|swww") echo "awww or swww" ;;
+        bluez-utils) ;;
+        *) echo "$1" ;;
+    esac
+}
+needs_list() {
+    local p n out=()
+    for p in "${wanted[@]}"; do
+        n=$(human "$p")
+        [[ -n $n ]] && out+=("$n")
+    done
+    local IFS=,
+    printf '%s' "${out[*]}" | sed 's/,/, /g'
+}
+
+# An AUR quickshell is built against the Qt it found then. After a Qt update it has to be built
+# again, or it warns "built against Qt X but the system has Qt Y" and may crash. So: is Qt
+# (qt6-base) newer than the quickshell package? Prints that package's name if so.
+# (Packages from the repos are rebuilt by Arch itself, and -bin ones can't be.)
+stamp() { # stamp <package> "Install Date" | "Build Date": as seconds
+    local d
+    d=$(LC_ALL=C pacman -Qi -- "$1" 2> /dev/null | sed -n "s/^$2 *: //p")
+    [[ -n $d ]] && date -d "$d" +%s 2> /dev/null
+}
+# Is quickshell built for an older Qt than the one installed? Prints "<package> <aur|arch>" if so.
+#   aur   built here, before the Qt we have was installed: kawt builds it again
+#   arch  from the repos, built by Arch before it built our Qt: Arch hasn't rebuilt it yet. It
+#         always does within days ("Rebuild for Qt 6.11.1", "Qt 6.11.2 rebuild"...) and
+#         `pacman -Syu` brings it; kawt only says so (building it here instead would be the same
+#         compiling as Arch does, for a few days' difference)
+stale_quickshell() {
+    local q from qt qs
+    command -v pacman > /dev/null || return 1
+    q=$(pacman -Qq 2> /dev/null | grep -xE 'quickshell(-git)?' | head -n 1)
+    [[ -n $q ]] || return 1
+    if pacman -Qmq 2> /dev/null | grep -x "$q" > /dev/null; then
+        from=aur
+        qt=$(stamp qt6-base "Install Date") qs=$(stamp "$q" "Install Date")
+    else
+        from=arch
+        qt=$(stamp qt6-base "Build Date") qs=$(stamp "$q" "Build Date")
+    fi
+    [[ -n $qt && -n $qs ]] && ((qt > qs)) || return 1
+    printf '%s %s' "$q" "$from"
+}
+
+# pacman -Syu never looks at the AUR: an aur quickshell would stay at its version for good. So
+# kawt asks the AUR itself (its rpc api: just a question, nothing is downloaded or changed) and
+# builds the newer one. A -git package has no version to compare and is left alone.
+aur_version() { # aur_version <package>: the version the AUR has now
+    curl -s -m 10 "https://aur.archlinux.org/rpc/v5/info?arg%5B%5D=$1" 2> /dev/null | grep -o '"Version":"[^"]*"' | head -n 1 | cut -d'"' -f4
+}
+qs_have="" qs_update=""
+if ((packages)) && pacman -Qmq 2> /dev/null | grep -x quickshell > /dev/null; then
+    qs_have=$(pacman -Q quickshell 2> /dev/null | cut -d' ' -f2)
+    v=$(aur_version quickshell)
+    [[ -n $v && -n $qs_have ]] && (($(vercmp "$v" "$qs_have") > 0)) && qs_update=$v
+fi
+# quickshell already behind the installed Qt (see stale_quickshell)
+stale_now=""
+((packages)) && stale_now=$(stale_quickshell)
+# without paru / yay an aur quickshell is (re)built here: that needs git and base-devel
+if [[ -z $aur_helper ]] && { ((${#aur_pkgs[@]})) || [[ -n $qs_have ]]; }; then
+    for p in git base-devel; do
+        installed "$p" || [[ " ${repo_pkgs[*]} " == *" $p "* ]] || repo_pkgs+=("$p")
+    done
+fi
+
+# ------------------------------------------------------------------ 4. the plan
 section "plan"
 names=()
 for i in "${!parts[@]}"; do
@@ -492,6 +633,7 @@ if ((${#names[@]} == 0)); then
     say "nothing picked. ${dim}nothing was changed.${off}"
     exit 0
 fi
+printf '  %-9s %s\n' "system" "${os_name:-unknown}$( ((is_arch)) && printf ' (arch: packages included)' || printf ' (configs only)')"
 printf '  %-9s %s\n' "install" "$(IFS=,; printf '%s' "${names[*]}" | sed 's/,/, /g')"
 if ((packages)); then
     pac="sudo pacman -S$( ((update)) && printf 'yu')"
@@ -503,10 +645,13 @@ if ((packages)); then
         printf '  %-9s %s\n' "packages" "${dim}all there ($have)${off}"
     fi
     if ((${#aur_pkgs[@]})); then
-        printf '  %-9s %s\n' "aur" "${aur_pkgs[*]}  ${dim}$( [[ -n $aur_helper ]] && printf 'with %s' "${aur_helper##*/}" || printf 'no paru / yay: shown how at the end')${off}"
+        printf '  %-9s %s\n' "aur" "${aur_pkgs[*]}  ${dim}$( [[ -n $aur_helper ]] && printf 'with %s' "${aur_helper##*/}" || printf 'built here with makepkg (no paru / yay needed)')${off}"
     fi
-elif ((${no_pacman:-0})); then
-    printf '  %-9s %s\n' "packages" "${dim}no pacman here: install the needs yourself (see the readme)${off}"
+    [[ -n $qs_update ]] && printf '  %-9s %s\n' "update" "quickshell $qs_have → $qs_update  ${dim}(from the aur)${off}"
+    [[ -n $stale_now && ${stale_now#* } == aur ]] && printf '  %-9s %s\n' "rebuild" "${stale_now% *}  ${dim}(built for an older Qt than yours)${off}"
+elif ((!is_arch)); then
+    printf '  %-9s %s\n' "packages" "${dim}${os_name:-this system} isn't arch: kawt can't install packages here${off}"
+    printf '  %-9s %s\n' "get" "$(needs_list)"
 else
     printf '  %-9s %s\n' "packages" "${dim}left alone${off}"
 fi
@@ -517,12 +662,12 @@ if ! ask "go?"; then
     exit 0
 fi
 
-# ------------------------------------------------------------------ 4. install packages
+# ------------------------------------------------------------------ 5. install packages
 failed=0
+noconfirm=()
+((yes)) && noconfirm=(--noconfirm)
 if ((packages)); then
     section "packages"
-    noconfirm=()
-    ((yes)) && noconfirm=(--noconfirm)
     if ((update)); then
         run sudo pacman -Syu --needed "${noconfirm[@]}" "${repo_pkgs[@]}" || { fail "pacman failed" "see above; then run ./install.sh again"; failed=1; }
     elif ((${#repo_pkgs[@]})); then
@@ -532,27 +677,75 @@ if ((packages)); then
         if [[ -n $aur_helper ]]; then
             run "$aur_helper" -S --needed "${noconfirm[@]}" "${aur_pkgs[@]}" || { fail "${aur_helper##*/} failed" "see above"; failed=1; }
         else
-            warn "these are in the aur: ${aur_pkgs[*]}" "install an aur helper first: git clone https://aur.archlinux.org/paru-bin.git && cd paru-bin && makepkg -si"
+            for p in "${aur_pkgs[@]}"; do
+                note "$p: from the aur, built here (the recipe: https://aur.archlinux.org/packages/$p)"
+                aur_build "$p" || { fail "building $p failed" "see above"; failed=1; }
+            done
+        fi
+    fi
+    if [[ -n $qs_update ]]; then
+        note "quickshell $qs_have → $qs_update, from the aur"
+        if [[ -n $aur_helper ]]; then
+            run "$aur_helper" -S "${noconfirm[@]}" quickshell || { fail "updating quickshell failed" "see above"; failed=1; }
+        else
+            aur_build quickshell || { fail "updating quickshell failed" "see above"; failed=1; }
+        fi
+    fi
+    # quickshell built for an older Qt (the update may have just brought a new one): build it again
+    if s=$(stale_quickshell); then
+        stale=${s% *} from=${s#* }
+        if [[ $from == arch ]]; then
+            warn "Arch hasn't rebuilt $stale for this Qt yet: it may crash until then" "the rebuild comes with sudo pacman -Syu, usually within days; kawt works meanwhile"
+        elif [[ -n $aur_helper ]]; then
+            note "Qt is newer than $stale: building $stale again against it"
+            run "$aur_helper" -S --rebuild "${noconfirm[@]}" "$stale" || { fail "rebuilding $stale failed" "see above; until it works kawt may crash"; failed=1; }
+        else
+            note "Qt is newer than $stale: building $stale again against it"
+            aur_build "$stale" rebuild || { fail "rebuilding $stale failed" "see above; until it works kawt may crash"; failed=1; }
         fi
     fi
     ((failed)) || pass "packages"
 fi
 
-# ------------------------------------------------------------------ 5. checks
+# ------------------------------------------------------------------ 6. checks
 section "checks"
-need_cmd() { # need_cmd <command> <what for>
-    if command -v "$1" > /dev/null; then pass "$1"; else fail "$1 not found" "$2"; fi
+# need_cmd <command> <what for>. On arch a missing one stops the install (the packages should be
+# there by now); elsewhere it's a reminder: the configs go in anyway, kawt runs once it's there
+need_cmd() {
+    if command -v "$1" > /dev/null; then
+        pass "$1"
+    elif ((is_arch)); then
+        fail "$1 not found" "$2"
+    else
+        warn "$1 not found" "$2"
+    fi
 }
 if want shell; then
     need_cmd qs "the shell itself (package quickshell)"
+    if ((!packages)) && s=$(stale_quickshell); then
+        stale=${s% *}
+        if [[ ${s#* } == arch ]]; then
+            warn "$stale is built for an older Qt: Arch hasn't rebuilt it yet, it may crash" "the rebuild comes with sudo pacman -Syu, usually within days"
+        else
+            fix="./install.sh (it builds it again)"
+            [[ -n $aur_helper ]] && fix="${aur_helper##*/} -S --rebuild $stale"
+            warn "$stale was built before the last Qt update: it may crash" "build it again: $fix"
+        fi
+    fi
     need_cmd hyprctl "the compositor (package hyprland)"
-    if fc-list : family 2> /dev/null | grep -F "JetBrainsMono Nerd Font" > /dev/null; then pass "JetBrainsMono Nerd Font"; else fail "JetBrainsMono Nerd Font not found" "the font of everything (ttf-jetbrains-mono-nerd)"; fi
+    if fc-list : family 2> /dev/null | grep -F "JetBrainsMono Nerd Font" > /dev/null; then
+        pass "JetBrainsMono Nerd Font"
+    elif ((is_arch)); then
+        fail "JetBrainsMono Nerd Font not found" "the font of everything (ttf-jetbrains-mono-nerd)"
+    else
+        warn "JetBrainsMono Nerd Font not found" "the font of everything: nerdfonts.com, JetBrainsMono"
+    fi
     # NetworkManager isn't installed for you: next to iwd or systemd-networkd it can take the
     # network over. The wifi panel needs it, the rest of kawt doesn't
     if command -v nmcli > /dev/null; then
         systemctl is-active --quiet NetworkManager 2> /dev/null && pass "NetworkManager (wifi panel)" || warn "NetworkManager isn't running" "the wifi panel needs it: sudo systemctl enable --now NetworkManager"
     else
-        warn "no NetworkManager: the wifi panel stays empty" "if you want it (and don't use iwd/networkd alone): sudo pacman -S networkmanager"
+        warn "no NetworkManager: the wifi panel stays empty" "if you want it (and don't use iwd/networkd alone), install networkmanager"
     fi
 fi
 want kitty && need_cmd kitty "the terminal (package kitty)"
@@ -576,7 +769,7 @@ if ((errors)) && ((!dry)); then
     exit 1
 fi
 
-# ------------------------------------------------------------------ 6. configs
+# ------------------------------------------------------------------ 7. configs
 section "configs"
 if want shell; then
     link "$repo/quickshell/kawt-shell" "$qs_dst" || { fail "could not link $qs_dst"; failed=1; }
@@ -605,7 +798,7 @@ if want zsh && command -v zsh > /dev/null; then
     hook "$zshrc" "$marker_zsh" "$line_zsh" || { fail "could not edit $zshrc"; failed=1; }
 fi
 
-# ------------------------------------------------------------------ 7. services
+# ------------------------------------------------------------------ 8. services
 # only asked, never just switched on
 if ((!dry)); then
     if want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && command -v bluetoothctl > /dev/null && ! systemctl is-active --quiet bluetooth 2> /dev/null; then
@@ -619,7 +812,7 @@ if ((!dry)); then
     fi
 fi
 
-# ------------------------------------------------------------------ 8. verify
+# ------------------------------------------------------------------ 9. verify
 if ((!dry)); then
     section "verify"
     if want shell; then
@@ -656,5 +849,9 @@ fi
 say "${acc}done.${off} start kawt:  ${acc}qs kill -c kawt-shell; qs -c kawt-shell -d${off}  ${dim}(or log in to hyprland again)${off}"
 want zsh && command -v zsh > /dev/null && say "the new prompt shows up in new terminals ${dim}(or now: exec zsh)${off}"
 want fastfetch && say "try: ${acc}fastfetch${off}"
+if ((!is_arch)); then
+    say "${acc}still to get${off} on ${os_name:-this system} (kawt couldn't install them here): $(needs_list)"
+    say "${dim}quickshell for your system: https://quickshell.org (install guide); some systems have a package (fedora: copr, nixos)${off}"
+fi
 say "${dim}first time? super + / shows every key.  ./doctor.sh says what's wrong if something is.${off}"
 exit 0

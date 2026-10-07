@@ -18,6 +18,41 @@ setting() { sed -n "s/^ *\"$1\": *\"\{0,1\}\([^\",]*\)\"\{0,1\},\{0,1\} *$/\1/p"
 echo "-- shell"
 # by process name: matching the command line would also find this very script
 if pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; then good "quickshell is running"; else fail "quickshell is not running" "start kawt: qs -c kawt-shell -d"; fi
+# quickshell built for an older Qt than the installed one warns "built against Qt X" and may crash.
+#   from the aur: built here before the last Qt update (install dates)
+#   from arch:    Arch built it before our Qt and hasn't rebuilt it yet (build dates)
+if command -v pacman > /dev/null; then
+    q=$(pacman -Qq 2> /dev/null | grep -xE 'quickshell(-git)?' | head -n 1)
+    if [[ -n $q ]]; then
+        at() { date -d "$(LC_ALL=C pacman -Qi -- "$1" 2> /dev/null | sed -n "s/^$2 *: //p")" +%s 2> /dev/null; }
+        if pacman -Qmq 2> /dev/null | grep -x "$q" > /dev/null; then
+            from=aur kind="Install Date"
+        else
+            from=arch kind="Build Date"
+        fi
+        qt_at=$(at qt6-base "$kind") qs_at=$(at "$q" "$kind")
+        if [[ -n $qt_at && -n $qs_at ]] && ((qt_at > qs_at)); then
+            if [[ $from == arch ]]; then
+                fail "$q is built for an older Qt: Arch hasn't rebuilt it yet (it may crash)" "the rebuild comes with sudo pacman -Syu, usually within days; kawt works meanwhile"
+            else
+                helper=$(command -v paru || command -v yay || true)
+                fix="./install.sh (it builds it again)"
+                [[ -n $helper ]] && fix="${helper##*/} -S --rebuild $q"
+                fail "$q was built before the last Qt update (it may crash)" "build it again: $fix"
+            fi
+        else
+            good "$q is built against the current Qt"
+        fi
+        # pacman -Syu doesn't look at the AUR: is there a newer quickshell there? (not for -git)
+        if [[ $from == aur && $q == quickshell ]]; then
+            have=$(pacman -Q quickshell 2> /dev/null | cut -d' ' -f2)
+            aur=$(curl -s -m 10 "https://aur.archlinux.org/rpc/v5/info?arg%5B%5D=quickshell" 2> /dev/null | grep -o '"Version":"[^"]*"' | head -n 1 | cut -d'"' -f4)
+            if [[ -n $aur && -n $have ]] && (($(vercmp "$aur" "$have") > 0)); then
+                info "quickshell $aur is in the aur (you have $have): ./install.sh updates it (or paru -Syu / yay -Syu)"
+            fi
+        fi
+    fi
+fi
 if [[ -f $config/quickshell/kawt-shell/shell.qml ]]; then
     good "config: $(readlink -f "$config/quickshell/kawt-shell")"
 else
