@@ -21,6 +21,11 @@ PanelWindow {
 
     default property alias content: body.data
 
+    // use these instead of onOpenChanged: the popover is created already open (Bar.qml).
+    // (not opened / closed: the window already has a `closed` signal of its own)
+    signal panelOpened
+    signal panelClosed
+
     screen: forScreen
     visible: open
     color: "transparent"
@@ -35,9 +40,14 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: if (open) {
-        card.forceActiveFocus();
-        fadeIn.restart();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            card.forceActiveFocus();
+            fadeIn.restart();
+            root.panelOpened();
+        }
+        onClosed: root.panelClosed()
     }
 
     MouseArea {

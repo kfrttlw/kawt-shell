@@ -59,14 +59,16 @@ ColumnLayout {
         return `${Math.floor(m / 1440)}d`;
     }
 
-    onOpenChanged: {
-        armed = "";
-        if (open) {
-            boot = 0;
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            root.armed = "";
+            root.boot = 0;
             bootTimer.restart();
             if (Settings.motto === "fortune")
                 fortuneProc.running = true;
         }
+        onClosed: root.armed = ""
     }
 
     Timer {

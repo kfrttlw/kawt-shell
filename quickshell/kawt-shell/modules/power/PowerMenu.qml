@@ -47,12 +47,15 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: {
-        countdown = 0;
-        if (open) {
-            current = 0;
+    // closing cancels a countdown
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            root.countdown = 0;
+            root.current = 0;
             box.forceActiveFocus();
         }
+        onClosed: root.countdown = 0
     }
 
     function run(i: int): void {

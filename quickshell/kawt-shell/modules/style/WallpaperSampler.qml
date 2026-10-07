@@ -1,19 +1,22 @@
 import QtQuick
 import qs.config
+import qs.services
 import "../../utils/wallpalette.js" as WallPalette
 
-// Reads the wallpaper's colors into Settings.wallPalette (the "wallpaper" theme), whenever
-// the wallpaper differs from the one the palette was made from. The image is drawn tiny
-// into a canvas only to read its pixels; it's never seen (opacity 0, but still painted:
-// a canvas that isn't visible doesn't paint at all).
+// The fallback for the wallpaper theme: services/Wallpapers.qml measures every wallpaper with
+// ffmpeg; only if that fails (no ffmpeg) is it done here, while the style window is open.
+// The image is drawn tiny into a canvas only to read its pixels; it sits behind the style
+// window's card, unseen.
 Item {
     id: root
 
-    readonly property string wanted: Settings.wallpaper !== "" && Settings.wallPalette?.source !== Settings.wallpaper ? Settings.wallpaper : ""
+    readonly property string wanted: Wallpapers.unmeasured !== "" && Wallpapers.unmeasured === Wallpapers.failed ? Wallpapers.unmeasured : ""
 
     width: canvas.width
     height: canvas.height
-    opacity: 0
+    // painted for real but hidden behind its parent's own background: a canvas with
+    // opacity 0 or visible: false may never paint, and then nothing gets measured
+    z: -1
 
     Image {
         id: picture
@@ -38,8 +41,8 @@ Item {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
             ctx.drawImage(picture, 0, 0, width, height);
-            const p = WallPalette.palette(ctx.getImageData(0, 0, width, height).data);
-            Settings.wallPalette = { source: root.wanted, dark: p.dark, light: p.light };
+            const a = WallPalette.analyse(ctx.getImageData(0, 0, width, height).data);
+            Settings.wallPalette = Object.assign({ source: root.wanted, version: Wallpapers.paletteVersion }, a);
         }
     }
 }

@@ -23,8 +23,8 @@ configs, all in one monospace, square-cornered, text-first style.
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `:` clipboard history |
 | `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
-| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper), each dark (CRT) or light (paper) |
-| theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts |
+| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper) |
+| theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. Wide mode shows its thinking as a small ascii network |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s) |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
@@ -32,7 +32,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
 | recording | `[● rec 0:42]` in the bar; area or whole screen, optional mic audio |
 | screenshots | area / window / screen, saved and copied to the clipboard |
-| prompt | an oh-my-zsh theme: `┌[user@host]─[~/dir]─[branch*]` / `└$`, greeting with your motto; uses the 16 terminal colors, so it follows the theme |
+| prompt | an oh-my-zsh theme: `┌[user@host]─[~/dir]─[branch*]` / `└$`, greeting with your motto; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
 ## Layout
@@ -70,7 +70,10 @@ Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
 **Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder`, `brightnessctl` on laptops
-**Optional:** `oh-my-zsh` (prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `power-profiles-daemon`
+**Optional:** `oh-my-zsh` (prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`
+
+The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
+without it, only while `super + w` is open.
 
 ## Keys
 
@@ -91,7 +94,8 @@ Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refu
 | `super + shift + r` / `super + alt + r` | record an area / the screen (same key again: stop) |
 
 In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.
-Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`.
+Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`,
+`... kawt wallpaper next|prev|random|none|<path>` (for a timer or your own binds).
 
 ## Environment
 

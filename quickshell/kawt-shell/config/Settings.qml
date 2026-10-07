@@ -21,6 +21,7 @@ Singleton {
     property alias screenshotDir: adapter.screenshotDir
     property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
+    property alias wallStrength: adapter.wallStrength
     property alias recordDir: adapter.recordDir
     property alias aiProvider: adapter.aiProvider
     property alias aiCtx: adapter.aiCtx
@@ -74,7 +75,7 @@ Singleton {
 
             property string theme: "mono"
             property bool light: false // light (paper) variant of the theme
-            property string termColors: "soft" // terminal colors: "soft" | "crt" (utils/themegen.js)
+            property string termColors: "soft" // terminal colors: "crt" | "soft" | "vivid" (utils/themegen.js)
             property bool clock24: true
             property bool clockSeconds: false
             property bool clockDate: false // weekday and date in the bar clock
@@ -83,7 +84,8 @@ Singleton {
             property string profileArt: "auto" // "auto": ~/.face as ascii if it exists, "machine": always the thinkpad/pc
             property string screenshotDir: "~/Pictures/screenshots"
             property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
-            property var wallPalette: ({}) // the "wallpaper" theme: { source, dark, light } from utils/wallpalette.js
+            property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
+            property string wallStrength: "strong" // how hard the wallpaper theme colors things: "calm" | "strong" | "full"
             property string recordDir: "~/Videos/recordings"
             // ai (services/Ai.qml): provider, and how much the local model may take
             property string aiProvider: "ollama" // "ollama" | "api"

@@ -18,7 +18,9 @@ PanelWindow {
 
     required property ShellScreen forScreen
     readonly property bool open: Panels.isSidebarOpen(forScreen)
-    property real progress: open ? 1 : 0
+    // 0 hidden .. 1 shown; starts at 0 so the panel slides in when it's created (Bar.qml makes
+    // it on open, and keeps it a moment after closing for the slide out)
+    property real progress: 0
     readonly property int tab: Panels.aiTab
     readonly property bool coder: Settings.aiMode === "coder"
     property var catalogOpen: null // null: decide by itself (open while no model is installed)
@@ -65,11 +67,16 @@ PanelWindow {
         }
     }
 
-    onOpenChanged: if (open) {
-        Ai.refresh();
-        if (tab === 0)
-            input.input.forceActiveFocus();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            Ai.refresh();
+            if (root.tab === 0)
+                input.input.forceActiveFocus();
+        }
     }
+
+    Component.onCompleted: progress = Qt.binding(() => open ? 1 : 0)
 
     // "4m" until the model unloads
     function until(ms: real): string {
@@ -503,6 +510,9 @@ PanelWindow {
                     id: input
 
                     Layout.fillWidth: true
+                    // the panel is destroyed when closed: the unsent text waits in Ai.draft
+                    Component.onCompleted: text = Ai.draft
+                    Component.onDestruction: Ai.draft = text
                     prompt: root.coder ? "task>" : Ai.busy ? "~" : ">"
                     placeholder: root.coder ? (Coder.running ? "working..." : "what should it do in the project?") : Ai.busy ? "thinking..." : "ask something..."
                     onAccepted: t => {

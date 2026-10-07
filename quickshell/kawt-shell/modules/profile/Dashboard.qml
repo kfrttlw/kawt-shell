@@ -27,9 +27,12 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: if (open) {
-        box.forceActiveFocus();
-        fadeIn.restart();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            box.forceActiveFocus();
+            fadeIn.restart();
+        }
     }
 
     Rectangle {

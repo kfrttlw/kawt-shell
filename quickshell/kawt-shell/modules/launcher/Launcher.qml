@@ -54,12 +54,15 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: if (open) {
-        input.text = Panels.launcherPrefix;
-        Panels.launcherPrefix = "";
-        current = 0;
-        input.input.forceActiveFocus();
-        fadeIn.restart();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            input.text = Panels.launcherPrefix;
+            Panels.launcherPrefix = "";
+            root.current = 0;
+            input.input.forceActiveFocus();
+            fadeIn.restart();
+        }
     }
     onQueryChanged: current = 0
     onCurrentChanged: (mode === ":" ? clipList : list).positionViewAtIndex(current, ListView.Contain)

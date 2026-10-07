@@ -39,6 +39,38 @@ else
     fail "no generated colors in ${state/#$HOME/\~}/theme/" "start kawt once, it writes them on startup"
 fi
 
+echo "-- wallpaper theme"
+wall=$(setting wallpaper)
+if [[ -z $wall ]]; then
+    info "no wallpaper picked in kawt (super+w): the wallpaper theme needs one"
+elif [[ ! -f $wall ]]; then
+    fail "the wallpaper file is gone: $wall" "pick one again in super+w"
+else
+    good "wallpaper: ${wall/#$HOME/\~}"
+    # the analysis kawt stored: version 4+, made from this wallpaper, colorful or not
+    pal=$(tr -d '\n ' < "$state/settings.json" | grep -o '"wallPalette":{[^}]*}')
+    pver=$(printf '%s' "$pal" | grep -o '"version":[0-9]*' | cut -d: -f2)
+    psrc=$(printf '%s' "$pal" | grep -o '"source":"[^"]*"' | cut -d'"' -f4)
+    phue=$(printf '%s' "$pal" | grep -o '"hue":[0-9.]*' | cut -d: -f2)
+    pcol=$(printf '%s' "$pal" | grep -o '"colorful":[a-z]*' | cut -d: -f2)
+    # kawt measures each new wallpaper with ffmpeg; without it, only while super+w is open
+    if command -v ffmpeg > /dev/null; then
+        hint="kawt measures it by itself when it runs; restart it: qs kill -c kawt-shell; qs -c kawt-shell -d"
+    else
+        hint="no ffmpeg, so kawt measures it only while super+w is open (sudo pacman -S ffmpeg)"
+    fi
+    if [[ -z $pal || ${pver:-0} -lt 4 ]]; then
+        fail "the wallpaper isn't analysed yet (or by an older kawt)" "$hint"
+    elif [[ $psrc != "$wall" ]]; then
+        fail "the analysis is of another wallpaper" "$hint"
+    elif [[ $pcol != true ]]; then
+        info "kawt finds this wallpaper gray (no real color), so the wallpaper theme is gray"
+    else
+        good "analysed: main hue ${phue%%.*}°, strength $(setting wallStrength)"
+    fi
+    [[ $theme == wallpaper ]] && good "the wallpaper theme is selected" || info "selected theme: ${theme:-mono} (pick 'wallpaper' in super+w to use it)"
+fi
+
 echo "-- kitty"
 kc=$config/kitty/kitty.conf
 if [[ ! -e $kc ]]; then
@@ -88,7 +120,7 @@ if command -v hyprctl > /dev/null; then
         fail "hyprland runs older kawt binds (recording keys are missing)" "hyprctl reload"
     fi
 fi
-for tool in wf-recorder:recording grim:screenshots slurp:"area selection" cliphist:"clipboard history"; do
+for tool in wf-recorder:recording ffmpeg:"wallpaper theme" grim:screenshots slurp:"area selection" cliphist:"clipboard history"; do
     command -v "${tool%%:*}" > /dev/null && good "${tool%%:*}" || fail "${tool%%:*} is missing (${tool#*:})" "sudo pacman -S ${tool%%:*}"
 done
 if ls /sys/class/bluetooth 2> /dev/null | grep -q .; then

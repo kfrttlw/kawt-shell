@@ -160,93 +160,175 @@ Variants {
             }
         }
 
-        Wallpaper {
-            forScreen: root.modelData
+        // only when kawt draws the wallpaper itself: the image inside would otherwise be decoded
+        // at screen size (8 MB at 1080p, 33 MB at 4K, per screen) even with awww drawing it
+        Lazy {
+            when: Wallpapers.backend === "kawt" && Settings.wallpaper !== ""
+
+            Wallpaper {
+                forScreen: root.modelData
+            }
         }
 
-        ProfilePopover {
-            forScreen: root.modelData
-            anchorItem: profile
+        // Panels are created when opened and destroyed when closed (components/Lazy.qml):
+        // a hidden window would keep all its items in memory, on every screen.
+        Lazy {
+            when: Panels.isOpen("profile", root.modelData)
+
+            ProfilePopover {
+                forScreen: root.modelData
+                anchorItem: profile
+            }
         }
 
-        DockPopover {
-            forScreen: root.modelData
-            anchorItem: dock
+        Lazy {
+            when: Panels.isOpen("dock", root.modelData)
+
+            DockPopover {
+                forScreen: root.modelData
+                anchorItem: dock
+            }
         }
 
-        CalendarPopover {
-            forScreen: root.modelData
-            anchorItem: clock
+        Lazy {
+            when: Panels.isOpen("calendar", root.modelData)
+
+            CalendarPopover {
+                forScreen: root.modelData
+                anchorItem: clock
+            }
         }
 
-        PlayerPopover {
-            forScreen: root.modelData
-            anchorItem: player
+        Lazy {
+            when: Panels.isOpen("player", root.modelData)
+
+            PlayerPopover {
+                forScreen: root.modelData
+                anchorItem: player
+            }
         }
 
-        WifiPopover {
-            forScreen: root.modelData
-            // with the wifi button hidden, the panel opens under the net graph
-            anchorItem: wifi.visible ? wifi : netGraph
+        Lazy {
+            when: Panels.isOpen("wifi", root.modelData)
+
+            WifiPopover {
+                forScreen: root.modelData
+                // with the wifi button hidden, the panel opens under the net graph
+                anchorItem: wifi.visible ? wifi : netGraph
+            }
         }
 
-        VolumePopover {
-            forScreen: root.modelData
-            anchorItem: volume
+        Lazy {
+            when: Panels.isOpen("volume", root.modelData)
+
+            VolumePopover {
+                forScreen: root.modelData
+                anchorItem: volume
+            }
         }
 
-        BrightnessPopover {
-            forScreen: root.modelData
-            anchorItem: brightness
+        Lazy {
+            when: Panels.isOpen("brightness", root.modelData)
+
+            BrightnessPopover {
+                forScreen: root.modelData
+                anchorItem: brightness
+            }
         }
 
-        MicPopover {
-            forScreen: root.modelData
-            anchorItem: mic
+        Lazy {
+            when: Panels.isOpen("mic", root.modelData)
+
+            MicPopover {
+                forScreen: root.modelData
+                anchorItem: mic
+            }
         }
 
-        BluetoothPopover {
-            forScreen: root.modelData
-            anchorItem: bluetooth
+        Lazy {
+            when: Panels.isOpen("bluetooth", root.modelData)
+
+            BluetoothPopover {
+                forScreen: root.modelData
+                anchorItem: bluetooth
+            }
         }
 
-        BatteryPopover {
-            forScreen: root.modelData
-            anchorItem: battery
+        Lazy {
+            when: Panels.isOpen("battery", root.modelData)
+
+            BatteryPopover {
+                forScreen: root.modelData
+                anchorItem: battery
+            }
         }
 
-        NotifsPopover {
-            forScreen: root.modelData
-            anchorItem: notifs
+        Lazy {
+            when: Panels.isOpen("notifs", root.modelData)
+
+            NotifsPopover {
+                forScreen: root.modelData
+                anchorItem: notifs
+            }
         }
 
-        TrayPopover {
-            forScreen: root.modelData
-            anchorItem: tray
+        Lazy {
+            when: Panels.isOpen("tray", root.modelData)
+
+            TrayPopover {
+                forScreen: root.modelData
+                anchorItem: tray
+            }
         }
 
-        AiSidebar {
-            forScreen: root.modelData
+        // kept a moment after closing, for the slide out
+        Lazy {
+            when: Panels.isSidebarOpen(root.modelData)
+            linger: 300
+
+            AiSidebar {
+                forScreen: root.modelData
+            }
         }
 
-        Launcher {
-            forScreen: root.modelData
+        Lazy {
+            when: Panels.isOpen("launcher", root.modelData)
+
+            Launcher {
+                forScreen: root.modelData
+            }
         }
 
-        StyleWindow {
-            forScreen: root.modelData
+        Lazy {
+            when: Panels.isOpen("style", root.modelData)
+
+            StyleWindow {
+                forScreen: root.modelData
+            }
         }
 
-        Dashboard {
-            forScreen: root.modelData
+        Lazy {
+            when: Panels.isOpen("dashboard", root.modelData)
+
+            Dashboard {
+                forScreen: root.modelData
+            }
         }
 
-        PowerMenu {
-            forScreen: root.modelData
+        Lazy {
+            when: Panels.isOpen("power", root.modelData)
+
+            PowerMenu {
+                forScreen: root.modelData
+            }
         }
 
-        KeysWindow {
-            forScreen: root.modelData
+        Lazy {
+            when: Panels.isOpen("keys", root.modelData)
+
+            KeysWindow {
+                forScreen: root.modelData
+            }
         }
 
         Toasts {

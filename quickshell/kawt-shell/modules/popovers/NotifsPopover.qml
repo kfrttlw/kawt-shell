@@ -14,8 +14,7 @@ Popover {
     title: "dmesg"
     cardWidth: 440
 
-    onOpenChanged: if (open)
-        Notifs.markRead()
+    onPanelOpened: Notifs.markRead()
 
     RowLayout {
         Layout.fillWidth: true

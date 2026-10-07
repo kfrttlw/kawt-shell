@@ -19,8 +19,8 @@ Popover {
     cardWidth: 340
 
     // stop searching when the panel closes, it drains the battery
-    onOpenChanged: if (!open && adapter?.discovering)
-        adapter.discovering = false
+    onPanelClosed: if (Bluetooth.defaultAdapter?.discovering)
+        Bluetooth.defaultAdapter.discovering = false
 
     RowLayout {
         Layout.fillWidth: true

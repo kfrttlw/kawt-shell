@@ -31,6 +31,7 @@ Singleton {
     // [{ role: "user" | "assistant" | "error", text, time (ms), took (ms, answers), tps (answers, ollama) }]
     readonly property var messages: chat?.messages ?? []
     property string partial: ""
+    property string draft: "" // unsent text of the panel's input, kept while the panel is closed
     property bool busy: false
     property real sentAt: 0 // when the question went out, for "3.2s"
     property string askedModel: "" // the model of the answer being streamed

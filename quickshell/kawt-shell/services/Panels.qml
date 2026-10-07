@@ -17,6 +17,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt close
 //   qs -c kawt-shell ipc call kawt dnd
 //   qs -c kawt-shell ipc call kawt toggleLight
+//   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
 //   qs -c kawt-shell ipc call kawt clearNotifs
 Singleton {
     id: root
@@ -121,6 +122,10 @@ Singleton {
 
         function toggleLight(): void {
             Settings.light = !Settings.light;
+        }
+
+        function wallpaper(arg: string): void {
+            Wallpapers.pick(arg || "next");
         }
 
         function dnd(): void {

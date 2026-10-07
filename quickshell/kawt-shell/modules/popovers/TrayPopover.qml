@@ -26,7 +26,7 @@ Popover {
     title: app ? (app.tooltipTitle || app.title || app.id || "tray").toLowerCase() : "tray"
     cardWidth: 300
 
-    onOpenChanged: {
+    onPanelOpened: {
         app = null;
         stack = [];
     }

@@ -39,9 +39,12 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: if (open) {
-        file.reload();
-        box.forceActiveFocus();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            file.reload();
+            box.forceActiveFocus();
+        }
     }
 
     // "SUPER + SHIFT + S" -> "super+shift+s"

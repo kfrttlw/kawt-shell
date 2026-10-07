@@ -28,11 +28,14 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    onOpenChanged: if (open) {
-        grid.currentIndex = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
-        Wallpapers.refresh();
-        box.forceActiveFocus();
-        fadeIn.restart();
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            grid.currentIndex = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
+            Wallpapers.refresh();
+            box.forceActiveFocus();
+            fadeIn.restart();
+        }
     }
 
     Rectangle {
@@ -121,6 +124,21 @@ PanelWindow {
                     color: Colors.dim
                 }
 
+                // wallpaper theme strength: [calm] strong full
+                Repeater {
+                    model: Colors.mode === "wallpaper" ? ["calm", "strong", "full"] : []
+
+                    BracketButton {
+                        required property string modelData
+
+                        label: modelData
+                        active: Settings.wallStrength === modelData
+                        textColor: Settings.wallStrength === modelData ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: Settings.wallStrength = modelData
+                    }
+                }
+
                 // [dark] light   (super+shift+w)
                 Repeater {
                     model: ["dark", "light"]
@@ -203,14 +221,14 @@ PanelWindow {
                 Layout.fillWidth: true
                 spacing: Metrics.spacing
 
-                // soft: muted, crt: bright like an old monitor
+                // calm to bright: crt (monochrome ink), soft (the theme's hues), vivid (colorful)
                 Label {
                     text: "terminal:"
                     color: Colors.dim
                 }
 
                 Repeater {
-                    model: ["soft", "crt"]
+                    model: ["crt", "soft", "vivid"]
 
                     BracketButton {
                         required property string modelData

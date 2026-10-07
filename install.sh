@@ -260,7 +260,7 @@ for f in "$config/hypr/kawt.lua" "$config/hypr/kawt-colors.lua"; do
     [[ -e $f ]] && warn "old file $f" "not used anymore, can be deleted"
 done
 
-say "${dim}optional: ollama (ai panel), awww (wallpapers), power-profiles-daemon${off}"
+say "${dim}optional: ollama (ai panel), awww (wallpapers), cava (sound bars), power-profiles-daemon${off}"
 say ""
 
 if ((errors)); then

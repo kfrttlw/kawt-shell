@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import "../utils/wallpalette.js" as WallPalette
 
 // Every theme comes in a dark (CRT) and a light (paper / printout) variant;
 // Settings.theme picks the theme, Settings.light the variant.
@@ -7,7 +8,9 @@ QtObject {
     id: root
 
     // the fixed themes, plus "wallpaper" once a palette was taken from the wallpaper
-    readonly property var themes: Settings.wallPalette?.dark ? Object.assign({}, fixed, { wallpaper: { dark: Settings.wallPalette.dark, light: Settings.wallPalette.light } }) : fixed
+    // the wallpaper theme is built from the analysed wallpaper + Settings.wallStrength,
+    // so changing the strength recolors at once, without looking at the picture again
+    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength) }) : fixed
 
     readonly property var fixed: ({
         mono: {

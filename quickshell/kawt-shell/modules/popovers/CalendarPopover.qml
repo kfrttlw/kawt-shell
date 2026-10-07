@@ -26,8 +26,7 @@ Popover {
     title: Qt.formatDate(today, "ddd dd.MM.yyyy").toLowerCase()
     cardWidth: 240
 
-    onOpenChanged: if (open)
-        monthOffset = 0
+    onPanelOpened: monthOffset = 0
 
     RowLayout {
         Layout.fillWidth: true

@@ -13,10 +13,11 @@ ShellRoot {
     Lock {}
 
     // singletons start lazily; these have to run without anything on screen using them
-    // (theme files for other apps, todo reminders)
+    // (theme files for other apps, todo reminders, the wallpaper theme)
     Component.onCompleted: {
         ThemeExport.dir;
         Todo.open;
         Clipboard.available; // starts the clipboard history watcher
+        Wallpapers.unmeasured; // measures each new wallpaper for the wallpaper theme
     }
 }

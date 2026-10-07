@@ -12,7 +12,7 @@ PanelWindow {
     required property ShellScreen forScreen
 
     screen: forScreen
-    visible: Wallpapers.backend === "kawt" && Settings.wallpaper !== ""
+    visible: true // created only when it's needed (Bar.qml)
     color: Colors.bg
 
     WlrLayershell.namespace: "kawt-wallpaper"

@@ -24,7 +24,7 @@ for d, mod in [("components", "qs.components"), ("services", "qs.services"), ("c
 external = {
     "Process": "Quickshell.Io", "StdioCollector": "Quickshell.Io", "SplitParser": "Quickshell.Io",
     "FileView": "Quickshell.Io", "JsonAdapter": "Quickshell.Io", "IpcHandler": "Quickshell.Io",
-    "PanelWindow": "Quickshell", "Variants": "Quickshell", "Scope": "Quickshell", "ShellRoot": "Quickshell",
+    "PanelWindow": "Quickshell", "Variants": "Quickshell", "LazyLoader": "Quickshell", "Scope": "Quickshell", "ShellRoot": "Quickshell",
     "Singleton": "Quickshell", "Region": "Quickshell", "QsMenuOpener": "Quickshell", "ShellScreen": "Quickshell",
     "WlSessionLock": "Quickshell.Wayland", "WlSessionLockSurface": "Quickshell.Wayland",
     "WlrLayershell": "Quickshell.Wayland", "WlrLayer": "Quickshell.Wayland",

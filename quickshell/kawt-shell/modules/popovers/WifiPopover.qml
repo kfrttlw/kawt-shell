@@ -29,12 +29,12 @@ Popover {
         }
     }
 
-    onOpenChanged: {
-        Wifi.scanning = open;
-        if (!open) {
-            pskTarget = null;
-            status = "";
-        }
+    // scan only while the panel is open
+    onPanelOpened: Wifi.scanning = true
+    onPanelClosed: {
+        Wifi.scanning = false;
+        pskTarget = null;
+        status = "";
     }
 
     RowLayout {
