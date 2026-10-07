@@ -12,6 +12,11 @@
 A [Quickshell](https://quickshell.org) desktop shell for Hyprland, plus matching
 configs, all in one monospace, square-cornered, text-first style.
 
+![the bar, light (paper) variant of the wallpaper theme](assets/bar-light.png)
+![the bar, dark (CRT) variant](assets/bar-dark.png)
+
+<img src="assets/ai-panel.png" alt="the ai panel: a local model, chat in the terminal look" width="320">
+
 ## What's inside
 
 **bar**: `[~] [$] [1] 2 3 · [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [>_]`
@@ -156,3 +161,8 @@ python3 tools/check.py   # catches the mistakes that stop the shell from loading
 ./colortest.sh           # which kind of terminal color something uses
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 ```
+
+## License
+
+[GPL-3.0](LICENSE): use it, change it, share it; what you build on it and share stays open
+too, under the same license.
