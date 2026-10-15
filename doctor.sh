@@ -148,6 +148,13 @@ if [[ -f $zshrc ]]; then
         # a PROMPT set after our line would replace it
         late=$(awk '/kawt-shell\/zsh\/kawt.zsh-theme/ {seen = 1; next} seen && /^[[:space:]]*(PROMPT|PS1|source .*(p10k|powerlevel|starship|oh-my-posh))/ {print NR": "$0}' "$zshrc")
         [[ -n $late ]] && fail "something after the kawt line replaces the prompt:" "$late"
+        # the prompt is only seen if terminals open zsh
+        login=$(getent passwd "$(id -un)" 2> /dev/null | cut -d: -f7)
+        if [[ -z $login || $login == */zsh ]]; then
+            good "zsh is your shell"
+        else
+            fail "terminals open ${login##*/}, not zsh: the prompt isn't seen" "make zsh your shell: chsh -s $(command -v zsh || echo /usr/bin/zsh)"
+        fi
     else
         fail ".zshrc doesn't load the kawt prompt" "run ./install.sh"
     fi

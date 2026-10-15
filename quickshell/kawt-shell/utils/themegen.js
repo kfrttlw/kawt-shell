@@ -325,27 +325,20 @@ function files(name, t, style) {
     };
 }
 
-// fastfetch in kawt's look: the little thinkpad from the readme with its red nub, keys in the
-// dim color, values in the text color, meters as [####------] like the profile panel, and the
+// fastfetch in kawt's look: the system's own logo (arch on arch), keys in the dim color,
+// values in the text color, the memory meter as [####------] like the profile panel, and the
 // theme's name at the end. Colors are the theme's own (24-bit), written again on every switch.
 // ~/.config/fastfetch/config.jsonc links here (install.sh).
+// Short and safe to screenshot: nothing that says who or where you are (no user@host, no
+// laptop model, no addresses), and no cpu / gpu / disk / battery lines.
 function fastfetch(name, t, style) {
     const c = hex => `38;2;${rgb(hex).join(";")}`;
-    const logo = [
-        "$1  ____________",
-        " | $2>_$1         |",
-        " |            |",
-        " |____________|",
-        "/ :::::$3●$1:::::: \\",
-        "\\______________/"
-    ].join("\n");
     const mod = (type, key, extra) => Object.assign({ type, key }, extra || {});
     const config = {
         "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
         logo: {
-            type: "data",
-            source: logo,
-            color: { 1: c(t.dim), 2: c(t.accent), 3: "38;2;226;35;26" }, // the nub is always thinkpad red
+            // no source: fastfetch picks the logo of the running system, in its usual colors
+            // (the terminal's, which the theme already tints)
             padding: { top: 1, left: 2, right: 4 }
         },
         display: {
@@ -361,21 +354,14 @@ function fastfetch(name, t, style) {
             }
         },
         modules: [
-            "title",
-            { type: "separator", string: "─" },
             mod("os", "os"),
-            mod("host", "host"),
             mod("kernel", "kern"),
             mod("uptime", "up"),
             mod("packages", "pkgs"),
             mod("wm", "wm"),
             mod("terminal", "term"),
             mod("shell", "shell"),
-            mod("cpu", "cpu"),
-            mod("gpu", "gpu"),
             mod("memory", "mem"),
-            mod("disk", "disk", { folders: "/" }),
-            mod("battery", "bat"),
             mod("custom", "kawt", { format: `${name} · ${style} terminal colors` }),
             "break",
             { type: "colors", symbol: "block", paddingLeft: 0 }

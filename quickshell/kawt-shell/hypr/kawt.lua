@@ -25,6 +25,9 @@ end
 try("autostart", function()
     hl.on("hyprland.start", function()
         hl.exec_cmd("qs -c kawt-shell")
+        -- the password window for apps that need admin rights (gparted, mounting a disk...);
+        -- without one they just fail. Not installed: this does nothing
+        hl.exec_cmd("systemctl --user start hyprpolkitagent")
     end)
 end)
 

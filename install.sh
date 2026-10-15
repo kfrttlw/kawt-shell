@@ -33,29 +33,48 @@ fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme sw
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
 # zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
-# ZSH_THEME wherever oh-my-zsh is installed (or without it)
+# ZSH_THEME wherever oh-my-zsh is installed (or without it). No .zshrc yet: it starts as a copy
+# of zsh/starter.zshrc (history, tab completion, keys), since bare zsh keeps no history at all
 zshrc=${ZDOTDIR:-$HOME}/.zshrc
+zsh_starter=$repo/quickshell/kawt-shell/zsh/starter.zshrc
+shell_before=$state/shell-before # the login shell kawt switched away from, for --uninstall
 marker_zsh="kawt-shell/zsh/kawt.zsh-theme"
 line_zsh='[[ -r ~/.config/quickshell/kawt-shell/zsh/kawt.zsh-theme ]] && source ~/.config/quickshell/kawt-shell/zsh/kawt.zsh-theme # kawt prompt'
 marker_lua="kawt-shell/hypr/kawt.lua"
 marker_conf="kawt-shell/hypr/kawt.conf"
 line_lua='pcall(dofile, os.getenv("HOME") .. "/.config/quickshell/kawt-shell/hypr/kawt.lua")'
 line_conf='source = ~/.config/quickshell/kawt-shell/hypr/kawt.conf'
+hypr_example=/usr/share/hypr/hyprland.lua # Hyprland's own starting config (0.55+)
+# no login screen: how hyprland starts from the console (both read hypr/login.sh)
+#   by itself   right after logging in on tty1: a line in ~/.zprofile (~/.bash_profile)
+#   a command   `start`: a line in ~/.zshrc (~/.bashrc)
+marker_login="kawt: hyprland at login on tty1"
+line_login='[[ -r ~/.config/quickshell/kawt-shell/hypr/login.sh ]] && source ~/.config/quickshell/kawt-shell/hypr/login.sh # kawt: hyprland at login on tty1'
+marker_start="kawt: the start command"
+line_start="alias start='source ~/.config/quickshell/kawt-shell/hypr/login.sh now' # kawt: the start command"
+no_start_ask=$state/no-hyprland-start # "neither" was picked: not asked again
 
 # the parts, in menu order: id | name | what it is
 parts=(
     "shell|shell|the bar, panels, launcher, lock screen, ai (quickshell)"
     "hypr|hyprland|kawt's binds and border colors in your hyprland config"
     "kitty|kitty|the terminal, in the theme's colors"
-    "zsh|zsh prompt|┌[user@host]─[~/dir]─[branch]  in the theme's colors"
-    "fastfetch|fastfetch|system info with the little thinkpad"
+    "zsh|zsh prompt|┌[user]─[~/dir]─[branch], hints from history, typos marked"
+    "fastfetch|fastfetch|short system info with your system's logo"
     "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power"
 )
 # packages per part; "a|b" = the first of them the repos have
 pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2)
+# what a fresh hyprland is missing (arch keeps them optional), with the shell too:
+#   pipewire-pulse, -alsa       sound for apps that speak pulseaudio / alsa (browsers, discord...)
+#   xdg-desktop-portal-*        screen sharing (hyprland), "open file" windows (gtk)
+#   hyprpolkitagent             the password window for apps that need admin rights
+#   playerctl                   play / pause / next keys (hyprland's own binds call it)
+#   noto-fonts-emoji            emoji instead of empty boxes
+pkgs_shell+=(pipewire-pulse pipewire-alsa xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprpolkitagent playerctl noto-fonts-emoji)
 pkgs_hypr=()
 pkgs_kitty=(kitty)
-pkgs_zsh=(zsh git)
+pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
 pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon)
 
@@ -246,6 +265,18 @@ ask() {
     [[ -z $answer || $answer == [yYдД]* ]]
 }
 
+# ask_text <question> <default>: a line typed in, or the default (enter, --yes, nobody to ask)
+ask_text() {
+    local answer
+    if ((yes)) || ! can_ask; then
+        printf '%s' "$2"
+        return
+    fi
+    printf '%s %s[%s]%s ' "$1" "$dim" "${2:-none}" "$off" > /dev/tty
+    IFS= read -r answer < /dev/tty
+    printf '%s' "${answer:-$2}"
+}
+
 # ------------------------------------------------------------------ helpers (configs)
 loads_kawt() {
     # does <file> load kawt? (a real line, not a commented-out one: -- in lua, # in hyprlang)
@@ -255,6 +286,56 @@ loads_kawt() {
 }
 
 resolve() { readlink -e -- "$1" 2> /dev/null || true; } # resolved target of a link, empty if broken
+
+# the shell terminals open (from the user database: $SHELL only changes at the next login)
+login_shell() { getent passwd "$(id -un)" 2> /dev/null | cut -d: -f7; }
+# the file it reads when you log in, and the one for every terminal (zsh and bash; empty for others)
+login_profile() {
+    case $(login_shell) in
+        */zsh) printf '%s' "${ZDOTDIR:-$HOME}/.zprofile" ;;
+        */bash) printf '%s' "$HOME/.bash_profile" ;;
+    esac
+}
+login_rc() {
+    case $(login_shell) in
+        */zsh) printf '%s' "$zshrc" ;;
+        */bash) printf '%s' "$HOME/.bashrc" ;;
+    esac
+}
+
+# Hyprland never started yet, so no config: start from its own (what it would write itself on
+# the first start, there with an "autogenerated" warning on top). Being brand new, it's fitted
+# to kawt: its SUPER + R (hyprlauncher) and SUPER + SHIFT + S (a window to the scratchpad)
+# are kawt's run and screenshot keys, so those two go out; and the keyboard layouts go in.
+fresh_hypr() {
+    local lc country suggest layouts l bad="" keep=()
+    run mkdir -p "$(dirname "$hypr_lua")" && run cp -- "$hypr_example" "$hypr_lua" || return 1
+    ((dry)) || sed -i -E 's/^(hl\.bind\(mainMod \.\. " \+ (R|SHIFT \+ S)",)/-- (kawt uses this key) \1/' "$hypr_lua" || return 1
+    step "copy" "$hypr_lua (hyprland's starting config; super+r, super+shift+s left to kawt)"
+    # it only knows "us". a second layout, guessed from the language (ru_RU -> ru)
+    ((dry)) && { note "would ask for keyboard layouts next to us"; return 0; }
+    lc=${LC_ALL:-${LANG:-}} country=${lc#*_} country=${country%%[.@]*} country=${country,,}
+    [[ $lc == *_* && $country =~ ^[a-z]{2}$ && $country != us && -f /usr/share/X11/xkb/symbols/$country ]] && suggest=$country
+    layouts=$(ask_text "keyboard layouts next to us? (like ru or de,ua; - for none)" "${suggest:-}")
+    layouts=${layouts// /}
+    [[ -z $layouts || $layouts == - ]] && return 0
+    for l in ${layouts//,/ }; do
+        [[ $l == us ]] && continue
+        if [[ $l =~ ^[a-z]{2,3}$ && ( ! -d /usr/share/X11/xkb/symbols || -f /usr/share/X11/xkb/symbols/$l ) ]]; then
+            keep+=("$l")
+        else
+            bad+=" $l"
+        fi
+    done
+    if [[ -n $bad ]]; then
+        warn "unknown layout:$bad, keyboard left at us" "later: kb_layout in $hypr_lua"
+        return 0
+    fi
+    ((${#keep[@]})) || return 0
+    layouts=$(IFS=,; printf '%s' "${keep[*]}")
+    ((dry)) || sed -i -E "s/^([[:space:]]*kb_layout[[:space:]]*=[[:space:]]*)\"us\",/\1\"us,$layouts\",/; s/^([[:space:]]*kb_options[[:space:]]*=[[:space:]]*)\"\",/\1\"grp:alt_shift_toggle\",/" "$hypr_lua" || return 1
+    step "edit" "keyboard: us,$layouts (alt + shift switches)"
+}
 
 # move <path> into the backup folder, keeping its place relative to $HOME
 stash() {
@@ -371,6 +452,26 @@ if [[ $mode == uninstall ]]; then
     if [[ -f $zshrc ]] && grep -F "$marker_zsh" "$zshrc" > /dev/null; then
         stash_copy "$zshrc" && run sed -i "\|$marker_zsh|d" "$zshrc" && step "edit" "$zshrc (kawt prompt line removed)"
     fi
+    # kawt made zsh the login shell: offer the old one back (zsh itself stays installed)
+    if [[ -f $shell_before ]]; then
+        old=$(< "$shell_before")
+        if [[ -n $old && $(login_shell) == */zsh && $old != */zsh ]] && ((!dry)) && ask "your shell was ${old##*/} before kawt: switch back to it?" 1; then
+            chsh -s "$old" && step "edit" "your shell: zsh -> ${old##*/} (everywhere after logging in again)" || warn "could not switch the shell back" "by hand: chsh -s $old"
+        fi
+        ((dry)) || rm -f -- "$shell_before"
+    fi
+
+    for f in "${ZDOTDIR:-$HOME}/.zprofile" "$HOME/.bash_profile"; do
+        if [[ -f $f ]] && grep -F "$marker_login" "$f" > /dev/null; then
+            stash_copy "$f" && run sed -i "\|$marker_login|d" "$f" && step "edit" "$f (hyprland at login removed)"
+        fi
+    done
+    for f in "$zshrc" "$HOME/.bashrc"; do
+        if [[ -f $f ]] && grep -F "$marker_start" "$f" > /dev/null; then
+            stash_copy "$f" && run sed -i "\|$marker_start|d" "$f" && step "edit" "$f (the start command removed)"
+        fi
+    done
+    ((dry)) || rm -f -- "$no_start_ask"
 
     for f in "$hypr_lua" "$hypr_conf"; do
         [[ -f $f ]] || continue
@@ -393,7 +494,7 @@ if ((EUID == 0)); then
     exit 1
 fi
 
-for f in quickshell/kawt-shell/shell.qml quickshell/kawt-shell/hypr/kawt.lua quickshell/kawt-shell/hypr/kawt.conf kitty/kitty.conf fastfetch/config.jsonc quickshell/kawt-shell/zsh/kawt.zsh-theme; do
+for f in quickshell/kawt-shell/shell.qml quickshell/kawt-shell/hypr/kawt.lua quickshell/kawt-shell/hypr/kawt.conf kitty/kitty.conf fastfetch/config.jsonc quickshell/kawt-shell/zsh/kawt.zsh-theme quickshell/kawt-shell/zsh/starter.zshrc; do
     if [[ ! -f $repo/$f ]]; then
         say "${red}the repo is incomplete:${off} $f is missing"
         exit 1
@@ -512,6 +613,12 @@ if ((packages)); then
         fi
         # power-profiles-daemon and tlp don't get along: keep tlp
         [[ ${alts[0]} == power-profiles-daemon ]] && installed tlp && continue
+        # still on pulseaudio itself: pipewire-pulse / -alsa would replace it, leave that be
+        [[ ${alts[0]} == pipewire-pulse || ${alts[0]} == pipewire-alsa ]] && installed pulseaudio && continue
+        # another password window (polkit agent) is already there: one is enough
+        if [[ ${alts[0]} == hyprpolkitagent ]]; then
+            for a in polkit-gnome polkit-kde-agent lxqt-policykit mate-polkit; do installed "$a" && continue 2; done
+        fi
         pick_repo=""
         for p in "${alts[@]}"; do
             in_repos "$p" && { pick_repo=$p; break; }
@@ -554,6 +661,8 @@ human() {
         papirus-icon-theme) echo "Papirus icons" ;;
         libnotify) echo "notify-send (libnotify)" ;;
         glib2) echo "gdbus (glib2)" ;;
+        hyprpolkitagent) echo "a polkit agent (hyprpolkitagent)" ;;
+        noto-fonts-emoji) echo "an emoji font (Noto Color Emoji)" ;;
         fortune-mod) echo "fortune" ;;
         "awww|swww") echo "awww or swww" ;;
         bluez-utils) ;;
@@ -759,7 +868,7 @@ if [[ -f $hypr_lua ]]; then
     if [[ -n $luac ]] && ! "$luac" -p -- "$hypr_lua" > /dev/null 2>&1; then
         fail "hyprland.lua already has a syntax error" "see: $luac -p $hypr_lua"
     fi
-elif want hypr && [[ ! -f $hypr_conf ]]; then
+elif want hypr && [[ ! -f $hypr_conf && ! -f $hypr_example ]] && ! ((dry && packages)); then
     warn "no hyprland config found" "start hyprland once (it writes one), then run ./install.sh again for the binds"
 fi
 if ((errors)) && ((!dry)); then
@@ -786,6 +895,9 @@ if want fastfetch; then
     link "$fastfetch_src" "$fastfetch_dst" || { fail "could not link $fastfetch_dst"; failed=1; }
 fi
 if want hypr; then
+    if [[ ! -f $hypr_lua && ! -f $hypr_conf ]] && { [[ -f $hypr_example ]] || ((dry && packages)); }; then
+        fresh_hypr || { fail "could not set up $hypr_lua"; failed=1; }
+    fi
     if [[ -f $hypr_lua ]]; then
         hook "$hypr_lua" "$marker_lua" "$line_lua" || { fail "could not edit $hypr_lua"; failed=1; }
     elif [[ -f $hypr_conf ]]; then
@@ -794,13 +906,68 @@ if want hypr; then
 fi
 if want zsh && command -v zsh > /dev/null; then
     undo_old_zsh_setup
-    [[ -f $zshrc ]] || run touch "$zshrc"
+    if [[ ! -e $zshrc ]]; then
+        run mkdir -p "$(dirname "$zshrc")" && run cp -- "$zsh_starter" "$zshrc" && step "copy" "$zshrc (kawt's starter: history, tab completion, keys)"
+    fi
     hook "$zshrc" "$marker_zsh" "$line_zsh" || { fail "could not edit $zshrc"; failed=1; }
 fi
 
 # ------------------------------------------------------------------ 8. services
 # only asked, never just switched on
 if ((!dry)); then
+    # the prompt lives in zsh: if terminals open bash, nobody sees it
+    if want zsh && zsh_path=$(command -v zsh) && old=$(login_shell) && [[ -n $old && $old != */zsh ]]; then
+        if ask "terminals open ${old##*/}, the prompt is in zsh: make zsh your shell? (chsh asks your password)" 1; then
+            if chsh -s "$zsh_path"; then
+                mkdir -p "$state" && printf '%s\n' "$old" > "$shell_before"
+                step "edit" "your shell: ${old##*/} -> zsh (everywhere after logging in again)"
+            else
+                warn "could not make zsh your shell" "by hand: chsh -s $zsh_path"
+            fi
+        fi
+    fi
+    # No login screen (display manager): the machine boots to a text console. How should
+    # hyprland start after you log in there? Asked once: by itself, with a `start` command,
+    # or neither (remembered). Not asked when the login file already starts it.
+    if want hypr && command -v Hyprland > /dev/null && [[ ! -e /etc/systemd/system/display-manager.service ]]; then
+        prof=$(login_profile) rc=$(login_rc)
+        if [[ -n $prof && ! -e $no_start_ask ]] && ! loads_kawt "$prof" "$marker_login" && ! loads_kawt "$rc" "$marker_start" &&
+            ! { [[ -f $prof ]] && grep -vE '^[[:space:]]*#' "$prof" | grep -E 'Hyprland|start-hyprland|uwsm start' > /dev/null; }; then
+            how=-1
+            if ((yes)); then
+                how=0
+            elif can_ask; then
+                section "starting hyprland"
+                say "${dim}  no login screen here. after you log in on the console: · ↑↓ move · enter pick${off}"
+                choose how "by itself|hyprland starts right away on tty1 (recommended)" \
+                    "a command|you type start" \
+                    "neither|you start it your own way (not asked again)"
+            fi
+            case $how in
+                0)
+                    if [[ ! -e $prof ]]; then
+                        mkdir -p "$(dirname "$prof")"
+                        # a new ~/.bash_profile hides ~/.bashrc unless it reads it (like arch's default one)
+                        [[ $prof == */.bash_profile ]] && printf '%s\n' '[[ -f ~/.bashrc ]] && . ~/.bashrc' > "$prof" || : > "$prof"
+                    fi
+                    hook "$prof" "$marker_login" "$line_login" && login_added=1 || warn "could not edit $prof"
+                    ;;
+                1)
+                    if [[ -f $rc ]] && grep -vE '^[[:space:]]*#' "$rc" | grep -E '^[[:space:]]*(alias[[:space:]]+start=|start[[:space:]]*\(\))' > /dev/null; then
+                        step "keep" "$rc already has a start command of its own"
+                        mkdir -p "$state" && : > "$no_start_ask"
+                    else
+                        [[ -e $rc ]] || : > "$rc"
+                        hook "$rc" "$marker_start" "$line_start" && start_added=1 || warn "could not edit $rc"
+                    fi
+                    ;;
+                2)
+                    mkdir -p "$state" && : > "$no_start_ask"
+                    note "not asked again (to be asked: rm $no_start_ask)"
+                    ;;
+            esac
+        fi
+    fi
     if want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && command -v bluetoothctl > /dev/null && ! systemctl is-active --quiet bluetooth 2> /dev/null; then
         ask "bluetooth is off: start it now and at boot?" 1 && sudo systemctl enable --now bluetooth
     fi
@@ -847,8 +1014,17 @@ if ((dry)); then
 fi
 [[ -d $backup ]] && say "${dim}old configs are in $(short "$backup")  (undo: ./install.sh --uninstall)${off}"
 say "${acc}done.${off} start kawt:  ${acc}qs kill -c kawt-shell; qs -c kawt-shell -d${off}  ${dim}(or log in to hyprland again)${off}"
-want zsh && command -v zsh > /dev/null && say "the new prompt shows up in new terminals ${dim}(or now: exec zsh)${off}"
+if want zsh && command -v zsh > /dev/null; then
+    sh_now=$(login_shell)
+    if [[ -z $sh_now || $sh_now == */zsh ]]; then
+        say "the new prompt shows up in new terminals ${dim}(or now: exec zsh)${off}"
+    else
+        say "the prompt is in zsh, but terminals still open ${sh_now##*/}: ${acc}chsh -s $(command -v zsh)${off} ${dim}(or just try it: zsh)${off}"
+    fi
+fi
 want fastfetch && say "try: ${acc}fastfetch${off}"
+((${login_added:-0})) && say "from now on: log in on tty1 and hyprland starts ${dim}(other consoles, ctrl+alt+F2..., stay text)${off}"
+((${start_added:-0})) && say "from now on: log in, then type ${acc}start${off} and hyprland starts"
 if ((!is_arch)); then
     say "${acc}still to get${off} on ${os_name:-this system} (kawt couldn't install them here): $(needs_list)"
     say "${dim}quickshell for your system: https://quickshell.org (install guide); some systems have a package (fedora: copr, nixos)${off}"

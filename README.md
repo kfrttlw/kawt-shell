@@ -38,8 +38,8 @@ configs, all in one monospace, square-cornered, text-first style.
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
 | recording | `[● rec 0:42]` in the bar; area or whole screen, optional mic audio |
 | screenshots | area / window / screen, saved and copied to the clipboard |
-| fastfetch | system info with the little thinkpad, `[####----]` meters and the current theme's colors (rewritten on every theme switch) |
-| prompt | an oh-my-zsh theme: `┌[user@host]─[~/dir]─[branch*]` / `└$`, greeting with your motto; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
+| fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
+| prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
 | also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
@@ -48,7 +48,9 @@ configs, all in one monospace, square-cornered, text-first style.
 ```
 quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua)
+  hypr/login.sh          starts Hyprland from the console: at login on tty1 or with `start`
   zsh/kawt.zsh-theme     prompt           (sourced from ~/.zshrc)
+  zsh/starter.zshrc      a first ~/.zshrc (copied only if you have none)
 kitty/kitty.conf         terminal         -> ~/.config/kitty/kitty.conf
 fastfetch/config.jsonc   fastfetch        -> ~/.local/state/kawt/theme/fastfetch.jsonc (kept in the theme's colors)
 install.sh
@@ -82,7 +84,25 @@ A menu asks which system this is (it guesses: Arch-based or not) and what to ins
 - symlinks the configs, so `git pull` updates everything in place. Configs that are already
   there are replaced but kept in `~/.local/state/kawt/backups/<date>/`
 - gives your `hyprland.lua` one line that loads `hypr/kawt.lua` (wrapped in `pcall`, so a
-  broken kawt can never take Hyprland down)
+  broken kawt can never take Hyprland down). Your own config stays yours. Never started
+  Hyprland yet, so there's none: it starts from Hyprland's own (`/usr/share/hypr/hyprland.lua`,
+  what Hyprland would write itself), without the two binds kawt uses (`super + r`,
+  `super + shift + s`), and asks which keyboard layouts you want next to `us`
+  (`alt + shift` switches; it guesses from your language, `ru_RU` -> `ru`)
+- also installs what a fresh Hyprland lacks: sound for browsers and Discord (`pipewire-pulse`),
+  screen sharing and "open file" windows (`xdg-desktop-portal-hyprland`, `-gtk`), the password
+  window for apps that need admin rights (`hyprpolkitagent`, started by kawt), the play / pause
+  keys (`playerctl`) and emoji (`noto-fonts-emoji`). Still on pulseaudio, or another polkit
+  agent: those are left alone
+- no login screen (display manager) on the machine: asks how Hyprland should start after you
+  log in on the console: by itself on tty1 (a line in `~/.zprofile`), with a `start` command
+  (in `~/.zshrc`; a `start` of your own is kept), or neither (not asked again). Both go
+  through `hypr/login.sh`: `uwsm` if you have it, otherwise `start-hyprland`
+- installs zsh (with `zsh-autosuggestions` and `zsh-syntax-highlighting`, the history hints and
+  the typo marks) and adds one line to the end of your `~/.zshrc` that loads the prompt. No
+  `~/.zshrc` yet: it starts from `zsh/starter.zshrc` (history, tab completion, keys), because
+  bare zsh doesn't even keep a history. If your terminals open bash, it asks to make zsh your
+  shell (`chsh`). oh-my-zsh isn't needed; if you have it, kawt's line comes after it and wins
 - asks before starting any service (bluetooth, ollama, power profiles). NetworkManager is never
   installed for you: next to iwd or systemd-networkd it can take the network over
 
@@ -107,8 +127,9 @@ Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
 **Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `brightnessctl` on laptops.
+For the rest of the desktop: `pipewire-pulse` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `hyprpolkitagent` `playerctl` `noto-fonts-emoji`.
 Services kawt talks to: `networkmanager` (wifi), `pipewire` (sound, mic), `upower` (battery), `bluez` (bluetooth), and systemd-logind with `glib2` (`gdbus`, for locking before sleep)
-**Optional:** `oh-my-zsh` (prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light)
+**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light)
 
 The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
 without it, only while `super + w` is open.
