@@ -8,14 +8,27 @@ import qs.components
 import qs.services
 
 // super + /: every kawt bind, read straight from hypr/kawt.lua (each hl.bind line ends with a
-// "-- what it does" comment), so the list can't drift away from the real binds.
+// "-- what it does" comment), so the list can't drift away from the real binds. Then the binds
+// of your Hyprland config that carry such a comment: ~/.config/hypr/hyprland.lua, and with
+// kawt's standard config hypr/preset.lua (less what user.lua frees with preset.unbind) and
+// user.lua. "-- keys: super+1..0 | what" lines stand for binds made in a loop or a group.
+// The first one of a key counts: kawt's, then yours, then the standard config's.
 // Plus the keys that work inside kawt's own windows.
 PanelWindow {
     id: root
 
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("keys", forScreen)
-    property var binds: [] // [{ keys, what }]
+    readonly property bool standard: hyprText.includes("hypr/preset.lua") // hyprland.lua loads kawt's standard config
+    readonly property var binds: { // [{ keys, what }]
+        const freed = standard ? unbinds(userText) : [];
+        const all = parse(kawtText).concat(standard ? parse(userText) : [], parse(hyprText), standard ? parse(presetText).filter(b => !freed.includes(b.keys)) : []);
+        return all.filter((b, i) => all.findIndex(o => o.keys === b.keys) === i);
+    }
+    property string kawtText: ""
+    property string hyprText: ""
+    property string presetText: ""
+    property string userText: ""
 
     readonly property var inside: [
         ["launcher", "↑↓ pick · enter run · ctrl+tab mode · ctrl+s pin · prefixes ! > = ? : ;"],
@@ -43,6 +56,9 @@ PanelWindow {
         open: root.open
         onOpened: {
             file.reload();
+            hyprFile.reload();
+            presetFile.reload();
+            userFile.reload();
             box.forceActiveFocus();
         }
     }
@@ -52,20 +68,66 @@ PanelWindow {
         return keys.toLowerCase().replace(/\s*\+\s*/g, "+").replace("slash", "/").replace("escape", "esc");
     }
 
+    // the binds in a lua config, as [{ keys, what }]
+    function parse(text: string): var {
+        const out = [];
+        for (const line of text.split("\n")) {
+            // hl.bind(mod .. " + R", ...) -- what   /   bind(mainMod .. ...) (preset.lua)   /   hl.bind("Print", ...) -- what
+            const m = line.match(/^\s*(?:hl\.)?bind\((\w*[Mm]od\s*\.\.\s*)?"([^"]+)".*?--\s*(.+)$/);
+            if (m) {
+                out.push({ keys: root.pretty((m[1] ? "SUPER" : "") + m[2]), what: m[3].trim() });
+                continue;
+            }
+            // -- keys: super+arrows | focus
+            const k = line.match(/^\s*--\s*keys:\s*(.+?)\s*\|\s*(.+)$/);
+            if (k)
+                out.push({ keys: k[1], what: k[2].trim() });
+        }
+        return out;
+    }
+
+    // the keys a user.lua frees: preset.unbind("SUPER + V") -> "super+v"
+    function unbinds(text: string): var {
+        const out = [];
+        for (const line of text.split("\n")) {
+            const m = line.match(/^\s*preset\.unbind\(\s*"([^"]+)"\s*\)/);
+            if (m)
+                out.push(root.pretty(m[1]));
+        }
+        return out;
+    }
+
     FileView {
         id: file
 
         path: `${Quickshell.shellDir}/hypr/kawt.lua`
-        onLoaded: {
-            const out = [];
-            for (const line of text().split("\n")) {
-                // hl.bind(mod .. " + R", ...) -- what   /   hl.bind("Print", ...) -- what
-                const m = line.match(/^\s*hl\.bind\((mod\s*\.\.\s*)?"([^"]+)".*?--\s*(.+)$/);
-                if (m)
-                    out.push({ keys: root.pretty((m[1] ? "SUPER" : "") + m[2]), what: m[3].trim() });
-            }
-            root.binds = out;
-        }
+        onLoaded: root.kawtText = text()
+    }
+
+    // your own config: missing or the classic hyprland.conf, and the list is kawt's alone
+    FileView {
+        id: hyprFile
+
+        path: `${Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"}/hypr/hyprland.lua`
+        printErrors: false
+        onLoaded: root.hyprText = text()
+        onLoadFailed: root.hyprText = ""
+    }
+
+    FileView {
+        id: presetFile
+
+        path: `${Quickshell.shellDir}/hypr/preset.lua`
+        onLoaded: root.presetText = text()
+    }
+
+    FileView {
+        id: userFile
+
+        path: `${Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"}/hypr/user.lua`
+        printErrors: false
+        onLoaded: root.userText = text()
+        onLoadFailed: root.userText = ""
     }
 
     Rectangle {
@@ -105,7 +167,7 @@ PanelWindow {
             spacing: 2
 
             Label {
-                visible: root.binds.length === 0
+                visible: root.kawtText === ""
                 text: "-- couldn't read hypr/kawt.lua --"
                 color: Colors.warn
             }

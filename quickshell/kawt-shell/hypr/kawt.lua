@@ -45,7 +45,8 @@ try("binds", function()
     hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
     hl.bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
     hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
-    -- screenshots: saved to the folder from the profile's cfg tab, and copied
+    -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in the profile's
+    -- cfg tab, saved to the folder from there and copied at once)
     hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
     hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
     hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen")) -- screenshot of the screen
@@ -85,7 +86,7 @@ end)
 try("layer rule", function()
     hl.layer_rule({
         name = "kawt-no-anim",
-        match = { namespace = "^kawt-(popover|launcher|style|toasts|sidebar|osd|power|dashboard|keys)$" },
+        match = { namespace = "^kawt-(popover|launcher|style|toasts|shot|sidebar|osd|power|dashboard|keys)$" },
         no_anim = true,
     })
 end)

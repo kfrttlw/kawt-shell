@@ -19,6 +19,7 @@ Singleton {
     property alias motto: adapter.motto
     property alias profileArt: adapter.profileArt
     property alias screenshotDir: adapter.screenshotDir
+    property alias screenshotAsk: adapter.screenshotAsk
     property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
     property alias wallStrength: adapter.wallStrength
@@ -88,6 +89,7 @@ Singleton {
             property string motto: "stay curious" // profile header line; "fortune" = a new one each time, "" = none
             property string profileArt: "auto" // "auto": ~/.face as ascii if it exists, "machine": always the thinkpad/pc
             property string screenshotDir: "~/Pictures/screenshots"
+            property bool screenshotAsk: true // a preview in the corner asks: copy / save (services/Screenshot.qml); false = saved and copied at once
             property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
             property string wallStrength: "strong" // how hard the wallpaper theme colors things: "calm" | "strong" | "full"

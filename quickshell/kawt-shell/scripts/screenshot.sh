@@ -1,12 +1,14 @@
 #!/bin/sh
-# usage: screenshot.sh <region|window|screen> <dir> [selection color] [shade color]
+# usage: screenshot.sh <region|window|screen> <dir> [selection color] [shade color] [quiet]
 # Saves a png to <dir>, copies it to the clipboard and sends a notification. Prints the path.
+# quiet: only saves and prints the path (kawt's preview asks what to do with it).
 # Needs grim, slurp and wl-clipboard. Colors are #rrggbb[aa] (the kawt theme passes its own).
 
 mode=${1:-region}
 dir=${2:-$HOME/Pictures/screenshots}
 color=${3:-#ffffffff}
 shade=${4:-#00000066}
+quiet=${5:-}
 
 mkdir -p "$dir" || exit 1
 file="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"
@@ -34,6 +36,10 @@ case $mode in
         ;;
 esac
 
+if [ "$quiet" = quiet ]; then
+    echo "$file"
+    exit 0
+fi
 wl-copy --type image/png < "$file"
 notify-send -a screenshot -i "$file" "screenshot saved" "${file#"$HOME"/}  ·  copied to clipboard"
 echo "$file"

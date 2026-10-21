@@ -15,6 +15,7 @@ import "../osd"
 import "../profile"
 import "../power"
 import "../help"
+import "../shot"
 
 Variants {
     model: Quickshell.screens
@@ -362,6 +363,15 @@ Variants {
             linger: 250
 
             OsdWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        // a screenshot waiting for [copy] / [save] (services/Screenshot.qml)
+        Lazy {
+            when: root.modelData.name === Screenshot.screen && Screenshot.shot !== ""
+
+            ShotPreview {
                 forScreen: root.modelData
             }
         }

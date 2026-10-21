@@ -37,7 +37,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
 | recording | `[● rec 0:42]` in the bar; area or whole screen, optional mic audio |
-| screenshots | area / window / screen, saved and copied to the clipboard |
+| screenshots | area / window / screen; a preview in the corner asks: `[copy]` `[save]` `[open]` (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
@@ -48,6 +48,8 @@ configs, all in one monospace, square-cornered, text-first style.
 ```
 quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua)
+  hypr/preset.lua        kawt's standard Hyprland config (with hypr/hyprland.lua + hypr/user.lua)
+  hypr/nvidia.lua        Hyprland's environment for an nvidia card (the installer adds it on a yes)
   hypr/login.sh          starts Hyprland from the console: at login on tty1 or with `start`
   zsh/kawt.zsh-theme     prompt           (sourced from ~/.zshrc)
   zsh/starter.zshrc      a first ~/.zshrc (copied only if you have none)
@@ -84,11 +86,37 @@ A menu asks which system this is (it guesses: Arch-based or not) and what to ins
 - symlinks the configs, so `git pull` updates everything in place. Configs that are already
   there are replaced but kept in `~/.local/state/kawt/backups/<date>/`
 - gives your `hyprland.lua` one line that loads `hypr/kawt.lua` (wrapped in `pcall`, so a
-  broken kawt can never take Hyprland down). Your own config stays yours. Never started
-  Hyprland yet, so there's none: it starts from Hyprland's own (`/usr/share/hypr/hyprland.lua`,
-  what Hyprland would write itself), without the two binds kawt uses (`super + r`,
-  `super + shift + s`), and asks which keyboard layouts you want next to `us`
-  (`alt + shift` switches; it guesses from your language, `ru_RU` -> `ru`)
+  broken kawt can never take Hyprland down). Your own config stays yours, unless you pick
+  **kawt's standard config**: CRT-style animations (windows open out of a line, no bouncing),
+  square windows, small tools and dialogs floating at their own size instead of stretched,
+  `super + v` floating ↔ tiled at 900x600 in the middle, a window mode on `super + z` (arrows
+  resize, `shift` + arrows move, `f` float, `c` center, `p` pin), resize on
+  `super + ctrl + arrows`, media keys through kawt's osd. Then `hyprland.lua` is three lines:
+
+  ```lua
+  dofile(".../kawt-shell/hypr/preset.lua")         -- the standard config: git pull updates it
+  pcall(dofile, ".../kawt-shell/hypr/kawt.lua")    -- kawt's keys and theme colors
+  dofile("~/.config/hypr/user.lua")                -- yours, last: it wins
+  ```
+
+  and everything of your own goes to `~/.config/hypr/user.lua` (made once, never replaced):
+  monitors, layouts, mouse speed, `preset.terminal = "foot"` (and `files`, `browser`), any
+  setting again (the last one counts). A key bound twice does both, so free a standard one
+  first: `preset.unbind("SUPER + B")`, then bind yours. Each part of the standard config runs
+  in its own `pcall`: one that doesn't fit your Hyprland version is skipped, not the rest.
+  Your old `hyprland.lua` goes to the backup (`user.lua` says where); `--uninstall` puts it
+  back, or, with none, copies the standard config into `hyprland.lua` so it works without
+  kawt. Never started Hyprland yet, so there's none: the standard config is the default, or
+  Hyprland's own (`/usr/share/hypr/hyprland.lua`, what Hyprland would write itself) without
+  the two binds kawt uses (`super + r`, `super + shift + s`). Either way it asks which
+  keyboard layouts you want next to `us` (`alt + shift` switches; it offers the ones of your
+  old config, or guesses from your language, `ru_RU` -> `ru`)
+- an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
+  the gpu, OpenGL through nvidia; not on a hybrid laptop, where the intel / amd gpu draws) and,
+  if there's no driver yet, the driver: `nvidia-open-dkms` for Turing and newer (GTX 16xx,
+  RTX), `nvidia-580xx-dkms` from the AUR for GTX 9xx / 10xx (with paru or yay), with the
+  kernel headers, `libva-nvidia-driver`, `lib32-nvidia-utils` when multilib is on and
+  `nvidia-prime` (`prime-run`) on a hybrid. Older cards: by hand. A reboot after
 - also installs what a fresh Hyprland lacks: sound for browsers and Discord (`pipewire-pulse`),
   screen sharing and "open file" windows (`xdg-desktop-portal-hyprland`, `-gtk`), the password
   window for apps that need admin rights (`hyprpolkitagent`, started by kawt), the play / pause
@@ -147,9 +175,9 @@ without it, only while `super + w` is open.
 | `super + n` / `super + shift + n` | notifications / do not disturb |
 | `super + i` | profile, full screen (`[~]` opens the small one) |
 | `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in profile → cfg) |
-| `super + /` | all keys (read from `hypr/kawt.lua`) |
+| `super + /` | all keys (read from `hypr/kawt.lua`, then the binds of your config that end with a `-- comment`: `hyprland.lua`, or `user.lua` and the standard config) |
 | `super + escape` | power menu: shutdown / reboot / suspend / logout / lock, with a 5 s countdown |
-| `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window) |
+| `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window), then copy / save in the corner |
 | `super + shift + r` / `super + alt + r` | record an area / the screen (same key again: stop) |
 
 In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.

@@ -1619,11 +1619,24 @@ ColumnLayout {
                     color: Colors.dim
                 }
 
-                TermInput {
+                RowLayout {
                     Layout.fillWidth: true
-                    prompt: "dir>"
-                    text: Settings.screenshotDir
-                    onAccepted: t => Settings.screenshotDir = t.trim() || Settings.screenshotDir
+                    spacing: Metrics.spacing
+
+                    TermInput {
+                        Layout.fillWidth: true
+                        prompt: "dir>"
+                        text: Settings.screenshotDir
+                        onAccepted: t => Settings.screenshotDir = t.trim() || Settings.screenshotDir
+                    }
+
+                    // on: a preview asks copy / save; off: saved and copied right away
+                    BracketButton {
+                        tag: Settings.screenshotAsk ? "x" : " "
+                        label: "ask"
+                        bordered: false
+                        onClicked: Settings.screenshotAsk = !Settings.screenshotAsk
+                    }
                 }
 
                 Label {

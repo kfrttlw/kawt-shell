@@ -16,7 +16,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt idle <minutes>              (lock after that long without input, 0 = never)
 //   qs -c kawt-shell ipc call kawt volume up|down|mute · mic mute · brightness up|down|<0-100>
 //   qs -c kawt-shell ipc call kawt night                       (night light, needs hyprsunset)
-//   qs -c kawt-shell ipc call kawt screenshot region|window|screen
+//   qs -c kawt-shell ipc call kawt screenshot region|window|screen   (a preview asks copy / save)
 //   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
 //   qs -c kawt-shell ipc call kawt close
 //   qs -c kawt-shell ipc call kawt dnd
