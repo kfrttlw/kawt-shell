@@ -47,6 +47,11 @@ Singleton {
     property alias aiBotLabel: adapter.aiBotLabel
     property alias aiMode: adapter.aiMode
     property alias aiCoderSteps: adapter.aiCoderSteps
+    property alias aiVisionModel: adapter.aiVisionModel
+    property alias aiRun: adapter.aiRun
+    property alias aiSandbox: adapter.aiSandbox
+    property alias aiSandboxImage: adapter.aiSandboxImage
+    property alias aiRunSecs: adapter.aiRunSecs
     property alias recordAudio: adapter.recordAudio
     property alias recordSound: adapter.recordSound
     property alias mediaPlayer: adapter.mediaPlayer
@@ -152,6 +157,11 @@ Singleton {
             property string aiBotLabel: "ai"
             property string aiMode: "chat" // "chat" | "coder" (services/Coder.qml)
             property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
+            property string aiVisionModel: "" // ollama: the model that gets pictures (a screenshot's [ask]); "" = the chat's
+            property bool aiRun: true // the coder may ask to run commands (each one waits for [run]), in a sandbox
+            property string aiSandbox: "bwrap" // "bwrap" (bubblewrap) | "podman" (with aiSandboxImage)
+            property string aiSandboxImage: "" // podman: an image you pulled yourself (kawt never pulls one)
+            property int aiRunSecs: 120 // a command is stopped after this long
             property bool recordAudio: false // record the microphone too (older kawt; recordSound wins when set)
             property string recordSound: "" // "off" | "mic" | "system" (what you hear) | "both"; "" = recordAudio decides
             property string mediaPlayer: "" // the player picked in the player popover's tabs (services/Media.qml)

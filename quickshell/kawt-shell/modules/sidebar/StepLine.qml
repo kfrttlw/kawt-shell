@@ -11,6 +11,9 @@ import qs.services
 //     @ line 12
 //     - button = false
 //     + button = true                     [apply] [skip]
+//   ⚙ run     npm test                         run it?
+//     $ npm test
+//     in the sandbox: no network, only the project writable   [run] [skip]
 //   -- stopped --                                       (info / error)
 Item {
     id: root
@@ -94,10 +97,78 @@ Item {
             }
 
             BracketButton {
-                visible: !!root.step.diff && !root.waiting
-                label: root.showDiff ? "hide" : "diff"
+                visible: (!!root.step.diff || !!root.step.out) && !root.waiting
+                label: root.showDiff ? "hide" : root.step.diff ? "diff" : "out"
                 bordered: false
                 onClicked: root.showDiff = !root.showDiff
+            }
+        }
+
+        // ---- a command: waiting for [run], then what it printed
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.leftMargin: root.size * 2
+            visible: !!root.step.cmd && (root.waiting || (root.showDiff && !!root.step.out)) && root.step.status !== "skipped"
+            implicitHeight: runCol.implicitHeight + 8
+            color: Colors.hoverFill
+            border.color: root.waiting ? Colors.accent : Colors.border
+            border.width: Metrics.borderWidth
+
+            ColumnLayout {
+                id: runCol
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 4
+                spacing: 2
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: root.waiting
+                    wrapMode: Text.WrapAnywhere
+                    textFormat: Text.PlainText
+                    text: `$ ${root.step.cmd ?? ""}`
+                    color: Colors.fg
+                    font.pixelSize: root.size - 1
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: root.waiting
+                    wrapMode: Text.Wrap
+                    text: Coder.sandbox.startsWith("podman") ? `in podman (${Coder.sandbox.slice(7)}): no network, only the project writable, ${Settings.aiRunSecs}s at most` : `in a sandbox: no network, only the project writable, ${Settings.aiRunSecs}s at most`
+                    color: Colors.dim
+                    font.pixelSize: root.size - 3
+                }
+
+                // the last lines of what it printed
+                Label {
+                    Layout.fillWidth: true
+                    visible: !root.waiting && !!root.step.out
+                    wrapMode: Text.WrapAnywhere
+                    textFormat: Text.PlainText
+                    maximumLineCount: 40
+                    text: root.step.out ?? ""
+                    color: root.step.status === "error" ? Colors.warn : Colors.fg
+                    font.pixelSize: root.size - 2
+                }
+
+                RowLayout {
+                    Layout.topMargin: 4
+                    visible: root.waiting
+
+                    BracketButton {
+                        label: "run"
+                        textColor: Colors.accent
+                        onClicked: Coder.apply()
+                    }
+
+                    BracketButton {
+                        label: "skip"
+                        onClicked: Coder.skip()
+                    }
+                }
             }
         }
 

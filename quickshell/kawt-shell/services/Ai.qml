@@ -68,6 +68,13 @@ Singleton {
     readonly property int fileLimit: 20000 // characters per attached file
     property var files: [] // paths inside Settings.aiFolder, relative
     property var attachments: [] // [{ path (relative), text }] going with the next message
+    // a picture going with the next message (a screenshot's [ask]): a copy in ~/.cache/kawt/ai,
+    // sent to Settings.aiVisionModel (or the chat's model) as base64, read only when it goes.
+    // The chats file keeps the path, not the picture
+    property string image: ""
+    property var imageData: ({}) // path -> base64 of pictures already read
+    readonly property string imageDir: `${Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache"}/kawt/ai`
+    readonly property string visionModel: useApi ? Settings.apiModel : Settings.aiVisionModel || Settings.ollamaModel
     property var attachQueue: []
     property string fileStatus: ""
 
@@ -131,6 +138,9 @@ Singleton {
 
     function send(text: string): void {
         text = text.trim();
+        // a picture and nothing typed: the plain question
+        if (!text && image)
+            text = "What's on this picture? Briefly.";
         if (!text)
             return;
         if (text.startsWith("/")) {
@@ -148,9 +158,97 @@ Singleton {
         const att = attachments;
         const content = att.length === 0 ? text : att.map(a => `File: ${a.path}\n\`\`\`\n${a.text}\n\`\`\``).join("\n\n") + `\n\n${text}`;
         attachments = [];
-        setMessages([...messages, { role: "user", text, time: Date.now(), files: att.map(a => a.path), content }]);
+        const pic = image;
+        image = "";
+        const msg = { role: "user", text, time: Date.now(), files: att.map(a => a.path), content };
+        if (pic) {
+            msg.image = pic;
+            msg.files = [...msg.files, pic.split("/").pop()];
+        }
+        setMessages([...messages, msg]);
         comparing = false;
-        ask(modelName);
+        go();
+    }
+
+    // to the model: the one that sees while a picture is in what it gets, else the chat's
+    function go(): void {
+        const pic = recentImage();
+        if (pic)
+            readImage(pic);
+        else
+            ask(modelName);
+    }
+
+    // the messages the model gets (the newest Settings.aiHistory of them)
+    function history_(): var {
+        return messages.filter(m => m.role === "user" || (m.role === "assistant" && !m.alt)).slice(-Settings.aiHistory);
+    }
+
+    // the newest picture among them, or ""
+    function recentImage(): string {
+        const h = history_();
+        for (let i = h.length - 1; i >= 0; i--)
+            if (h[i].image)
+                return h[i].image;
+        return "";
+    }
+
+    // ---- pictures
+
+    // a screenshot's [ask]: copied out of the shots' folder (those go after an hour), then the
+    // panel opens with it waiting for your question
+    function askAbout(path: string): void {
+        if (!path)
+            return;
+        imageCopy.command = ["sh", "-c", 'mkdir -p "$2" && f="$2/$(date +%Y%m%d-%H%M%S)-${1##*/}" && cp -- "$1" "$f" && find "$2" -name "*.png" -mtime +7 -delete; printf %s "$f"', "sh", path, imageDir];
+        imageCopy.running = true;
+    }
+
+    Job {
+        id: imageCopy
+
+        onDone: (code, out) => {
+            if (code !== 0 || !out)
+                return;
+            root.image = out;
+            Settings.aiMode = "chat";
+            Panels.aiTab = 0;
+            Panels.sidebarScreen = Panels.focusedScreen;
+            Panels.sidebarOpen = true;
+        }
+    }
+
+    // the picture as base64, then the question goes (to the model that sees)
+    function readImage(path: string): void {
+        if (imageData[path]) {
+            ask(visionModel);
+            return;
+        }
+        imageReader.path = path;
+        imageReader.command = ["base64", "-w0", path];
+        imageReader.running = true;
+    }
+
+    Job {
+        id: imageReader
+
+        property string path: ""
+
+        onDone: (code, out) => {
+            if (code !== 0 || !out) {
+                root.note("the picture is gone (it was in ~/.cache/kawt/ai): asked without it");
+                root.ask(root.modelName);
+                return;
+            } else {
+                // only the newest few stay in memory
+                const d = {};
+                d[path] = out.trim();
+                for (const k of Object.keys(root.imageData).slice(-2))
+                    d[k] = root.imageData[k];
+                root.imageData = d;
+            }
+            root.ask(root.visionModel);
+        }
     }
 
     // ask again: drop the answers after the last question and send it once more
@@ -162,7 +260,7 @@ Singleton {
             return;
         setMessages(messages.slice(0, last + 1));
         comparing = false;
-        ask(modelName);
+        go();
     }
 
     // take the last question back into the input: returns its text, drops it and what followed
@@ -188,14 +286,27 @@ Singleton {
         sentAt = Date.now();
         tps = 0;
         askedModel = model;
-        const history = messages.filter(m => m.role === "user" || (m.role === "assistant" && !m.alt)).slice(-Settings.aiHistory).map(m => ({ role: m.role, content: m.content ?? m.text }));
+        const picked = history_();
+        // the newest picture goes along (older ones only as their text: requests stay small)
+        const withPic = picked.map(m => !!(m.image && imageData[m.image])).lastIndexOf(true);
+        const history = picked.map((m, i) => {
+            const h = { role: m.role, content: m.content ?? m.text };
+            if (i === withPic) {
+                const b64 = imageData[m.image];
+                if (useApi)
+                    h.content = [{ type: "text", text: h.content }, { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } }];
+                else
+                    h.images = [b64];
+            }
+            return h;
+        });
         const system = systemPrompt();
         if (system)
             history.unshift({ role: "system", content: system });
 
         // the context must hold the whole conversation, or ollama silently cuts its start and
         // small models lose the thread and start repeating. ~3.5 characters per token.
-        const need = Math.ceil(history.reduce((n, m) => n + m.content.length, 0) / 3.5) + 1024;
+        const need = Math.ceil(history.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 2000), 0) / 3.5) + 1024 + (withPic >= 0 ? 2048 : 0);
         let ctx = Settings.aiCtx;
         while (ctx < need && ctx < 16384)
             ctx *= 2;

@@ -103,7 +103,7 @@ PanelWindow {
                 }
             }
 
-            // [copy] [save] [open] [edit] [text] [x]: edit and text only with satty / tesseract
+            // [copy] [save] [open] [edit] [text] [ask] [x]: edit and text only with satty / tesseract
             Flow {
                 Layout.fillWidth: true
                 spacing: Metrics.spacing
@@ -136,6 +136,12 @@ PanelWindow {
                     visible: Screenshot.ocrLangs !== ""
                     label: "text"
                     onClicked: Screenshot.readText()
+                }
+
+                // into the ai panel, to ask about it (a model that sees: ai -> cfg -> pictures)
+                BracketButton {
+                    label: "ask"
+                    onClicked: Ai.askAbout(Screenshot.shot)
                 }
 
                 BracketButton {
