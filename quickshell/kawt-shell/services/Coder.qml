@@ -6,20 +6,29 @@ import qs.config
 import qs.utils
 
 // The coder agent: the same model as the ai panel, working inside one project folder
-// (Settings.aiFolder) through four tools, in a loop:
+// (Settings.aiFolder) through its tools, in a loop:
 //   model thinks -> asks for a tool -> kawt runs it -> the result goes back -> ... -> summary
 //
 //   list    files of a folder                    runs at once
 //   search  lines containing a text              runs at once
 //   read    numbered lines of a file             runs at once
 //   edit    replace a piece of a file / new file waits for [apply] or [skip], shown as a diff
+//   run     a shell command (tests, a build)     waits for [run] or [skip]; then runs in a
+//                                                sandbox (scripts/sandbox.sh: no network, only
+//                                                the folder writable, a time limit). Only
+//                                                there's a sandbox and Settings.aiRun is on
 //
 // Every path goes through scripts/coder-tool.sh, which refuses anything outside the folder.
-// [undo] puts back every file the agent changed during the session.
+// [undo] puts back every file the agent changed with edit (not what a command did: git is
+// for that).
 Singleton {
     id: root
 
     readonly property string tool: `${Quickshell.shellDir}/scripts/coder-tool.sh`
+    readonly property string sandboxTool: `${Quickshell.shellDir}/scripts/sandbox.sh`
+    property string sandbox: "" // what scripts/sandbox.sh check found: "bwrap", "podman <image>", ""
+    readonly property bool canRun: Settings.aiRun && sandbox !== ""
+    readonly property var sandboxEnv: [`KAWT_SANDBOX=${Settings.aiSandbox}`, `KAWT_IMAGE=${Settings.aiSandboxImage}`]
     readonly property string folder: Settings.expand(Settings.aiFolder)
     readonly property int maxSteps: Settings.aiCoderSteps // 0 = no limit
 
@@ -38,7 +47,13 @@ Singleton {
 
     readonly property bool canUndo: Object.keys(touched).length > 0 && !running
 
-    readonly property var toolSpecs: [
+    readonly property var runSpec: ({
+        name: "run",
+        description: "Run a shell command in the project folder (tests, a build, a linter, a script). It runs in a sandbox: no network, only the project folder is writable, a time limit. The user approves every command first. Returns the exit code and the output (cut when long). Keep commands short and non-interactive.",
+        parameters: { type: "object", properties: { command: { type: "string", description: "one sh command line, run from the project's root" } }, required: ["command"] }
+    })
+    readonly property var toolSpecs: canRun ? baseSpecs.concat([runSpec]) : baseSpecs
+    readonly property var baseSpecs: [
         {
             name: "list",
             description: "List files and folders (2 levels deep) under a path of the project. Folders end with /.",
@@ -63,7 +78,7 @@ Singleton {
 
     function system(): string {
         return `You are a careful coding agent. You work inside one project folder (${folder.split("/").pop()}), chosen by the user; nothing outside it exists for you.
-Use the tools: list to see the structure, search to find where something is, read a file before changing it, edit to change it.
+Use the tools: list to see the structure, search to find where something is, read a file before changing it, edit to change it.${canRun ? " run executes a shell command in the project (tests, builds, checks), in a sandbox without network; use it to check your changes, not to edit files." : ""}
 Rules:
 - Never guess what a file contains: read it first.
 - In edit, copy \`old\` exactly from the file, without the line numbers and the "| " that read adds. Keep it to a few lines that appear only once.
@@ -94,6 +109,13 @@ Answer in the language of the user's task.`;
     function callModel(): void {
         if (!running)
             return;
+        // the first task right as the panel opens: the sandbox check decides which tools there are
+        if (sandboxCheck.running && sandboxWait.tries < 20) {
+            sandboxWait.tries++;
+            sandboxWait.restart();
+            return;
+        }
+        sandboxWait.tries = 0;
         if (maxSteps > 0 && stepCount >= maxSteps) {
             addStep({ kind: "info", text: `stopped after ${maxSteps} steps. say "go on" to continue` });
             finish();
@@ -282,7 +304,7 @@ Answer in the language of the user's task.`;
 
     function runTool(call: var): void {
         const a = call.args;
-        const label = { list: a.path || ".", search: `"${a.text ?? ""}"`, read: a.path ?? "", edit: a.path ?? "" }[call.name] ?? "";
+        const label = { list: a.path || ".", search: `"${a.text ?? ""}"`, read: a.path ?? "", edit: a.path ?? "", run: a.command ?? "" }[call.name] ?? "";
         const id = addStep({ kind: "tool", name: call.name, arg: label, status: "running" });
         action = `${call.name} ${label}`;
 
@@ -299,9 +321,11 @@ Answer in the language of the user's task.`;
             shell(args, (code, out) => done(call, id, code, out, `${out.split("\n").filter(l => /^\s*\d+\|/.test(l)).length} lines`));
         } else if (call.name === "edit") {
             prepareEdit(call, id);
+        } else if (call.name === "run" && canRun) {
+            prepareRun(call, id);
         } else {
             setStep(id, { status: "error", text: "unknown tool" });
-            reply(call, `error: there is no tool named ${call.name}. use list, search, read or edit.`);
+            reply(call, `error: there is no tool named ${call.name}. use ${toolSpecs.map(t => t.name).join(", ")}.`);
         }
     }
 
@@ -376,6 +400,10 @@ Answer in the language of the user's task.`;
         if (!p)
             return;
         pending = null;
+        if (p.kind === "run") {
+            execRun(p);
+            return;
+        }
         shell(["cat", p.path], (code, now) => {
             const current = code === 5 ? null : code === 0 ? now : undefined;
             if (current !== p.original) {
@@ -408,7 +436,83 @@ Answer in the language of the user's task.`;
             return;
         pending = null;
         setStep(p.stepId, { status: "skipped" });
-        reply(p.call, "the user rejected this edit. don't repeat it; ask or try something else.");
+        reply(p.call, p.kind === "run" ? "the user didn't run this command. don't repeat it; ask or try something else." : "the user rejected this edit. don't repeat it; ask or try something else.");
+    }
+
+    // ------------------------------------------------------------------ commands
+
+    // shown whole, waiting for [run]: nothing runs before that
+    function prepareRun(call: var, id: real): void {
+        const command = String(call.args.command ?? "").trim();
+        if (!command) {
+            setStep(id, { status: "error", text: "no command" });
+            reply(call, "error: give the command to run as `command`.");
+            return;
+        }
+        setStep(id, { status: "waiting", text: "run it?", cmd: command });
+        pending = { stepId: id, call, kind: "run", command };
+        action = "run (waiting for you)";
+    }
+
+    // [run]: in the sandbox, with a time limit; the exit code and the output go to the model
+    function execRun(p: var): void {
+        setStep(p.stepId, { status: "running", text: "" });
+        action = `run ${p.command}`;
+        runner.call = p.call;
+        runner.stepId = p.stepId;
+        runner.since = Date.now();
+        runner.command = ["env", ...sandboxEnv, "sh", sandboxTool, folder, String(Settings.aiRunSecs), p.command];
+        runner.running = true;
+    }
+
+    // what the model gets back from a command: the end matters most (errors, the summary)
+    function cutOutput(out: string): string {
+        return out.length <= 12000 ? out : `${out.slice(0, 3000)}\n... (${out.length - 11000} characters left out) ...\n${out.slice(-8000)}`;
+    }
+
+    Job {
+        id: runner
+
+        property var call: null
+        property real stepId: 0
+        property real since: 0
+
+        onDone: (code, out) => {
+            if (!root.running || !call)
+                return;
+            const c = call;
+            call = null;
+            const secs = Math.round((Date.now() - since) / 100) / 10;
+            const lines = out ? out.replace(/\n$/, "").split("\n") : [];
+            const why = code === 124 ? ` (stopped: over ${Settings.aiRunSecs}s)` : code === 125 ? " (no sandbox)" : "";
+            root.setStep(stepId, { status: code === 0 ? "done" : "error", text: `exit ${code}${why} · ${lines.length} lines · ${secs}s`, out: lines.slice(-40).join("\n") });
+            root.reply(c, `exit code ${code}${why}${out.length >= 65536 ? " (the output was cut at 64 KB)" : ""}\n${root.cutOutput(out) || "(no output)"}`);
+        }
+    }
+
+    // which sandbox works here; again when the setting changes
+    Process {
+        id: sandboxCheck
+
+        running: true
+        command: ["env", ...root.sandboxEnv, "sh", root.sandboxTool, "check"]
+        stdout: StdioCollector {
+            onStreamFinished: root.sandbox = text.trim()
+        }
+    }
+
+    Timer {
+        id: sandboxWait
+
+        property int tries: 0
+
+        interval: 150
+        onTriggered: root.callModel()
+    }
+
+    onSandboxEnvChanged: {
+        sandboxCheck.running = false;
+        sandboxCheck.running = true;
     }
 
     // put back every file the agent changed, delete the ones it created
@@ -440,6 +544,11 @@ Answer in the language of the user's task.`;
         if (pending) {
             setStep(pending.stepId, { status: "skipped" });
             pending = null;
+        }
+        if (runner.running) {
+            setStep(runner.stepId, { status: "error", text: "stopped" });
+            runner.call = null;
+            runner.running = false;
         }
         if (was)
             addStep({ kind: "info", text: "stopped" });

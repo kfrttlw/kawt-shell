@@ -34,12 +34,13 @@ PanelWindow {
         ["qwen2.5:3b", "1.9G", "balanced, good with code"],
         ["llama3.2:3b", "2.0G", "balanced all-rounder"],
         ["phi4-mini", "2.5G", "reasoning, math"],
-        ["gemma3:4b", "3.3G", "smart, still light"],
+        ["gemma3:4b", "3.3G", "smart, still light, sees pictures"],
+        ["qwen2.5vl:3b", "3.2G", "sees pictures: a screenshot's [ask]"],
         ["qwen2.5-coder:7b", "4.7G", "code, needs ~8G ram"],
         ["llama3.1:8b", "4.9G", "smartest here, needs ~8G ram"]
     ]
     // more names for the pull> completion (from ollama.com/library)
-    readonly property list<string> popular: ["llama3.2", "llama3.1", "llama3.3", "mistral", "mistral-nemo", "mixtral", "qwen2.5", "qwen2.5:1.5b", "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder", "qwen2.5-coder:1.5b", "qwen2.5-coder:3b", "qwen3", "qwen3:0.6b", "qwen3:1.7b", "qwen3:4b", "qwen3:8b", "deepseek-r1", "deepseek-r1:1.5b", "deepseek-r1:7b", "deepseek-r1:8b", "gemma2", "gemma2:2b", "gemma3", "gemma3:12b", "phi3", "phi3:mini", "phi4", "codellama", "codegemma", "starcoder2", "llava", "moondream", "tinyllama", "smollm2", "smollm2:360m", "granite3.1-dense", "nomic-embed-text"]
+    readonly property list<string> popular: ["llama3.2", "llama3.1", "llama3.3", "mistral", "mistral-nemo", "mixtral", "qwen2.5", "qwen2.5:1.5b", "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder", "qwen2.5-coder:1.5b", "qwen2.5-coder:3b", "qwen3", "qwen3:0.6b", "qwen3:1.7b", "qwen3:4b", "qwen3:8b", "deepseek-r1", "deepseek-r1:1.5b", "deepseek-r1:7b", "deepseek-r1:8b", "gemma2", "gemma2:2b", "gemma3", "gemma3:12b", "phi3", "phi3:mini", "phi4", "codellama", "codegemma", "starcoder2", "llava", "llava:7b", "moondream", "qwen2.5vl", "qwen2.5vl:3b", "qwen2.5vl:7b", "tinyllama", "smollm2", "smollm2:360m", "granite3.1-dense", "nomic-embed-text"]
     readonly property string defaultSystem: "Answer briefly and informatively. Get straight to the point, skip filler and repetition. Use a list or a code block only when it really helps. Answer in the language of the question."
 
     screen: forScreen
@@ -405,7 +406,7 @@ PanelWindow {
                     width: coderLog.width
                     visible: coderLog.count === 0
                     height: visible ? implicitHeight : 0
-                    text: "  coder: tell it what to do in the project.\n\n  it can list, search and read files on its own;\n  every change is shown as a diff: [apply] or [skip].\n  [undo] puts back everything it changed.\n\n  works best with qwen2.5 / qwen2.5-coder / llama3.1+"
+                    text: `  coder: tell it what to do in the project.\n\n  it can list, search and read files on its own;\n  every change is shown as a diff: [apply] or [skip].\n${root.coder && Coder.canRun ? "  commands (tests, builds) wait for [run], then go\n  into a sandbox: no network, only the project.\n" : ""}  [undo] puts back everything it changed.\n\n  works best with qwen2.5 / qwen2.5-coder / llama3.1+`
                     color: Colors.dim
                 }
 
@@ -497,11 +498,20 @@ PanelWindow {
                 }
             }
 
-            // files going with the next message: [@notes.md x]
+            // files going with the next message: [@notes.md x]; a picture: [picture shot.png x]
             Flow {
                 Layout.fillWidth: true
-                visible: root.tab === 0 && !root.coder && Ai.attachments.length > 0
+                visible: root.tab === 0 && !root.coder && (Ai.attachments.length > 0 || Ai.image !== "")
                 spacing: Metrics.spacing
+
+                BracketButton {
+                    visible: Ai.image !== ""
+                    tag: "picture"
+                    label: `${Ai.image.split("/").pop().replace(/^\d{8}-\d{6}-/, "")} x`
+                    textColor: Colors.accent
+                    bordered: false
+                    onClicked: Ai.image = ""
+                }
 
                 Repeater {
                     model: Ai.attachments
@@ -530,7 +540,7 @@ PanelWindow {
                     Component.onCompleted: text = Ai.draft
                     Component.onDestruction: Ai.draft = text
                     prompt: root.coder ? "task>" : Ai.busy ? "~" : ">"
-                    placeholder: root.coder ? (Coder.running ? "working..." : "what should it do in the project?") : Ai.busy ? "thinking..." : "ask something..."
+                    placeholder: root.coder ? (Coder.running ? "working..." : "what should it do in the project?") : Ai.busy ? "thinking..." : Ai.image ? `about the picture (to ${Ai.visionModel})... enter: what's on it` : "ask something..."
                     onAccepted: t => {
                         if (root.coder) {
                             if (Coder.running)
@@ -1083,12 +1093,70 @@ PanelWindow {
                                 onPicked: v => Settings.aiPersona = v
                             }
 
+                            // the model that gets pictures (a screenshot's [ask]): one that sees
+                            TermInput {
+                                Layout.fillWidth: true
+                                visible: !Ai.useApi
+                                prompt: "pictures>"
+                                placeholder: `the chat's model (${Settings.ollamaModel})`
+                                completions: Ai.models.map(m => m.name)
+                                highlight: Ai.models.map(m => m.name)
+                                Component.onCompleted: text = Settings.aiVisionModel
+                                onAccepted: t => Settings.aiVisionModel = t.trim()
+                            }
+
+                            Label {
+                                Layout.fillWidth: true
+                                visible: !Ai.useApi
+                                elide: Text.ElideRight
+                                text: "a model that sees, for a screenshot's [ask]: gemma3:4b, qwen2.5vl:3b, moondream"
+                                color: Colors.dim
+                                font.pixelSize: Metrics.fontSize - 3
+                            }
+
                             Choice {
                                 title: "coder steps"
                                 hintText: "the agent stops after this many; ∞ = never (stop it yourself)"
                                 options: [[15, "15"], [30, "30"], [50, "50"], [0, "∞"]]
                                 value: Settings.aiCoderSteps
                                 onPicked: v => Settings.aiCoderSteps = v
+                            }
+
+                            // the coder's `run`: every command waits for [run], then goes into the sandbox
+                            Choice {
+                                visible: root.coder
+                                title: "coder runs"
+                                hintText: !root.coder ? "" : !Settings.aiRun ? "it can't run commands, only read and edit" : Coder.sandbox ? `commands you approve, in ${Coder.sandbox}: no network, only the project writable` : Settings.aiSandbox === "podman" ? "podman: set an image you pulled (below)" : "no sandbox here: install bubblewrap"
+                                options: [[true, "on"], [false, "off"]]
+                                value: Settings.aiRun
+                                onPicked: v => Settings.aiRun = v
+                            }
+
+                            Choice {
+                                visible: root.coder && Settings.aiRun
+                                title: "sandbox"
+                                hintText: "bwrap: the system read-only, the project at /work. podman: in an image of yours"
+                                options: [["bwrap", "bwrap"], ["podman", "podman"]]
+                                value: Settings.aiSandbox
+                                onPicked: v => Settings.aiSandbox = v
+                            }
+
+                            TermInput {
+                                Layout.fillWidth: true
+                                visible: root.coder && Settings.aiRun && Settings.aiSandbox === "podman"
+                                prompt: "image>"
+                                placeholder: "docker.io/library/archlinux (podman pull it first)"
+                                Component.onCompleted: text = Settings.aiSandboxImage
+                                onAccepted: t => Settings.aiSandboxImage = t.trim()
+                            }
+
+                            Choice {
+                                visible: root.coder && Settings.aiRun
+                                title: "run time"
+                                hintText: "a command still going after this is stopped"
+                                options: [[30, "30s"], [120, "2m"], [600, "10m"]]
+                                value: Settings.aiRunSecs
+                                onPicked: v => Settings.aiRunSecs = v
                             }
 
                             Choice {

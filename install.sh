@@ -98,7 +98,7 @@ pkgs_hypr=()
 pkgs_kitty=(kitty)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
-pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype)
+pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
@@ -969,6 +969,7 @@ about() {
         tesseract | tesseract-data-*) echo "[text] on screenshots" ;;
         libqalculate) echo "= in the launcher: units, currencies, dates" ;;
         wtype) echo "emoji from the launcher typed in, not only copied" ;;
+        bubblewrap) echo "the coder runs commands you approve in a sandbox (no network, only the project)" ;;
         ddcutil) echo "the monitors' own brightness, from the bar (no backlight here)" ;;
         *) echo "" ;;
     esac
