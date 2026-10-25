@@ -14,7 +14,9 @@
 #   ./install.sh --dry-run       show what would happen, change nothing
 #   ./install.sh --uninstall     remove kawt's links and lines, put the old configs back
 #   ./install.sh --update        kawt itself: git pull, then what the new version needs; up to date,
-#                                it still makes sure all its packages and their libraries are there
+#                                it still makes sure all its packages and their libraries are there.
+#                                Right after a git pull by hand (a version from before --update):
+#                                what that pull brought, the same way
 #                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
 #   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
 #   ./install.sh --help
@@ -116,7 +118,7 @@ for arg in "$@"; do
         -n | --dry-run) dry=1 ;;
         -u | --uninstall) mode=uninstall ;;
         -h | --help)
-            sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -543,6 +545,24 @@ if [[ $mode == update ]]; then
     behind=$(g rev-list --count 'HEAD..@{u}')
     ahead=$(g rev-list --count '@{u}..HEAD')
     if ((behind == 0)); then
+        # pulled by hand a moment ago (the first update from a version that had no --update,
+        # or a plain git pull): what's new since then, as if this had pulled it. Once per pull
+        read -r ref how _ <<< "$(g reflog -1 --date=unix --format='%gd %gs' 2> /dev/null)"
+        when=${ref#*\{}
+        when=${when%\}}
+        prev=$(g rev-parse -q --verify 'HEAD@{1}' 2> /dev/null)
+        seen=$state/pull-seen
+        if [[ $how == pull* && $when =~ ^[0-9]+$ ]] && (($(date +%s) - when < 6 * 3600)) &&
+            [[ -n $prev && $prev != "$old" && $(cat "$seen" 2> /dev/null) != "$ref" ]] &&
+            g merge-base --is-ancestor "$prev" HEAD 2> /dev/null; then
+            pass "pulled by hand: $(g rev-list --count "$prev..HEAD") new since $(g log -1 --format='%h' "$prev")"
+            if ((dry)); then
+                fwd+=(--dry-run)
+            else
+                mkdir -p "$state" && printf '%s\n' "$ref" > "$seen"
+            fi
+            exec "$repo/install.sh" --updated="$prev" "${fwd[@]}"
+        fi
         pass "kawt is up to date ($(g log -1 --format='%h, %cr'))"
         # still: is all it needs there? (a package removed since, one an older install missed,
         # a library gone after a system update)

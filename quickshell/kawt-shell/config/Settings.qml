@@ -90,6 +90,7 @@ Singleton {
     property alias companionSkin: adapter.companionSkin
     property alias companionName: adapter.companionName
     property alias companionLang: adapter.companionLang
+    property alias companionQuotes: adapter.companionQuotes
     property alias updateAuto: adapter.updateAuto
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
@@ -205,6 +206,7 @@ Singleton {
             property string companionSkin: "phos" // utils/companions.js, or yours in ~/.config/kawt/companions.json
             property string companionName: "" // "" = the look's own
             property string companionLang: "en" // "en" | "ru": what he says
+            property bool companionQuotes: true // wise words now and then on a click (fortune-mod's too, in english)
             // kawt's own updates (services/Update.qml): [check] asks github once
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
             property real updateCheckedAt: 0 // ms, the last check that got an answer

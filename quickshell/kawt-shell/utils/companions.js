@@ -490,6 +490,23 @@ var talk = {
         swept: ["all clean"],
         battery: ["battery %s"],
         next: ["next: %s"],
+        // a click now and then (with fortune-mod: its sayings too, in english)
+        wise: [
+            "Simplicity is prerequisite for reliability. (Dijkstra)",
+            "Talk is cheap. Show me the code. (Linus Torvalds)",
+            "Premature optimization is the root of all evil. (Knuth)",
+            "Any fool can write code that a computer can understand. Good programmers write code that humans can understand. (Martin Fowler)",
+            "There are only two hard things in computer science: cache invalidation and naming things. (Phil Karlton)",
+            "The best way to predict the future is to invent it. (Alan Kay)",
+            "Make it work, make it right, make it fast. (Kent Beck)",
+            "We suffer more often in imagination than in reality. (Seneca)",
+            "Waste no more time arguing what a good man should be. Be one. (Marcus Aurelius)",
+            "Brevity is the sister of talent. (Chekhov)",
+            "a small step is still a step",
+            "rest is part of the work too",
+            "done is better than perfect",
+            "the bug is never where you look first"
+        ],
         foods: ["a cookie", "an apple", "a byte", "some noodles", "a tiny battery", "a pancake"]
     },
     ru: {
@@ -528,6 +545,23 @@ var talk = {
         swept: ["всё чисто"],
         battery: ["батарея %s"],
         next: ["дальше: %s"],
+        wise: [
+            "Простота — необходимое условие надёжности. (Дейкстра)",
+            "Болтать легко. Покажи код. (Линус Торвальдс)",
+            "Преждевременная оптимизация — корень всех зол. (Кнут)",
+            "Любой дурак напишет код, понятный компьютеру. Хорошие программисты пишут код, понятный людям. (Мартин Фаулер)",
+            "В программировании две трудные вещи: инвалидация кеша и придумывание имён. (Фил Карлтон)",
+            "Лучший способ предсказать будущее — изобрести его. (Алан Кэй)",
+            "Сначала пусть работает, потом — правильно, потом — быстро. (Кент Бек)",
+            "Мы чаще страдаем в воображении, чем в действительности. (Сенека)",
+            "Хватит рассуждать, каким должен быть хороший человек. Будь им. (Марк Аврелий)",
+            "Краткость — сестра таланта. (Чехов)",
+            "Привычка свыше нам дана: замена счастию она. (Пушкин)",
+            "маленький шаг — тоже шаг",
+            "отдых — тоже часть работы",
+            "сделано лучше, чем идеально",
+            "баг всегда не там, где ищешь сначала"
+        ],
         foods: ["печенька", "яблоко", "байтик", "лапша", "батареечка", "блинчик"]
     }
 };

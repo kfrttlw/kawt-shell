@@ -17,7 +17,7 @@ PanelWindow {
     screen: forScreen
     color: "transparent"
     implicitWidth: Math.max(him.width, talk.maxWidth) + Metrics.padding
-    implicitHeight: him.height + Math.round(70 * Metrics.scale)
+    implicitHeight: him.height + Math.round(110 * Metrics.scale)
 
     WlrLayershell.namespace: "kawt-companion-peek"
     WlrLayershell.layer: WlrLayer.Overlay

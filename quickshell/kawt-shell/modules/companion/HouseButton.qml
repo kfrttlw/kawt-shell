@@ -4,7 +4,7 @@ import qs.components
 import qs.services
 
 // [⌂] the companion's house in the bar, a few pixels: the window lit while he's home and
-// awake, the door open while he's out on the desktop. After it: z asleep, ! when he wants
+// awake, the door open while he's out on the desktop. After it: s asleep, ! when he wants
 // something (food, a game, sleep), the minutes of a running pomodoro.
 BarBox {
     id: root
@@ -12,7 +12,7 @@ BarBox {
     readonly property int cell: Math.max(1, Math.round(2 * Metrics.scale))
     readonly property bool out: Companion.deskViews > 0
     readonly property bool lit: !out && !Companion.sleeping
-    readonly property string tag: Companion.pomoPhase ? `${Companion.pomoLeft}m` : Companion.wants || Companion.sulking ? "!" : Companion.sleeping ? "z" : ""
+    readonly property string tag: Companion.pomoPhase ? `${Companion.pomoLeft}m` : Companion.wants || Companion.sulking ? "!" : Companion.sleeping ? "s" : ""
     readonly property var rows: [
         ".....#.....",
         "....###....",
