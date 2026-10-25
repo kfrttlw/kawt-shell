@@ -3,9 +3,11 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.config
+import qs.utils
 
 // App search for the launcher. Ranks by how well the name matches, plus how often
 // each app was launched (counts saved in ~/.local/state/kawt/launcher.json).
+// An app's own actions ("New Private Window" in firefox) are found by their names too.
 Singleton {
     id: root
 
@@ -45,12 +47,32 @@ Singleton {
         return changed ? out : "";
     }
 
+    // the actions of the apps (.desktop [Desktop Action] parts), as launcher entries:
+    // { name: "Firefox: New Private Window", icon, app, action, isAction }
+    function actionsOf(app: var): var {
+        return (app?.actions ?? []).map(act => ({
+            name: `${app.name}: ${act.name}`,
+            icon: act.icon || app.icon,
+            id: `${app.id}:${act.id}`,
+            genericName: "",
+            comment: "",
+            keywords: [],
+            categories: app.categories,
+            runInTerminal: app.runInTerminal,
+            app: app,
+            action: act,
+            isAction: true
+        }));
+    }
+    readonly property var actions: apps.reduce((out, a) => out.concat(actionsOf(a)), [])
+
     function search(query: string): var {
         const q = query.trim().toLowerCase();
         // typed in the other layout: found too, a little below what matches as typed
         const alt = otherLayout(q);
-        return apps.filter(a => q || !isSystem(a))
-            .map(a => ({ app: a, score: q ? Math.max(match(a, q), alt ? match(a, alt) - 5 : 0) : 1 }))
+        // actions only once something is typed, and below the apps themselves
+        return (q ? apps.concat(actions) : apps.filter(a => !isSystem(a)))
+            .map(a => ({ app: a, score: q ? Math.max(match(a, q), alt ? match(a, alt) - 5 : 0) - (a.isAction ? 10 : 0) : 1 }))
             .filter(r => r.score > 0)
             .map(r => ({ app: r.app, score: r.score + Math.min(20, (adapter.counts[r.app.id] ?? 0) * 2) - (isSystem(r.app) ? 25 : 0) }))
             .sort((x, y) => y.score - x.score || x.app.name.localeCompare(y.app.name))
@@ -122,12 +144,19 @@ Singleton {
     }
 
     function togglePin(app: var): void {
+        if (app?.isAction)
+            return;
         adapter.pinned = isPinned(app) ? adapter.pinned.filter(id => id !== app.id) : [...adapter.pinned, app.id];
     }
 
     function launch(app: var): void {
         adapter.counts = Object.assign({}, adapter.counts, { [app.id]: (adapter.counts[app.id] ?? 0) + 1 });
-        if (app.runInTerminal)
+        if (app.isAction) {
+            if (typeof app.action.execute === "function")
+                app.action.execute();
+            else
+                Quickshell.execDetached(app.action.command);
+        } else if (app.runInTerminal)
             Quickshell.execDetached({
                 command: [...terminalCmd(), ...app.command],
                 workingDirectory: app.workingDirectory
@@ -148,6 +177,76 @@ Singleton {
 
     function terminalCmd(): list<string> {
         return Settings.terminal.split(/\s+/).filter(s => s);
+    }
+
+    // ---- `=` with qalc (package libqalculate): units, currencies, dates, percentages too
+    //   =10 km/h to m/s   =100 usd to eur   =today + 3 weeks   =20% of 150   =sqrt(2)^2
+    // In its own config dir, never told to update exchange rates: it uses the ones it has
+    // (qalc -e downloads them, that goes online). A sum the plain calculator below can do comes
+    // from it at once; qalc answers the rest a moment after typing stops.
+    property bool hasQalc: false
+    property string qalcAsked: ""
+    property string qalcFor: "" // the expression qalcOut answers
+    property string qalcOut: ""
+
+    Process {
+        running: true
+        command: ["sh", "-c", "command -v qalc"]
+        stdout: StdioCollector {
+            onStreamFinished: root.hasQalc = text.trim() !== ""
+        }
+    }
+
+    function qalc(expr: string): void {
+        if (!hasQalc || expr === qalcAsked)
+            return;
+        qalcAsked = expr;
+        qalcWait.restart();
+    }
+
+    Timer {
+        id: qalcWait
+
+        interval: 150
+        onTriggered: {
+            if (qalcJob.running) {
+                restart();
+                return;
+            }
+            // plot() would start gnuplot
+            if (!root.qalcAsked || /\bplot\s*\(/i.test(root.qalcAsked)) {
+                root.qalcFor = root.qalcAsked;
+                root.qalcOut = "";
+                return;
+            }
+            qalcJob.expr = root.qalcAsked;
+            qalcJob.command = ["env", `XDG_CONFIG_HOME=${Settings.dir}/qalc`, "qalc", "-t", "-s", "upxrates 0", root.qalcAsked];
+            qalcJob.running = true;
+            qalcLimit.restart();
+        }
+    }
+
+    // a sum that takes too long (10000!) is let go
+    Timer {
+        id: qalcLimit
+
+        interval: 2000
+        onTriggered: qalcJob.running = false
+    }
+
+    Job {
+        id: qalcJob
+
+        property string expr: ""
+
+        onDone: (code, out) => {
+            qalcLimit.stop();
+            // the last line is the answer; "error: ..." and an echo of what was typed aren't
+            const line = out.trim().split("\n").pop()?.trim() ?? "";
+            const same = line.replace(/\s+/g, "") === expr.replace(/\s+/g, "");
+            root.qalcFor = expr;
+            root.qalcOut = code === 0 && line && !same && !/^(error|warning):/i.test(line) ? line : "";
+        }
     }
 
     // `=2*(3+4)` in the launcher. Only digits and operators get through to eval.
