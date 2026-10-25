@@ -168,8 +168,10 @@ checks that all the packages of your parts are there and that their libraries ar
 `pacman -Dk` finds missing gets installed, and an AUR quickshell that can't load its own
 libraries (`ldd`) is built again. Your own things are outside the repo and stay as they
 are; changes made inside the repo stop it, with a list (`git stash` can put them aside).
-Nothing asks for updates by itself: `[check]` in profile → cfg asks once when pressed, and
-"check once a day" there is off until you switch it on.
+Nothing asks for updates by itself: `[check]` in profile → cfg asks github once when pressed
+(`git fetch`). Once a week a notification reminds you, with `[check]` on it (and `[update]`
+on the answer when there's something new); it's made on your machine, nothing goes out for
+it. "remind me once a week" in profile → cfg switches it off.
 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.

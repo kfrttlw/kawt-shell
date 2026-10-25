@@ -76,9 +76,8 @@ Singleton {
     property alias barHide: adapter.barHide
     property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
-    property alias updateCheck: adapter.updateCheck
+    property alias updateRemind: adapter.updateRemind
     property alias updateCheckedAt: adapter.updateCheckedAt
-    property alias updateNotified: adapter.updateNotified
 
     // "~/x" -> "/home/user/x"
     function expand(path: string): string {
@@ -176,10 +175,9 @@ Singleton {
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
             property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "ai"
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
-            // kawt's own updates (services/Update.qml): asked only when you press [check], unless this is on
-            property bool updateCheck: false // once a day, by itself (git fetch: that goes to github)
-            property real updateCheckedAt: 0 // ms, the last daily check
-            property string updateNotified: "" // the upstream commit the last notification was about
+            // kawt's own updates (services/Update.qml): asked only when you press [check]
+            property bool updateRemind: true // once a week a notification with [check] (made here, nothing goes out)
+            property real updateCheckedAt: 0 // ms, the last check or reminder
         }
     }
 }
