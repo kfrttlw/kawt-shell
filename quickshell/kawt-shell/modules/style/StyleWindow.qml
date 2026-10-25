@@ -299,6 +299,66 @@ PanelWindow {
                 }
             }
 
+            //  every [off] 15m 30m 1h 3h   [next] random   ·   crt  fade  grow  random  none
+            Flow {
+                Layout.fillWidth: true
+                spacing: Metrics.spacing
+
+                Label {
+                    text: "new one every:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: [[0, "off"], [15, "15m"], [30, "30m"], [60, "1h"], [180, "3h"]]
+
+                    BracketButton {
+                        required property var modelData
+
+                        label: modelData[1]
+                        active: Settings.wallpaperEvery === modelData[0]
+                        textColor: Settings.wallpaperEvery === modelData[0] ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: Settings.wallpaperEvery = modelData[0]
+                    }
+                }
+
+                Repeater {
+                    model: Settings.wallpaperEvery > 0 ? ["next", "random"] : []
+
+                    BracketButton {
+                        required property string modelData
+
+                        label: modelData
+                        active: Settings.wallpaperOrder === modelData
+                        textColor: Settings.wallpaperOrder === modelData ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: Settings.wallpaperOrder = modelData
+                    }
+                }
+
+                Label {
+                    visible: Wallpapers.backend === "awww" || Wallpapers.backend === "swww"
+                    leftPadding: Metrics.spacing
+                    text: "· transition:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: Wallpapers.backend === "awww" || Wallpapers.backend === "swww" ? ["crt", "fade", "grow", "random", "none"] : []
+
+                    BracketButton {
+                        required property string modelData
+
+                        label: modelData
+                        active: Settings.wallpaperTransition === modelData
+                        textColor: Settings.wallpaperTransition === modelData ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: Settings.wallpaperTransition = modelData
+                    }
+                }
+            }
+
             Label {
                 visible: !Wallpapers.loading && Wallpapers.files.length === 0
                 Layout.fillWidth: true

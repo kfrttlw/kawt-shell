@@ -11,6 +11,8 @@ import "../utils/wallpalette.js" as WallPalette
 // awww's daemon is started by kawt (scripts/wallpaper.sh): at login, once a wallpaper was
 // picked here, and whenever one is set while it isn't running. No line in hyprland's config
 // needed. Never picked one here (hyprpaper and the like draw it): kawt leaves awww alone.
+// A new one by itself every Settings.wallpaperEvery minutes if you like (super+w), the next in
+// the folder or a random one, with awww's transition picked there (crt: drawn in from the top).
 Singleton {
     id: root
 
@@ -63,7 +65,7 @@ Singleton {
     function set(path: string): void {
         Settings.wallpaper = path;
         if (path && (backend === "awww" || backend === "swww"))
-            Quickshell.execDetached(["sh", script, backend, path]);
+            Quickshell.execDetached(["sh", script, backend, path, Settings.wallpaperTransition]);
         // hyprlock (and other scripts) read the current wallpaper from here
         if (path)
             Quickshell.execDetached(["sh", "-c", 'mkdir -p ~/.cache && printf "%s" "$1" > ~/.cache/current_wallpaper.txt', "sh", path]);
@@ -91,6 +93,26 @@ Singleton {
             set(files[j]);
         } else if (arg) {
             set(Settings.expand(arg));
+        }
+    }
+
+    // the next one by itself; not behind the lock, and only once one was picked here. Picking
+    // one by hand starts the wait again
+    Timer {
+        id: every
+
+        running: Settings.wallpaperEvery > 0 && Settings.wallpaper !== "" && root.files.length > 1 && !Panels.locked
+        interval: Math.max(1, Settings.wallpaperEvery) * 60000
+        repeat: true
+        onTriggered: root.pick(Settings.wallpaperOrder === "random" ? "random" : "next")
+    }
+
+    Connections {
+        target: Settings
+
+        function onWallpaperChanged(): void {
+            if (every.running)
+                every.restart();
         }
     }
 

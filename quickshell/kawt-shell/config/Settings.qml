@@ -65,12 +65,16 @@ Singleton {
     property alias terminal: adapter.terminal
     property alias wallpaper: adapter.wallpaper
     property alias wallpaperDir: adapter.wallpaperDir
+    property alias wallpaperEvery: adapter.wallpaperEvery
+    property alias wallpaperOrder: adapter.wallpaperOrder
+    property alias wallpaperTransition: adapter.wallpaperTransition
     property alias themeTerminals: adapter.themeTerminals
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
+    property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
     property alias updateCheck: adapter.updateCheck
     property alias updateCheckedAt: adapter.updateCheckedAt
@@ -160,12 +164,16 @@ Singleton {
             property string terminal: "kitty" // command is appended; for alacritty use "alacritty -e"
             property string wallpaper: "" // empty: kawt draws no wallpaper (use hyprpaper/swww)
             property string wallpaperDir: "~/Pictures/wallpapers"
+            property int wallpaperEvery: 0 // minutes until the next one comes by itself, 0 = never (services/Wallpapers.qml)
+            property string wallpaperOrder: "next" // "next" (the folder's order) | "random"
+            property string wallpaperTransition: "crt" // with awww: "crt" | "fade" | "grow" | "random" | "none" (scripts/wallpaper.sh)
             property bool themeTerminals: true // recolor open terminals on theme change
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "JetBrainsMono Nerd Font Mono" // a monospace one: kawt lines text up in columns
             property int fontSize: 13 // px; panels grow with it
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
+            property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
             property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "ai"
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // kawt's own updates (services/Update.qml): asked only when you press [check], unless this is on

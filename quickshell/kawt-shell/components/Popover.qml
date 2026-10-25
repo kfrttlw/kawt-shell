@@ -51,8 +51,10 @@ PanelWindow {
     anchors.top: !Metrics.barBottom
     anchors.bottom: Metrics.barBottom
     anchors.left: true
-    margins.top: Metrics.barHeight + Metrics.spacing
-    margins.bottom: Metrics.barHeight + Metrics.spacing
+    // right at the edge while the bar is tucked away (opened by a key then)
+    readonly property int barGap: barWindow?.tucked ? 0 : Metrics.barHeight
+    margins.top: barGap + Metrics.spacing
+    margins.bottom: barGap + Metrics.spacing
     margins.left: Math.round(Math.max(Metrics.padding, Math.min(forScreen.width - cardW - Metrics.padding, anchorX - cardW / 2)))
 
     // a click outside this window and the bar closes it

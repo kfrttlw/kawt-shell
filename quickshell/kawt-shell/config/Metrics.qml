@@ -11,8 +11,9 @@ QtObject {
     readonly property int barHeight: Settings.barHeight > 0 ? Math.max(fontSize + 10, Settings.barHeight) : fontSize + 21
     readonly property bool barBottom: Settings.barBottom
     // the room the bar takes at the top / the bottom edge, for windows that line up with it
-    readonly property int topGap: barBottom ? 0 : barHeight
-    readonly property int bottomGap: barBottom ? barHeight : 0
+    // (none while it's tucked away: then it only comes out over the windows)
+    readonly property int topGap: barBottom || Settings.barHidden ? 0 : barHeight
+    readonly property int bottomGap: barBottom && !Settings.barHidden ? barHeight : 0
     readonly property int borderWidth: 1
     readonly property int radius: 0
     readonly property int padding: 8
