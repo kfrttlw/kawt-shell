@@ -419,9 +419,10 @@ Singleton {
         return h >= 1 && h < 5;
     }
 
-    // the minute: needs, asking, a walk or not, sleep, the night
+    // the minute: needs, asking, a walk or not, sleep, the night. Only once his file is read:
+    // a change before that would be written over the file and lose his life
     Timer {
-        running: root.enabled
+        running: root.enabled && root.loaded
         repeat: true
         interval: 60000
         triggeredOnStart: true
@@ -598,7 +599,7 @@ Singleton {
 
         // locked: you're away, he naps; back: he's up again if he only napped for that
         function onLockedChanged(): void {
-            if (!root.enabled)
+            if (!root.enabled || !root.loaded)
                 return;
             if (Panels.locked && !root.sleeping) {
                 root.sleep(true);
@@ -613,7 +614,7 @@ Singleton {
     function command(what: string): void {
         if (what === "toggle")
             Settings.companion = !Settings.companion;
-        else if (!enabled)
+        else if (!enabled || !loaded)
             return;
         else if (what === "feed")
             feed();
