@@ -154,13 +154,18 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --no-update     # install what's missing, no system update
 ./install.sh --uninstall     # remove the links and lines, put your old configs back
 ./install.sh --update        # kawt itself, see below
+./install.sh --check         # is everything it needs installed? only says (doctor.sh asks too)
 ./install.sh --help
 ```
 
 **Updating.** `./install.sh --update` (or `[update]` in profile → cfg, or
 `qs -c kawt-shell ipc call kawt update`): shows what's new, asks, `git pull`s, then the new
 installer adds what the new version needs for the parts you have (new packages, links), starts
-the shell again and reloads Hyprland. Your own things are outside the repo and stay as they
+the shell again and reloads Hyprland. Optional packages new in that version (like `satty` for
+`[edit]`) are offered with what they're for. Every update, and an "up to date" one too, also
+checks that all the packages of your parts are there and that their libraries are: what
+`pacman -Dk` finds missing gets installed, and an AUR quickshell that can't load its own
+libraries (`ldd`) is built again. Your own things are outside the repo and stay as they
 are; changes made inside the repo stop it, with a list (`git stash` can put them aside).
 Nothing asks for updates by itself: `[check]` in profile → cfg asks once when pressed, and
 "check once a day" there is off until you switch it on.

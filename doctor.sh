@@ -2,6 +2,7 @@
 # kawt doctor: checks the whole chain "pick a theme -> files written -> apps read them"
 # and says where it breaks. Changes nothing. The one thing it sends out: a question to the
 # aur for quickshell's version, and only when quickshell came from there.
+# The packages of the parts installed and their libraries: ./install.sh --check says.
 #   ./doctor.sh
 
 config=${XDG_CONFIG_HOME:-$HOME/.config}
@@ -59,6 +60,12 @@ if [[ -f $config/quickshell/kawt-shell/shell.qml ]]; then
 else
     fail "~/.config/quickshell/kawt-shell is missing or a broken link" "run ./install.sh"
 fi
+
+echo "-- packages"
+# the installer knows what each part needs; --check only looks (pacman -Q, -Dk, ldd)
+"$(dirname "${BASH_SOURCE[0]}")/install.sh" --check 2>&1 | grep -v -e '^$' -e '^-- what kawt needs here --$'
+code=${PIPESTATUS[0]}
+((code == 0)) || problems=$((problems + 1))
 
 echo "-- theme"
 theme=$(setting theme) light=$(setting light) term=$(setting termColors)
