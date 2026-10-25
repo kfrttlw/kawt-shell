@@ -69,6 +69,17 @@ PanelWindow {
         }
     }
 
+    // what you said (services/Voice.qml), after what's typed
+    Connections {
+        target: Voice
+
+        function onHeard(text: string): void {
+            input.text = `${input.text} ${text}`.trim();
+            input.input.cursorPosition = input.text.length;
+            input.input.forceActiveFocus();
+        }
+    }
+
     OpenWatch {
         open: root.open
         onOpened: {
@@ -496,6 +507,19 @@ PanelWindow {
                         onClicked: Ai.quick(modelData[0])
                     }
                 }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // your open tasks go along: "what's on tomorrow?", "add: call mom at 6"
+                BracketButton {
+                    tag: Settings.aiTodo ? "x" : " "
+                    label: "tasks"
+                    textColor: Settings.aiTodo ? Colors.accent : Colors.dim
+                    bordered: false
+                    onClicked: Settings.aiTodo = !Settings.aiTodo
+                }
             }
 
             // files going with the next message: [@notes.md x]; a picture: [picture shot.png x]
@@ -562,6 +586,14 @@ PanelWindow {
                     label: "stop"
                     bordered: false
                     onClicked: Ai.stop()
+                }
+
+                // speak instead of typing (super + alt + v): whisper.cpp, on this machine
+                BracketButton {
+                    label: Panels.voice !== "" ? Panels.voice : "mic"
+                    textColor: Panels.voice !== "" ? Colors.accent : Colors.dim
+                    bordered: false
+                    onClicked: Voice.toggle()
                 }
             }
 
@@ -1157,6 +1189,30 @@ PanelWindow {
                                 options: [[30, "30s"], [120, "2m"], [600, "10m"]]
                                 value: Settings.aiRunSecs
                                 onPicked: v => Settings.aiRunSecs = v
+                            }
+
+                            // speaking to it (services/Voice.qml): whisper.cpp and a model of it, fetched once
+                            Choice {
+                                title: "voice"
+                                hintText: !Voice.bin ? "needs whisper-cpp: sudo pacman -S whisper-cpp" : Voice.status || (Voice.ready ? `ready: super + alt + v or [mic], all on this machine` : `the ${Voice.size} model: [get] it once (from huggingface), then nothing goes out`)
+                                options: Voice.sizes.map(s => [s[0], `${s[0]} ${s[1]}${Voice.have.includes(s[0]) ? " ✓" : ""}`])
+                                value: Voice.size
+                                onPicked: v => Settings.aiVoiceModel = v
+                            }
+
+                            BracketButton {
+                                visible: Voice.bin !== "" && !Voice.have.includes(Voice.size)
+                                label: Voice.fetching ? "getting..." : `get ${Voice.size}`
+                                textColor: Colors.accent
+                                onClicked: Voice.get(Voice.size)
+                            }
+
+                            Choice {
+                                title: "voice goes"
+                                hintText: "what you said: into the input to look at first, or sent at once"
+                                options: [[false, "to the input"], [true, "sent"]]
+                                value: Settings.aiVoiceSend
+                                onPicked: v => Settings.aiVoiceSend = v
                             }
 
                             Choice {

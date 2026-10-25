@@ -48,6 +48,9 @@ Singleton {
     property alias aiMode: adapter.aiMode
     property alias aiCoderSteps: adapter.aiCoderSteps
     property alias aiVisionModel: adapter.aiVisionModel
+    property alias aiTodo: adapter.aiTodo
+    property alias aiVoiceModel: adapter.aiVoiceModel
+    property alias aiVoiceSend: adapter.aiVoiceSend
     property alias aiRun: adapter.aiRun
     property alias aiSandbox: adapter.aiSandbox
     property alias aiSandboxImage: adapter.aiSandboxImage
@@ -157,6 +160,9 @@ Singleton {
             property string aiBotLabel: "ai"
             property string aiMode: "chat" // "chat" | "coder" (services/Coder.qml)
             property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
+            property string aiVoiceModel: "base" // whisper.cpp model for speaking to the ai: "tiny" | "base" | "small"
+            property bool aiVoiceSend: false // what you said is sent at once, instead of into the input
+            property bool aiTodo: false // your open tasks go along with every chat question ([x] tasks)
             property string aiVisionModel: "" // ollama: the model that gets pictures (a screenshot's [ask]); "" = the chat's
             property bool aiRun: true // the coder may ask to run commands (each one waits for [run]), in a sandbox
             property string aiSandbox: "bwrap" // "bwrap" (bubblewrap) | "podman" (with aiSandboxImage)

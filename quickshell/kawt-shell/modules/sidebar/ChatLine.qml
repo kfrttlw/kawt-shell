@@ -53,6 +53,10 @@ Item {
         return out.filter(p => p.code || p.text.trim() !== "");
     }
 
+    // "+ task: ..." lines the model wrote ([x] tasks in the chat): [add 2 tasks] puts them in todo
+    readonly property var tasks: kind === "assistant" && !streaming && Settings.aiTodo ? Ai.tasksIn(text) : []
+    property bool tasksAdded: false
+
     signal retry
     signal edit
     signal toNote
@@ -226,6 +230,20 @@ Item {
                     label: "note"
                     bordered: false
                     onClicked: root.toNote()
+                }
+
+                BracketButton {
+                    visible: root.tasks.length > 0
+                    label: root.tasksAdded ? "added" : `add ${root.tasks.length} task${root.tasks.length === 1 ? "" : "s"}`
+                    textColor: Colors.accent
+                    bordered: false
+                    onClicked: {
+                        if (root.tasksAdded)
+                            return;
+                        for (const t of root.tasks)
+                            Todo.add(t, "inbox");
+                        root.tasksAdded = true;
+                    }
                 }
 
                 BracketButton {

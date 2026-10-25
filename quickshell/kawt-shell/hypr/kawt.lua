@@ -37,6 +37,8 @@ try("binds", function()
     hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
     hl.bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle dock")) -- pinned apps
     hl.bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
+    hl.bind(mod .. " + ALT + A", hl.dsp.exec_cmd(kawt .. "selection")) -- the ai on the text you marked
+    hl.bind(mod .. " + ALT + V", hl.dsp.exec_cmd(kawt .. "voice")) -- speak to the ai (again: stop)
     hl.bind(mod .. " + W", hl.dsp.exec_cmd(kawt .. "toggle style")) -- wallpaper & themes
     hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(kawt .. "toggleLight")) -- dark <-> light
     hl.bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
