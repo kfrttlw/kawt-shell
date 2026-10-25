@@ -138,10 +138,14 @@ Singleton {
     Job {
         id: whisper
 
-        command: ["sh", "-c", '"$1" -m "$2" -f "$3" -l auto -nt -np -t "$(nproc)" 2> /dev/null; c=$?; rm -f "$3"; exit $c', "sh", root.bin, root.model, root.wav]
+        command: ["sh", "-c", '[ -s "$3" ] || exit 3; "$1" -m "$2" -f "$3" -l auto -nt -np -t "$(nproc)" 2> /dev/null; c=$?; rm -f "$3"; exit $c', "sh", root.bin, root.model, root.wav]
         onDone: (code, out) => {
             // [BLANK_AUDIO], (music), [Music]: not words
             const text = out.replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+            if (code === 3) {
+                root.status = "nothing was recorded: is there a mic? (pw-record)";
+                return;
+            }
             if (code !== 0) {
                 root.status = "whisper failed (is the model whole? get it again)";
                 return;
