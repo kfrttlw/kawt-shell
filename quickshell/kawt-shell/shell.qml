@@ -28,7 +28,7 @@ ShellRoot {
         Idle.caffeine; // locks after Settings.idleLock minutes without input
         Night.on; // the night light, if it was on
         Hypr.lua; // keeps the special workspace in the bar up to date
-        if (Settings.updateCheck)
-            Update.repo; // the daily update check (off by default: nothing goes out by itself)
+        if (Settings.updateRemind)
+            Update.repo; // the weekly reminder to look for updates (it only reminds: nothing goes out)
     }
 }

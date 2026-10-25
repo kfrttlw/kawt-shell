@@ -1969,7 +1969,7 @@ ColumnLayout {
                 // ------------------------------------------------------------ kawt
                 //  kawt  2b47871 · 3 days ago            [check] [update 3]
                 //  3 new: notifications keep -t...
-                //  [ ] check once a day by itself (git fetch)
+                //  [x] remind me once a week to check
                 Label {
                     Layout.topMargin: Metrics.spacing
                     text: "kawt"
@@ -2015,12 +2015,13 @@ ColumnLayout {
                     font.pixelSize: Metrics.fontSize - 2
                 }
 
+                // only a notification with [check] on it: nothing goes out until that's pressed
                 BracketButton {
                     visible: Update.repo !== ""
-                    tag: Settings.updateCheck ? "x" : " "
-                    label: "check once a day by itself (git fetch)"
+                    tag: Settings.updateRemind ? "x" : " "
+                    label: "remind me once a week to check"
                     bordered: false
-                    onClicked: Settings.updateCheck = !Settings.updateCheck
+                    onClicked: Settings.updateRemind = !Settings.updateRemind
                 }
 
                 // the ai has its own settings now, in its panel
