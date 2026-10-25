@@ -8,20 +8,22 @@ import qs.services
 // │ summary                   │
 // │ body                      │
 // └───────────────────────────┘
-// left click: default action, right click: dismiss. Critical ones stay until handled.
+// left click: default action, right click: dismiss. Critical ones (and -t 0) stay until handled;
+// the rest stay as long as the app asked (notify-send -t), or 6 s.
 Item {
     id: root
 
     required property var modelData
     readonly property bool critical: Notifs.isCritical(modelData)
+    readonly property int timeout: Notifs.timeoutOf(modelData)
     readonly property var buttons: modelData?.actions.filter(a => a.identifier !== "default" && a.text) ?? []
 
     implicitHeight: box.height + box.titleOverhang
 
     Timer {
-        running: !root.critical && !hover.hovered
-        interval: Notifs.popupTimeout
-        onTriggered: Notifs.hide(root.modelData)
+        running: !root.critical && root.timeout > 0 && !hover.hovered
+        interval: root.timeout
+        onTriggered: Notifs.expired(root.modelData)
     }
 
     Connections {

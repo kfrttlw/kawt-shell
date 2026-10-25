@@ -2,15 +2,18 @@ import qs.config
 import qs.components
 import qs.services
 
-// [wifi home], [wifi ▂▄▆_] or nothing, as picked in the profile's cfg tab
+// [wifi home], [wifi ▂▄▆_] or nothing, as picked in the profile's cfg tab; [eth] on a cable
+// (traffic takes the cable then: networkmanager ranks it above wifi)
 BracketButton {
     readonly property string ssid: Wifi.active?.name ?? ""
+    readonly property bool wired: NetLinks.wired !== ""
 
-    visible: Wifi.device !== null && Settings.wifiStyle !== "hidden"
-    tag: "wifi"
-    label: !Wifi.enabled ? "off"
+    visible: (Wifi.device !== null || wired) && Settings.wifiStyle !== "hidden"
+    tag: wired ? "" : "wifi"
+    label: wired ? "eth"
+        : !Wifi.enabled ? "off"
         : ssid === "" ? "--"
         : Settings.wifiStyle === "bars" ? Wifi.signalBars(Wifi.active.signalStrength)
         : ssid.length > 14 ? ssid.slice(0, 13) + "~" : ssid
-    textColor: Wifi.enabled && ssid !== "" ? Colors.fg : Colors.dim
+    textColor: wired || (Wifi.enabled && ssid !== "") ? Colors.fg : Colors.dim
 }

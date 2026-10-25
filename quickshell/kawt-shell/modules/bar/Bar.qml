@@ -69,6 +69,15 @@ Variants {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Metrics.spacing
 
+            // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the wifi panel
+            BracketButton {
+                visible: NetLinks.vpn !== ""
+                label: "vpn"
+                textColor: Colors.accent
+                active: Panels.isOpen("wifi", root.modelData)
+                onClicked: Panels.toggle("wifi", root.modelData)
+            }
+
             WifiButton {
                 id: wifi
                 active: Panels.isOpen("wifi", root.modelData)

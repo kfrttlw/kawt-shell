@@ -1378,7 +1378,7 @@ ColumnLayout {
                 }
 
                 // ------------------------------------------------------------- lock
-                //  lock screen  [x] next task & music   (anyone at the screen sees them)
+                //  lock screen  [x] task, music, wifi   (anyone at the screen sees them)
                 RowLayout {
                     Layout.topMargin: Metrics.spacing
                     spacing: Metrics.spacing
@@ -1390,7 +1390,7 @@ ColumnLayout {
 
                     BracketButton {
                         tag: Settings.lockDetails ? "x" : " "
-                        label: "next task & music"
+                        label: "task, music, wifi" // and user@host, messages: LockSurface.qml
                         bordered: false
                         onClicked: Settings.lockDetails = !Settings.lockDetails
                     }

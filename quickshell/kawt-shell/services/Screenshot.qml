@@ -41,11 +41,12 @@ Singleton {
         copied = true;
     }
 
-    // into Settings.screenshotDir, announced like an unasked shot; the preview goes
+    // into Settings.screenshotDir, announced like an unasked shot; the preview goes. A file of
+    // the same name already there stays: this one gets -2 (-3...)
     function save(): void {
         if (!shot)
             return;
-        Quickshell.execDetached(["sh", "-c", 'f="$2/${1##*/}"; if mkdir -p "$2" && mv -- "$1" "$f"; then notify-send -a screenshot -i "$f" "screenshot saved" "${f#"$HOME"/}$3"; else notify-send -a screenshot -u critical "screenshot not saved" "could not write to $2"; fi', "sh", shot, Settings.expand(Settings.screenshotDir), copied ? "  ·  copied to clipboard" : ""]);
+        Quickshell.execDetached(["sh", "-c", 'b=${1##*/}; f="$2/$b"; n=2; while [ -e "$f" ]; do f="$2/${b%.png}-$n.png"; n=$((n + 1)); done; if mkdir -p "$2" && mv -- "$1" "$f"; then notify-send -a screenshot -i "$f" "screenshot saved" "${f#"$HOME"/}$3"; else notify-send -a screenshot -u critical "screenshot not saved" "could not write to $2"; fi', "sh", shot, Settings.expand(Settings.screenshotDir), copied ? "  ·  copied to clipboard" : ""]);
         shot = "";
     }
 

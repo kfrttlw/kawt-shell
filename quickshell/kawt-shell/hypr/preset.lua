@@ -306,12 +306,18 @@ end)
 try("window mode", function()
     local step = 40
     local mode_binds = {}
-    local function notify(text)
-        hl.dispatch(hl.dsp.exec_cmd("notify-send -t 1500 -h string:x-canonical-private-synchronous:wmode '[window]' '" .. text .. "'"))
+    -- -e: only a toast, never in kawt's log. The tag makes each one replace the last: the help
+    -- stays up while the mode is on (-t 0), "off" takes its place and goes after 1.5 s
+    local function notify(text, ms)
+        hl.dispatch(hl.dsp.exec_cmd("notify-send -e -t " .. ms .. " -h string:x-canonical-private-synchronous:wmode '[window]' '" .. text .. "'"))
     end
     local function window_mode(on)
         for _, b in ipairs(mode_binds) do b:set_enabled(on) end
-        notify(on and "arrows: size · shift+arrows: move · f float · c center · p pin · esc" or "off")
+        if on then
+            notify("arrows: size · shift+arrows: move · f float · c center · p pin · esc", 0)
+        else
+            notify("off", 1500)
+        end
     end
     local function mode_bind(key, action, opts)
         local b = hl.bind(key, action, opts)

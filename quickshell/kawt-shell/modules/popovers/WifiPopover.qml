@@ -11,6 +11,8 @@ Popover {
 
     property var pskTarget: null // secured network waiting for a password
     property string status: ""
+    property bool hiddenAsk: false // the lines for a hidden network are open
+    property string hiddenSsid: "" // its name, typed: now the password is asked
 
     name: "wifi"
     title: "wifi"
@@ -20,6 +22,8 @@ Popover {
         if (net.connected || net.stateChanging)
             return;
         status = "";
+        Wifi.hiddenStatus = "";
+        hiddenAsk = false;
         if (net.known || !Wifi.isSecure(net)) {
             pskTarget = null;
             net.connect();
@@ -36,6 +40,8 @@ Popover {
         Wifi.scanning = false;
         pskTarget = null;
         status = "";
+        if (!Wifi.hiddenBusy)
+            Wifi.hiddenStatus = "";
     }
 
     RowLayout {
@@ -60,6 +66,15 @@ Popover {
             label: "disconnect"
             onClicked: Wifi.active?.disconnect()
         }
+    }
+
+    // cable enp3s0 · vpn wg0
+    Label {
+        Layout.fillWidth: true
+        visible: text !== ""
+        elide: Text.ElideRight
+        text: [NetLinks.wired ? `cable ${NetLinks.wired}` : "", NetLinks.vpn ? `vpn ${NetLinks.vpn}` : ""].filter(s => s).join(" · ")
+        color: Colors.accent
     }
 
     Rectangle {
@@ -184,12 +199,78 @@ Popover {
         }
     }
 
+    // a network that doesn't announce its name: typed in, then its password
+    //   [+ hidden network]  ->  ssid> home  ->  psk> ****  (enter on an empty psk: an open one)
+    BracketButton {
+        visible: Wifi.enabled && Wifi.device !== null && !root.hiddenAsk
+        Layout.topMargin: Metrics.spacing
+        bordered: false
+        label: "+ hidden network"
+        textColor: Colors.dim
+        onClicked: {
+            root.pskTarget = null;
+            root.hiddenSsid = "";
+            root.hiddenAsk = true;
+            ssidInput.text = "";
+            ssidInput.input.forceActiveFocus();
+        }
+    }
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        visible: root.hiddenAsk
+        spacing: 2
+
+        Label {
+            Layout.topMargin: Metrics.spacing
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: root.hiddenSsid ? `password for ${root.hiddenSsid} (empty: open network):` : "name of the hidden network:"
+            color: Colors.dim
+            font.pixelSize: Metrics.fontSize - 2
+        }
+
+        TermInput {
+            id: ssidInput
+
+            Layout.fillWidth: true
+            visible: root.hiddenSsid === ""
+            prompt: "ssid>"
+            onAccepted: text => {
+                if (!text.trim())
+                    return;
+                root.hiddenSsid = text.trim();
+                hiddenPsk.text = "";
+                hiddenPsk.input.forceActiveFocus();
+            }
+            Keys.onEscapePressed: root.hiddenAsk = false
+        }
+
+        TermInput {
+            id: hiddenPsk
+
+            Layout.fillWidth: true
+            visible: root.hiddenSsid !== ""
+            prompt: "psk>"
+            echoMode: TextInput.Password
+            onAccepted: text => {
+                Wifi.connectHidden(root.hiddenSsid, text);
+                hiddenPsk.text = "";
+                root.hiddenSsid = "";
+                root.hiddenAsk = false;
+            }
+            Keys.onEscapePressed: root.hiddenAsk = false
+        }
+    }
+
     Label {
-        visible: root.status !== ""
+        readonly property string shown: Wifi.hiddenStatus || root.status
+
+        visible: shown !== ""
         Layout.fillWidth: true
         elide: Text.ElideRight
-        text: root.status
-        color: root.status.startsWith("failed") ? Colors.warn : Colors.dim
+        text: shown
+        color: shown.startsWith("failed") ? Colors.warn : Colors.dim
         font.pixelSize: Metrics.fontSize - 2
     }
 }
