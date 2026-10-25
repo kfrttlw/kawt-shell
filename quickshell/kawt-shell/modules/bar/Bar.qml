@@ -178,6 +178,8 @@ Variants {
 
             RecButton {}
 
+            VoiceButton {}
+
             CastButton {}
 
             CafButton {}
@@ -412,6 +414,15 @@ Variants {
             linger: 300
 
             AiSidebar {
+                forScreen: root.modelData
+            }
+        }
+
+        // super + alt + a: the ai on the text you marked (modules/sidebar/SelectionPopup.qml)
+        Lazy {
+            when: Panels.isOpen("selection", root.modelData)
+
+            SelectionPopup {
                 forScreen: root.modelData
             }
         }

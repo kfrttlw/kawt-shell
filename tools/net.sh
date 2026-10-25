@@ -10,8 +10,8 @@
 #
 # kawt itself shows nothing here while you just use the desktop, but for one git fetch to
 # github a week (is there a new kawt; off in profile -> cfg). The rest of kawt's that goes out:
-# the ai panel on an "api" provider you picked, ollama pull, and install.sh / doctor.sh
-# (pacman, the aur) while you run them.
+# the ai panel on an "api" provider you picked, ollama pull, the voice model's [get] (once),
+# and install.sh / doctor.sh (pacman, the aur) while you run them.
 
 watch=0 lan=0
 while (($#)); do

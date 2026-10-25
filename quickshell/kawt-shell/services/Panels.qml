@@ -27,6 +27,8 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt clearNotifs
 //   qs -c kawt-shell ipc call kawt update                      (a terminal with ./install.sh --update)
 //   qs -c kawt-shell ipc call kawt companion feed|play|sleep|wake|pet|focus|home|walk|auto|toggle
+//   qs -c kawt-shell ipc call kawt selection                   (the ai on the text you marked)
+//   qs -c kawt-shell ipc call kawt voice                       (speak to the ai: again to stop)
 Singleton {
     id: root
 
@@ -40,6 +42,7 @@ Singleton {
     property string screen: ""
     property bool sidebarOpen: false
     property string sidebarScreen: ""
+    property string voice: "" // services/Voice.qml while it listens or writes: the bar shows it
 
     readonly property string focusedScreen: Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? ""
 
@@ -210,6 +213,16 @@ Singleton {
         // kawt itself, from git: in a terminal, which shows what's new and asks first
         function update(): void {
             Update.run();
+        }
+
+        // the ai on the text you marked in any window (explain / translate / fix / summary)
+        function selection(): void {
+            toggle("selection");
+        }
+
+        // speak to the ai panel (services/Voice.qml): starts listening, again: stops and writes it
+        function voice(): void {
+            Voice.toggle();
         }
 
         // the companion (services/Companion.qml): looked after without opening his house

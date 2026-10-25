@@ -12,7 +12,9 @@ import qs.services
 // │ > ▣ Firefox *                   web browser │
 // └─────────────────────────────────────────────┘
 // rofi-style launcher. Modes are just prefixes: !cmd shell, >cmd terminal, =expr calc, ?text ai,
-// :text clipboard, ;text open windows, .text emoji, so they can be typed directly or picked with
+// $text a command from the ai (enter: it's written; enter again: into > to look at and run;
+// tab: copy; it never runs by itself), :text clipboard, ;text open windows, .text emoji, so they
+// can be typed directly or picked with
 // ctrl+tab / a click on the tab. → on an app with actions of its own (firefox: a private window)
 // lists them.
 // The lists are ScriptModels with reused rows: typing a letter re-sorts the rows that are
@@ -31,6 +33,7 @@ PanelWindow {
         { prefix: ">", name: "term" },
         { prefix: "=", name: "calc" },
         { prefix: "?", name: "ai" },
+        { prefix: "$", name: "cmd" },
         { prefix: ":", name: "clip" },
         { prefix: ";", name: "win" },
         { prefix: ".", name: "emoji" }
@@ -44,6 +47,8 @@ PanelWindow {
     readonly property string calcResult: mode !== "=" ? "" : calcPlain || (Apps.qalcFor === arg ? Apps.qalcOut : "")
     // the app whose own actions are listed (→ on it); typing goes back to the search
     property var expanded: null
+    // $: the ai's command is there, for what's typed now (Ai is only named in this mode)
+    readonly property bool cmdReady: mode === "$" && Ai.cmdFor === arg && Ai.cmdText !== "" && !Ai.cmdBusy
     readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : Apps.search(query).slice(0, 60)
     readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
     readonly property var emojis: open && mode === "." ? Emoji.search(arg) : []
@@ -133,6 +138,15 @@ PanelWindow {
             Panels.sidebarScreen = forScreen.name;
             Panels.sidebarOpen = true;
             Ai.send(arg);
+        } else if (mode === "$" && arg) {
+            // the command written: into terminal mode, to read (and change) before it runs
+            if (cmdReady) {
+                input.text = `>${Ai.cmdText}`;
+                input.input.cursorPosition = input.text.length;
+            } else {
+                Ai.suggestCommand(arg);
+            }
+            return;
         } else if (!mode && results[current]) {
             Apps.launch(results[current]);
         } else {
@@ -268,7 +282,10 @@ PanelWindow {
                         root.setMode(root.modeIndex + 1);
                     else if (ctrl && event.key === Qt.Key_Backtab)
                         root.setMode(root.modeIndex - 1);
-                    else if (event.key === Qt.Key_Tab)
+                    else if (event.key === Qt.Key_Tab && root.cmdReady) {
+                        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy', "sh", Ai.cmdText]);
+                        Panels.close();
+                    } else if (event.key === Qt.Key_Tab)
                         root.move(1);
                     else if (event.key === Qt.Key_Backtab)
                         root.move(-1);
@@ -318,9 +335,50 @@ PanelWindow {
                     // all saved chats) on the first letter typed into the launcher
                     if (root.mode === "?")
                         return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
+                    if (root.mode === "$") {
+                        if (!root.arg)
+                            return "say what you want done, the ai writes one command: $ the biggest files in my home";
+                        if (Ai.cmdBusy)
+                            return `~ ${Ai.modelName} is writing it...`;
+                        if (Ai.cmdFor === root.arg && Ai.cmdError)
+                            return `!! ${Ai.cmdError}`;
+                        return root.cmdReady ? `$ ${Ai.cmdText}` : `enter: ask ${Ai.modelName} for a command (it never runs by itself)`;
+                    }
                     return "";
                 }
-                color: root.mode === "=" && root.calcResult ? Colors.accent : root.arg ? Colors.fg : Colors.dim
+                color: (root.mode === "=" && root.calcResult) || root.cmdReady ? Colors.accent : root.mode === "$" && root.arg && Ai.cmdError && Ai.cmdFor === root.arg ? Colors.warn : root.arg ? Colors.fg : Colors.dim
+            }
+
+            // $: what the command does, what to look out for, and what the keys do now
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: root.cmdReady
+                spacing: 2
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    wrapMode: Text.Wrap
+                    text: root.cmdReady ? Ai.cmdAbout : ""
+                    color: Colors.dim
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    readonly property var risks: root.cmdReady ? Ai.risks(Ai.cmdText) : []
+                    visible: risks.length > 0
+                    wrapMode: Text.Wrap
+                    text: `[!] careful: ${risks.join(", ")}. read it before you run it`
+                    color: Colors.warn
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: "enter: into > (the terminal) to look at and run · tab: copy · keep typing: ask again"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
             }
 
             Label {
@@ -694,6 +752,7 @@ PanelWindow {
                 text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
                     : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
                     : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
+                    : root.mode === "$" ? "enter: write it · enter again: into the terminal · tab: copy · ctrl+tab mode"
                     : root.expanded ? "↑↓ select · enter run · esc back"
                     : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
                 color: Colors.dim

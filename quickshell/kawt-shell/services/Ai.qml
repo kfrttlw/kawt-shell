@@ -300,9 +300,9 @@ Singleton {
             }
             return h;
         });
-        const system = systemPrompt();
+        const system = systemPrompt() + (Settings.aiTodo ? todoContext() : "");
         if (system)
-            history.unshift({ role: "system", content: system });
+            history.unshift({ role: "system", content: system.trim() });
 
         // the context must hold the whole conversation, or ollama silently cuts its start and
         // small models lose the thread and start repeating. ~3.5 characters per token.
@@ -579,6 +579,223 @@ Singleton {
             root.comparing = false;
             root.ask(root.modelName);
         }
+    }
+
+    // ------------------------------------------------------------------ your tasks
+
+    // [x] tasks in the chat (Settings.aiTodo): the todo list goes along with every question, so
+    // "what's on tomorrow?" can be answered. Only the open ones, only to the model you use (a
+    // local one stays on the machine). Tasks it proposes come back as "+ task: ..." lines, and
+    // the answer gets an [add] for them (modules/sidebar/ChatLine.qml)
+    function todoContext(): string {
+        const now = new Date(Time.ms());
+        const open = Todo.sorted.filter(t => !t.done).slice(0, 80);
+        const lines = open.map(t => `- ${t.text}${t.due ? ` (due ${Qt.formatDateTime(new Date(t.due), "ddd dd.MM HH:mm")})` : ""}${t.folder && t.folder !== "inbox" ? ` [${t.folder}]` : ""}${t.prio ? " " + "!".repeat(t.prio) : ""}`);
+        return `\n\nIt is now ${Qt.formatDateTime(now, "dddd dd.MM.yyyy HH:mm")}. The user's open tasks (their todo list):\n${lines.join("\n") || "(none)"}\nWhen the user wants tasks added, write each one on its own line exactly as: + task: DD.MM HH:MM text (the date and time only if it has one).`;
+    }
+
+    // "+ task: 05.10 14:00 buy milk" lines of an answer -> "05.10 14:00 buy milk"
+    function tasksIn(text: string): var {
+        return text.split("\n").map(l => l.match(/^\s*[-*]?\s*\+\s*task:\s*(.+)$/i)).filter(m => m).map(m => m[1].replace(/[*`]/g, "").trim()).filter(t => t);
+    }
+
+    // ------------------------------------------------------------------ one question, one answer
+
+    // not into the chat: the launcher's $ (a command) and the selection's actions. The whole
+    // answer at once; cb(text, error). Returns the request (abort() stops it)
+    function oneShot(system: string, prompt: string, maxTokens: int, cb: var): var {
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState !== 4)
+                return;
+            let data = null;
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (e) {}
+            if (xhr.status === 0) {
+                cb("", useApi ? `can't reach ${Settings.apiUrl}` : "ollama is offline: sudo systemctl enable --now ollama");
+                return;
+            }
+            const err = data && data.error;
+            if (xhr.status >= 400 || !data) {
+                cb("", `model error: ${(err && err.message) || err || `http ${xhr.status}`}`);
+                return;
+            }
+            const msg = useApi ? data.choices && data.choices[0] && data.choices[0].message : data.message;
+            const text = ((msg && msg.content) || "").trim();
+            cb(text, text ? "" : "the model said nothing");
+        };
+        const messages = [{ role: "system", content: system }, { role: "user", content: prompt }];
+        if (useApi) {
+            if (!Settings.apiUrl || !apiKey) {
+                cb("", "api: set the url, model and key in the ai panel's [models] first");
+                return xhr;
+            }
+            xhr.open("POST", `${Settings.apiUrl.replace(/\/+$/, "")}/chat/completions`);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.setRequestHeader("Authorization", `Bearer ${apiKey}`);
+            xhr.send(JSON.stringify({ model: Settings.apiModel, messages, temperature: 0.2, max_tokens: maxTokens }));
+        } else {
+            const options = { num_ctx: Math.max(Settings.aiCtx, Math.ceil(prompt.length / 3.5) + maxTokens + 512), temperature: 0.2, num_predict: maxTokens };
+            if (Settings.aiThreads > 0)
+                options.num_thread = Settings.aiThreads;
+            if (Settings.aiGpuLayers >= 0)
+                options.num_gpu = Settings.aiGpuLayers;
+            xhr.open("POST", `${Settings.ollamaUrl}/api/chat`);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify({ model: Settings.ollamaModel, messages, stream: false, keep_alive: keepAliveValue(), options }));
+        }
+        return xhr;
+    }
+
+    // ---- the launcher's $: what you want -> one shell command, never run by itself
+    property string cmdFor: "" // the request the answer below is for
+    property string cmdText: ""
+    property string cmdAbout: ""
+    property string cmdError: ""
+    property var cmdReq: null
+    readonly property bool cmdBusy: cmdReq !== null
+
+    function suggestCommand(what: string): void {
+        what = what.trim();
+        if (!what)
+            return;
+        if (cmdReq)
+            cmdReq.abort();
+        cmdFor = what;
+        cmdText = "";
+        cmdAbout = "";
+        cmdError = "";
+        const system = "You turn a request into ONE shell command for Arch Linux (bash or zsh, GNU tools, pacman, systemd, Hyprland). Reply with exactly two lines: the command on the first line (no $ in front, no backticks, no markdown), then one short line saying what it does, in the language of the request. Prefer safe, read-only commands; never add sudo unless the task really needs root.";
+        const req = oneShot(system, what, 160, (text, error) => {
+            if (root.cmdReq !== req)
+                return;
+            root.cmdReq = null;
+            if (error) {
+                root.cmdError = error;
+                return;
+            }
+            const lines = text.replace(/```\w*/g, "").split("\n").map(l => l.trim()).filter(l => l);
+            root.cmdText = (lines[0] ?? "").replace(/^\$\s+/, "").replace(/^`+|`+$/g, "");
+            root.cmdAbout = lines.slice(1).join(" ").replace(/^[#>*-]+\s*/, "");
+            if (!root.cmdText)
+                root.cmdError = "no command came back";
+        });
+        cmdReq = req;
+    }
+
+    // what makes a command worth a second look
+    function risks(c: string): var {
+        const rules = [
+            [/\brm\s/, "deletes files"],
+            [/\b(sudo|doas|pkexec|su)\b/, "runs as root"],
+            [/\b(dd|mkfs[\w.]*|wipefs|fdisk|parted|sgdisk|shred)\b/, "writes to disks"],
+            [/>\s*\/dev\/(sd|nvme|mmcblk|vd|hd)/, "writes to a disk"],
+            [/\b(chmod|chown)\s+(-\w+\s+)*-R|\b(chmod|chown)\s+-\w*R/, "changes many files"],
+            [/\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(ba|z|da)?sh\b/, "runs a script from the internet"],
+            [/:\(\)\s*\{/, "a fork bomb"],
+            [/\b(shutdown|reboot|poweroff|halt)\b|systemctl\s+(poweroff|reboot|halt)/, "turns the machine off"],
+            [/\bkill(all)?\s+-(9|KILL)\b|\bpkill\b/, "kills processes"],
+            [/\bgit\s+(push\s+.*(-f\b|--force)|reset\s+--hard|clean\s+-\w*f)/, "throws work away"],
+            [/\bpacman\s+-R|\bpacman\s+-S\w*\s/, "changes packages"],
+            [/(^|[^>&0-9])>\s*[~\/.\w]/, "overwrites a file"]
+        ];
+        return rules.filter(r => r[0].test(c)).map(r => r[1]);
+    }
+
+    // ---- the selection (super + alt + a): the text you marked, without copying it
+    readonly property var selActions: [
+        ["explain", "Explain this clearly and briefly:", false],
+        ["translate", "Translate this (Russian to English, anything else to Russian). Output only the translation, nothing else:", true],
+        ["fix", "Fix the mistakes in this (spelling, grammar, or bugs if it's code). Output only the corrected text, nothing else:", true],
+        ["summary", "Summarize this in a few short points:", false]
+    ]
+    property string selText: ""
+    property bool selFromClipboard: false // nothing was selected: the clipboard instead
+    property string selAction: ""
+    property string selAnswer: ""
+    property string selError: ""
+    property real selTook: 0
+    property var selReq: null
+    readonly property bool selBusy: selReq !== null || selReader.running
+    property bool canType: false // wtype: [replace] types the answer over the selection
+
+    // read what's selected: the "primary" selection, what middle click would paste
+    function selRead(): void {
+        selText = "";
+        selAnswer = "";
+        selError = "";
+        selAction = "";
+        selReader.command = ["sh", "-c", 'command -v wtype > /dev/null && echo wtype; echo ---; t=$(wl-paste --primary --no-newline 2> /dev/null); if [ -n "$t" ]; then printf "primary\n%s" "$t"; else printf "clipboard\n%s" "$(wl-paste --no-newline --type text 2> /dev/null)"; fi'];
+        selReader.running = true;
+    }
+
+    Job {
+        id: selReader
+
+        onDone: (code, out) => {
+            const cut = out.indexOf("---\n");
+            root.canType = out.slice(0, Math.max(0, cut)).includes("wtype");
+            const rest = cut >= 0 ? out.slice(cut + 4) : out;
+            const nl = rest.indexOf("\n");
+            root.selFromClipboard = rest.slice(0, nl) === "clipboard";
+            root.selText = nl >= 0 ? rest.slice(nl + 1).slice(0, 20000) : "";
+            if (!root.selText.trim())
+                root.selError = "nothing selected (and the clipboard is empty): mark some text first";
+        }
+    }
+
+    function selDo(name: string): void {
+        const a = selActions.find(x => x[0] === name);
+        if (!a || !selText.trim())
+            return;
+        if (selReq)
+            selReq.abort();
+        selAction = name;
+        selAnswer = "";
+        selError = "";
+        const started = Date.now();
+        const req = oneShot(systemPrompt() || "Answer briefly.", `${a[1]}\n\n${selText}`, Math.max(512, Settings.aiMaxAnswer), (text, error) => {
+            if (root.selReq !== req)
+                return;
+            root.selReq = null;
+            root.selTook = Date.now() - started;
+            root.selAnswer = text;
+            root.selError = error;
+        });
+        selReq = req;
+    }
+
+    function selStop(): void {
+        if (selReq) {
+            const r = selReq;
+            selReq = null;
+            r.abort();
+        }
+    }
+
+    // over the selection, in the window it's in: the popup closes first, then wtype types it
+    function selReplace(): void {
+        if (!selAnswer || !canType)
+            return;
+        Panels.close();
+        Quickshell.execDetached(["sh", "-c", 'sleep 0.25; wtype -- "$1"', "sh", selAnswer]);
+    }
+
+    // on into the chat, to go on about it there
+    function selToChat(): void {
+        const a = selActions.find(x => x[0] === selAction);
+        if (!selText)
+            return;
+        const msgs = [...messages, { role: "user", text: `[${selAction || "selection"}] ${selText.length > 200 ? selText.slice(0, 200) + "…" : selText}`, time: Date.now(), content: a ? `${a[1]}\n\n${selText}` : selText }];
+        if (selAnswer)
+            msgs.push({ role: "assistant", text: selAnswer, time: Date.now(), took: selTook, model: modelName });
+        setMessages(msgs);
+        Panels.close();
+        Settings.aiMode = "chat";
+        Panels.aiTab = 0;
+        Panels.sidebarScreen = Panels.focusedScreen;
+        Panels.sidebarOpen = true;
     }
 
     // an answer into the notes tab, folder "ai"

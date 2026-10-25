@@ -83,7 +83,7 @@ parts=(
     "kitty|kitty|the terminal, in the theme's colors"
     "zsh|zsh prompt|┌[user]─[~/dir]─[branch], hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
-    "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc"
+    "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc, sandbox, voice"
 )
 # packages per part; "a|b" = the first of them the repos have
 pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2 hyprpicker)
@@ -98,7 +98,7 @@ pkgs_hypr=()
 pkgs_kitty=(kitty)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
-pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap)
+pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
@@ -970,6 +970,7 @@ about() {
         libqalculate) echo "= in the launcher: units, currencies, dates" ;;
         wtype) echo "emoji from the launcher typed in, not only copied" ;;
         bubblewrap) echo "the coder runs commands you approve in a sandbox (no network, only the project)" ;;
+        whisper-cpp) echo "speak to the ai panel (super + alt + v), written down on this machine" ;;
         ddcutil) echo "the monitors' own brightness, from the bar (no backlight here)" ;;
         *) echo "" ;;
     esac
