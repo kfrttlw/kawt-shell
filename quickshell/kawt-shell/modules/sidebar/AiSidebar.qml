@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
+import "../companion"
 
 // Right-side ai panel (super + a). Tabs:
 //   chat    the conversation
@@ -335,6 +336,12 @@ PanelWindow {
             }
 
             // ------------------------------------------------------------ coder
+            // the companion, keeping the coder company
+            CoderBuddy {
+                Layout.topMargin: Metrics.spacing
+                visible: root.tab === 0 && root.coder && Companion.enabled
+            }
+
             // the network, wide only; narrow gets one line
             NeuralArt {
                 Layout.alignment: Qt.AlignHCenter

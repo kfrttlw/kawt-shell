@@ -192,6 +192,9 @@ Singleton {
     // Reminders: one timer, set for the next one to the second. The clock's tick only checks
     // whether that one is overdue: the timer runs on the machine's own count, which stops during
     // a sleep, and the shell clock may have been moved (Settings.timeOffset)
+    // a reminder went off (the companion rings a bell too)
+    signal dueNow(string text)
+
     readonly property real nextDue: tasks.filter(t => !t.done && !t.notified && t.due > 0).reduce((m, t) => Math.min(m, t.due), Infinity)
 
     function remind(): void {
@@ -199,8 +202,10 @@ Singleton {
         const due = root.tasks.filter(t => !t.done && !t.notified && t.due > 0 && t.due <= now);
         if (due.length === 0)
             return;
-        for (const t of due)
+        for (const t of due) {
             Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Time.fmt(new Date(t.due))}`]);
+            root.dueNow(t.text);
+        }
         const ids = due.map(t => t.id);
         adapter.tasks = adapter.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
     }

@@ -8,7 +8,7 @@ import qs.config
 // Which popover / sidebar is open, and on which screen.
 // Only one popover can be open at a time; the sidebar is independent.
 //
-//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs
+//   qs -c kawt-shell ipc call kawt toggle launcher|dock|style|tray|profile|dashboard|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest | suspend   (suspend: locks first, then sleeps)
@@ -26,6 +26,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
 //   qs -c kawt-shell ipc call kawt clearNotifs
 //   qs -c kawt-shell ipc call kawt update                      (a terminal with ./install.sh --update)
+//   qs -c kawt-shell ipc call kawt companion feed|play|sleep|wake|pet|focus|home|walk|auto|toggle
 Singleton {
     id: root
 
@@ -209,6 +210,11 @@ Singleton {
         // kawt itself, from git: in a terminal, which shows what's new and asks first
         function update(): void {
             Update.run();
+        }
+
+        // the companion (services/Companion.qml): looked after without opening his house
+        function companion(arg: string): void {
+            Companion.command(arg || "pet");
         }
 
         function sidebar(): void {

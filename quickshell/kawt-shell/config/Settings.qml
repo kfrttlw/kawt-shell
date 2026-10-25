@@ -76,6 +76,12 @@ Singleton {
     property alias barHide: adapter.barHide
     property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
+    property alias companion: adapter.companion
+    property alias companionMode: adapter.companionMode
+    property alias companionAsks: adapter.companionAsks
+    property alias companionSkin: adapter.companionSkin
+    property alias companionName: adapter.companionName
+    property alias companionLang: adapter.companionLang
     property alias updateAuto: adapter.updateAuto
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
@@ -174,8 +180,15 @@ Singleton {
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
-            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "ai"
+            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai"
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
+            // the companion (services/Companion.qml): his house is [⌂] in the bar
+            property bool companion: true // off: no house, no walks, no peeks
+            property string companionMode: "auto" // "home" | "walk" (an empty desktop is his) | "auto" (he decides)
+            property bool companionAsks: true // asks for food and play in a notification, 3 a day at most
+            property string companionSkin: "phos" // utils/companions.js, or yours in ~/.config/kawt/companions.json
+            property string companionName: "" // "" = the look's own
+            property string companionLang: "en" // "en" | "ru": what he says
             // kawt's own updates (services/Update.qml): [check] asks github once
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
             property real updateCheckedAt: 0 // ms, the last check that got an answer

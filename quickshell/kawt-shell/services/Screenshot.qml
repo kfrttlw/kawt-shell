@@ -108,6 +108,9 @@ Singleton {
     property string screen: "" // the preview shows on the screen that had the focus
     property bool copied: false
 
+    // a shot was taken (the companion goes "click!")
+    signal taken
+
     function take(m: string): void {
         if (job.running)
             return; // the area selection is still open
@@ -167,7 +170,10 @@ Singleton {
 
         onDone: (code, out) => {
             const file = out.trim().split("\n").pop();
-            if (code !== 0 || !file || !root.asking)
+            if (code !== 0 || !file)
+                return;
+            root.taken();
+            if (!root.asking)
                 return;
             root.mode = root.pending;
             root.copied = false;

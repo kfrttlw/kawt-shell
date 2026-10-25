@@ -19,7 +19,7 @@ configs, all in one monospace, square-cornered, text-first style.
 
 ## What's inside
 
-**bar**: `[~] [$] [1] 2 3 · [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [>_]`
+**bar**: `[~] [$] [1] 2 3 · [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [⌂] [>_]`
 (the wheel on the workspaces walks them, and with several monitors each bar lists its own; `[eth]` instead of `[wifi]` on a cable, `[vpn]` while a tunnel is up (wireguard, openvpn, tailscale...); `[cast ● app]` shows while something captures the screen or the webcam, `[caf on]` while caffeine is on)
 
 | | |
@@ -32,6 +32,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config. A new one by itself every 15 min … 3 h if you like (the next in the folder or a random one), with awww's transition picked there: `crt` (drawn in from the top, in steps, like an old screen's beam), fade, grow, random or none |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. Wide mode shows its thinking as a small ascii network |
+| companion | `[⌂]` in the bar is the house of a little pixel friend, a few cells like Claude Code's: a green monitor, an amber one with horns, a floppy disk that looks out of its window, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round. Out on an empty desktop he walks about, dances to music, naps (a window opens and he goes home; drag him along the edge, click him to talk, double click: home for an hour). He peeks out of the corner when the battery gets low, the charger comes, a screenshot is taken, the recording starts (a red light on his antenna), a reminder rings, a new kawt is out (lvl up), and once a night to say it's late; never over a fullscreen window or in do not disturb. Next to the coder he thinks, types, raises a flag on a diff, cheers, holds his head on an error, sweeps up after `[undo]`. A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg: no house, nothing runs for him |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
@@ -208,7 +209,8 @@ Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <p
 `... kawt wallpaper next|prev|random|none|<path>` (for a timer or your own binds),
 `... kawt suspend` (locks, then sleeps), `kawt caffeine`, `kawt idle <minutes>` (0 = never), `kawt night`,
 `kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`,
-`kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar [show|hide]`.
+`kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar [show|hide]`,
+`kawt companion feed|play|sleep|wake|pet|focus|home|walk|auto|toggle`.
 The last four are for the media keys: there is a ready block in `hypr/kawt.lua` (and `kawt.conf`)
 to uncomment, after removing your own XF86 binds. Through kawt, the osd shows at once.
 
@@ -224,6 +226,8 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 
 - `~/.local/state/kawt/settings.json`: theme, wallpaper, ai model, font, bar...
 - `~/.config/kawt/themes.json`: your own themes (below)
+- `~/.config/kawt/companions.json`: your own looks for the companion
+- `~/.local/state/kawt/companion.json`: his life (food, fun, sleep, the phrases you gave him)
 - `~/.config/hypr/user.lua`: your Hyprland settings, with kawt's standard config
 - `~/.local/state/kawt/theme/`: generated color files, rewritten on every theme switch
 - `quickshell/kawt-shell/config/Colors.qml`: kawt's own themes (don't edit them there: a
