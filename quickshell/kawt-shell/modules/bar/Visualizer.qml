@@ -20,7 +20,7 @@ Item {
 
     // the fallback without cava
     Timer {
-        running: root.active && !root.real
+        running: root.active && !root.real && !Panels.locked
         repeat: true
         interval: 220
         triggeredOnStart: true

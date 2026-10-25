@@ -68,8 +68,10 @@ Singleton {
         calm.restart();
     }
 
+    // (not while locked: nothing shows it then; kawt's own changes, like the dim before the
+    // lock, set `raw` themselves)
     Timer {
-        running: root.available
+        running: root.available && !Panels.locked
         repeat: true
         interval: root.busy ? 250 : 1000
         onTriggered: file.reload()

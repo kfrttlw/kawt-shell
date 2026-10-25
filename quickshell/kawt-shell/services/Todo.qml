@@ -189,21 +189,52 @@ Singleton {
         return `${Qt.formatDate(d, "dd.MM")} ${time}`;
     }
 
-    // check every 15 s whether something is due
+    // Reminders: one timer, set for the next one to the second (nothing polls). Looked at
+    // again on every tick of the clock as well: the timer runs on the machine's own count, which
+    // stops during a sleep, and the shell clock may have been moved (Settings.timeOffset)
+    readonly property real nextDue: tasks.filter(t => !t.done && !t.notified && t.due > 0).reduce((m, t) => Math.min(m, t.due), Infinity)
+
+    function remind(): void {
+        const now = Time.ms();
+        const due = root.tasks.filter(t => !t.done && !t.notified && t.due > 0 && t.due <= now);
+        if (due.length === 0)
+            return;
+        for (const t of due)
+            Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Time.fmt(new Date(t.due))}`]);
+        const ids = due.map(t => t.id);
+        adapter.tasks = adapter.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
+    }
+
+    function schedule(): void {
+        if (nextDue === Infinity) {
+            reminder.stop();
+            return;
+        }
+        reminder.interval = Math.max(1000, Math.min(3600000, nextDue - Time.ms()));
+        reminder.restart();
+    }
+
+    onNextDueChanged: schedule()
+    Component.onCompleted: {
+        remind();
+        schedule();
+    }
+
     Timer {
-        running: true
-        repeat: true
-        interval: 15000
-        triggeredOnStart: true
+        id: reminder
+
         onTriggered: {
-            const now = Time.ms();
-            const due = root.tasks.filter(t => !t.done && !t.notified && t.due > 0 && t.due <= now);
-            if (due.length === 0)
-                return;
-            for (const t of due)
-                Quickshell.execDetached(["notify-send", "-a", "todo", "-u", "critical", t.text, `due ${Time.fmt(new Date(t.due))}`]);
-            const ids = due.map(t => t.id);
-            adapter.tasks = adapter.tasks.map(t => ids.includes(t.id) ? Object.assign({}, t, { notified: true }) : t);
+            root.remind();
+            root.schedule();
+        }
+    }
+
+    Connections {
+        target: Time
+
+        function onNowChanged(): void {
+            root.remind();
+            root.schedule();
         }
     }
 
