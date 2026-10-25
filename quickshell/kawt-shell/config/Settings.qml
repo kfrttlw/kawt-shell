@@ -60,10 +60,27 @@ Singleton {
     property alias wallpaper: adapter.wallpaper
     property alias wallpaperDir: adapter.wallpaperDir
     property alias themeTerminals: adapter.themeTerminals
+    property alias fontFamily: adapter.fontFamily
+    property alias fontSize: adapter.fontSize
+    property alias barHeight: adapter.barHeight
+    property alias barBottom: adapter.barBottom
+    property alias barHide: adapter.barHide
+    property alias updateCheck: adapter.updateCheck
+    property alias updateCheckedAt: adapter.updateCheckedAt
+    property alias updateNotified: adapter.updateNotified
 
     // "~/x" -> "/home/user/x"
     function expand(path: string): string {
         return path.startsWith("~/") ? Quickshell.env("HOME") + path.slice(1) : path;
+    }
+
+    // a bar button the user hasn't switched off (profile -> cfg -> bar); names: Bar.qml
+    function barShows(name: string): bool {
+        return !(barHide ?? []).includes(name);
+    }
+
+    function toggleBar(name: string): void {
+        barHide = barShows(name) ? [...(barHide ?? []), name] : barHide.filter(n => n !== name);
     }
 
     FileView {
@@ -131,6 +148,16 @@ Singleton {
             property string wallpaper: "" // empty: kawt draws no wallpaper (use hyprpaper/swww)
             property string wallpaperDir: "~/Pictures/wallpapers"
             property bool themeTerminals: true // recolor open terminals on theme change
+            // the look, yours without editing the repo (config/Metrics.qml reads these)
+            property string fontFamily: "JetBrainsMono Nerd Font Mono" // a monospace one: kawt lines text up in columns
+            property int fontSize: 13 // px; panels grow with it
+            property int barHeight: 0 // px, 0 = fits the font
+            property bool barBottom: false // the bar at the bottom edge instead of the top
+            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "ai"
+            // kawt's own updates (services/Update.qml): asked only when you press [check], unless this is on
+            property bool updateCheck: false // once a day, by itself (git fetch: that goes to github)
+            property real updateCheckedAt: 0 // ms, the last daily check
+            property string updateNotified: "" // the upstream commit the last notification was about
         }
     }
 }

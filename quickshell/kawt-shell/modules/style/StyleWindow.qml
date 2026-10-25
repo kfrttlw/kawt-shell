@@ -169,7 +169,7 @@ PanelWindow {
                         readonly property var t: Colors.preview(modelData)
                         readonly property bool current: Colors.mode === modelData
 
-                        width: 132
+                        width: Math.round(132 * Metrics.scale)
                         height: tileCol.implicitHeight + 12
                         color: t.bg
                         border.width: current ? 2 : 1
@@ -215,6 +215,15 @@ PanelWindow {
                         }
                     }
                 }
+            }
+
+            // your own themes (config/Colors.qml says how), or what's wrong with the file
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: Colors.userError || "own themes, or other colors for these: ~/.config/kawt/themes.json"
+                color: Colors.userError ? Colors.warn : Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
             }
 
             RowLayout {

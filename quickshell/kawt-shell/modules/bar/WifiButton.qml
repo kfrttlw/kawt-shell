@@ -8,7 +8,7 @@ BracketButton {
     readonly property string ssid: Wifi.active?.name ?? ""
     readonly property bool wired: NetLinks.wired !== ""
 
-    visible: (Wifi.device !== null || wired) && Settings.wifiStyle !== "hidden"
+    visible: Settings.barShows("wifi") && (Wifi.device !== null || wired) && Settings.wifiStyle !== "hidden"
     tag: wired ? "" : "wifi"
     label: wired ? "eth"
         : !Wifi.enabled ? "off"

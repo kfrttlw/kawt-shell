@@ -1,16 +1,30 @@
 pragma Singleton
 import QtQuick
+import Quickshell
+import Quickshell.Io
 import "../utils/wallpalette.js" as WallPalette
 
 // Every theme comes in a dark (CRT) and a light (paper / printout) variant;
 // Settings.theme picks the theme, Settings.light the variant.
-QtObject {
+//
+// Your own themes go to ~/.config/kawt/themes.json, not here (a git pull would take a change
+// here back). A new name is a new theme; a name from below changes only the colors given:
+//   {
+//     "matrix":   { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
+//                             "accent": "#b6ffc8", "warn": "#ff3b30", "hoverFill": "#061a0b" } },
+//     "phosphor": { "dark": { "accent": "#ffffff" } }
+//   }
+// Colors are #rrggbb or #rrggbbaa; a missing one comes from the theme of the same name (or
+// mono). A new theme given only "dark" (or "light") uses it for both. Names: lowercase
+// letters, digits and -.
+// The file is read again whenever it's saved.
+Singleton {
     id: root
 
-    // the fixed themes, plus "wallpaper" once a palette was taken from the wallpaper
-    // the wallpaper theme is built from the analysed wallpaper + Settings.wallStrength,
-    // so changing the strength recolors at once, without looking at the picture again
-    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength) }) : fixed
+    // the fixed themes, your own over them, plus "wallpaper" once a palette was taken from the
+    // wallpaper. That one is built from the analysed wallpaper + Settings.wallStrength, so
+    // changing the strength recolors at once, without looking at the picture again
+    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, custom, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength) }) : Object.assign({}, fixed, custom)
 
     readonly property var fixed: ({
         mono: {
@@ -96,6 +110,63 @@ QtObject {
             }
         }
     })
+
+    // ---- ~/.config/kawt/themes.json
+    readonly property list<string> keys: ["bg", "fg", "dim", "border", "accent", "warn", "hoverFill"]
+    property var user: ({}) // the file, parsed
+    property string userError: "" // what's wrong with it, for the style window; "" = fine
+
+    // only known keys with a real color
+    function clean(v: var): var {
+        const out = {};
+        if (v && typeof v === "object")
+            for (const k of keys)
+                if (typeof v[k] === "string" && /^#([0-9a-f]{6}|[0-9a-f]{8})$/i.test(v[k]))
+                    out[k] = v[k];
+        return out;
+    }
+
+    readonly property var custom: {
+        const out = {};
+        for (const name of Object.keys(user)) {
+            const t = user[name];
+            if (!/^[a-z0-9-]{1,24}$/.test(name) || name === "wallpaper" || !t || typeof t !== "object")
+                continue;
+            const base = fixed[name] ?? fixed.mono;
+            let dark = Object.assign({}, base.dark, clean(t.dark));
+            let light = Object.assign({}, base.light, clean(t.light));
+            // a new theme given in one variant only: the other is the same. (New colors for one
+            // of kawt's leave its other variant as it is)
+            if (!fixed[name] && !t.light)
+                light = dark;
+            else if (!fixed[name] && !t.dark)
+                dark = light;
+            out[name] = { dark, light };
+        }
+        return out;
+    }
+
+    FileView {
+        path: `${Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"}/kawt/themes.json`
+        printErrors: false // there's none until you make one
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const v = JSON.parse(text());
+                const ok = v !== null && typeof v === "object" && !Array.isArray(v);
+                root.user = ok ? v : {};
+                root.userError = ok ? "" : 'themes.json: should look like { "name": { "dark": { ... } } }';
+            } catch (e) {
+                // a half-saved file: keep the last good themes until it's fixed
+                root.userError = `themes.json: ${e.message}`;
+            }
+        }
+        onLoadFailed: {
+            root.user = {};
+            root.userError = "";
+        }
+    }
 
     readonly property list<string> names: Object.keys(themes)
     readonly property string mode: themes[Settings.theme] ? Settings.theme : "mono"

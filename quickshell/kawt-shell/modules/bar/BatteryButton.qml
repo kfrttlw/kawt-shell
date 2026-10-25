@@ -8,7 +8,7 @@ BracketButton {
         || device.state === UPowerDeviceState.FullyCharged
         || device.state === UPowerDeviceState.PendingCharge
 
-    visible: device.isLaptopBattery
+    visible: Settings.barShows("bat") && (device.isLaptopBattery)
     tag: "bat"
     label: `${Math.round(device.percentage * 100)}%${charging ? "+" : ""}`
     textColor: !charging && device.percentage < 0.2 ? Colors.warn : Colors.fg

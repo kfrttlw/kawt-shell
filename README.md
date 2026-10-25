@@ -29,7 +29,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `:` clipboard history · `;` open windows |
 | `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb; keeps what the app asks for: `notify-send -t 1500` stays that long (`-t 0` until clicked), `-e` (transient) only pops up and never lands in the log, and one with a replace tag (`x-canonical-private-synchronous`, `x-dunst-stack-tag`: volume scripts) takes its earlier one's place |
-| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper) |
+| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. Wide mode shows its thinking as a small ascii network |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes; `[caf]` in the profile keeps the screen on. No hypridle / hyprlock needed |
@@ -132,7 +132,11 @@ A menu asks which system this is (it guesses: Arch-based or not) and what to ins
   bare zsh doesn't even keep a history. If your terminals open bash, it asks to make zsh your
   shell (`chsh`). oh-my-zsh isn't needed; if you have it, kawt's line comes after it and wins
 - asks before starting any service (bluetooth, ollama, power profiles). NetworkManager is never
-  installed for you: next to iwd or systemd-networkd it can take the network over
+  installed for you: next to iwd or systemd-networkd it can take the network over. It asks
+  whether NetworkManager may keep asking a server every few minutes if there's internet (the
+  one thing on a fresh Arch that goes out by itself; it finds wifi login pages in cafés)
+- with only the shell picked, asks whether wallpapers should go through `awww` (transitions);
+  makes `~/Pictures/wallpapers`, where `super + w` looks
 
 It never runs as root (it asks for sudo itself, only for pacman), and running it again is safe.
 
@@ -148,8 +152,17 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --no-packages   # only link the configs, leave pacman alone
 ./install.sh --no-update     # install what's missing, no system update
 ./install.sh --uninstall     # remove the links and lines, put your old configs back
+./install.sh --update        # kawt itself, see below
 ./install.sh --help
 ```
+
+**Updating.** `./install.sh --update` (or `[update]` in profile → cfg, or
+`qs -c kawt-shell ipc call kawt update`): shows what's new, asks, `git pull`s, then the new
+installer adds what the new version needs for the parts you have (new packages, links), starts
+the shell again and reloads Hyprland. Your own things are outside the repo and stay as they
+are; changes made inside the repo stop it, with a list (`git stash` can put them aside).
+Nothing asks for updates by itself: `[check]` in profile → cfg asks once when pressed, and
+"check once a day" there is off until you switch it on.
 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
@@ -198,9 +211,34 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 
 ## Where things live
 
-- `~/.local/state/kawt/settings.json`: theme, wallpaper, ai model...
+- `~/.local/state/kawt/settings.json`: theme, wallpaper, ai model, font, bar...
+- `~/.config/kawt/themes.json`: your own themes (below)
+- `~/.config/hypr/user.lua`: your Hyprland settings, with kawt's standard config
 - `~/.local/state/kawt/theme/`: generated color files, rewritten on every theme switch
-- `quickshell/kawt-shell/config/Colors.qml`: the themes themselves; edit colors here
+- `quickshell/kawt-shell/config/Colors.qml`: kawt's own themes (don't edit them there: a
+  `git pull` would take it back; `themes.json` changes them too)
+
+## Your own look
+
+Nothing in the repo has to be edited, so updates never fight with your changes:
+
+- **font, bar**: profile → cfg. Font size (the panels grow with it) and family (a monospace
+  one), the bar at the top or the bottom, its height, and which buttons it shows (one switched
+  off still works on its key; `[● rec]`, `[cast]` and `[caf]` always show while they're on)
+- **colors**: `~/.config/kawt/themes.json`, read again whenever it's saved. A new name is a new
+  theme; one of kawt's names changes only the colors you give:
+
+  ```json
+  {
+    "matrix":   { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
+                            "accent": "#b6ffc8", "warn": "#ff3b30", "hoverFill": "#061a0b" } },
+    "phosphor": { "dark": { "accent": "#ffffff" } }
+  }
+  ```
+
+  a missing color comes from the theme of the same name (or `mono`); a new theme with only
+  `dark` (or `light`) uses it for both. Something wrong in the file: `super + w` says what
+- **hyprland**: `~/.config/hypr/user.lua` (see the install part above)
 
 ## Hacking
 

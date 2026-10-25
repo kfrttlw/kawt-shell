@@ -1666,6 +1666,50 @@ ColumnLayout {
                     }
                 }
 
+                // ------------------------------------------------------------ look
+                //  font  [-] 13px [+]   font> JetBrainsMono Nerd Font Mono
+                // (in settings.json, not in the repo: a git pull never takes it back)
+                Label {
+                    Layout.topMargin: Metrics.spacing
+                    text: "look"
+                    color: Colors.dim
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Metrics.spacing
+
+                    Label {
+                        text: "font:"
+                        color: Colors.dim
+                    }
+
+                    BracketButton {
+                        label: "-"
+                        bordered: false
+                        onClicked: Settings.fontSize = Math.max(9, Metrics.fontSize - 1)
+                    }
+
+                    Label {
+                        text: `${Metrics.fontSize}px`
+                    }
+
+                    BracketButton {
+                        label: "+"
+                        bordered: false
+                        onClicked: Settings.fontSize = Math.min(28, Metrics.fontSize + 1)
+                    }
+
+                    // a monospace one: kawt lines its text up in columns
+                    TermInput {
+                        Layout.fillWidth: true
+                        prompt: "font>"
+                        text: Settings.fontFamily
+                        placeholder: "a monospace font, as fc-list calls it"
+                        onAccepted: t => Settings.fontFamily = t.trim() || "JetBrainsMono Nerd Font Mono"
+                    }
+                }
+
                 Label {
                     Layout.topMargin: Metrics.spacing
                     text: "bar"
@@ -1695,6 +1739,87 @@ ColumnLayout {
                     }
                 }
 
+                //  at  [top] bottom   height  [-] auto [+]
+                RowLayout {
+                    spacing: Metrics.spacing
+
+                    Label {
+                        text: "at:"
+                        color: Colors.dim
+                    }
+
+                    BracketButton {
+                        label: "top"
+                        active: !Settings.barBottom
+                        textColor: !Settings.barBottom ? Colors.accent : Colors.dim
+                        onClicked: Settings.barBottom = false
+                    }
+
+                    BracketButton {
+                        label: "bottom"
+                        active: Settings.barBottom
+                        textColor: Settings.barBottom ? Colors.accent : Colors.dim
+                        onClicked: Settings.barBottom = true
+                    }
+
+                    Label {
+                        Layout.leftMargin: Metrics.spacing
+                        text: "height:"
+                        color: Colors.dim
+                    }
+
+                    BracketButton {
+                        label: "-"
+                        bordered: false
+                        onClicked: Settings.barHeight = Math.max(Metrics.fontSize + 10, Metrics.barHeight - 2)
+                    }
+
+                    Label {
+                        text: Settings.barHeight > 0 ? `${Metrics.barHeight}px` : "auto"
+                    }
+
+                    BracketButton {
+                        label: "+"
+                        bordered: false
+                        onClicked: Settings.barHeight = Math.min(80, Metrics.barHeight + 2)
+                    }
+
+                    BracketButton {
+                        visible: Settings.barHeight > 0
+                        label: "auto"
+                        bordered: false
+                        textColor: Colors.dim
+                        onClicked: Settings.barHeight = 0
+                    }
+                }
+
+                //  [x] ~  [x] $  [x] 1 2 3  [x] wifi ...   which buttons the bar shows
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Metrics.spacing
+
+                    Repeater {
+                        model: [["profile", "~"], ["dock", "$"], ["workspaces", "1 2 3"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["ai", ">_"]]
+
+                        BracketButton {
+                            required property var modelData
+
+                            tag: Settings.barShows(modelData[0]) ? "x" : " "
+                            label: modelData[1]
+                            bordered: false
+                            onClicked: Settings.toggleBar(modelData[0])
+                        }
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: "switched off, a button still works on its key (super + i: this panel). [● rec], [cast] and [caf] always show while they're on"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+
                 Label {
                     Layout.topMargin: Metrics.spacing
                     text: "device"
@@ -1716,6 +1841,63 @@ ColumnLayout {
                             onClicked: Settings.device = modelData
                         }
                     }
+                }
+
+                // ------------------------------------------------------------ kawt
+                //  kawt  2b47871 · 3 days ago            [check] [update 3]
+                //  3 new: notifications keep -t...
+                //  [ ] check once a day by itself (git fetch)
+                Label {
+                    Layout.topMargin: Metrics.spacing
+                    text: "kawt"
+                    color: Colors.dim
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Metrics.spacing
+
+                    Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: Update.repo ? `${Update.repo.replace(Quickshell.env("HOME"), "~")} · ${Update.version}` : "not a git clone: no updates from here"
+                        color: Colors.dim
+                    }
+
+                    // asks the remote once: nothing else of kawt's goes out by itself
+                    BracketButton {
+                        visible: Update.repo !== ""
+                        label: Update.checking ? "..." : "check"
+                        onClicked: Update.check(false)
+                    }
+
+                    // a terminal with ./install.sh --update: it shows what's new and asks first
+                    BracketButton {
+                        visible: Update.repo !== ""
+                        label: Update.behind > 0 ? `update ${Update.behind}` : "update"
+                        textColor: Update.behind > 0 ? Colors.accent : Colors.fg
+                        onClicked: {
+                            Update.run();
+                            Panels.close();
+                        }
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    elide: Text.ElideRight
+                    text: Update.status + (Update.news ? `: ${Update.news}` : "")
+                    color: Update.status.startsWith("couldn't") ? Colors.warn : Update.behind > 0 ? Colors.accent : Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+
+                BracketButton {
+                    visible: Update.repo !== ""
+                    tag: Settings.updateCheck ? "x" : " "
+                    label: "check once a day by itself (git fetch)"
+                    bordered: false
+                    onClicked: Settings.updateCheck = !Settings.updateCheck
                 }
 
                 // the ai has its own settings now, in its panel

@@ -23,7 +23,7 @@ PanelWindow {
 
     anchors.top: true
     anchors.right: true
-    margins.top: Metrics.barHeight + Metrics.spacing
+    margins.top: Metrics.topGap + Metrics.spacing
     // step aside for the ai panel when it's open on this side
     margins.right: Metrics.padding + (Panels.isSidebarOpen(forScreen) && Settings.aiSide !== "left" ? (Settings.aiWide ? Math.round(forScreen.width * 0.62) : Metrics.sidebarWidth) : 0)
 

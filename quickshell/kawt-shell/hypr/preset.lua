@@ -74,13 +74,9 @@ end)
 ---- AUTOSTART ----
 -------------------
 
--- kawt itself and the password window start from kawt.lua. Here: the wallpaper daemon, if
--- awww (or swww) is installed, and the last wallpaper back. awww img waits for the daemon.
-try("autostart", function()
-    hl.on("hyprland.start", function()
-        hl.exec_cmd([[sh -c 'w=$(command -v awww || command -v swww) || exit 0; "$w-daemon" & until "$w" query >/dev/null 2>&1; do sleep 0.1; done; f=$(cat ~/.cache/current_wallpaper.txt 2>/dev/null) && [ -f "$f" ] && "$w" img "$f"']])
-    end)
-end)
+-- kawt itself and the password window start from kawt.lua; the wallpaper daemon (awww or
+-- swww) kawt starts itself, with the last wallpaper (services/Wallpapers.qml). Your own
+-- programs: hl.on("hyprland.start", ...) in user.lua.
 
 
 -------------------------------

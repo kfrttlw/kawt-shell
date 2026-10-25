@@ -8,6 +8,9 @@ import "../utils/wallpalette.js" as WallPalette
 // Images in Settings.wallpaperDir (and one level of subfolders), and setting one.
 // If awww (or its old name swww) is installed it does the drawing, with its transitions;
 // otherwise kawt draws the wallpaper itself (modules/background/Wallpaper.qml).
+// awww's daemon is started by kawt (scripts/wallpaper.sh): at login, once a wallpaper was
+// picked here, and whenever one is set while it isn't running. No line in hyprland's config
+// needed. Never picked one here (hyprpaper and the like draw it): kawt leaves awww alone.
 Singleton {
     id: root
 
@@ -55,10 +58,12 @@ Singleton {
         }
     }
 
+    readonly property string script: `${Quickshell.shellDir}/scripts/wallpaper.sh`
+
     function set(path: string): void {
         Settings.wallpaper = path;
         if (path && (backend === "awww" || backend === "swww"))
-            Quickshell.execDetached([backend, "img", path]);
+            Quickshell.execDetached(["sh", script, backend, path]);
         // hyprlock (and other scripts) read the current wallpaper from here
         if (path)
             Quickshell.execDetached(["sh", "-c", 'mkdir -p ~/.cache && printf "%s" "$1" > ~/.cache/current_wallpaper.txt', "sh", path]);
@@ -145,7 +150,12 @@ Singleton {
         running: true
         command: ["sh", "-c", "command -v awww || command -v swww || true"]
         stdout: StdioCollector {
-            onStreamFinished: root.backend = text.trim().split("/").pop() || "kawt"
+            onStreamFinished: {
+                root.backend = text.trim().split("/").pop() || "kawt";
+                // at login: the daemon up, and the last wallpaper on it (it usually keeps that itself)
+                if (root.backend !== "kawt" && Settings.wallpaper)
+                    Quickshell.execDetached(["sh", root.script, root.backend, Settings.wallpaper, "start"]);
+            }
         }
     }
 
