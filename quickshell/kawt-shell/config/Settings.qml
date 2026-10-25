@@ -49,6 +49,8 @@ Singleton {
     property alias aiCoderSteps: adapter.aiCoderSteps
     property alias recordAudio: adapter.recordAudio
     property alias recordSound: adapter.recordSound
+    property alias mediaPlayer: adapter.mediaPlayer
+    property alias playerNetCovers: adapter.playerNetCovers
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
     property alias device: adapter.device
@@ -142,6 +144,8 @@ Singleton {
             property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
             property bool recordAudio: false // record the microphone too (older kawt; recordSound wins when set)
             property string recordSound: "" // "off" | "mic" | "system" (what you hear) | "both"; "" = recordAudio decides
+            property string mediaPlayer: "" // the player picked in the player popover's tabs (services/Media.qml)
+            property bool playerNetCovers: false // covers that are online (spotify's): fetched only with this on
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop

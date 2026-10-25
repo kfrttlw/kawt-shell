@@ -15,6 +15,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt caffeine                    (the screen stays on, no idle lock)
 //   qs -c kawt-shell ipc call kawt idle <minutes>              (lock after that long without input, 0 = never)
 //   qs -c kawt-shell ipc call kawt volume up|down|mute · mic mute · brightness up|down|<0-100>
+//   qs -c kawt-shell ipc call kawt media toggle|play|pause|next|prev|back|forward   (the player kawt shows)
 //   qs -c kawt-shell ipc call kawt night                       (night light, needs hyprsunset)
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen   (a preview asks copy / save)
 //   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
@@ -156,6 +157,11 @@ Singleton {
 
         function mic(arg: string): void {
             Audio.toggleMicMute();
+        }
+
+        // the player the bar shows (services/Media.qml): the one picked, or the last one started
+        function media(arg: string): void {
+            Media.command(arg || "toggle");
         }
 
         // up | down | a percentage

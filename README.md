@@ -36,12 +36,13 @@ configs, all in one monospace, square-cornered, text-first style.
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
+| player | `[> ▂▅▃▇▂]` next to the clock (real sound with `cava`); click: the cover as an old phosphor screen shows it (a few big pixels in the theme's color), a wide spectrum, `[-10] [<<] [||] [>>] [+10]`, a position bar to click, drag or scroll, shuffle and loop, the player's own volume, tabs when several play (spotify / firefox / mpv: the bar and the media keys follow the one picked, or the last one started) and this session's tracks (click copies "artist — title", nothing is written down). Keys inside: `space` `←→` `↑↓` `n` `p` `s` `r` `tab`. Covers that live online (spotify's) load only after `[cover load from the net]` |
 | recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg) |
 | screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
-| also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout (and, if you switch it on in profile → cfg, a layout per window: each keeps its own, a new one starts with the first) |
+| also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness, battery + power profiles, calendar, tray, keyboard layout (and, if you switch it on in profile → cfg, a layout per window: each keeps its own, a new one starts with the first) |
 
 ## Layout
 
@@ -197,8 +198,9 @@ In the launcher: `↑↓` select, `ctrl+s` pin, `ctrl+tab` switch mode.
 Everything is also reachable over IPC: `qs -c kawt-shell ipc call kawt toggle <panel>`,
 `... kawt wallpaper next|prev|random|none|<path>` (for a timer or your own binds),
 `... kawt suspend` (locks, then sleeps), `kawt caffeine`, `kawt idle <minutes>` (0 = never), `kawt night`,
-`kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`.
-The last three are for the media keys: there is a ready block in `hypr/kawt.lua` (and `kawt.conf`)
+`kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`,
+`kawt media toggle|next|prev|back|forward` (the player the bar shows).
+The last four are for the media keys: there is a ready block in `hypr/kawt.lua` (and `kawt.conf`)
 to uncomment, after removing your own XF86 binds. Through kawt, the osd shows at once.
 
 ## Environment

@@ -85,7 +85,7 @@ pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libno
 #   pipewire-pulse, -alsa       sound for apps that speak pulseaudio / alsa (browsers, discord...)
 #   xdg-desktop-portal-*        screen sharing (hyprland), "open file" windows (gtk)
 #   hyprpolkitagent             the password window for apps that need admin rights
-#   playerctl                   play / pause / next keys (hyprland's own binds call it)
+#   playerctl                   play / pause / next keys while kawt isn't running
 #   noto-fonts-emoji            emoji instead of empty boxes
 pkgs_shell+=(pipewire-pulse pipewire-alsa xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprpolkitagent playerctl noto-fonts-emoji)
 pkgs_hypr=()

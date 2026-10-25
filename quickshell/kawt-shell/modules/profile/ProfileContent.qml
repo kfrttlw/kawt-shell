@@ -1735,6 +1735,22 @@ ColumnLayout {
                     }
                 }
 
+                Label {
+                    Layout.topMargin: Metrics.spacing
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: "player  (the music button in the bar; the media keys follow its tabs)"
+                    color: Colors.dim
+                }
+
+                // spotify's covers are on its servers; the local ones (firefox, mpv) always show
+                BracketButton {
+                    tag: Settings.playerNetCovers ? "x" : " "
+                    label: "covers from the net (spotify's)"
+                    bordered: false
+                    onClicked: Settings.playerNetCovers = !Settings.playerNetCovers
+                }
+
                 // ------------------------------------------------------------ look
                 //  font  [-] 13px [+]   font> JetBrainsMono Nerd Font Mono
                 // (in settings.json, not in the repo: a git pull never takes it back)
