@@ -1680,6 +1680,15 @@ ColumnLayout {
                         bordered: false
                         onClicked: Settings.screenshotAsk = !Settings.screenshotAsk
                     }
+
+                    // the screen stands still while an area is picked (hyprpicker)
+                    BracketButton {
+                        visible: Screenshot.canFreeze
+                        tag: Settings.screenshotFreeze ? "x" : " "
+                        label: "freeze"
+                        bordered: false
+                        onClicked: Settings.screenshotFreeze = !Settings.screenshotFreeze
+                    }
                 }
 
                 Label {
@@ -1700,12 +1709,29 @@ ColumnLayout {
                         text: Settings.recordDir
                         onAccepted: t => Settings.recordDir = t.trim() || Settings.recordDir
                     }
+                }
 
-                    BracketButton {
-                        tag: Settings.recordAudio ? "x" : " "
-                        label: "mic audio"
-                        bordered: false
-                        onClicked: Settings.recordAudio = !Settings.recordAudio
+                //  sound  [off] mic  system  both    (system: what you hear; both: mixed)
+                RowLayout {
+                    spacing: Metrics.spacing
+
+                    Label {
+                        text: "sound:"
+                        color: Colors.dim
+                    }
+
+                    Repeater {
+                        model: [["off", "off"], ["mic", "mic"], ["system", "what you hear"], ["both", "both"]]
+
+                        BracketButton {
+                            required property var modelData
+
+                            label: modelData[1]
+                            active: Recorder.sound === modelData[0]
+                            textColor: Recorder.sound === modelData[0] ? Colors.accent : Colors.dim
+                            bordered: false
+                            onClicked: Settings.recordSound = modelData[0]
+                        }
                     }
                 }
 

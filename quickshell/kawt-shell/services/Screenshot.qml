@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.config
 import qs.utils
 
@@ -10,8 +11,95 @@ import qs.utils
 // alone, the preview goes and the shot isn't kept (the cache is cleaned after an hour).
 // Otherwise it's saved to Settings.screenshotDir at once, copied, and announced.
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen
+// With the tools installed (each optional, its button only shows with it):
+//   hyprpicker   the screen stands still while an area is picked (Settings.screenshotFreeze)
+//   satty        [edit]: arrows, boxes, text, blur, in the shot itself (or swappy)
+//   tesseract    [text]: the text in the shot, onto the clipboard (the languages it has)
 Singleton {
     id: root
+
+    // ---- the optional tools, looked for once
+    property bool canFreeze: false
+    property string editor: "" // "satty" | "swappy" | ""
+    property string ocrLangs: "" // "eng+rus": what tesseract has of the useful ones; "" = no [text]
+    property bool editing: editJob.running // the preview waits meanwhile
+    property bool reading: textJob.running
+    property string textStatus: "" // "text copied", "no text found"
+    property int version: 0 // goes up when the shot's file changed (edited): the preview loads it again
+
+    Process {
+        running: true
+        command: ["sh", "-c", 'command -v hyprpicker; command -v satty || command -v swappy; command -v tesseract > /dev/null && tesseract --list-langs 2> /dev/null | tail -n +2 | tr "\\n" " "']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.canFreeze = text.includes("/hyprpicker");
+                root.editor = text.includes("/satty") ? "satty" : text.includes("/swappy") ? "swappy" : "";
+                // english, plus russian / ukrainian / the rest of the useful ones it has, in that order
+                const have = (text.split("\n").pop() ?? "").trim().split(/\s+/);
+                root.ocrLangs = ["eng", "rus", "ukr", "deu", "fra", "spa", "pol"].filter(l => have.includes(l)).join("+");
+            }
+        }
+    }
+
+    // [edit]: the editor saves over the waiting shot; the preview shows the result
+    function edit(): void {
+        if (!shot || !editor || editJob.running)
+            return;
+        editJob.command = editor === "satty" ? ["satty", "--filename", shot, "--output-filename", shot, "--early-exit", "--copy-command", "wl-copy"] : ["swappy", "-f", shot, "-o", shot];
+        editJob.running = true;
+    }
+
+    Process {
+        id: editJob
+
+        onExited: {
+            root.version++;
+            root.copied = false; // what's on the clipboard now may be the old picture
+        }
+    }
+
+    // [text]: what tesseract reads in the shot, onto the clipboard
+    function readText(): void {
+        if (!shot || !ocrLangs || textJob.running)
+            return;
+        textStatus = "reading...";
+        textJob.command = ["tesseract", shot, "-", "-l", ocrLangs];
+        textJob.running = true;
+    }
+
+    Job {
+        id: textJob
+
+        onDone: (code, out) => {
+            const t = out.replace(/\f/g, "").trim();
+            if (code !== 0 || !t) {
+                root.textStatus = code !== 0 ? "tesseract failed" : "no text found";
+                return;
+            }
+            try {
+                Quickshell.clipboardText = t;
+            } catch (e) {
+                copyText.input = t; // older quickshell: through wl-copy, on stdin
+                copyText.stdinEnabled = true;
+                copyText.running = true;
+            }
+            const lines = t.split("\n").length;
+            root.textStatus = `text copied (${lines} line${lines === 1 ? "" : "s"})`;
+        }
+    }
+
+    Process {
+        id: copyText
+
+        property string input: ""
+
+        command: ["wl-copy"]
+        onStarted: {
+            write(input);
+            input = "";
+            stdinEnabled = false;
+        }
+    }
 
     readonly property string cacheDir: `${Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache"}/kawt/shots`
     readonly property int timeout: 10000 // the preview goes after this long without the pointer on it
@@ -59,6 +147,7 @@ Singleton {
     function dismiss(): void {
         shot = "";
         copied = false;
+        textStatus = "";
     }
 
     Timer {
@@ -69,7 +158,7 @@ Singleton {
             // asked shots nobody saved: an hour later they go
             if (root.asking)
                 Quickshell.execDetached(["sh", "-c", 'find "$1" -maxdepth 1 -name "*.png" -mmin +60 -delete 2> /dev/null', "sh", root.cacheDir]);
-            job.command = ["sh", `${Quickshell.shellDir}/scripts/screenshot.sh`, root.pending, root.asking ? root.cacheDir : Settings.expand(Settings.screenshotDir), Colors.palette.accent + "ff", Colors.palette.bg + "88", root.asking ? "quiet" : ""];
+            job.command = ["env", `KAWT_FREEZE=${Settings.screenshotFreeze && root.canFreeze ? 1 : 0}`, "sh", `${Quickshell.shellDir}/scripts/screenshot.sh`, root.pending, root.asking ? root.cacheDir : Settings.expand(Settings.screenshotDir), Colors.palette.accent + "ff", Colors.palette.bg + "88", root.asking ? "quiet" : ""];
             job.running = true;
         }
     }

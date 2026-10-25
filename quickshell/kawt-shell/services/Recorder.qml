@@ -15,6 +15,8 @@ Singleton {
     property real started: 0
     property int elapsed: 0 // seconds
     property string pending: ""
+    // off | mic | system (what you hear) | both; an older kawt only knew the mic on or off
+    readonly property string sound: Settings.recordSound || (Settings.recordAudio ? "mic" : "off")
 
     function toggle(mode: string): void {
         if (recording) {
@@ -37,7 +39,7 @@ Singleton {
         interval: 200
         onTriggered: {
             root.file = `${Settings.expand(Settings.recordDir)}/${Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh-mm-ss")}.mp4`;
-            proc.command = ["sh", `${Quickshell.shellDir}/scripts/record.sh`, root.pending, root.file, Colors.palette.accent + "ff", Colors.palette.bg + "88", Settings.recordAudio ? "1" : "0"];
+            proc.command = ["sh", `${Quickshell.shellDir}/scripts/record.sh`, root.pending, root.file, Colors.palette.accent + "ff", Colors.palette.bg + "88", root.sound];
             root.elapsed = 0;
             root.started = Date.now();
             proc.running = true;

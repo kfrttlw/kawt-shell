@@ -80,7 +80,7 @@ parts=(
     "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power"
 )
 # packages per part; "a|b" = the first of them the repos have
-pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2)
+pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2 hyprpicker)
 # what a fresh hyprland is missing (arch keeps them optional), with the shell too:
 #   pipewire-pulse, -alsa       sound for apps that speak pulseaudio / alsa (browsers, discord...)
 #   xdg-desktop-portal-*        screen sharing (hyprland), "open file" windows (gtk)
@@ -92,7 +92,7 @@ pkgs_hypr=()
 pkgs_kitty=(kitty)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
-pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon)
+pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng)
 
 mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from=""
 for arg in "$@"; do
@@ -899,6 +899,17 @@ for id in shell hypr kitty zsh fastfetch extras; do
 done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
 ((wall_awww)) && wanted+=("awww|swww")
+# [text] on a screenshot reads english, and your language when tesseract knows it (ru_RU -> rus)
+if want extras; then
+    case ${LC_ALL:-${LANG:-}} in
+        ru_*) wanted+=(tesseract-data-rus) ;;
+        uk_*) wanted+=(tesseract-data-ukr) ;;
+        de_*) wanted+=(tesseract-data-deu) ;;
+        fr_*) wanted+=(tesseract-data-fra) ;;
+        es_*) wanted+=(tesseract-data-spa) ;;
+        pl_*) wanted+=(tesseract-data-pol) ;;
+    esac
+fi
 want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && wanted+=(bluez bluez-utils)
 ((nv_driver)) && wanted+=("${nv_pkgs[@]}")
 

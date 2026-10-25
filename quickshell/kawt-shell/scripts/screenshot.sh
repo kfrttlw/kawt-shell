@@ -3,6 +3,8 @@
 # Saves a png to <dir>, copies it to the clipboard and sends a notification. Prints the path.
 # quiet: only saves and prints the path (kawt's preview asks what to do with it).
 # Needs grim, slurp and wl-clipboard. Colors are #rrggbb[aa] (the kawt theme passes its own).
+# KAWT_FREEZE=1: the screen stands still while an area is picked (hyprpicker shows the frozen
+# picture under the selection; a video or an animation can't move away from it meanwhile).
 
 mode=${1:-region}
 dir=${2:-$HOME/Pictures/screenshots}
@@ -22,6 +24,13 @@ done
 
 case $mode in
     region)
+        if [ "${KAWT_FREEZE:-}" = 1 ] && command -v hyprpicker > /dev/null; then
+            # -r: the frozen picture on every screen, -z: no zoom lens. Gone again however this ends
+            hyprpicker -r -z > /dev/null 2>&1 &
+            frozen=$!
+            trap 'kill "$frozen" 2> /dev/null' EXIT
+            sleep 0.2 # until it's drawn: slurp has to come up above it
+        fi
         # esc in slurp cancels: no file, no notification
         geo=$(slurp -d -c "$color" -b "$shade" -w 1) || exit 1
         grim -g "$geo" "$file" || exit 1
