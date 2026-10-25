@@ -6,16 +6,23 @@ import qs.components
 import qs.services
 
 // [1] 2 3 4 5 [s:term]  — lazygit-style tabs for Hyprland workspaces.
-// The wheel walks them; a workspace with a window that wants attention (urgent) shows in the
-// warn color; [s:name] is the special workspace (scratchpad) open on this monitor.
+// The wheel walks them (up to 10, what super + 1..0 reach, or further if there are more); a
+// workspace with a window that wants attention (urgent) shows in the warn color; [s:name] is
+// the special workspace (scratchpad) open on this monitor.
+// With several monitors each bar lists its own: a workspace living on another monitor shows
+// in that monitor's bar only (clicking it here would only throw the focus over there).
 Item {
     id: root
 
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property int activeId: monitor?.activeWorkspace?.id ?? 1
-    readonly property list<int> occupied: Hyprland.workspaces.values.filter(w => w.id > 0).map(w => w.id)
+    // (none while this monitor isn't known yet, right at the start: all of them would land here)
+    readonly property list<int> elsewhere: monitor ? Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor && w.monitor.name !== monitor.name).map(w => w.id) : []
+    readonly property list<int> occupied: Hyprland.workspaces.values.filter(w => w.id > 0 && !elsewhere.includes(w.id)).map(w => w.id)
     readonly property int count: Math.max(5, activeId, ...occupied)
+    // 1..count, without the other monitors' ones
+    readonly property var shown: Array.from({ length: count }, (_, i) => i + 1).filter(id => !elsewhere.includes(id))
     readonly property list<int> urgent: Hyprland.workspaces.values.filter(w => w.id > 0 && w.urgent === true).map(w => w.id)
     // "special" (the plain scratchpad) or "special:term"; "" when none is open here
     // (services/Hypr.qml keeps this up to date)
@@ -39,11 +46,17 @@ Item {
         acceptedButtons: Qt.NoButton
         onWheel: wheel => {
             root.wheelAcc += wheel.angleDelta.y;
+            let cur = root.activeId; // activeId only follows once Hyprland has switched
             while (Math.abs(root.wheelAcc) >= 120) {
-                const next = root.activeId + (root.wheelAcc > 0 ? -1 : 1);
-                root.wheelAcc -= root.wheelAcc > 0 ? 120 : -120;
-                if (next >= 1)
+                const dir = root.wheelAcc > 0 ? -1 : 1;
+                root.wheelAcc += dir * 120;
+                let next = cur + dir;
+                while (root.elsewhere.includes(next))
+                    next += dir;
+                if (next >= 1 && next <= Math.max(10, root.count)) {
                     Hypr.focusWorkspace(next);
+                    cur = next;
+                }
             }
         }
     }
@@ -56,13 +69,13 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         Repeater {
-            model: root.count
+            model: root.shown
 
             Item {
                 id: ws
 
-                required property int index
-                readonly property int wsId: index + 1
+                required property int modelData
+                readonly property int wsId: modelData
                 readonly property bool current: wsId === root.activeId
                 readonly property bool used: root.occupied.includes(wsId)
                 readonly property bool urgent: root.urgent.includes(wsId) && !current

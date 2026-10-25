@@ -122,7 +122,7 @@ Singleton {
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop
             property bool dnd: false // do not disturb: no notification toasts
-            property bool lockDetails: true // the lock screen shows the next task and what's playing (anyone at the screen sees them)
+            property bool lockDetails: true // the lock screen shows the next task, what's playing, the wifi name, messages and user@host (anyone at the screen sees them)
             property bool lockOnSleep: true // lock before the machine sleeps and on `loginctl lock-session` (services/Session.qml)
             property int idleLock: 10 // lock after this many minutes without input, 0 = never (services/Idle.qml)
             property bool nightLight: false // warmer colors through hyprsunset (services/Night.qml)

@@ -79,7 +79,7 @@ WlSessionLockSurface {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: `kawt-lock · ${SysInfo.user}@${SysInfo.host}`
+            text: Settings.lockDetails ? `kawt-lock · ${SysInfo.user}@${SysInfo.host}` : "kawt-lock"
             color: Colors.accent
         }
 
@@ -115,6 +115,7 @@ WlSessionLockSurface {
 
         // what you'd otherwise unlock for: layout, battery, heat, wifi, messages
         //   [us]  bat 72% 3h left · 54°C · wifi home · 2 messages
+        // (the wifi name and the messages only with Settings.lockDetails: anyone at the screen sees them)
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: Metrics.spacing
@@ -137,8 +138,8 @@ WlSessionLockSurface {
                     return [
                         dev.isLaptopBattery ? `bat ${Math.round(dev.percentage * 100)}%${plugged ? "+" : ""}` + (!plugged && dev.timeToEmpty > 0 ? ` ${Fmt.uptime(dev.timeToEmpty)} left` : "") : "",
                         SysInfo.cpuTemp >= 0 ? `${Math.round(SysInfo.cpuTemp)}°C` : "",
-                        Wifi.active ? `wifi ${Wifi.active.name}` : "",
-                        Notifs.count > 0 ? `${Notifs.count} message${Notifs.count === 1 ? "" : "s"}` : ""
+                        Wifi.active && Settings.lockDetails ? `wifi ${Wifi.active.name}` : "",
+                        Notifs.count > 0 && Settings.lockDetails ? `${Notifs.count} message${Notifs.count === 1 ? "" : "s"}` : ""
                     ].filter(s => s).join(" · ");
                 }
                 color: Colors.dim

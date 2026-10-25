@@ -1,5 +1,6 @@
 import Quickshell.Services.Pipewire
 import qs.components
+import qs.services
 
 BracketButton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
@@ -9,12 +10,8 @@ BracketButton {
     tag: "vol"
     label: muted ? "mute" : `${pct}%`
 
-    onScrolled: steps => {
-        if (sink?.audio) {
-            sink.audio.muted = false;
-            sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + steps * 0.05));
-        }
-    }
+    // the same steps as the volume keys (a volume above 100% stays, see services/Audio.qml)
+    onScrolled: steps => Audio.step(steps * 0.05)
 
     PwObjectTracker {
         objects: [sink].filter(n => n)

@@ -11,11 +11,14 @@ Singleton {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
 
+    // up to 100%; above that (set in pavucontrol) up leaves it there and down goes down from it,
+    // instead of jumping back to 100%
     function step(delta: real): void {
         if (!sink?.audio)
             return;
+        const v = sink.audio.volume;
         sink.audio.muted = false;
-        sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + delta));
+        sink.audio.volume = Math.max(0, Math.min(Math.max(1, v), v + delta));
     }
 
     function toggleMute(): void {

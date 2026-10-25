@@ -11,7 +11,14 @@ shade=${4:-#00000066}
 quiet=${5:-}
 
 mkdir -p "$dir" || exit 1
-file="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"
+# two shots in the same second: the second one gets -2 (-3...), nothing is written over
+name=$(date +%Y-%m-%d_%H-%M-%S)
+file="$dir/$name.png"
+n=2
+while [ -e "$file" ]; do
+    file="$dir/$name-$n.png"
+    n=$((n + 1))
+done
 
 case $mode in
     region)

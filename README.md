@@ -20,7 +20,7 @@ configs, all in one monospace, square-cornered, text-first style.
 ## What's inside
 
 **bar**: `[~] [$] [1] 2 3 · [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [>_]`
-(the wheel on the workspaces walks them; `[cast ● app]` shows while something captures the screen or the webcam, `[caf on]` while caffeine is on)
+(the wheel on the workspaces walks them, and with several monitors each bar lists its own; `[eth]` instead of `[wifi]` on a cable, `[vpn]` while a tunnel is up (wireguard, openvpn, tailscale...); `[cast ● app]` shows while something captures the screen or the webcam, `[caf on]` while caffeine is on)
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | `[$]` dock | pinned apps |
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `:` clipboard history · `;` open windows |
 | `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine |
-| `[log]` | notification daemon, `dmesg`-style history, do-not-disturb |
+| `[log]` | notification daemon, `dmesg`-style history, do-not-disturb; keeps what the app asks for: `notify-send -t 1500` stays that long (`-t 0` until clicked), `-e` (transient) only pops up and never lands in the log, and one with a replace tag (`x-canonical-private-synchronous`, `x-dunst-stack-tag`: volume scripts) takes its earlier one's place |
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper) |
 | theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. Wide mode shows its thinking as a small ascii network |
@@ -41,7 +41,7 @@ configs, all in one monospace, square-cornered, text-first style.
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
-| also | wifi, volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
+| also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness, battery + power profiles, mpris player, calendar, tray, keyboard layout |
 
 ## Layout
 
@@ -209,6 +209,7 @@ python3 tools/check.py   # catches the mistakes that stop the shell from loading
 ./doctor.sh              # where the "theme -> files -> apps" chain breaks on this machine
 ./colortest.sh           # which kind of terminal color something uses
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
+tools/net.sh -w          # which programs talk to the internet, live (kawt sends nothing by itself)
 ```
 
 ## License

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # kawt doctor: checks the whole chain "pick a theme -> files written -> apps read them"
-# and says where it breaks. Changes nothing.
+# and says where it breaks. Changes nothing. The one thing it sends out: a question to the
+# aur for quickshell's version, and only when quickshell came from there.
 #   ./doctor.sh
 
 config=${XDG_CONFIG_HOME:-$HOME/.config}
@@ -197,6 +198,26 @@ for other in hypridle hyprlock swayidle swaylock; do
     pgrep -x "$other" > /dev/null && info "$other is running too: let only one of them lock (kawt's switches are in profile -> cfg)"
 done
 
+echo "-- network (what goes out by itself)"
+# kawt sends nothing in the background; what else on the system does, if anything
+if command -v NetworkManager > /dev/null; then
+    # [connectivity] from all of networkmanager's config files, merged
+    conn=$(NetworkManager --print-config 2> /dev/null | awk '/^\[/ { s = ($0 == "[connectivity]"); next } s')
+    uri=$(printf '%s\n' "$conn" | sed -n 's/^uri=//p' | tail -n 1)
+    every=$(printf '%s\n' "$conn" | sed -n 's/^interval=//p' | tail -n 1)
+    if [[ -n $uri ]] && ! printf '%s\n' "$conn" | grep -qx 'enabled=false' && [[ ${every:-300} != 0 ]]; then
+        host=${uri#*://} host=${host%%/*}
+        info "networkmanager asks $host every $((${every:-300} / 60)) min if there is internet (it's how it finds wifi login pages: cafés, hotels)"
+        info "to switch it off: printf '[connectivity]\\nenabled=false\\n' | sudo tee /etc/NetworkManager/conf.d/90-no-check.conf && sudo systemctl reload NetworkManager"
+    else
+        good "networkmanager doesn't check the internet by itself"
+    fi
+fi
+if [[ $(setting aiProvider) == api ]]; then
+    info "the ai panel is on an api provider: what you ask it goes to $(setting apiUrl)"
+fi
+info "live, by program: tools/net.sh -w"
+
 echo "-- ai (ollama)"
 model=$(setting ollamaModel)
 url=$(setting ollamaUrl)
@@ -207,6 +228,16 @@ elif ! tags=$(curl -s -m 3 "$url/api/tags"); then
     fail "ollama doesn't answer at $url" "start it: sudo systemctl enable --now ollama"
 else
     good "ollama answers at $url"
+    # OLLAMA_HOST=0.0.0.0 opens it to the whole network: anyone on the same wifi can use the models
+    port=${url##*:} port=${port%%/*}
+    if command -v ss > /dev/null && [[ $port =~ ^[0-9]+$ ]]; then
+        where=$(ss -Htln "sport = :$port" 2> /dev/null | awk '{ print $4 }')
+        if printf '%s\n' "$where" | grep -qE '^(0\.0\.0\.0|\*|\[::\]):'; then
+            fail "ollama listens on the whole network, not just this machine (OLLAMA_HOST=0.0.0.0?)" "anyone on your wifi can use your models: sudo systemctl edit ollama, drop OLLAMA_HOST (or set it to 127.0.0.1), then sudo systemctl restart ollama"
+        elif [[ -n $where ]]; then
+            good "ollama listens only on this machine"
+        fi
+    fi
     pulled=$(printf '%s' "$tags" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' ')
     if [[ -z $pulled ]]; then
         fail "no models downloaded" "ollama pull ${model:-llama3.2}"

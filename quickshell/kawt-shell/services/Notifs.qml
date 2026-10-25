@@ -8,14 +8,19 @@ import qs.config
 // Notification daemon (org.freedesktop.Notifications). Don't run mako/dunst/swaync alongside.
 // Everything stays in `list` (newest first) until dismissed; `popups` are the toasts on screen.
 // Each notification is stamped with seconds since boot, dmesg-style.
+// What the app asks for is kept:
+//   notify-send -t 1500     the toast stays that long (-t 0: until it's clicked)
+//   notify-send -e          transient: only a toast, never in the log
+//   a replace tag           x-canonical-private-synchronous / x-dunst-stack-tag: a new one with
+//                           the same tag takes the old one's place (volume scripts, window mode)
 Singleton {
     id: root
 
     readonly property int maxPopups: 4
-    readonly property int popupTimeout: 6000
+    readonly property int popupTimeout: 6000 // when the app doesn't say (-t)
     readonly property int maxHistory: 100 // older ones are dismissed: a chatty app can't fill the memory
 
-    readonly property var list: server.trackedNotifications.values.slice().reverse()
+    readonly property var list: server.trackedNotifications.values.filter(n => !n.transient).reverse()
     readonly property int count: list.length
     property var popups: []
     property int unread: 0
@@ -33,6 +38,39 @@ Singleton {
 
     function hide(n: var): void {
         popups = popups.filter(p => p && p !== n);
+    }
+
+    // a toast's time ran out: a transient one goes for good, the rest stay in the log
+    function expired(n: var): void {
+        hide(n);
+        if (n?.transient)
+            drop(n);
+    }
+
+    // gone as timed out (not as "closed by the user", which some apps act on)
+    function drop(n: var): void {
+        if (typeof n.expire === "function")
+            n.expire();
+        else
+            n.dismiss();
+    }
+
+    // how long the toast stays, in ms: the app's -t; -1 (not given) = ours, 0 = until handled.
+    // The spec sends milliseconds; a value under 100 can only be seconds
+    function timeoutOf(n: var): int {
+        const t = n?.expireTimeout ?? -1;
+        if (t < 0)
+            return popupTimeout;
+        if (t === 0)
+            return 0;
+        return Math.max(500, Math.round(t < 100 ? t * 1000 : t));
+    }
+
+    // "app|tag" for notifications that replace their own earlier one, "" for the rest
+    function tagOf(n: var): string {
+        const h = n?.hints ?? {};
+        const tag = h["x-canonical-private-synchronous"] ?? h["x-dunst-stack-tag"] ?? h["synchronous"] ?? "";
+        return tag ? `${n.appName}|${tag}` : "";
     }
 
     // run the "default" action if there is one (the app usually focuses itself), then drop it
@@ -54,6 +92,9 @@ Singleton {
     // once the log closes: the toast window isn't kept around while the log is open)
     function markRead(): void {
         unread = 0;
+        for (const p of popups)
+            if (p?.transient)
+                drop(p);
         popups = [];
     }
 
@@ -68,13 +109,28 @@ Singleton {
         persistenceSupported: true
 
         onNotification: n => {
+            const toast = !Settings.dnd || root.isCritical(n);
+            // a transient one with no toast to show has nowhere to go: left untracked, it's dropped
+            if (n.transient && !toast)
+                return;
+            // the same tag again: the earlier one makes room (its toast goes with it)
+            const tag = root.tagOf(n);
+            let replaced = false;
+            if (tag) {
+                for (const old of server.trackedNotifications.values.slice()) {
+                    if (old !== n && root.tagOf(old) === tag) {
+                        root.drop(old);
+                        replaced = true;
+                    }
+                }
+            }
             // stamp first: tracking it makes it appear in `list` right away
             root.stamps[n.id] = Date.now() / 1000 - root.bootTime;
             n.tracked = true;
-            if (Panels.current !== "notifs")
+            if (Panels.current !== "notifs" && !n.transient && !replaced)
                 root.unread++;
-            if (!Settings.dnd || root.isCritical(n))
-                root.popups = [n, ...root.popups.filter(p => p)].slice(0, root.maxPopups);
+            if (toast)
+                root.popups = [n, ...root.popups.filter(p => p && p !== n)].slice(0, root.maxPopups);
             root.trim();
         }
     }
