@@ -21,10 +21,14 @@ Singleton {
         lister.running = true;
     }
 
-    // entries matching a search text (case-insensitive)
+    // entries matching a search text (case-insensitive; typed in the wrong layout too)
     function search(q: string): var {
         q = q.trim().toLowerCase();
-        return q ? entries.filter(e => e.text.toLowerCase().includes(q)) : entries;
+        const alt = Apps.otherLayout(q);
+        return q ? entries.filter(e => {
+            const t = e.text.toLowerCase();
+            return t.includes(q) || (alt !== "" && t.includes(alt));
+        }) : entries;
     }
 
     // put an entry back on the clipboard

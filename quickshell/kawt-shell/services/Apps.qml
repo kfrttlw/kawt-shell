@@ -22,10 +22,35 @@ Singleton {
         return app.runInTerminal || cats.some(c => systemCategories.includes(c));
     }
 
+    // The same keys in the other layout, for text typed with the wrong one on: "ашкуащч" (the
+    // russian layout on) -> "firefox", and back: "ntvbyfk" -> "терминал". Ukrainian і ї є ґ
+    // count as their russian neighbours. "" if nothing changes (no letter of either)
+    readonly property string keysEn: "`qwertyuiop[]asdfghjkl;'zxcvbnm,."
+    readonly property string keysRu: "ёйцукенгшщзхъфывапролджэячсмитьбю"
+    readonly property var keysUa: ({ "і": "s", "ї": "]", "є": "'", "ґ": "`" })
+
+    function otherLayout(text: string): string {
+        let out = "";
+        let changed = false;
+        for (const c of text) {
+            let i = keysRu.indexOf(c);
+            let o = i >= 0 ? keysEn[i] : keysUa[c];
+            if (o === undefined) {
+                i = keysEn.indexOf(c);
+                o = i >= 0 ? keysRu[i] : c;
+            }
+            changed = changed || o !== c;
+            out += o;
+        }
+        return changed ? out : "";
+    }
+
     function search(query: string): var {
         const q = query.trim().toLowerCase();
+        // typed in the other layout: found too, a little below what matches as typed
+        const alt = otherLayout(q);
         return apps.filter(a => q || !isSystem(a))
-            .map(a => ({ app: a, score: q ? match(a, q) : 1 }))
+            .map(a => ({ app: a, score: q ? Math.max(match(a, q), alt ? match(a, alt) - 5 : 0) : 1 }))
             .filter(r => r.score > 0)
             .map(r => ({ app: r.app, score: r.score + Math.min(20, (adapter.counts[r.app.id] ?? 0) * 2) - (isSystem(r.app) ? 25 : 0) }))
             .sort((x, y) => y.score - x.score || x.app.name.localeCompare(y.app.name))
@@ -56,26 +81,28 @@ Singleton {
     // the typed letters marked in an app's name, as StyledText for the launcher:
     // "fire" in "Firefox" -> <b><font color=..>Fire</font></b>fox; letters in order ("ffx") too
     function highlight(name: string, query: string, color: string): string {
-        const q = query.trim().toLowerCase();
         const lower = name.toLowerCase();
-        const hit = new Array(name.length).fill(false);
-        if (q) {
+        // the letters of q in name: as one piece, or in order; null if they aren't there
+        const hits = q => {
+            const hit = new Array(name.length).fill(false);
             const at = lower.indexOf(q);
             if (at >= 0) {
                 for (let i = at; i < at + q.length; i++)
                     hit[i] = true;
-            } else {
-                let j = 0;
-                for (let i = 0; i < name.length && j < q.length; i++) {
-                    if (lower[i] === q[j]) {
-                        hit[i] = true;
-                        j++;
-                    }
-                }
-                if (j < q.length)
-                    hit.fill(false);
+                return hit;
             }
-        }
+            let j = 0;
+            for (let i = 0; i < name.length && j < q.length; i++) {
+                if (lower[i] === q[j]) {
+                    hit[i] = true;
+                    j++;
+                }
+            }
+            return j === q.length ? hit : null;
+        };
+        const q = query.trim().toLowerCase();
+        const alt = q ? otherLayout(q) : "";
+        const hit = (q ? hits(q) ?? (alt ? hits(alt) : null) : null) ?? new Array(name.length).fill(false);
         const esc = c => c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : c;
         let out = "", on = false;
         for (let i = 0; i < name.length; i++) {

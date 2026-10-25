@@ -1863,6 +1863,36 @@ ColumnLayout {
                     font.pixelSize: Metrics.fontSize - 2
                 }
 
+                // ------------------------------------------------------------ keyboard
+                //  keyboard  [x] a layout per window   (us, ru: alt + shift)
+                RowLayout {
+                    Layout.topMargin: Metrics.spacing
+                    visible: Keyboard.count > 1
+                    spacing: Metrics.spacing
+
+                    Label {
+                        text: "keyboard"
+                        color: Colors.dim
+                    }
+
+                    // services/Keyboard.qml: leaving a window remembers its layout, coming back puts it back
+                    BracketButton {
+                        tag: Settings.layoutPerWindow ? "x" : " "
+                        label: "a layout per window"
+                        bordered: false
+                        onClicked: Settings.layoutPerWindow = !Settings.layoutPerWindow
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: Keyboard.count > 1
+                    elide: Text.ElideRight
+                    text: Settings.layoutPerWindow ? "each window keeps its own layout; a new one starts with the first" : "one layout for all windows"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+
                 Label {
                     Layout.topMargin: Metrics.spacing
                     text: "device"

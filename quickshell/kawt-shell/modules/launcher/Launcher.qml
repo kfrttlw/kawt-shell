@@ -41,7 +41,12 @@ PanelWindow {
     readonly property var results: open && !mode ? Apps.search(query).slice(0, 60) : []
     readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
     // open windows whose title or class has the typed text
-    readonly property var wins: open && mode === ";" ? Hypr.windows.filter(w => `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase().includes(arg.toLowerCase())) : []
+    // (typed in the wrong layout: found too, services/Apps.qml)
+    readonly property string argAlt: Apps.otherLayout(arg.toLowerCase())
+    readonly property var wins: open && mode === ";" ? Hypr.windows.filter(w => {
+        const t = `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase();
+        return t.includes(arg.toLowerCase()) || (argAlt !== "" && t.includes(argAlt));
+    }) : []
     // how many rows the current mode lists (apps, clipboard entries or windows)
     readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : results.length
     property int current: 0
