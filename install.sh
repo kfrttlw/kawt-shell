@@ -13,8 +13,10 @@
 #   ./install.sh --yes           ask nothing (pacman too: --noconfirm)
 #   ./install.sh --dry-run       show what would happen, change nothing
 #   ./install.sh --uninstall     remove kawt's links and lines, put the old configs back
-#   ./install.sh --update        kawt itself: git pull, then what the new version needs
+#   ./install.sh --update        kawt itself: git pull, then what the new version needs; up to date,
+#                                it still makes sure all its packages and their libraries are there
 #                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
+#   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
 #   ./install.sh --help
 
 set -uo pipefail
@@ -98,6 +100,7 @@ mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from=""
 for arg in "$@"; do
     case $arg in
         --update) mode=update ;;
+        --check) mode=check ;;
         --updated=*) updated_from=${arg#*=} ;; # the new install.sh, after --update pulled it (from: the commit before)
         -a | --all) preset=all ;;
         -s | --shell-only) preset=shell ;;
@@ -116,6 +119,11 @@ for arg in "$@"; do
             ;;
     esac
 done
+# --check goes the way of an update (the parts that are here, no questions) until the packages
+# are known, says what it found and stops. --updated=none: --update found nothing new to pull
+[[ $mode == check ]] && updated_from=check dry=1 update=0
+nothing_new=0
+[[ $updated_from == none || $updated_from == check ]] && nothing_new=1
 
 if [[ -t 1 ]]; then
     dim=$'\e[2m' acc=$'\e[1m' red=$'\e[31m' nub=$'\e[38;2;226;35;26m' off=$'\e[0m'
@@ -124,6 +132,7 @@ else
 fi
 say() { printf '%s\n' "$*"; }
 short() { printf '%s' "${1//"$HOME"/\~}"; } # /home/you/x -> ~/x, for display only
+commas() { local IFS=,; printf '%s' "$*" | sed 's/,/, /g'; } # a, b, c
 step() { printf '%s[%s]%s %s\n' "$acc" "$1" "$off" "$(short "$2")"; }
 note() { printf '       %s%s%s\n' "$dim" "$(short "$1")" "$off"; }
 section() { printf '\n%s-- %s --%s\n' "$dim" "$1" "$off"; }
@@ -517,6 +526,11 @@ if [[ $mode == update ]]; then
             exit 1
         fi
     fi
+    # for the new installer, which does the rest: it may know more than this one
+    fwd=()
+    ((yes)) && fwd+=(--yes)
+    ((packages)) || fwd+=(--no-packages)
+    ((update)) || fwd+=(--no-update)
     step "ask" "$up for news"
     g fetch -q || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
     old=$(g rev-parse HEAD)
@@ -524,7 +538,10 @@ if [[ $mode == update ]]; then
     ahead=$(g rev-list --count '@{u}..HEAD')
     if ((behind == 0)); then
         pass "kawt is up to date ($(g log -1 --format='%h, %cr'))"
-        exit 0
+        # still: is all it needs there? (a package removed since, one an older install missed,
+        # a library gone after a system update)
+        ((dry)) && fwd+=(--dry-run)
+        exec "$repo/install.sh" --updated=none "${fwd[@]}"
     fi
     if ((ahead > 0)); then
         fail "this clone has $ahead commit(s) of its own that $up doesn't" "merge them by hand: git -C $repo pull"
@@ -544,11 +561,6 @@ if [[ $mode == update ]]; then
     fi
     g merge -q --ff-only '@{u}' || { fail "git merge failed" "see above"; exit 1; }
     pass "kawt is at $(g log -1 --format='%h')"
-    # the new installer does the rest: it may know more than this one
-    fwd=()
-    ((yes)) && fwd+=(--yes)
-    ((packages)) || fwd+=(--no-packages)
-    ((update)) || fwd+=(--no-update)
     exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
 fi
 
@@ -644,11 +656,21 @@ fi
 # no questions answered at the install (services, the login shell, hyprland's start)
 if [[ -n $updated_from ]]; then
     preset=update
-    section "what the new version needs"
+    if ((nothing_new)); then section "what kawt needs here"; else section "what the new version needs"; fi
 else
     banner "installer"
 fi
-((dry)) && say "${dim}dry run: nothing will be changed${off}"
+((dry)) && [[ $mode != check ]] && say "${dim}dry run: nothing will be changed${off}"
+# --check speaks like doctor.sh, which shows what it says
+if [[ $mode == check ]]; then
+    pass() { step " ok " "$1"; }
+    fail() {
+        step " !! " "${red}$1${off}"
+        [[ -n ${2:-} ]] && note "$2"
+        errors=$((errors + 1))
+        return 0
+    }
+fi
 
 if ((EUID == 0)); then
     say ""
@@ -900,15 +922,65 @@ done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
 ((wall_awww)) && wanted+=("awww|swww")
 # [text] on a screenshot reads english, and your language when tesseract knows it (ru_RU -> rus)
-if want extras; then
+tess_lang() {
     case ${LC_ALL:-${LANG:-}} in
-        ru_*) wanted+=(tesseract-data-rus) ;;
-        uk_*) wanted+=(tesseract-data-ukr) ;;
-        de_*) wanted+=(tesseract-data-deu) ;;
-        fr_*) wanted+=(tesseract-data-fra) ;;
-        es_*) wanted+=(tesseract-data-spa) ;;
-        pl_*) wanted+=(tesseract-data-pol) ;;
+        ru_*) echo tesseract-data-rus ;;
+        uk_*) echo tesseract-data-ukr ;;
+        de_*) echo tesseract-data-deu ;;
+        fr_*) echo tesseract-data-fra ;;
+        es_*) echo tesseract-data-spa ;;
+        pl_*) echo tesseract-data-pol ;;
     esac
+}
+if want extras; then
+    t=$(tess_lang)
+    [[ -n $t ]] && wanted+=("$t")
+fi
+have_any() { # have_any "a|b": one of them is installed
+    local p alts
+    IFS='|' read -ra alts <<< "$1"
+    for p in "${alts[@]}"; do installed "$p" && return 0; done
+    return 1
+}
+# what an extra is for, when it's offered on its own
+about() {
+    case $1 in
+        ollama) echo "the ai panel's local models" ;;
+        cava) echo "real sound bars at the player" ;;
+        fortune-mod) echo "a new motto every time (profile)" ;;
+        "awww|swww") echo "wallpapers with transitions" ;;
+        hyprsunset) echo "night light" ;;
+        power-profiles-daemon) echo "power profiles in the battery panel" ;;
+        satty) echo "[edit] on screenshots" ;;
+        tesseract | tesseract-data-*) echo "[text] on screenshots" ;;
+        *) echo "" ;;
+    esac
+}
+# After an update: optional packages new in this version. Which extras you took can't be told
+# from what's installed (cava may be there for its own sake), so only those the version you came
+# from didn't have yet are offered; the rest stays as you left it
+new_extras=()
+if [[ -n $updated_from ]] && ((!nothing_new && packages)) && ! want extras; then
+    old=$(git -C "$repo" show "$updated_from:install.sh" 2> /dev/null | sed -n 's/^pkgs_extras=(\(.*\))$/\1/p' | head -n 1)
+    if [[ -n $old ]]; then
+        read -ra old_extras <<< "${old//\"/}"
+        for spec in "${pkgs_extras[@]}"; do
+            [[ " ${old_extras[*]} " == *" $spec "* ]] || have_any "$spec" || new_extras+=("$spec")
+        done
+    fi
+fi
+if ((${#new_extras[@]})); then
+    say "  optional ones new in this version:"
+    for spec in "${new_extras[@]}"; do
+        printf '    %-22s %s%s%s\n' "${spec//|/ or }" "$dim" "$(about "$spec")" "$off"
+    done
+    if ask "  install them too?" 1; then
+        wanted+=("${new_extras[@]}")
+        t=$(tess_lang)
+        [[ " ${new_extras[*]} " == *" tesseract "* && -n $t ]] && wanted+=("$t")
+    elif ! can_ask; then
+        note "nobody to ask here; to add them: sudo pacman -S --needed ${new_extras[*]%%|*}"
+    fi
 fi
 want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && wanted+=(bluez bluez-utils)
 ((nv_driver)) && wanted+=("${nv_pkgs[@]}")
@@ -1033,7 +1105,7 @@ aur_version() { # aur_version <package>: the version the AUR has now
     curl -s -m 10 "https://aur.archlinux.org/rpc/v5/info?arg%5B%5D=$1" 2> /dev/null | grep -o '"Version":"[^"]*"' | head -n 1 | cut -d'"' -f4
 }
 qs_have="" qs_update=""
-if ((packages)) && pacman -Qmq 2> /dev/null | grep -x quickshell > /dev/null; then
+if ((packages)) && [[ $mode != check ]] && pacman -Qmq 2> /dev/null | grep -x quickshell > /dev/null; then
     qs_have=$(pacman -Q quickshell 2> /dev/null | cut -d' ' -f2)
     v=$(aur_version quickshell)
     [[ -n $v && -n $qs_have ]] && (($(vercmp "$v" "$qs_have") > 0)) && qs_update=$v
@@ -1041,11 +1113,62 @@ fi
 # quickshell already behind the installed Qt (see stale_quickshell)
 stale_now=""
 ((packages)) && stale_now=$(stale_quickshell)
+# Can kawt's programs load their libraries? pacman -Dk lists the installed packages whose
+# dependencies are gone (a library removed by hand, an update left half done, pacman -Rdd); the
+# ones kawt uses count here. ldd finds the .so files quickshell itself can't open: an aur build
+# whose library went away or changed under it.
+libs_missing=() libs_for=() qs_libs=()
+check_libs() {
+    local line p names=" " re="missing '([^']+)' dependency for '([^']+)'"
+    libs_missing=() libs_for=() qs_libs=()
+    for p in "${wanted[@]}"; do names+="${p//|/ } "; done
+    while IFS= read -r line; do
+        [[ $line =~ $re ]] || continue
+        p=${BASH_REMATCH[2]}
+        [[ $names == *" $p "* || $names == *" ${p%-git} "* || $names == *" ${p%-bin} "* ]] || continue
+        [[ " ${libs_missing[*]} " == *" ${BASH_REMATCH[1]} "* ]] || libs_missing+=("${BASH_REMATCH[1]}")
+        [[ " ${libs_for[*]} " == *" $p "* ]] || libs_for+=("$p")
+    done < <(LC_ALL=C pacman -Dk 2>&1)
+    if command -v qs > /dev/null && command -v ldd > /dev/null; then
+        mapfile -t qs_libs < <(LC_ALL=C ldd "$(command -v qs)" 2> /dev/null | awk '/not found/ {print $1}' | sort -u)
+    fi
+}
+
 # without paru / yay an aur quickshell is (re)built here: that needs git and base-devel
 if [[ -z $aur_helper ]] && { ((${#aur_pkgs[@]})) || [[ -n $qs_have ]]; }; then
     for p in git base-devel; do
         installed "$p" || [[ " ${repo_pkgs[*]} " == *" $p "* ]] || repo_pkgs+=("$p")
     done
+fi
+
+# ------------------------------------------------------------------ --check: what it found
+if [[ $mode == check ]]; then
+    names=()
+    for i in "${!parts[@]}"; do
+        ((on[i])) && { p=${parts[i]#*|}; names+=("${p%%|*}"); }
+    done
+    if ((${#names[@]} == 0)); then
+        fail "kawt isn't installed here (none of its links)" "./install.sh"
+        exit 1
+    fi
+    if ((!is_arch || !packages)); then
+        note "${os_name:-this system}: kawt can't tell its packages here (not arch)"
+        exit 0
+    fi
+    missing=("${repo_pkgs[@]}" "${aur_pkgs[@]}")
+    if ((${#missing[@]})); then
+        fail "missing for $(commas "${names[@]}"): $(commas "${missing[@]}")" "./install.sh --update installs them"
+    else
+        pass "packages for $(commas "${names[@]}"): all $have there"
+    fi
+    opt=()
+    for spec in "${pkgs_extras[@]}"; do have_any "$spec" || opt+=("${spec//|/ or }"); done
+    ((${#opt[@]})) && note "optional, not installed: $(commas "${opt[@]}")"
+    check_libs
+    ((${#libs_missing[@]})) && fail "not installed, though $(commas "${libs_for[@]}") need$( ((${#libs_for[@]} == 1)) && printf s) it: $(commas "${libs_missing[@]}")" "./install.sh --update installs it (or: sudo pacman -S --asdeps ${libs_missing[*]})"
+    ((${#qs_libs[@]})) && fail "quickshell can't load ${qs_libs[*]}" "./install.sh --update builds it again (aur), or sudo pacman -Syu"
+    ((${#libs_missing[@]} + ${#qs_libs[@]})) || pass "libraries: none missing"
+    exit $((errors > 0))
 fi
 
 # ------------------------------------------------------------------ 4. the plan
@@ -1099,6 +1222,8 @@ fi
 
 # ------------------------------------------------------------------ 5. install packages
 failed=0
+touched=0 # packages were installed or built: after an update with nothing new the shell restarts for them
+((!dry)) && { ((${#repo_pkgs[@]} + ${#aur_pkgs[@]})) || [[ -n $qs_update || -n $stale_now ]]; } && touched=1
 noconfirm=()
 ((yes)) && noconfirm=(--noconfirm)
 if ((packages)); then
@@ -1140,6 +1265,37 @@ if ((packages)); then
         fi
     fi
     ((failed)) || pass "packages"
+
+    # their libraries (see check_libs): what's missing is installed, an aur quickshell that
+    # can't load its own is built again
+    check_libs
+    ((${#libs_missing[@]} + ${#qs_libs[@]})) || pass "libraries: none missing"
+    if ((${#libs_missing[@]})); then
+        warn "not installed, though $(commas "${libs_for[@]}") need$( ((${#libs_for[@]} == 1)) && printf s) it: $(commas "${libs_missing[@]}")" "a library removed, or an update left half done"
+        if ask "install it?" 1; then
+            if run sudo pacman -S --needed --asdeps "${noconfirm[@]}" "${libs_missing[@]}"; then
+                ((dry)) || touched=1
+            else
+                fail "pacman failed" "see above"
+                failed=1
+            fi
+        fi
+    fi
+    if ((${#qs_libs[@]})); then
+        q=$(pacman -Qq 2> /dev/null | grep -xE 'quickshell(-git)?' | head -n 1)
+        if [[ -n $q ]] && pacman -Qmq 2> /dev/null | grep -x "$q" > /dev/null; then
+            note "$q can't load ${qs_libs[*]}: building it again against what's here"
+            if [[ -n $aur_helper ]]; then
+                run "$aur_helper" -S --rebuild "${noconfirm[@]}" "$q" || { fail "rebuilding $q failed" "see above"; failed=1; }
+            else
+                aur_build "$q" rebuild || { fail "rebuilding $q failed" "see above"; failed=1; }
+            fi
+            ((failed || dry)) || touched=1
+        else
+            fail "${q:-quickshell} can't load ${qs_libs[*]}" "an update left half done: sudo pacman -Syu"
+            failed=1
+        fi
+    fi
 fi
 
 # ------------------------------------------------------------------ 6. checks
@@ -1371,9 +1527,10 @@ if ((dry)); then
 fi
 # after an update: what changed comes in without logging out
 if [[ -n $updated_from ]]; then
-    section "reload"
-    diff=$(git -C "$repo" diff --name-only "$updated_from" HEAD 2> /dev/null)
-    if want shell && [[ -n ${WAYLAND_DISPLAY:-} ]] && { pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; }; then
+    diff=""
+    ((nothing_new)) || diff=$(git -C "$repo" diff --name-only "$updated_from" HEAD 2> /dev/null)
+    ((nothing_new && !touched)) || section "reload"
+    if want shell && ((!nothing_new || touched)) && [[ -n ${WAYLAND_DISPLAY:-} ]] && { pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; }; then
         qs kill -c kawt-shell > /dev/null 2>&1
         for _ in {1..30}; do
             pgrep -f 'qs -c kawt-shell' > /dev/null || break
@@ -1388,8 +1545,12 @@ if [[ -n $updated_from ]]; then
     if want kitty && grep -Fx 'kitty/kitty.conf' <<< "$diff" > /dev/null && pgrep -x kitty > /dev/null; then
         pkill -USR1 -x kitty && pass "kitty read its config again"
     fi
-    say ""
-    say "${acc}kawt is updated.${off} ${dim}all of what's new: git -C $(short "$repo") log --oneline ${updated_from:0:7}..${off}"
+    ((nothing_new && !touched)) || say ""
+    if ((nothing_new)); then
+        say "${acc}kawt is up to date, and all it needs is here.${off}"
+    else
+        say "${acc}kawt is updated.${off} ${dim}all of what's new: git -C $(short "$repo") log --oneline ${updated_from:0:7}..${off}"
+    fi
     [[ -d $backup ]] && say "${dim}configs moved aside: $(short "$backup")${off}"
     exit 0
 fi
