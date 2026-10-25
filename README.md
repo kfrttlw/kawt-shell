@@ -36,8 +36,8 @@ configs, all in one monospace, square-cornered, text-first style.
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
-| recording | `[● rec 0:42]` in the bar; area or whole screen, optional mic audio |
-| screenshots | area / window / screen; a preview in the corner asks: `[copy]` `[save]` `[open]` (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg: saved and copied at once, like before |
+| recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg) |
+| screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
@@ -167,10 +167,10 @@ Nothing asks for updates by itself: `[check]` in profile → cfg asks once when 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
-**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `brightnessctl` on laptops.
+**Needs:** `quickshell` `hyprland` `kitty` `ttf-jetbrains-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `hyprpicker` (the still screen for screenshots), `brightnessctl` on laptops.
 For the rest of the desktop: `pipewire-pulse` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `hyprpolkitagent` `playerctl` `noto-fonts-emoji`.
 Services kawt talks to: `networkmanager` (wifi), `pipewire` (sound, mic), `upower` (battery), `bluez` (bluetooth), and systemd-logind with `glib2` (`gdbus`, for locking before sleep)
-**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light)
+**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (fortune motto), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (`[edit]` on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (`[text]` on screenshots)
 
 The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
 without it, only while `super + w` is open.

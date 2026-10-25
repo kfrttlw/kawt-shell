@@ -34,10 +34,22 @@ PanelWindow {
     // step aside for the ai panel when it's open on this side, like the toasts
     margins.right: Metrics.padding + (Panels.isSidebarOpen(forScreen) && Settings.aiSide !== "left" ? (Settings.aiWide ? Math.round(forScreen.width * 0.62) : Metrics.sidebarWidth) : 0)
 
+    // (it waits while the shot is being edited or read)
     Timer {
-        running: !hover.hovered
+        running: !hover.hovered && !Screenshot.editing && !Screenshot.reading
         interval: Screenshot.timeout
         onTriggered: Screenshot.dismiss()
+    }
+
+    // edited: the same file, new picture
+    Connections {
+        target: Screenshot
+
+        function onVersionChanged(): void {
+            const s = pic.source;
+            pic.source = "";
+            pic.source = s;
+        }
     }
 
     TitledBox {
@@ -91,7 +103,8 @@ PanelWindow {
                 }
             }
 
-            RowLayout {
+            // [copy] [save] [open] [edit] [text] [x]: edit and text only with satty / tesseract
+            Flow {
                 Layout.fillWidth: true
                 spacing: Metrics.spacing
 
@@ -111,8 +124,18 @@ PanelWindow {
                     onClicked: Screenshot.open()
                 }
 
-                Item {
-                    Layout.fillWidth: true
+                // arrows, boxes, text, blur: saved into this shot, then copy / save as usual
+                BracketButton {
+                    visible: Screenshot.editor !== ""
+                    label: Screenshot.editing ? "editing..." : "edit"
+                    onClicked: Screenshot.edit()
+                }
+
+                // the text in the picture, onto the clipboard
+                BracketButton {
+                    visible: Screenshot.ocrLangs !== ""
+                    label: "text"
+                    onClicked: Screenshot.readText()
                 }
 
                 BracketButton {
@@ -120,6 +143,15 @@ PanelWindow {
                     textColor: Colors.dim
                     onClicked: Screenshot.dismiss()
                 }
+            }
+
+            Label {
+                Layout.fillWidth: true
+                visible: text !== ""
+                elide: Text.ElideRight
+                text: Screenshot.textStatus
+                color: Screenshot.textStatus.startsWith("text copied") ? Colors.accent : Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
             }
         }
     }

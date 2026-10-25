@@ -20,6 +20,7 @@ Singleton {
     property alias profileArt: adapter.profileArt
     property alias screenshotDir: adapter.screenshotDir
     property alias screenshotAsk: adapter.screenshotAsk
+    property alias screenshotFreeze: adapter.screenshotFreeze
     property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
     property alias wallStrength: adapter.wallStrength
@@ -47,6 +48,7 @@ Singleton {
     property alias aiMode: adapter.aiMode
     property alias aiCoderSteps: adapter.aiCoderSteps
     property alias recordAudio: adapter.recordAudio
+    property alias recordSound: adapter.recordSound
     property alias ollamaUrl: adapter.ollamaUrl
     property alias ollamaModel: adapter.ollamaModel
     property alias device: adapter.device
@@ -110,6 +112,7 @@ Singleton {
             property string profileArt: "auto" // "auto": ~/.face as ascii if it exists, "machine": always the thinkpad/pc
             property string screenshotDir: "~/Pictures/screenshots"
             property bool screenshotAsk: true // a preview in the corner asks: copy / save (services/Screenshot.qml); false = saved and copied at once
+            property bool screenshotFreeze: true // the screen stands still while an area is picked (needs hyprpicker)
             property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
             property string wallStrength: "strong" // how hard the wallpaper theme colors things: "calm" | "strong" | "full"
@@ -137,7 +140,8 @@ Singleton {
             property string aiBotLabel: "ai"
             property string aiMode: "chat" // "chat" | "coder" (services/Coder.qml)
             property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
-            property bool recordAudio: false // record the microphone too
+            property bool recordAudio: false // record the microphone too (older kawt; recordSound wins when set)
+            property string recordSound: "" // "off" | "mic" | "system" (what you hear) | "both"; "" = recordAudio decides
             property string ollamaUrl: "http://localhost:11434"
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop
