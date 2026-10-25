@@ -12,8 +12,9 @@ import qs.services
 // │ > ▣ Firefox *                   web browser │
 // └─────────────────────────────────────────────┘
 // rofi-style launcher. Modes are just prefixes: !cmd shell, >cmd terminal, =expr calc, ?text ai,
-// :text clipboard, ;text open windows, so they can be typed directly or picked with ctrl+tab /
-// a click on the tab.
+// :text clipboard, ;text open windows, .text emoji, so they can be typed directly or picked with
+// ctrl+tab / a click on the tab. → on an app with actions of its own (firefox: a private window)
+// lists them.
 // The lists are ScriptModels with reused rows: typing a letter re-sorts the rows that are
 // already there instead of making all of them (and their icons) again.
 PanelWindow {
@@ -31,15 +32,21 @@ PanelWindow {
         { prefix: "=", name: "calc" },
         { prefix: "?", name: "ai" },
         { prefix: ":", name: "clip" },
-        { prefix: ";", name: "win" }
+        { prefix: ";", name: "win" },
+        { prefix: ".", name: "emoji" }
     ]
     readonly property string query: input.text
     readonly property string mode: modes.some(m => m.prefix && query.startsWith(m.prefix)) ? query[0] : ""
     readonly property int modeIndex: modes.findIndex(m => m.prefix === mode)
     readonly property string arg: mode ? query.slice(1).trim() : query
-    readonly property string calcResult: mode === "=" ? Apps.calc(arg) : ""
-    readonly property var results: open && !mode ? Apps.search(query).slice(0, 60) : []
+    // the plain calculator at once; with qalc, what it can't do a moment later (services/Apps.qml)
+    readonly property string calcPlain: mode === "=" ? Apps.calc(arg) : ""
+    readonly property string calcResult: mode !== "=" ? "" : calcPlain || (Apps.qalcFor === arg ? Apps.qalcOut : "")
+    // the app whose own actions are listed (→ on it); typing goes back to the search
+    property var expanded: null
+    readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : Apps.search(query).slice(0, 60)
     readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
+    readonly property var emojis: open && mode === "." ? Emoji.search(arg) : []
     // open windows whose title or class has the typed text
     // (typed in the wrong layout: found too, services/Apps.qml)
     readonly property string argAlt: Apps.otherLayout(arg.toLowerCase())
@@ -48,7 +55,7 @@ PanelWindow {
         return t.includes(arg.toLowerCase()) || (argAlt !== "" && t.includes(argAlt));
     }) : []
     // how many rows the current mode lists (apps, clipboard entries or windows)
-    readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : results.length
+    readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : mode === "." ? emojis.length : results.length
     property int current: 0
 
     screen: forScreen
@@ -75,14 +82,21 @@ PanelWindow {
             fadeIn.restart();
         }
     }
-    onQueryChanged: current = 0
-    onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : list).positionViewAtIndex(current, ListView.Contain)
+    onQueryChanged: {
+        current = 0;
+        expanded = null;
+    }
+    onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : mode === "." ? emojiList : list).positionViewAtIndex(current, ListView.Contain)
     onModeChanged: {
         if (mode === ":")
             Clipboard.refresh();
         else if (mode === ";")
             Hypr.refreshWindows();
+        else if (mode === ".")
+            Emoji.wanted = true; // the list is read the first time
     }
+    onArgChanged: if (mode === "=" && arg && !Apps.calc(arg))
+        Apps.qalc(arg)
 
     function move(delta: int): void {
         if (rows > 0)
@@ -102,15 +116,19 @@ PanelWindow {
         } else if (mode === ">" && arg) {
             Apps.runInTerminal(arg);
         } else if (mode === "=" && calcResult) {
+            // qalc's "≈ 0.33": the number
+            const value = calcResult.replace(/^[≈=]\s*/, "");
             try {
-                Quickshell.clipboardText = calcResult;
+                Quickshell.clipboardText = value;
             } catch (e) {
-                Quickshell.execDetached(["wl-copy", calcResult]); // older quickshell
+                Quickshell.execDetached(["wl-copy", value]); // older quickshell
             }
         } else if (mode === ":" && clips[current]) {
             Clipboard.copy(clips[current]);
         } else if (mode === ";" && wins[current]) {
             Hypr.focusWindow(wins[current]);
+        } else if (mode === "." && emojis[current]) {
+            Emoji.pick(emojis[current]);
         } else if (mode === "?" && arg) {
             Panels.sidebarScreen = forScreen.name;
             Panels.sidebarOpen = true;
@@ -220,9 +238,30 @@ PanelWindow {
                 onAccepted: root.accept()
 
                 // TextInput doesn't use these keys, so they bubble up to here
-                Keys.onEscapePressed: Panels.close()
+                Keys.onEscapePressed: {
+                    if (root.expanded)
+                        root.expanded = null;
+                    else
+                        Panels.close();
+                }
                 Keys.onUpPressed: root.move(-1)
                 Keys.onDownPressed: root.move(1)
+                // at the end of the line: the selected app's own actions
+                Keys.onRightPressed: event => {
+                    const app = root.results[root.current];
+                    if (!root.mode && !root.expanded && !app?.isAction && (app?.actions?.length ?? 0) > 0) {
+                        root.expanded = app;
+                        root.current = 0;
+                    } else {
+                        event.accepted = false;
+                    }
+                }
+                Keys.onLeftPressed: event => {
+                    if (root.expanded)
+                        root.expanded = null;
+                    else
+                        event.accepted = false;
+                }
                 Keys.onPressed: event => {
                     const ctrl = event.modifiers & Qt.ControlModifier;
                     if (ctrl && event.key === Qt.Key_Tab)
@@ -266,12 +305,15 @@ PanelWindow {
                     if (root.mode === ">")
                         return root.arg ? `${Settings.terminal} ${root.arg}` : "run a command in a terminal";
                     if (root.mode === "=")
-                        return root.calcResult ? `= ${root.calcResult}   (enter: copy)` : "calculator: 2*(3+4), 2^10, 15%4";
+                        return root.calcResult ? `${/^[≈=]/.test(root.calcResult) ? "" : "= "}${root.calcResult}   (enter: copy)`
+                            : Apps.hasQalc ? "calculator: 2*(3+4) · 10 km to mi · 100 usd to eur · today + 3 weeks" : "calculator: 2*(3+4), 2^10, 15%4";
                     if (root.mode === ":")
                         return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
                             : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
                     if (root.mode === ";")
                         return `${root.wins.length} window${root.wins.length === 1 ? "" : "s"} · enter: go there`;
+                    if (root.mode === ".")
+                        return Emoji.all.length === 0 ? "reading the emoji list..." : root.arg ? `${root.emojis.length} found · enter: copy${Emoji.canType ? " and type in" : ""}` : `yours first · english or russian: .heart .сердце · enter: copy${Emoji.canType ? " and type in" : ""}`;
                     // only in "?" mode: just naming Ai here would load the whole ai service (and
                     // all saved chats) on the first letter typed into the launcher
                     if (root.mode === "?")
@@ -282,7 +324,7 @@ PanelWindow {
             }
 
             Label {
-                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0) || (root.mode === ";" && root.wins.length === 0)
+                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0) || (root.mode === ";" && root.wins.length === 0) || (root.mode === "." && Emoji.all.length > 0 && root.emojis.length === 0)
                 text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : root.mode === ";" && !root.arg ? "-- no windows --" : "-- no match --"
                 color: Colors.dim
             }
@@ -566,11 +608,94 @@ PanelWindow {
                 }
             }
 
+            // emoji: > 😀  grinning face                      широко улыбается
+            ListView {
+                id: emojiList
+
+                // the russian names next to the english ones on a russian (ukrainian...) system,
+                // or when that's what was typed; otherwise the other english names
+                readonly property bool cyrillic: /^(ru|uk|be)/.test(Qt.locale().name) || /[а-яёіїєґ]/i.test(root.arg)
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === "." && count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.emojis
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: emo
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+
+                    width: emojiList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: emo.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: emo.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        Label {
+                            Layout.preferredWidth: Metrics.fontSize * 2
+                            horizontalAlignment: Text.AlignHCenter
+                            text: emo.modelData.e
+                            font.pixelSize: Metrics.fontSize + 4
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: emo.modelData.en
+                            color: emo.selected ? Colors.accent : Colors.fg
+                        }
+
+                        Label {
+                            Layout.maximumWidth: emojiList.width * 0.45
+                            elide: Text.ElideRight
+                            text: emojiList.cyrillic ? emo.modelData.ru : emo.modelData.other
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = emo.index
+                        onClicked: {
+                            root.current = emo.index;
+                            root.accept();
+                        }
+                    }
+                }
+            }
+
             Label {
                 Layout.alignment: Qt.AlignRight
                 text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
                     : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
-                    : "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
+                    : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
+                    : root.expanded ? "↑↓ select · enter run · ← / esc back"
+                    : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }
