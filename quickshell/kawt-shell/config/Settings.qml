@@ -67,6 +67,7 @@ Singleton {
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
+    property alias layoutPerWindow: adapter.layoutPerWindow
     property alias updateCheck: adapter.updateCheck
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
@@ -158,6 +159,7 @@ Singleton {
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "ai"
+            property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // kawt's own updates (services/Update.qml): asked only when you press [check], unless this is on
             property bool updateCheck: false // once a day, by itself (git fetch: that goes to github)
             property real updateCheckedAt: 0 // ms, the last daily check

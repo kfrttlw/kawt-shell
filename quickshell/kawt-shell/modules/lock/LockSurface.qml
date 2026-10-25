@@ -103,6 +103,18 @@ WlSessionLockSurface {
             }
 
             Keys.onEscapePressed: password.text = ""
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_CapsLock)
+                    Keyboard.checkCaps();
+            }
+        }
+
+        // the most common reason a right password is "wrong"
+        Label {
+            Layout.fillWidth: true
+            visible: Keyboard.caps
+            text: "[!] caps lock is on"
+            color: Colors.warn
         }
 
         Label {
@@ -200,5 +212,8 @@ WlSessionLockSurface {
         }
     }
 
-    Component.onCompleted: password.input.forceActiveFocus()
+    Component.onCompleted: {
+        password.input.forceActiveFocus();
+        Keyboard.checkCaps();
+    }
 }
