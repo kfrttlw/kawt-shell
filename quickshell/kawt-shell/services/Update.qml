@@ -5,11 +5,12 @@ import Quickshell.Io
 import qs.config
 import qs.utils
 
-// kawt's own updates (profile -> cfg -> kawt). Nothing goes out by itself: [check] asks the
-// remote once (git fetch, to github), and only when pressed. Settings.updateRemind (on by
-// default) only reminds: once a week a notification with [check] on it, made without going
-// anywhere. [update] opens a terminal with ./install.sh --update, which shows what's new and
-// asks before it changes anything (and may need sudo for a new package).
+// kawt's own updates (profile -> cfg -> kawt). Knowing whether there's a new version means
+// asking github: [check] does that once (git fetch), and Settings.updateAuto (on by default)
+// does it by itself once a week, saying so in a notification only when there's something new
+// (the companion jumps: lvl up). Off: nothing goes out unless [check] is pressed. [update]
+// opens a terminal with ./install.sh --update, which shows what's new and asks before it
+// changes anything (and may need sudo for a new package).
 //   qs -c kawt-shell ipc call kawt update
 Singleton {
     id: root
@@ -22,13 +23,16 @@ Singleton {
     property string status: ""
     readonly property bool checking: checker.running
 
-    // tell: say the answer in a notification ([check] on the reminder: no panel open to show it)
-    function check(tell: bool): void {
+    // the weekly check found a version it hadn't told about yet
+    signal found(int count)
+
+    // auto: the weekly check, which says so in a notification (the panel isn't open to show it)
+    function check(auto: bool): void {
         if (!repo || checker.running)
             return;
-        checker.tell = !!tell;
+        checker.auto = !!auto;
         status = "asking the remote...";
-        checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q || exit 1; git rev-list --count "HEAD..@{u}" && git log --no-merges --format=%s -n 1 "HEAD..@{u}"', "sh", repo];
+        checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q || exit 1; git rev-list --count "HEAD..@{u}" && git rev-parse "@{u}" && git log --no-merges --format=%s -n 1 "HEAD..@{u}"', "sh", repo];
         checker.running = true;
     }
 
@@ -36,15 +40,6 @@ Singleton {
     function run(): void {
         if (repo)
             Apps.runInTerminal(`'${repo.replace(/'/g, "'\\''")}/install.sh' --update`);
-    }
-
-    // a notification with one button; pressing it, or clicking the notification (in the log
-    // too, after the toast is gone), does that. notify-send -A waits for it
-    function ask(title: string, body: string, action: string): void {
-        asker.running = false;
-        asker.action = action;
-        asker.command = ["notify-send", "-a", "kawt", "-A", `${action}=${action}`, "-A", `default=${action}`, title, body];
-        asker.running = true;
     }
 
     // where the clone is, and what it's at: the shell's folder is a link into it
@@ -62,67 +57,58 @@ Singleton {
         }
     }
 
-    // "3" (new commits), the newest title
+    // "3" (new commits), the upstream commit, the newest title
     Job {
         id: checker
 
-        property bool tell: false
+        property bool auto: false
 
         onDone: (code, out) => {
             const lines = out.trim().split("\n");
             if (code !== 0 || !/^\d+$/.test(lines[0] ?? "")) {
+                // the weekly one stays due: tried again next hour, quietly
                 root.status = "couldn't ask: no internet, or the branch follows no remote one";
-                if (tell)
-                    Quickshell.execDetached(["notify-send", "-a", "kawt", "kawt: couldn't check", "no internet, or the branch follows no remote one"]);
                 return;
             }
-            // just checked: the weekly reminder starts counting again
             Settings.updateCheckedAt = Date.now();
             root.behind = parseInt(lines[0]);
-            root.news = root.behind > 0 ? (lines[1] ?? "") : "";
+            root.news = root.behind > 0 ? (lines[2] ?? "") : "";
             root.status = root.behind === 0 ? "up to date" : `${root.behind} new`;
-            if (!tell)
-                return;
-            if (root.behind > 0)
-                root.ask(`kawt: ${root.status}`, root.news, "update");
-            else
-                Quickshell.execDetached(["notify-send", "-a", "kawt", "kawt: up to date"]);
+            // once per new upstream state: a version you skipped isn't brought up every week
+            if (auto && root.behind > 0 && Settings.updateNotified !== lines[1]) {
+                Settings.updateNotified = lines[1];
+                asker.running = false;
+                asker.command = ["notify-send", "-a", "kawt", "-A", "update=update", "-A", "default=update", `kawt: ${root.status}`, root.news];
+                asker.running = true;
+                root.found(root.behind);
+            }
         }
     }
 
-    // one of ask()'s notifications was pressed (nothing comes when it's dismissed)
+    // the notification's [update] (or a click on it, in the log too) runs the update;
+    // nothing comes when it's dismissed. notify-send -A waits for it
     Process {
         id: asker
 
-        property string action: ""
-
         stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.trim() === "")
-                    return;
-                if (asker.action === "check")
-                    root.check(true);
-                else if (asker.action === "update")
-                    root.run();
-            }
+            onStreamFinished: if (text.trim() !== "")
+                root.run()
         }
     }
 
-    // Settings.updateRemind: a week after the last check or reminder (looked at hourly; the time
-    // is kept, so a restart doesn't remind again). A new install starts counting from now
+    // Settings.updateAuto: a week after the last check (looked at hourly, so a machine that
+    // sleeps a lot still gets it; the time is kept, so a restart doesn't ask again). A new
+    // install starts counting from now: it's up to date
     Timer {
-        running: Settings.updateRemind && root.repo !== ""
+        running: Settings.updateAuto && root.repo !== ""
         repeat: true
         interval: 3600000
         triggeredOnStart: true
         onTriggered: {
             if (!Settings.updateCheckedAt)
                 Settings.updateCheckedAt = Date.now();
-            // last week's is still in the log, unanswered: that one will do
-            if (Date.now() - Settings.updateCheckedAt < root.week || asker.running)
-                return;
-            Settings.updateCheckedAt = Date.now();
-            root.ask("kawt: look for updates?", "it's been a week. [check] asks github once", "check");
+            if (Date.now() - Settings.updateCheckedAt >= root.week)
+                root.check(true);
         }
     }
 }
