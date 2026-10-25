@@ -76,13 +76,11 @@ Singleton {
                 root.textStatus = code !== 0 ? "tesseract failed" : "no text found";
                 return;
             }
-            try {
-                Quickshell.clipboardText = t;
-            } catch (e) {
-                copyText.input = t; // older quickshell: through wl-copy, on stdin
-                copyText.stdinEnabled = true;
-                copyText.running = true;
-            }
+            // through wl-copy, on stdin: the preview never has the keyboard, and wayland only
+            // lets a window with it set the clipboard (Quickshell.clipboardText would do nothing)
+            copyText.input = t;
+            copyText.stdinEnabled = true;
+            copyText.running = true;
             const lines = t.split("\n").length;
             root.textStatus = `text copied (${lines} line${lines === 1 ? "" : "s"})`;
         }
