@@ -68,8 +68,9 @@ Popover {
         objects: root.streams
     }
 
+    // up to 100%; one above that (set in pavucontrol) stays, like the main volume (services/Audio.qml)
     function setVolume(v: real): void {
-        v = Math.max(0, Math.min(1, v));
+        v = Math.max(0, Math.min(Math.max(1, volume), v));
         if (streamVolume) {
             stream.audio.muted = false;
             stream.audio.volume = v;

@@ -63,6 +63,9 @@ Singleton {
                 root.status = "couldn't ask: no internet, or the branch follows no remote one";
                 return;
             }
+            // the daily check counts once it got an answer: a failed one is tried again next hour
+            if (auto)
+                Settings.updateCheckedAt = Date.now();
             root.behind = parseInt(lines[0]);
             root.news = root.behind > 0 ? (lines[2] ?? "") : "";
             root.status = root.behind === 0 ? "up to date" : `${root.behind} new`;
@@ -84,7 +87,6 @@ Singleton {
         onTriggered: {
             if (Date.now() - Settings.updateCheckedAt < 23 * 3600000)
                 return;
-            Settings.updateCheckedAt = Date.now();
             root.check(true);
         }
     }

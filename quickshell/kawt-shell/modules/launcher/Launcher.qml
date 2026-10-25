@@ -694,7 +694,7 @@ PanelWindow {
                 text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
                     : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
                     : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
-                    : root.expanded ? "↑↓ select · enter run · ← / esc back"
+                    : root.expanded ? "↑↓ select · enter run · esc back"
                     : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3

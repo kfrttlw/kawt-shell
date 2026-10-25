@@ -184,6 +184,9 @@ Singleton {
     // In its own config dir, never told to update exchange rates: it uses the ones it has
     // (qalc -e downloads them, that goes online). A sum the plain calculator below can do comes
     // from it at once; qalc answers the rest a moment after typing stops.
+    // It runs while you type, before any enter, so what reaches outside qalc never gets to it:
+    // command() runs a program, plot() starts gnuplot, export / load / save write and read
+    // files, and those take their names in quotes. A leading "-" would read as an option
     property bool hasQalc: false
     property string qalcAsked: ""
     property string qalcFor: "" // the expression qalcOut answers
@@ -213,14 +216,13 @@ Singleton {
                 restart();
                 return;
             }
-            // plot() would start gnuplot
-            if (!root.qalcAsked || /\bplot\s*\(/i.test(root.qalcAsked)) {
+            if (!root.qalcAsked || /["'`]|\b(command|plot|export|load|save)\b/i.test(root.qalcAsked)) {
                 root.qalcFor = root.qalcAsked;
                 root.qalcOut = "";
                 return;
             }
             qalcJob.expr = root.qalcAsked;
-            qalcJob.command = ["env", `XDG_CONFIG_HOME=${Settings.dir}/qalc`, "qalc", "-t", "-s", "upxrates 0", root.qalcAsked];
+            qalcJob.command = ["env", `XDG_CONFIG_HOME=${Settings.dir}/qalc`, "qalc", "-t", "-s", "upxrates 0", " " + root.qalcAsked];
             qalcJob.running = true;
             qalcLimit.restart();
         }

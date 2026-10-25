@@ -27,3 +27,6 @@ launcher.json
 *.swp
 .vscode/
 .idea/
+
+# python
+__pycache__/

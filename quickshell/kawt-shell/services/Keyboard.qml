@@ -25,6 +25,8 @@ Singleton {
 
     property var perWindow: ({}) // window address -> layout index
     property string window: "" // the focused window's address
+    property var pendingWindow: null // focused while the layout was still being read: handled after
+    property bool readAgain: false // the layout changed again while it was being read
 
     function next(): void {
         Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", "next"]);
@@ -34,9 +36,22 @@ Singleton {
         Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", "prev"]);
     }
 
+    // (index is taken as switched at once: a window left before hyprland's event comes back
+    // is remembered with the right one)
     function setIndex(i: int): void {
-        if (i !== index && i >= 0 && i < count)
+        if (i !== index && i >= 0 && i < count) {
+            index = i;
             Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", String(i)]);
+        }
+    }
+
+    // the window left keeps its layout, the one focused gets its own back
+    function focusWindow(a: string): void {
+        if (window)
+            perWindow[window] = index;
+        window = a;
+        if (a)
+            setIndex(perWindow[a] ?? 0);
     }
 
     // a moment after the key: the led follows it
@@ -60,6 +75,15 @@ Singleton {
                     root.index = kb.active_layout_index ?? 0;
                     root.code = codes[kb.active_layout_index] ?? kb.active_keymap.slice(0, 2).toLowerCase();
                 } catch (e) {}
+                if (root.readAgain) {
+                    root.readAgain = false;
+                    devices.running = true;
+                } else if (root.pendingWindow !== null) {
+                    const a = root.pendingWindow;
+                    root.pendingWindow = null;
+                    if (a !== root.window)
+                        root.focusWindow(a);
+                }
             }
         }
     }
@@ -69,17 +93,20 @@ Singleton {
 
         function onRawEvent(event: HyprlandEvent): void {
             if (event.name === "activelayout") {
-                devices.running = true;
+                if (devices.running)
+                    root.readAgain = true; // that read may have started before this change
+                else
+                    devices.running = true;
             } else if (event.name === "activewindowv2") {
                 // "activewindowv2>>55d1c0a87e40", empty with no window focused
                 const a = event.data.split(",")[0];
                 if (!Settings.layoutPerWindow || root.count < 2 || a === root.window)
                     return;
-                if (root.window)
-                    root.perWindow[root.window] = root.index;
-                root.window = a;
-                if (a)
-                    root.setIndex(root.perWindow[a] ?? 0);
+                // switched a moment ago and alt-tabbed right away: once the layout is read
+                if (devices.running)
+                    root.pendingWindow = a;
+                else
+                    root.focusWindow(a);
             } else if (event.name === "closewindow") {
                 delete root.perWindow[event.data];
             }
@@ -93,6 +120,7 @@ Singleton {
         function onLayoutPerWindowChanged(): void {
             root.perWindow = {};
             root.window = "";
+            root.pendingWindow = null;
         }
     }
 

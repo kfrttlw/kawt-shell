@@ -115,22 +115,28 @@ Singleton {
                 return;
             // the same tag again: the earlier one makes room (its toast goes with it)
             const tag = root.tagOf(n);
-            let replaced = false;
+            const gone = [];
             if (tag) {
                 for (const old of server.trackedNotifications.values.slice()) {
                     if (old !== n && root.tagOf(old) === tag) {
                         root.drop(old);
-                        replaced = true;
+                        gone.push(old);
                     }
                 }
             }
+            const replaced = gone.length > 0;
             // stamp first: tracking it makes it appear in `list` right away
             root.stamps[n.id] = Date.now() / 1000 - root.bootTime;
             n.tracked = true;
             if (Panels.current !== "notifs" && !n.transient && !replaced)
                 root.unread++;
-            if (toast)
-                root.popups = [n, ...root.popups.filter(p => p && p !== n)].slice(0, root.maxPopups);
+            // (a replaced one is only deleted later: taken out of the toasts here, not left as an empty card)
+            const next = [...(toast ? [n] : []), ...root.popups.filter(p => p && p !== n && !gone.includes(p))];
+            // a transient one pushed out of the toasts has nowhere else to be: it goes
+            for (const p of next.slice(root.maxPopups))
+                if (p.transient)
+                    root.drop(p);
+            root.popups = next.slice(0, root.maxPopups);
             root.trim();
         }
     }
