@@ -8,9 +8,10 @@
 #   tools/net.sh -a       the local network too (router, printer, phone...), marked "lan"
 #   sudo tools/net.sh     every program's (without sudo, the system's own services show as "?")
 #
-# kawt itself shows nothing here while you just use the desktop. The only things of kawt's
-# that ever go out: the ai panel on an "api" provider you picked, ollama pull, and install.sh /
-# doctor.sh (pacman, the aur) while you run them.
+# kawt itself shows nothing here while you just use the desktop, but for one git fetch to
+# github a week (is there a new kawt; off in profile -> cfg). The rest of kawt's that goes out:
+# the ai panel on an "api" provider you picked, ollama pull, and install.sh / doctor.sh
+# (pacman, the aur) while you run them.
 
 watch=0 lan=0
 while (($#)); do
@@ -18,7 +19,7 @@ while (($#)); do
         -w | --watch) watch=1 ;;
         -a | --all) lan=1 ;;
         -h | --help)
-            sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)

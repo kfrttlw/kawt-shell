@@ -168,10 +168,10 @@ checks that all the packages of your parts are there and that their libraries ar
 `pacman -Dk` finds missing gets installed, and an AUR quickshell that can't load its own
 libraries (`ldd`) is built again. Your own things are outside the repo and stay as they
 are; changes made inside the repo stop it, with a list (`git stash` can put them aside).
-Nothing asks for updates by itself: `[check]` in profile → cfg asks github once when pressed
-(`git fetch`). Once a week a notification reminds you, with `[check]` on it (and `[update]`
-on the answer when there's something new); it's made on your machine, nothing goes out for
-it. "remind me once a week" in profile → cfg switches it off.
+Knowing about a new version means asking github: `[check]` in profile → cfg does it once
+(`git fetch`), and kawt does it by itself once a week, with a notification only when there's
+something new (`[update]` on it; the companion jumps). "look for updates once a week" there
+switches that off: then nothing goes out unless you press `[check]`.
 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
@@ -258,7 +258,7 @@ python3 tools/check.py   # catches the mistakes that stop the shell from loading
 ./doctor.sh              # where the "theme -> files -> apps" chain breaks on this machine
 ./colortest.sh           # which kind of terminal color something uses
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
-tools/net.sh -w          # which programs talk to the internet, live (kawt sends nothing by itself)
+tools/net.sh -w          # which programs talk to the internet, live (kawt: one git fetch a week)
 ```
 
 ## License
