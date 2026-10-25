@@ -8,7 +8,7 @@ BracketButton {
     readonly property var items: SystemTray.items.values.filter(i => i.status !== Status.Passive)
     readonly property bool attention: items.some(i => i.status === Status.NeedsAttention)
 
-    visible: items.length > 0
+    visible: Settings.barShows("tray") && (items.length > 0)
     tag: "tray"
     label: `${items.length} ${active ? "^" : "v"}`
     textColor: attention ? Colors.accent : Colors.fg

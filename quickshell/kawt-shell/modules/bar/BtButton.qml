@@ -14,7 +14,7 @@ BracketButton {
     readonly property var connected: Bluetooth.devices.values.filter(d => d.connected)
     property bool hardware: false
 
-    visible: adapter !== null || hardware
+    visible: Settings.barShows("bt") && (adapter !== null || hardware)
     tag: "bt"
     label: adapter === null ? "--"
         : !adapter.enabled ? "off"

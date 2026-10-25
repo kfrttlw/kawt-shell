@@ -7,6 +7,7 @@
 //   "Default": setting the variable yourself still wins.
 import QtQuick
 import Quickshell
+import qs.config
 import qs.services
 import "modules/bar"
 import "modules/lock"
@@ -27,5 +28,7 @@ ShellRoot {
         Idle.caffeine; // locks after Settings.idleLock minutes without input
         Night.on; // the night light, if it was on
         Hypr.lua; // keeps the special workspace in the bar up to date
+        if (Settings.updateCheck)
+            Update.repo; // the daily update check (off by default: nothing goes out by itself)
     }
 }

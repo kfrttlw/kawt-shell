@@ -49,7 +49,7 @@ PanelWindow {
         id: box
 
         x: Math.round((root.width - width) / 2)
-        y: Math.max(Metrics.barHeight + Metrics.padding * 2, Math.round((root.height - height) / 2))
+        y: Math.max(Metrics.topGap + Metrics.padding * 2, Math.round((root.height - Metrics.bottomGap - height) / 2))
         width: Math.min(900, root.width - Metrics.padding * 4)
         height: content.implicitHeight + Metrics.padding * 3 + titleOverhang
         title: `${SysInfo.user}@${SysInfo.host}`

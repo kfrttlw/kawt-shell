@@ -10,7 +10,7 @@ BarBox {
     readonly property list<MprisPlayer> players: Mpris.players.values
     readonly property MprisPlayer player: players.find(p => p.isPlaying) ?? players[0] ?? null
 
-    visible: player !== null
+    visible: Settings.barShows("player") && (player !== null)
     spacing: 4
 
     Label {

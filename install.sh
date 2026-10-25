@@ -13,6 +13,8 @@
 #   ./install.sh --yes           ask nothing (pacman too: --noconfirm)
 #   ./install.sh --dry-run       show what would happen, change nothing
 #   ./install.sh --uninstall     remove kawt's links and lines, put the old configs back
+#   ./install.sh --update        kawt itself: git pull, then what the new version needs
+#                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
 #   ./install.sh --help
 
 set -uo pipefail
@@ -64,6 +66,9 @@ line_login='[[ -r ~/.config/quickshell/kawt-shell/hypr/login.sh ]] && source ~/.
 marker_start="kawt: the start command"
 line_start="alias start='source ~/.config/quickshell/kawt-shell/hypr/login.sh now' # kawt: the start command"
 no_start_ask=$state/no-hyprland-start # "neither" was picked: not asked again
+# networkmanager's internet check switched off, if you said so (asked at the install)
+nm_quiet=/etc/NetworkManager/conf.d/90-kawt-no-check.conf
+marker_nm="kawt: networkmanager's internet check off"
 
 # the parts, in menu order: id | name | what it is
 parts=(
@@ -89,9 +94,11 @@ pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
 pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon)
 
-mode=install dry=0 yes=0 preset="" packages=1 update=1
+mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from=""
 for arg in "$@"; do
     case $arg in
+        --update) mode=update ;;
+        --updated=*) updated_from=${arg#*=} ;; # the new install.sh, after --update pulled it (from: the commit before)
         -a | --all) preset=all ;;
         -s | --shell-only) preset=shell ;;
         --no-packages) packages=0 ;;
@@ -100,7 +107,7 @@ for arg in "$@"; do
         -n | --dry-run) dry=1 ;;
         -u | --uninstall) mode=uninstall ;;
         -h | --help)
-            sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -191,7 +198,7 @@ fit() { # fit <text> <room>: the text, cut with … if longer than room
 }
 cols() {
     local c
-    c=$(stty size < /dev/tty 2> /dev/null | cut -d' ' -f2)
+    c=$({ stty size < /dev/tty; } 2> /dev/null | cut -d' ' -f2) # braces: no terminal, no message
     ((c > 0)) 2> /dev/null && echo "$c" || echo 80
 }
 trap cursor_back EXIT
@@ -470,6 +477,81 @@ undo_old_zsh_setup() {
     fi
 }
 
+# ------------------------------------------------------------------ update
+# --update: kawt itself, from git. The configs are links into this folder, so a pull is most of
+# it; then the new install.sh takes over (--updated) for what the new version needs: new
+# packages and links for the parts already here, the shell and hyprland loaded again. Yours is
+# never touched: settings, ~/.config/kawt/themes.json, ~/.config/hypr/user.lua all live outside
+# the repo. Changes made inside the repo stop it (a pull would mix them in): they're listed,
+# and git stash can put them aside first. The only time kawt asks the internet for its own
+# updates is this, and [check] in profile -> cfg, when you press it.
+if [[ $mode == update ]]; then
+    if ((EUID == 0)); then
+        say "${red}run this as your own user, not as root${off} ${dim}(git would leave root's files in your clone)${off}"
+        exit 1
+    fi
+    banner "update"
+    ((dry)) && say "${dim}dry run: nothing will be changed${off}"
+    say ""
+    g() { GIT_TERMINAL_PROMPT=0 git -C "$repo" "$@"; } # never stops to ask for a password
+    if ! g rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        say "${red}$(short "$repo") isn't a git clone${off}, so kawt can't update itself here"
+        note "with git: git clone https://github.com/kfrttlw/kawt-shell ~/kawt && ~/kawt/install.sh"
+        exit 1
+    fi
+    if ! up=$(g rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null); then
+        say "${red}the branch $(g branch --show-current) follows no branch of the remote${off}"
+        note "to follow main: git -C $repo branch -u origin/main"
+        exit 1
+    fi
+    changed=$(g status --porcelain --untracked-files=no)
+    if [[ -n $changed ]]; then
+        say "files of the repo were changed here:"
+        printf '%s\n' "$changed" | sed 's/^.../  /'
+        note "your own colors, look and keys go outside it: ~/.config/kawt/themes.json, profile -> cfg, ~/.config/hypr/user.lua"
+        if ((!dry && !yes)) && can_ask && ask "put them aside (git stash) and update? git stash pop brings them back" 1; then
+            g stash push -q -m "kawt: before the update of $stamp" || { fail "git stash failed"; exit 1; }
+            step "save" "your changes (back with: git -C $repo stash pop)"
+        else
+            say "${dim}nothing was changed.${off}"
+            exit 1
+        fi
+    fi
+    step "ask" "$up for news"
+    g fetch -q || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
+    old=$(g rev-parse HEAD)
+    behind=$(g rev-list --count 'HEAD..@{u}')
+    ahead=$(g rev-list --count '@{u}..HEAD')
+    if ((behind == 0)); then
+        pass "kawt is up to date ($(g log -1 --format='%h, %cr'))"
+        exit 0
+    fi
+    if ((ahead > 0)); then
+        fail "this clone has $ahead commit(s) of its own that $up doesn't" "merge them by hand: git -C $repo pull"
+        exit 1
+    fi
+    section "new: $behind"
+    g log --no-merges --format='  %s' 'HEAD..@{u}' | head -n 15 | cut -c1-"$(cols)"
+    ((behind > 15)) && note "... and $((behind - 15)) more: git -C $repo log"
+    say ""
+    if ! ask "update?"; then
+        say "${dim}nothing was changed.${off}"
+        exit 0
+    fi
+    if ((dry)); then
+        note "would run: git merge --ff-only $up, then the new install.sh for the rest"
+        exit 0
+    fi
+    g merge -q --ff-only '@{u}' || { fail "git merge failed" "see above"; exit 1; }
+    pass "kawt is at $(g log -1 --format='%h')"
+    # the new installer does the rest: it may know more than this one
+    fwd=()
+    ((yes)) && fwd+=(--yes)
+    ((packages)) || fwd+=(--no-packages)
+    ((update)) || fwd+=(--no-update)
+    exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
+fi
+
 # ------------------------------------------------------------------ uninstall
 if [[ $mode == uninstall ]]; then
     banner "uninstalling"
@@ -523,6 +605,10 @@ if [[ $mode == uninstall ]]; then
         fi
     done
     ((dry)) || rm -f -- "$no_start_ask"
+    # networkmanager's internet check, switched off by kawt: on again
+    if [[ -f $nm_quiet ]] && grep -F "$marker_nm" "$nm_quiet" > /dev/null && ask "networkmanager's internet check was switched off by kawt: on again?"; then
+        run sudo rm -f -- "$nm_quiet" && run sudo systemctl reload NetworkManager && step "rm" "$nm_quiet (the internet check is on again)"
+    fi
 
     # hyprland.lua loads kawt's standard config, from the kawt folder that's going away. The one
     # from before is in the oldest backup: back it comes. With none (or a no), the standard
@@ -554,7 +640,14 @@ if [[ $mode == uninstall ]]; then
 fi
 
 # ------------------------------------------------------------------ 0. who and where
-banner "installer"
+# after --update this is the new installer, for the parts that are here already: no menus,
+# no questions answered at the install (services, the login shell, hyprland's start)
+if [[ -n $updated_from ]]; then
+    preset=update
+    section "what the new version needs"
+else
+    banner "installer"
+fi
 ((dry)) && say "${dim}dry run: nothing will be changed${off}"
 
 if ((EUID == 0)); then
@@ -615,6 +708,15 @@ on=(1 1 1 1 1 0)
 case $preset in
     all) on=(1 1 1 1 1 1) ;;
     shell) on=(1 1 0 0 0 0) ;;
+    # the parts kawt finds here (the extras can't be told apart from anything else: ./install.sh adds them)
+    update)
+        on=(0 0 0 0 0 0)
+        [[ -L $qs_dst && $(resolve "$qs_dst") == "$(resolve "$repo/quickshell/kawt-shell")" ]] && on[0]=1
+        { loads_kawt "$hypr_lua" "$marker_lua" || loads_kawt "$hypr_conf" "$marker_conf"; } && on[1]=1
+        [[ -L $kitty_dst && $(resolve "$kitty_dst") == "$(resolve "$repo/kitty/kitty.conf")" ]] && on[2]=1
+        loads_kawt "$zshrc" "$marker_zsh" && on[3]=1
+        [[ -L $fastfetch_dst && $(resolve "$fastfetch_dst") == "$(resolve "$fastfetch_src")" ]] && on[4]=1
+        ;;
     *)
         if can_ask; then
             which=0
@@ -656,6 +758,13 @@ fi
 installed() { pacman -T -- "$1" > /dev/null 2>&1; } # also true for a package that provides it (quickshell-git)
 in_repos() { pacman -Si -- "$1" > /dev/null 2>&1; }
 
+# wallpapers: awww draws them, with transitions, and kawt starts its daemon itself (no line in
+# hyprland's config). It comes with the extras; with the shell alone it's asked on its own
+wall_awww=0
+if want shell && ! want extras && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
+    ask "wallpapers through awww? (smooth transitions; kawt starts it with hyprland)" 1 && wall_awww=1
+fi
+
 # ------------------------------------------------------------------ 2b. hyprland's config
 # What hyprland.lua becomes (hypr_from):
 #   ""     left as it is, kawt only adds its line at the end
@@ -665,7 +774,7 @@ in_repos() { pacman -Si -- "$1" > /dev/null 2>&1; }
 #   hypr   Hyprland's own starting config
 # Not for the classic hyprland.conf: the standard config is lua, and hyprland would read both
 hypr_from=""
-if want hypr && [[ ! -f $hypr_conf ]]; then
+if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
     if [[ ! -f $hypr_lua ]]; then
         hypr_from=std
         if can_ask; then
@@ -707,7 +816,7 @@ for d in /sys/bus/pci/devices/*; do
         nv_other=1
     fi
 done
-if [[ -n $nv_dev ]] && { want hypr || ((packages)); }; then
+if [[ -n $nv_dev && -z $updated_from ]] && { want hypr || ((packages)); }; then
     nv_name=$(lspci -s "$nv_slot" 2> /dev/null | sed -E 's/^[^:]*:[^:]*: //; s/ \(rev [0-9a-f]+\)$//')
     if ((nv_dev >= 0x1e00)); then
         nv_gen=open
@@ -789,6 +898,7 @@ for id in shell hypr kitty zsh fastfetch extras; do
     unset -n list
 done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
+((wall_awww)) && wanted+=("awww|swww")
 want shell && compgen -G "/sys/class/bluetooth/*" > /dev/null && wanted+=(bluez bluez-utils)
 ((nv_driver)) && wanted+=("${nv_pkgs[@]}")
 
@@ -824,6 +934,8 @@ if ((packages)); then
     done
 fi
 aur_helper=$(command -v paru || command -v yay || true)
+# an update of kawt with nothing new to install doesn't update the whole system on the side
+[[ -n $updated_from ]] && ((${#repo_pkgs[@]} == 0)) && update=0
 
 # The AUR is a shelf of build recipes; paru and yay fetch and build them for you. kawt only needs
 # one thing from there (quickshell, when the repos don't have it), so without a helper it does
@@ -936,7 +1048,7 @@ if ((${#names[@]} == 0)); then
     exit 0
 fi
 printf '  %-9s %s\n' "system" "${os_name:-unknown}$( ((is_arch)) && printf ' (arch: packages included)' || printf ' (configs only)')"
-printf '  %-9s %s\n' "install" "$(IFS=,; printf '%s' "${names[*]}" | sed 's/,/, /g')"
+printf '  %-9s %s\n' "$([[ -n $updated_from ]] && printf 'check' || printf 'install')" "$(IFS=,; printf '%s' "${names[*]}" | sed 's/,/, /g')"
 if ((packages)); then
     pac="sudo pacman -S$( ((update)) && printf 'yu')"
     if ((${#repo_pkgs[@]})); then
@@ -966,7 +1078,10 @@ if ((nv_cfg || nv_driver)); then
 fi
 printf '  %-9s %s\n' "then" "link the configs ${dim}(what's there now goes to $(short "$backup"))${off}"
 say ""
-if ! ask "go?"; then
+# after an update with nothing to install, there's nothing to ask: the links are checked only
+quiet_update=0
+[[ -n $updated_from ]] && ((${#repo_pkgs[@]} == 0 && ${#aur_pkgs[@]} == 0)) && [[ -z $qs_update && -z $stale_now ]] && quiet_update=1
+if ((!quiet_update)) && ! ask "go?"; then
     say "${dim}nothing was changed.${off}"
     exit 0
 fi
@@ -1083,6 +1198,10 @@ section "configs"
 if want shell; then
     link "$repo/quickshell/kawt-shell" "$qs_dst" || { fail "could not link $qs_dst"; failed=1; }
 fi
+# where the style window (super + w) looks for wallpapers
+if want shell && [[ ! -d $HOME/Pictures/wallpapers ]]; then
+    run mkdir -p "$HOME/Pictures/wallpapers" && step "make" "$HOME/Pictures/wallpapers (put wallpapers here: super + w picks them)"
+fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
 fi
@@ -1123,8 +1242,8 @@ if want zsh && command -v zsh > /dev/null; then
 fi
 
 # ------------------------------------------------------------------ 8. services
-# only asked, never just switched on
-if ((!dry)); then
+# only asked, never just switched on (and not again after an update: that was answered)
+if ((!dry)) && [[ -z $updated_from ]]; then
     # the prompt lives in zsh: if terminals open bash, nobody sees it
     if want zsh && zsh_path=$(command -v zsh) && old=$(login_shell) && [[ -n $old && $old != */zsh ]]; then
         if ask "terminals open ${old##*/}, the prompt is in zsh: make zsh your shell? (chsh asks your password)" 1; then
@@ -1187,6 +1306,23 @@ if ((!dry)); then
     if want extras && command -v powerprofilesctl > /dev/null && ! systemctl is-active --quiet power-profiles-daemon 2> /dev/null; then
         ask "start power-profiles-daemon (saver / balanced / perf in the battery panel)?" 1 && sudo systemctl enable --now power-profiles-daemon
     fi
+    # networkmanager asks a server every few minutes whether there is internet: the one thing on
+    # a fresh arch that goes out by itself. It's how it finds wifi login pages (cafés, hotels),
+    # so it stays on unless you say so; --yes doesn't
+    if want shell && ((!yes)) && can_ask && command -v NetworkManager > /dev/null && [[ ! -e $nm_quiet ]]; then
+        conn=$(NetworkManager --print-config 2> /dev/null | awk '/^\[/ { s = ($0 == "[connectivity]"); next } s')
+        uri=$(printf '%s\n' "$conn" | sed -n 's/^uri=//p' | tail -n 1)
+        if [[ -n $uri ]] && ! printf '%s\n' "$conn" | grep -x 'enabled=false' > /dev/null; then
+            host=${uri#*://} host=${host%%/*}
+            if ask "networkmanager asks $host every few minutes if there's internet (finds wifi login pages). switch that off?" 1; then
+                if printf '# %s (./install.sh --uninstall takes it back)\n[connectivity]\nenabled=false\n' "$marker_nm" | sudo tee "$nm_quiet" > /dev/null && sudo systemctl reload NetworkManager; then
+                    step "edit" "$nm_quiet (no more internet checks)"
+                else
+                    warn "could not switch it off" "by hand: see ./doctor.sh, network"
+                fi
+            fi
+        fi
+    fi
 fi
 
 # ------------------------------------------------------------------ 9. verify
@@ -1220,6 +1356,30 @@ if ((failed)); then
 fi
 if ((dry)); then
     say "dry run done, nothing was changed."
+    exit 0
+fi
+# after an update: what changed comes in without logging out
+if [[ -n $updated_from ]]; then
+    section "reload"
+    diff=$(git -C "$repo" diff --name-only "$updated_from" HEAD 2> /dev/null)
+    if want shell && [[ -n ${WAYLAND_DISPLAY:-} ]] && { pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; }; then
+        qs kill -c kawt-shell > /dev/null 2>&1
+        for _ in {1..30}; do
+            pgrep -f 'qs -c kawt-shell' > /dev/null || break
+            sleep 0.1
+        done
+        # in a session of its own: it outlives this script and the terminal it runs in
+        if setsid -f qs -c kawt-shell -d > /dev/null 2>&1; then pass "the shell started again"; else warn "could not start the shell again" "qs -c kawt-shell -d"; fi
+    fi
+    if want hypr && grep -E '^quickshell/kawt-shell/hypr/' <<< "$diff" > /dev/null && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+        hyprctl reload > /dev/null 2>&1 && pass "hyprland read its config again"
+    fi
+    if want kitty && grep -Fx 'kitty/kitty.conf' <<< "$diff" > /dev/null && pgrep -x kitty > /dev/null; then
+        pkill -USR1 -x kitty && pass "kitty read its config again"
+    fi
+    say ""
+    say "${acc}kawt is updated.${off} ${dim}all of what's new: git -C $(short "$repo") log --oneline ${updated_from:0:7}..${off}"
+    [[ -d $backup ]] && say "${dim}configs moved aside: $(short "$backup")${off}"
     exit 0
 fi
 [[ -d $backup ]] && say "${dim}old configs are in $(short "$backup")  (undo: ./install.sh --uninstall)${off}"

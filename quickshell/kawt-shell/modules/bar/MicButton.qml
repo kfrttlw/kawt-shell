@@ -13,7 +13,7 @@ BracketButton {
     // apps recording right now: pipewire calls them "Stream/Input/Audio"
     readonly property int recording: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio").length
 
-    visible: source !== null
+    visible: Settings.barShows("mic") && (source !== null)
     tag: "mic"
     label: muted ? "off" : recording > 0 ? "●" : "on"
     textColor: muted ? Colors.dim : recording > 0 ? Colors.accent : Colors.fg

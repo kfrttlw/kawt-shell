@@ -31,7 +31,10 @@ Variants {
 
         WlrLayershell.namespace: "kawt-bar"
 
-        anchors.top: true
+        // the top edge, or the bottom one (profile -> cfg -> bar). Every button can be switched
+        // off there too: Settings.barShows(name), with the names used below
+        anchors.top: !Metrics.barBottom
+        anchors.bottom: Metrics.barBottom
         anchors.left: true
         anchors.right: true
 
@@ -44,6 +47,7 @@ Variants {
 
             BracketButton {
                 id: profile
+                visible: Settings.barShows("profile")
                 label: "~"
                 active: Panels.isOpen("profile", root.modelData)
                 onClicked: Panels.toggle("profile", root.modelData)
@@ -51,6 +55,7 @@ Variants {
 
             BracketButton {
                 id: dock
+                visible: Settings.barShows("dock")
                 label: "$"
                 textColor: Colors.accent
                 active: Panels.isOpen("dock", root.modelData)
@@ -58,6 +63,7 @@ Variants {
             }
 
             Workspaces {
+                visible: Settings.barShows("workspaces")
                 screen: root.modelData
             }
         }
@@ -71,7 +77,7 @@ Variants {
 
             // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the wifi panel
             BracketButton {
-                visible: NetLinks.vpn !== ""
+                visible: NetLinks.vpn !== "" && Settings.barShows("vpn")
                 label: "vpn"
                 textColor: Colors.accent
                 active: Panels.isOpen("wifi", root.modelData)
@@ -86,6 +92,7 @@ Variants {
 
             NetGraph {
                 id: netGraph
+                visible: Settings.barShows("net")
                 active: Panels.isOpen("wifi", root.modelData)
                 onClicked: Panels.toggle("wifi", root.modelData)
             }
@@ -93,6 +100,7 @@ Variants {
 
         ClockButton {
             id: clock
+            visible: Settings.barShows("clock")
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             active: Panels.isOpen("calendar", root.modelData)
@@ -144,6 +152,7 @@ Variants {
 
             VolumeButton {
                 id: volume
+                visible: Settings.barShows("vol")
                 active: Panels.isOpen("volume", root.modelData)
                 onClicked: Panels.toggle("volume", root.modelData)
             }
@@ -162,11 +171,13 @@ Variants {
 
             NotifButton {
                 id: notifs
+                visible: Settings.barShows("log")
                 active: Panels.isOpen("notifs", root.modelData)
                 onClicked: Panels.toggle("notifs", root.modelData)
             }
 
             BracketButton {
+                visible: Settings.barShows("ai")
                 label: ">_"
                 textColor: Colors.accent
                 active: Panels.isSidebarOpen(root.modelData)

@@ -20,10 +20,12 @@ PanelWindow {
     property string title: name
     property Item anchorItem: null // bar widget to center the card under
     property var barWindow: null // the bar it hangs from: clicks there don't close it (Bar.qml)
-    property int cardWidth: 260
+    property int cardWidth: 260 // at the standard font size; it grows with a bigger one
+    readonly property int cardW: Math.round(cardWidth * Metrics.scale)
     readonly property bool open: Panels.isOpen(name, forScreen)
-    // the bar spans the whole screen width, so its scene x == screen x; re-evaluated on open
-    readonly property real anchorX: open && anchorItem ? anchorItem.mapToItem(null, anchorItem.width / 2, 0).x : 0
+    // the bar spans the whole screen width, so its scene x == screen x; re-evaluated on open.
+    // A button switched off in the bar (or opened by its key): the middle of the screen
+    readonly property real anchorX: open && anchorItem?.visible ? anchorItem.mapToItem(null, anchorItem.width / 2, 0).x : forScreen.width / 2
 
     default property alias content: body.data
 
@@ -35,7 +37,7 @@ PanelWindow {
     screen: forScreen
     visible: open
     color: "transparent"
-    implicitWidth: cardWidth
+    implicitWidth: cardW
     implicitHeight: card.height + card.titleOverhang
 
     WlrLayershell.namespace: "kawt-popover"
@@ -43,11 +45,13 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    // under the bar, centered on its button, kept on the screen
-    anchors.top: true
+    // under the bar (over it, with the bar at the bottom), centered on its button, kept on the screen
+    anchors.top: !Metrics.barBottom
+    anchors.bottom: Metrics.barBottom
     anchors.left: true
     margins.top: Metrics.barHeight + Metrics.spacing
-    margins.left: Math.round(Math.max(Metrics.padding, Math.min(forScreen.width - cardWidth - Metrics.padding, anchorX - cardWidth / 2)))
+    margins.bottom: Metrics.barHeight + Metrics.spacing
+    margins.left: Math.round(Math.max(Metrics.padding, Math.min(forScreen.width - cardW - Metrics.padding, anchorX - cardW / 2)))
 
     // a click outside this window and the bar closes it
     HyprlandFocusGrab {
@@ -72,7 +76,7 @@ PanelWindow {
         title: root.title
         hint: "esc"
         y: titleOverhang
-        width: root.cardWidth
+        width: root.cardW
         height: body.implicitHeight + Metrics.padding * 2 + titleOverhang
 
         Keys.onEscapePressed: Panels.close()
