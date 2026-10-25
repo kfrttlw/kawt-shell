@@ -323,6 +323,23 @@ Popover {
 
     BracketButton {
         visible: root.tab === 2
+        tag: Settings.companionQuotes ? "x" : " "
+        label: "wise words now and then"
+        bordered: false
+        onClicked: Settings.companionQuotes = !Settings.companionQuotes
+    }
+
+    Label {
+        Layout.fillWidth: true
+        visible: root.tab === 2 && Settings.companionQuotes
+        wrapMode: Text.Wrap
+        text: Companion.lang === "ru" ? "his own (fortune speaks english only)" : Companion.hasFortune ? "his own and fortune's sayings" : "his own; with fortune-mod (sudo pacman -S fortune-mod) many more"
+        color: Colors.dim
+        font.pixelSize: Metrics.fontSize - 2
+    }
+
+    BracketButton {
+        visible: root.tab === 2
         tag: Settings.companionAsks ? "x" : " "
         label: "he asks for food and play"
         bordered: false

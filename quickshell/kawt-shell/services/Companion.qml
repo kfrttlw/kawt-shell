@@ -243,6 +243,8 @@ Singleton {
             say(line("next", nextTask()), 0);
         else if (night && r < 0.6)
             say(line("night", ""), 0);
+        else if (r < 0.55 && Settings.companionQuotes)
+            wise();
         else
             say(line("chat", ""), 0);
         // a little fun from the attention, once a minute at most
@@ -254,6 +256,38 @@ Singleton {
     }
 
     property real petAt: 0
+
+    // a wise word: fortune's (fortune-mod, english only) or one of his own
+    function wise(): void {
+        if (hasFortune && lang === "en" && Math.random() < 0.6 && !fortune.running) {
+            fortune.running = true;
+            return;
+        }
+        say(line("wise", ""), 0);
+    }
+
+    property bool hasFortune: false
+
+    Process {
+        running: root.enabled
+        command: ["sh", "-c", "command -v fortune"]
+        stdout: StdioCollector {
+            onStreamFinished: root.hasFortune = text.trim() !== ""
+        }
+    }
+
+    // short ones only: they have to fit his bubble
+    Process {
+        id: fortune
+
+        command: ["fortune", "-s", "-n", "140"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = text.replace(/\s+/g, " ").trim();
+                root.say(t || root.line("wise", ""), 0);
+            }
+        }
+    }
 
     function nextTask(): string {
         const t = Todo.today[0];

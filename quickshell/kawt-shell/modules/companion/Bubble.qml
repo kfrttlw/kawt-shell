@@ -9,7 +9,7 @@ Item {
     id: root
 
     property string text: Companion.said
-    property int maxWidth: Math.round(200 * Metrics.scale)
+    property int maxWidth: Math.round(240 * Metrics.scale)
     property real tailX: width / 2 // where he is, under the box
 
     visible: text !== ""

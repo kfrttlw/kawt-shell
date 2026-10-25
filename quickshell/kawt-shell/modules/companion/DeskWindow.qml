@@ -16,7 +16,7 @@ PanelWindow {
 
     screen: forScreen
     color: "transparent"
-    implicitHeight: him.height + Math.round(70 * Metrics.scale)
+    implicitHeight: him.height + Math.round(110 * Metrics.scale) // room for a long saying
 
     WlrLayershell.namespace: "kawt-companion"
     WlrLayershell.layer: WlrLayer.Bottom

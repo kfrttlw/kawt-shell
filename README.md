@@ -174,6 +174,10 @@ Knowing about a new version means asking github: `[check]` in profile → cfg do
 something new (`[update]` on it; the companion jumps). "look for updates once a week" there
 switches that off: then nothing goes out unless you press `[check]`.
 
+Coming from a version that had no `--update` yet: `git pull` in the clone once by hand, then
+`./install.sh --update`; it sees that pull and does the rest as if it had made it (new packages
+offered, links, the shell and Hyprland loaded again).
+
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it.
 Don't clone it into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 
