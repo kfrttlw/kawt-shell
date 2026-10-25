@@ -2,13 +2,13 @@ import QtQuick
 import Quickshell.Services.Mpris
 import qs.config
 import qs.components
+import qs.services
 
-// [> ▂▅▃▇▂]  — shown only while some MPRIS player exists
+// [> ▂▅▃▇▂]  — shown only while some MPRIS player exists (the one services/Media.qml follows)
 BarBox {
     id: root
 
-    readonly property list<MprisPlayer> players: Mpris.players.values
-    readonly property MprisPlayer player: players.find(p => p.isPlaying) ?? players[0] ?? null
+    readonly property MprisPlayer player: Media.player
 
     visible: Settings.barShows("player") && (player !== null)
     spacing: 4

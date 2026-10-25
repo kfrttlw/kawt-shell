@@ -33,6 +33,8 @@ PanelWindow {
     // (not opened / closed: the window already has a `closed` signal of its own)
     signal panelOpened
     signal panelClosed
+    // a key on the card (the player's space, arrows...); Esc is taken already: it closes
+    signal cardKey(var event)
 
     screen: forScreen
     visible: open
@@ -80,6 +82,7 @@ PanelWindow {
         height: body.implicitHeight + Metrics.padding * 2 + titleOverhang
 
         Keys.onEscapePressed: Panels.close()
+        Keys.onPressed: event => root.cardKey(event)
 
         NumberAnimation {
             id: fadeIn

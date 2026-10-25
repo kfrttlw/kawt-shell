@@ -286,10 +286,12 @@ try("keys", function()
     bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(kawt .. "brightness up"),   { locked = true, repeating = true })
     bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true, repeating = true })
 
-    bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-    bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-    bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-    bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+    -- play / pause / next go to the player kawt shows (the one picked in its player panel, or
+    -- the last one started); playerctl if kawt isn't running
+    bind("XF86AudioNext",  hl.dsp.exec_cmd(kawt .. "media next || playerctl next"),         { locked = true })
+    bind("XF86AudioPause", hl.dsp.exec_cmd(kawt .. "media toggle || playerctl play-pause"), { locked = true })
+    bind("XF86AudioPlay",  hl.dsp.exec_cmd(kawt .. "media toggle || playerctl play-pause"), { locked = true })
+    bind("XF86AudioPrev",  hl.dsp.exec_cmd(kawt .. "media prev || playerctl previous"),     { locked = true })
 end)
 
 -- WINDOW MODE: SUPER + Z switches it on, Esc / Enter off. Inside, without modifiers:

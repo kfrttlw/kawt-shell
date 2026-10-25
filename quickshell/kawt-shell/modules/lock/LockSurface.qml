@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
 import qs.config
 import qs.components
@@ -170,7 +169,7 @@ WlSessionLockSurface {
 
         // now playing, with controls
         RowLayout {
-            readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
+            readonly property var player: Media.player
 
             id: media
 

@@ -65,6 +65,9 @@ end)
 --     hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
 --     hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true })
 --     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true })
+--     hl.bind("XF86AudioPlay", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
+--     hl.bind("XF86AudioNext", hl.dsp.exec_cmd(kawt .. "media next"), { locked = true })
+--     hl.bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
 -- end)
 -- Locking: kawt locks by itself before sleep (the lid too), on `loginctl lock-session` and after
 -- 10 idle minutes (profile -> cfg). No hypridle / hyprlock needed; if you keep them, turn
