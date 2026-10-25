@@ -1892,7 +1892,7 @@ ColumnLayout {
                     spacing: Metrics.spacing
 
                     Repeater {
-                        model: [["profile", "~"], ["dock", "$"], ["workspaces", "1 2 3"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["ai", ">_"]]
+                        model: [["profile", "~"], ["dock", "$"], ["workspaces", "1 2 3"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["home", "⌂"], ["ai", ">_"]]
 
                         BracketButton {
                             required property var modelData
@@ -2043,6 +2043,26 @@ ColumnLayout {
                             Panels.aiTab = 3;
                             Panels.close();
                         }
+                    }
+                }
+
+                // the companion: on / off here, the rest in his house
+                RowLayout {
+                    Layout.topMargin: Metrics.spacing
+                    spacing: Metrics.spacing
+
+                    BracketButton {
+                        tag: Settings.companion ? "x" : " "
+                        label: Settings.companion ? `companion: ${Companion.name}` : "companion"
+                        bordered: false
+                        onClicked: Settings.companion = !Settings.companion
+                    }
+
+                    BracketButton {
+                        visible: Settings.companion
+                        label: "his house"
+                        textColor: Colors.accent
+                        onClicked: Panels.toggle("home", root.forScreen ?? Quickshell.screens[0])
                     }
                 }
 

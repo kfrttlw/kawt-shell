@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.config
 import qs.components
@@ -16,6 +17,7 @@ import "../profile"
 import "../power"
 import "../help"
 import "../shot"
+import "../companion"
 
 Variants {
     model: Quickshell.screens
@@ -37,6 +39,12 @@ Variants {
         property bool peeking: false
         readonly property bool tucked: Settings.barHidden && !peeking
         readonly property bool panelOpen: Panels.current !== "" && Panels.screen === modelData.name
+        readonly property bool focusedHere: modelData.name === Panels.focusedScreen
+        // no window on this screen's workspace (nor a scratchpad over it): the companion may walk.
+        // Not while he's in his house or next to the coder: he's there then
+        readonly property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(modelData)
+        readonly property bool emptyDesk: (hyprMonitor?.activeWorkspace?.toplevels?.values?.length ?? 1) === 0 && !(hyprMonitor?.lastIpcObject?.specialWorkspace?.name)
+        readonly property bool companionOut: focusedHere && emptyDesk && Companion.onDesk && Panels.current !== "home" && !(Panels.sidebarOpen && Settings.aiMode === "coder")
 
         WlrLayershell.exclusionMode: Settings.barHidden ? ExclusionMode.Ignore : ExclusionMode.Auto
         onPanelOpenChanged: if (!panelOpen && !edge.hovered)
@@ -220,6 +228,13 @@ Variants {
                 onClicked: Panels.toggle("notifs", root.modelData)
             }
 
+            // the companion's house (modules/companion)
+            HouseButton {
+                id: home
+                active: Panels.isOpen("home", root.modelData)
+                onClicked: Panels.toggle("home", root.modelData)
+            }
+
             BracketButton {
                 visible: Settings.barShows("ai")
                 label: ">_"
@@ -359,6 +374,35 @@ Variants {
                 forScreen: root.modelData
                 anchorItem: tray
                 barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("home", root.modelData)
+
+            HousePopover {
+                forScreen: root.modelData
+                anchorItem: home
+                barWindow: root
+            }
+        }
+
+        // the companion out on an empty desktop, and peeking from the corner when something
+        // happens while he's nowhere on the screen (services/Companion.qml)
+        Lazy {
+            when: root.companionOut
+
+            DeskWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: root.focusedHere && Companion.peeking && Companion.enabled
+            linger: 300
+
+            PeekWindow {
+                forScreen: root.modelData
             }
         }
 
