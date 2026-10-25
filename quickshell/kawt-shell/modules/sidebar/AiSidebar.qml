@@ -92,9 +92,9 @@ PanelWindow {
         // slides in from its own edge
         x: root.onLeft ? -(1 - root.progress) * width : Metrics.padding + (1 - root.progress) * width
         // between the bar and the other edge, wherever the bar is
-        y: (Metrics.barBottom ? Metrics.padding : Metrics.barHeight + Metrics.spacing) + titleOverhang
+        y: (Metrics.topGap > 0 ? Metrics.topGap + Metrics.spacing : Metrics.padding) + titleOverhang
         width: root.panelWidth - Metrics.padding
-        height: parent.height - y - (Metrics.barBottom ? Metrics.barHeight + Metrics.spacing : Metrics.padding)
+        height: parent.height - y - (Metrics.bottomGap > 0 ? Metrics.bottomGap + Metrics.spacing : Metrics.padding)
         title: `ai: ${Ai.modelName}`
         hint: Ai.useApi ? "api" : Ai.online ? "online" : "offline"
 

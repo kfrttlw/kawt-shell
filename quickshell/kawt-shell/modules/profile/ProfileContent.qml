@@ -1824,6 +1824,14 @@ ColumnLayout {
                     }
                 }
 
+                // tucked away: a 2 px edge that takes no room, the pointer there brings it out
+                BracketButton {
+                    tag: Settings.barHidden ? "x" : " "
+                    label: "tucked away: out when the pointer touches the edge (super+shift+b)"
+                    bordered: false
+                    onClicked: Settings.barHidden = !Settings.barHidden
+                }
+
                 //  at  [top] bottom   height  [-] auto [+]
                 RowLayout {
                     spacing: Metrics.spacing

@@ -44,6 +44,7 @@ try("binds", function()
     hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
     hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
     hl.bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
+    hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)
     hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
     -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in the profile's
     -- cfg tab, saved to the folder from there and copied at once)

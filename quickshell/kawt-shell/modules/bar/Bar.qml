@@ -26,10 +26,49 @@ Variants {
         required property ShellScreen modelData
         screen: modelData
 
-        implicitHeight: Metrics.barHeight
+        implicitHeight: tucked ? 2 : Metrics.barHeight
         color: "transparent"
 
         WlrLayershell.namespace: "kawt-bar"
+
+        // tucked away (kawt bar, super+shift+b, or profile -> cfg): a 2 px edge that takes no
+        // room from the windows. The pointer at that edge brings the bar out over them; it goes
+        // again half a second after the pointer leaves, unless one of its panels is open
+        property bool peeking: false
+        readonly property bool tucked: Settings.barHidden && !peeking
+        readonly property bool panelOpen: Panels.current !== "" && Panels.screen === modelData.name
+
+        WlrLayershell.exclusionMode: Settings.barHidden ? ExclusionMode.Ignore : ExclusionMode.Auto
+        onPanelOpenChanged: if (!panelOpen && !edge.hovered)
+            leave.restart()
+
+        HoverHandler {
+            id: edge
+
+            onHoveredChanged: {
+                if (hovered) {
+                    leave.stop();
+                    root.peeking = true;
+                } else {
+                    leave.restart();
+                }
+            }
+        }
+
+        Timer {
+            id: leave
+
+            interval: 500
+            onTriggered: root.peeking = edge.hovered || root.panelOpen
+        }
+
+        Connections {
+            target: Settings
+
+            function onBarHiddenChanged(): void {
+                root.peeking = false;
+            }
+        }
 
         // the top edge, or the bottom one (profile -> cfg -> bar). Every button can be switched
         // off there too: Settings.barShows(name), with the names used below
@@ -40,6 +79,7 @@ Variants {
 
         // left: profile, pinned apps, workspaces
         RowLayout {
+            opacity: root.tucked ? 0 : 1
             anchors.left: parent.left
             anchors.leftMargin: Metrics.padding
             anchors.verticalCenter: parent.verticalCenter
@@ -70,6 +110,7 @@ Variants {
 
         // network leads up to the clock
         RowLayout {
+            opacity: root.tucked ? 0 : 1
             anchors.right: clock.left
             anchors.rightMargin: Metrics.sectionGap
             anchors.verticalCenter: parent.verticalCenter
@@ -101,6 +142,7 @@ Variants {
         ClockButton {
             id: clock
             visible: Settings.barShows("clock")
+            opacity: root.tucked ? 0 : 1
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             active: Panels.isOpen("calendar", root.modelData)
@@ -110,6 +152,7 @@ Variants {
         // media follows the clock
         PlayerButton {
             id: player
+            opacity: root.tucked ? 0 : 1
             anchors.left: clock.right
             anchors.leftMargin: Metrics.sectionGap
             anchors.verticalCenter: parent.verticalCenter
@@ -119,6 +162,7 @@ Variants {
 
         // right: tray, input/output, power, messages, ai
         RowLayout {
+            opacity: root.tucked ? 0 : 1
             anchors.right: parent.right
             anchors.rightMargin: Metrics.padding
             anchors.verticalCenter: parent.verticalCenter

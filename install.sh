@@ -71,6 +71,10 @@ no_start_ask=$state/no-hyprland-start # "neither" was picked: not asked again
 # networkmanager's internet check switched off, if you said so (asked at the install)
 nm_quiet=/etc/NetworkManager/conf.d/90-kawt-no-check.conf
 marker_nm="kawt: networkmanager's internet check off"
+# a desktop's monitors take brightness over DDC/CI (ddcutil), which needs the i2c-dev module
+i2c_conf=/etc/modules-load.d/kawt-i2c.conf
+marker_i2c="kawt: monitor brightness over DDC/CI"
+no_i2c_ask=$state/no-i2c-dev # "no" was answered: not asked again
 
 # the parts, in menu order: id | name | what it is
 parts=(
@@ -95,6 +99,8 @@ pkgs_kitty=(kitty)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
 pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype)
+# extras for a machine without a backlight (a desktop): the monitors' own brightness
+pkgs_desktop=(ddcutil)
 
 mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from=""
 for arg in "$@"; do
@@ -618,6 +624,10 @@ if [[ $mode == uninstall ]]; then
     done
     ((dry)) || rm -f -- "$no_start_ask"
     # networkmanager's internet check, switched off by kawt: on again
+    ((dry)) || rm -f -- "$no_i2c_ask"
+    if [[ -f $i2c_conf ]] && grep -F "$marker_i2c" "$i2c_conf" > /dev/null && ask "kawt loads i2c-dev at boot (monitor brightness): stop that?"; then
+        run sudo rm -f -- "$i2c_conf" && step "rm" "$i2c_conf"
+    fi
     if [[ -f $nm_quiet ]] && grep -F "$marker_nm" "$nm_quiet" > /dev/null && ask "networkmanager's internet check was switched off by kawt: on again?"; then
         run sudo rm -f -- "$nm_quiet" && run sudo systemctl reload NetworkManager && step "rm" "$nm_quiet (the internet check is on again)"
     fi
@@ -936,6 +946,10 @@ if want extras; then
     t=$(tess_lang)
     [[ -n $t ]] && wanted+=("$t")
 fi
+# the extras that make sense here
+extras_here=("${pkgs_extras[@]}")
+compgen -G "/sys/class/backlight/*" > /dev/null || extras_here+=("${pkgs_desktop[@]}")
+want extras && ! compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=("${pkgs_desktop[@]}")
 have_any() { # have_any "a|b": one of them is installed
     local p alts
     IFS='|' read -ra alts <<< "$1"
@@ -955,6 +969,7 @@ about() {
         tesseract | tesseract-data-*) echo "[text] on screenshots" ;;
         libqalculate) echo "= in the launcher: units, currencies, dates" ;;
         wtype) echo "emoji from the launcher typed in, not only copied" ;;
+        ddcutil) echo "the monitors' own brightness, from the bar (no backlight here)" ;;
         *) echo "" ;;
     esac
 }
@@ -963,10 +978,10 @@ about() {
 # from didn't have yet are offered; the rest stays as you left it
 new_extras=()
 if [[ -n $updated_from ]] && ((!nothing_new && packages)) && ! want extras; then
-    old=$(git -C "$repo" show "$updated_from:install.sh" 2> /dev/null | sed -n 's/^pkgs_extras=(\(.*\))$/\1/p' | head -n 1)
+    old=$(git -C "$repo" show "$updated_from:install.sh" 2> /dev/null | sed -n 's/^pkgs_\(extras\|desktop\)=(\(.*\))$/\2/p' | tr '\n' ' ')
     if [[ -n $old ]]; then
         read -ra old_extras <<< "${old//\"/}"
-        for spec in "${pkgs_extras[@]}"; do
+        for spec in "${extras_here[@]}"; do
             [[ " ${old_extras[*]} " == *" $spec "* ]] || have_any "$spec" || new_extras+=("$spec")
         done
     fi
@@ -1164,7 +1179,7 @@ if [[ $mode == check ]]; then
         pass "packages for $(commas "${names[@]}"): all $have there"
     fi
     opt=()
-    for spec in "${pkgs_extras[@]}"; do have_any "$spec" || opt+=("${spec//|/ or }"); done
+    for spec in "${extras_here[@]}"; do have_any "$spec" || opt+=("${spec//|/ or }"); done
     ((${#opt[@]})) && note "optional, not installed: $(commas "${opt[@]}")"
     check_libs
     ((${#libs_missing[@]})) && fail "not installed, though $(commas "${libs_for[@]}") need$( ((${#libs_for[@]} == 1)) && printf s) it: $(commas "${libs_missing[@]}")" "./install.sh --update installs it (or: sudo pacman -S --asdeps ${libs_missing[*]})"
@@ -1491,6 +1506,22 @@ if ((!dry)) && [[ -z $updated_from ]]; then
                 fi
             fi
         fi
+    fi
+fi
+
+# ddcutil reaches the monitors through /dev/i2c-*: the i2c-dev module, which nothing loads by
+# default. Asked once, after an update too (ddcutil may have just come with it)
+if ((!dry)) && want shell && command -v ddcutil > /dev/null && ! compgen -G "/sys/class/backlight/*" > /dev/null &&
+    [[ ! -e $no_i2c_ask ]] && ! grep -rsE '^[[:space:]]*i2c[-_]dev' /etc/modules-load.d /usr/lib/modules-load.d > /dev/null; then
+    if ask "the monitors' brightness from the bar (ddcutil) needs the i2c-dev module: load it now and at every boot?" 1; then
+        if printf '# %s (./install.sh --uninstall takes it back)\ni2c-dev\n' "$marker_i2c" | sudo tee "$i2c_conf" > /dev/null && sudo modprobe i2c-dev; then
+            step "edit" "$i2c_conf (i2c-dev at boot; kawt finds the monitors at its next start)"
+        else
+            warn "could not load i2c-dev" "by hand: echo i2c-dev | sudo tee $i2c_conf && sudo modprobe i2c-dev"
+        fi
+    elif can_ask; then
+        mkdir -p "$state" && : > "$no_i2c_ask"
+        note "not asked again (to be asked: rm $no_i2c_ask)"
     fi
 fi
 

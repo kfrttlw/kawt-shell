@@ -20,6 +20,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen   (a preview asks copy / save)
 //   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
 //   qs -c kawt-shell ipc call kawt close
+//   qs -c kawt-shell ipc call kawt bar [show|hide]             (tucked away it peeks out at the edge)
 //   qs -c kawt-shell ipc call kawt dnd
 //   qs -c kawt-shell ipc call kawt toggleLight
 //   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
@@ -170,6 +171,11 @@ Singleton {
                 Brightness.step(arg === "down" ? -0.05 : 0.05);
             else if (/^\d+%?$/.test(arg))
                 Brightness.set(parseInt(arg) / 100);
+        }
+
+        // the bar tucked away (a 2 px edge: the pointer there brings it out) or back
+        function bar(arg: string): void {
+            Settings.barHidden = arg === "hide" ? true : arg === "show" ? false : !Settings.barHidden;
         }
 
         function night(): void {
