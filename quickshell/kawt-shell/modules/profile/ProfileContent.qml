@@ -1459,6 +1459,49 @@ ColumnLayout {
                     font.pixelSize: Metrics.fontSize - 2
                 }
 
+                //  screen off  off  [1m]  2m  5m   (after the lock)   [x] dim before
+                // only the picture goes: wifi, downloads, music keep running (services/Idle.qml)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Metrics.spacing
+
+                    Label {
+                        text: "screen off"
+                        color: Colors.dim
+                    }
+
+                    Repeater {
+                        model: [[0, "off"], [1, "1m"], [2, "2m"], [5, "5m"]]
+
+                        BracketButton {
+                            required property var modelData
+
+                            label: modelData[1]
+                            active: Settings.screenOff === modelData[0]
+                            textColor: Settings.screenOff === modelData[0] ? Colors.accent : Colors.dim
+                            bordered: false
+                            onClicked: Settings.screenOff = modelData[0]
+                        }
+                    }
+
+                    // laptops: the backlight down to a third, 30 s before the idle lock
+                    BracketButton {
+                        visible: Brightness.available && Settings.idleLock > 0
+                        tag: Settings.dimBeforeLock ? "x" : " "
+                        label: "dim before"
+                        bordered: false
+                        onClicked: Settings.dimBeforeLock = !Settings.dimBeforeLock
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: Settings.screenOff > 0 ? `the picture goes ${Settings.screenOff} min after the lock; wifi, music, downloads keep going · a key brings it back` : "the screen stays on while locked"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+
                 //  night light  [x] on   4500K  [-] [+]   (hyprsunset)
                 RowLayout {
                     visible: Night.available

@@ -54,6 +54,8 @@ Singleton {
     property alias lockDetails: adapter.lockDetails
     property alias lockOnSleep: adapter.lockOnSleep
     property alias idleLock: adapter.idleLock
+    property alias screenOff: adapter.screenOff
+    property alias dimBeforeLock: adapter.dimBeforeLock
     property alias nightLight: adapter.nightLight
     property alias nightTemp: adapter.nightTemp
     property alias terminal: adapter.terminal
@@ -142,6 +144,8 @@ Singleton {
             property bool lockDetails: true // the lock screen shows the next task, what's playing, the wifi name, messages and user@host (anyone at the screen sees them)
             property bool lockOnSleep: true // lock before the machine sleeps and on `loginctl lock-session` (services/Session.qml)
             property int idleLock: 10 // lock after this many minutes without input, 0 = never (services/Idle.qml)
+            property int screenOff: 1 // the picture off this many minutes after the lock, 0 = never (only the picture: the rest keeps running)
+            property bool dimBeforeLock: true // the backlight down to a third 30 s before the idle lock
             property bool nightLight: false // warmer colors through hyprsunset (services/Night.qml)
             property int nightTemp: 4500 // night light color temperature, kelvin
             property string terminal: "kitty" // command is appended; for alacritty use "alacritty -e"

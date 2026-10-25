@@ -5,7 +5,8 @@ import Quickshell.Io
 import Quickshell.Services.Mpris
 
 // Real audio levels for the bar's media button, from cava (scripts/cava.conf).
-// One cava for all screens, and only while some player is playing: nothing runs in silence.
+// One cava for all screens, and only while some player is playing: nothing runs in silence,
+// or behind the lock screen. A frame like the last one changes nothing, so nothing is redrawn.
 // Without cava installed, `available` is false and the bar falls back to its own animation.
 Singleton {
     id: root
@@ -27,13 +28,13 @@ Singleton {
     Process {
         id: cava
 
-        running: root.available && root.playing
+        running: root.available && root.playing && !Panels.locked
         command: ["cava", "-p", `${Quickshell.shellDir}/scripts/cava.conf`]
         // "3;5;1;0;2;" per frame
         stdout: SplitParser {
             onRead: line => {
                 const v = line.split(";").filter(s => s !== "").map(Number);
-                if (v.length === root.bars)
+                if (v.length === root.bars && v.some((x, i) => x !== root.levels[i]))
                     root.levels = v;
             }
         }

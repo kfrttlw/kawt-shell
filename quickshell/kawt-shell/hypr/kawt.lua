@@ -81,6 +81,11 @@ end)
 try("lock restore", function()
     hl.config({ misc = { allow_session_lock_restore = true } })
 end)
+-- the screen off after the lock (profile -> cfg): a key or the mouse brings it back, by
+-- hyprland itself too, so it never stays dark, even if kawt isn't running
+try("screen wakes on input", function()
+    hl.config({ misc = { mouse_move_enables_dpms = true, key_press_enables_dpms = true } })
+end)
 
 -- kawt animates its panels itself
 try("layer rule", function()
