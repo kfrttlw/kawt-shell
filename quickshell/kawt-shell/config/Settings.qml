@@ -8,6 +8,7 @@ Singleton {
     id: root
 
     readonly property string dir: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/kawt`
+    property bool loaded: false // the file is read (or there was none): what's here is yours
 
     property alias theme: adapter.theme
     property alias light: adapter.light
@@ -91,6 +92,7 @@ Singleton {
     property alias companionName: adapter.companionName
     property alias companionLang: adapter.companionLang
     property alias companionQuotes: adapter.companionQuotes
+    property alias welcomed: adapter.welcomed
     property alias updateAuto: adapter.updateAuto
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
@@ -114,9 +116,11 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
+        onLoaded: root.loaded = true
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();
+            root.loaded = true;
         }
 
         JsonAdapter {
@@ -207,6 +211,7 @@ Singleton {
             property string companionName: "" // "" = the look's own
             property string companionLang: "en" // "en" | "ru": what he says
             property bool companionQuotes: true // wise words now and then on a click (fortune-mod's too, in english)
+            property bool welcomed: false // the first start's hello and short tour was shown (modules/companion/WelcomePopover.qml)
             // kawt's own updates (services/Update.qml): [check] asks github once
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
             property real updateCheckedAt: 0 // ms, the last check that got an answer

@@ -101,6 +101,17 @@ Singleton {
         }
     }
 
+    // the first start: the companion says hello and shows around, once, a moment after the
+    // shell is up (and not over something already open, or the lock)
+    Timer {
+        running: Settings.loaded && !Settings.welcomed && !root.locked && root.current === ""
+        interval: 2500
+        onTriggered: {
+            root.screen = root.focusedScreen;
+            root.current = "welcome";
+        }
+    }
+
     IpcHandler {
         target: "kawt"
 
@@ -223,6 +234,12 @@ Singleton {
         // speak to the ai panel (services/Voice.qml): starts listening, again: stops and writes it
         function voice(): void {
             Voice.toggle();
+        }
+
+        // the first start's hello and tour again (modules/companion/WelcomePopover.qml)
+        function welcome(): void {
+            root.screen = root.focusedScreen;
+            root.current = "welcome";
         }
 
         // the companion (services/Companion.qml): looked after without opening his house

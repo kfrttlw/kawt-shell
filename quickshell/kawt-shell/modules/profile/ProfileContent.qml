@@ -2064,6 +2064,12 @@ ColumnLayout {
                         textColor: Colors.accent
                         onClicked: Panels.toggle("home", root.forScreen ?? Quickshell.screens[0])
                     }
+
+                    // the first start's hello and short tour, again
+                    BracketButton {
+                        label: "tour"
+                        onClicked: Panels.toggle("welcome", root.forScreen ?? Quickshell.screens[0])
+                    }
                 }
 
                 Label {
