@@ -11,7 +11,7 @@
 --
 -- What the standard config does: ~/.config/quickshell/kawt-shell/hypr/preset.lua
 
--- monitors: names and modes with  hyprctl monitors all
+-- monitors: names and modes with  hyprctl monitors all  (or ~/kawt/install.sh --monitors asks)
 -- hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@144", position = "0x0", scale = "1" })
 
 preset.terminal = "kitty"
