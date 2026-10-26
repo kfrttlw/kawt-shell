@@ -6,8 +6,9 @@ import qs.config
 import "../utils/themegen.js" as Gen
 
 // Shares the current theme with other programs. Writes kitty / foot / alacritty / hyprland /
-// shell / json snippets to ~/.local/state/kawt/theme/, and on a theme switch also recolors
-// open terminals (escape sequences) and reloads Hyprland for the border colors.
+// gtk / shell / json snippets and kawt's folder icons to ~/.local/state/kawt/theme/, and on a
+// theme switch also recolors open terminals (escape sequences) and gtk apps, and reloads
+// Hyprland for the border colors.
 // hyprland.lua loads the border colors with dofile() from theme/hyprland_colors.lua (see hypr/kawt.lua).
 Singleton {
     id: root
@@ -26,6 +27,9 @@ Singleton {
             args.push(name, f[name]);
         if (live && Settings.themeTerminals)
             args.push("@pts", Gen.sequences(Colors.palette, Settings.termColors));
+        // gtk apps (only where install.sh linked their gtk.css to kawt's): dark or light, and
+        // on a switch the open ones read their colors again
+        args.push("@gtk", `${Gen.isLight(Colors.palette) ? "light" : "dark"}${live ? " live" : ""}`);
         if (live && Hypr.lua)
             args.push("@hyprreload", "");
         else if (live)

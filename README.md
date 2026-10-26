@@ -30,9 +30,9 @@ configs, all in one monospace, square-cornered, text-first style.
 | `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine; a screenshot's `[ask]` brings the picture into the chat for a model that sees (`gemma3:4b`, `qwen2.5vl:3b`; ai → cfg → pictures), follow-up questions about it too; `[x] tasks` gives it your open todo list ("what's on tomorrow?"), and tasks it proposes get an `[add]`; `super + alt + a` works on the text you marked in any window (a small box: explain, translate, fix, summary; `[replace]` types the answer over it with `wtype`); `super + alt + v` or `[mic]`: speak, `whisper-cpp` writes it down (its model fetched once in ai → cfg → voice, then nothing goes out; the recording stays in memory and is gone after) |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb; keeps what the app asks for: `notify-send -t 1500` stays that long (`-t 0` until clicked), `-e` (transient) only pops up and never lands in the log, and one with a replace tag (`x-canonical-private-synchronous`, `x-dunst-stack-tag`: volume scripts) takes its earlier one's place |
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config. A new one by itself every 15 min … 3 h if you like (the next in the folder or a random one), with awww's transition picked there: `crt` (drawn in from the top, in steps, like an old screen's beam), fade, grow, random or none |
-| theme export | switching themes recolors open terminals live and rewrites colors for kitty, Hyprland borders, foot, alacritty and shell scripts; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
+| theme export | switching themes recolors open terminals and GTK apps (thunar) live and rewrites colors for kitty, Hyprland borders, GTK, foot, alacritty and shell scripts, and kawt's folder icons; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. With `bubblewrap` it can also ask to run a command (tests, a build): each one waits for `[run]`, then goes into a sandbox with no network, the system read-only and the project the only writable place (its `.git` read-only too, so no hooks), a time limit, 2 GB, output cut at 64 KB; or in podman with an image you pulled (ai → cfg). What a command changed isn't in `[undo]`: that's what git is for. Wide mode shows its thinking as a small ascii network |
-| companion | `[⌂]` in the bar is the house of a little pixel friend, a few cells like Claude Code's: a green monitor, an amber one with horns, a floppy disk that looks out of its window, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round. Out on an empty desktop he walks about, dances to music, naps (a window opens and he goes home; drag him along the edge, click him to talk, double click: home for an hour). He peeks out of the corner when the battery gets low, the charger comes, a screenshot is taken, the recording starts (a red light on his antenna), a reminder rings, a new kawt is out (lvl up), and once a night to say it's late; never over a fullscreen window or in do not disturb. Next to the coder he thinks, types, raises a flag on a diff, cheers, holds his head on an error, sweeps up after `[undo]`. A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg: no house, nothing runs for him |
+| companion | On the first start he says hello and shows around in six short steps (keys, the look, the ai, his house), in english or russian, and you can name him there (again: profile → cfg → `[tour]`). `[⌂]` in the bar is the house of a little pixel friend, a few cells like Claude Code's: a green monitor, an amber one with horns, a floppy disk that looks out of its window, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round. Out on an empty desktop he walks about, dances to music, naps (a window opens and he goes home; drag him along the edge, click him to talk, double click: home for an hour). He peeks out of the corner when the battery gets low, the charger comes, a screenshot is taken, the recording starts (a red light on his antenna), a reminder rings, a new kawt is out (lvl up), and once a night to say it's late; never over a fullscreen window or in do not disturb. Next to the coder he thinks, types, raises a flag on a diff, cheers, holds his head on an error, sweeps up after `[undo]`. A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg: no house, nothing runs for him |
 | lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
@@ -71,7 +71,7 @@ cd ~/kawt
 
 ```
 -- what should go on this machine? --
- > everything       shell, terminal, prompt, fastfetch and the extras
+ > everything       shell, terminal, prompt, fastfetch, thunar and the extras
    only the shell   the bar and panels + hyprland binds, nothing else
    let me pick      part by part
 ```
@@ -146,6 +146,23 @@ A menu asks which system this is (it guesses: Arch-based or not) and what to ins
   one thing on a fresh Arch that goes out by itself; it finds wifi login pages in cafés)
 - with only the shell picked, asks whether wallpapers should go through `awww` (transitions);
   makes `~/Pictures/wallpapers`, where `super + w` looks
+- thunar (a part of its own): installs it with `gvfs` (drives, trash) and `tumbler`
+  (thumbnails), and folders open in it. GTK apps (thunar, the "open file" windows) take the
+  theme's colors through `adw-gtk3`: `~/.config/gtk-3.0/gtk.css` and `gtk-4.0/gtk.css` link to
+  what kawt writes on every theme switch (yours goes to the backup), dark or light with it,
+  square like the rest. And kawt's own folder icons: pixel folders in the theme's color, with a
+  sign on home, downloads, music, pictures... and the trash (an icon theme `kawt`; every
+  other icon is Papirus). All from the Arch repos, all in your home folder
+- before pacman, says what would stop it halfway: another pacman running (or the lock one
+  left behind: it offers to take it away), less than 1 GB free, no internet
+- other bars, notification daemons and wallpaper programs (waybar, dunst, mako, swaync,
+  hyprpaper...) running or started in your Hyprland config: listed, and stopped and commented
+  out if you say so (only one program can show notifications)
+- at the end Hyprland checks its config (`Hyprland --verify-config`) and says what's wrong in
+  it; inside Hyprland kawt starts right away, and a few seconds later it's looked at: still
+  running, and nothing in its log that stopped a part from loading
+- everything it prints also goes to `~/.local/state/kawt/install.log`: the file to look at, or
+  to send along, when something went wrong
 
 It never runs as root (it asks for sudo itself, only for pacman), and running it again is safe.
 
@@ -242,7 +259,9 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 - `~/.config/kawt/companions.json`: your own looks for the companion
 - `~/.local/state/kawt/companion.json`: his life (food, fun, sleep, the phrases you gave him)
 - `~/.config/hypr/user.lua`: your Hyprland settings, with kawt's standard config
-- `~/.local/state/kawt/theme/`: generated color files, rewritten on every theme switch
+- `~/.local/state/kawt/theme/`: generated color files, rewritten on every theme switch (the
+  gtk colors and kawt's folder icons too)
+- `~/.local/state/kawt/install.log`: what the last install or update did
 - `quickshell/kawt-shell/config/Colors.qml`: kawt's own themes (don't edit them there: a
   `git pull` would take it back; `themes.json` changes them too)
 
