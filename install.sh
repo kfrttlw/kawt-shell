@@ -19,6 +19,7 @@
 #                                what that pull brought, the same way
 #                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
 #   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
+#   ./install.sh --monitors      your monitors: auto, or each one by hand (mode, position, scale)
 #   ./install.sh --help
 
 set -uo pipefail
@@ -109,6 +110,7 @@ for arg in "$@"; do
     case $arg in
         --update) mode=update ;;
         --check) mode=check ;;
+        --monitors) mode=monitors ;;
         --updated=*) updated_from=${arg#*=} ;; # the new install.sh, after --update pulled it (from: the commit before)
         -a | --all) preset=all ;;
         -s | --shell-only) preset=shell ;;
@@ -118,7 +120,7 @@ for arg in "$@"; do
         -n | --dry-run) dry=1 ;;
         -u | --uninstall) mode=uninstall ;;
         -h | --help)
-            sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -379,6 +381,178 @@ set_layouts() {
     step "edit" "keyboard: us,$layouts (alt + shift switches)"
 }
 
+# ------------------------------------------------------------------ helpers (monitors)
+# Auto: every monitor at its own best mode, side by side (the catch-all rule both new configs
+# have). By hand: a rule for each one, in a block of its own in user.lua (hyprland.lua,
+# hyprland.conf), which ./install.sh --monitors writes again
+mark_mon="kawt monitors ("
+mark_mon_end="kawt monitors end"
+mon_auto=1
+mon_rules=() # name|mode|position|scale|turned; mode "off": that one stays dark
+
+# the monitors connected now, one a line: name|description|modes (its own first). In hyprland,
+# hyprctl knows the refresh rates too; from a console, the kernel's /sys/class/drm the sizes only
+list_monitors() {
+    local out line d n="" desc="" modes=""
+    if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && out=$(hyprctl monitors all 2> /dev/null) && [[ $out == Monitor* ]]; then
+        while IFS= read -r line; do
+            case $line in
+                "Monitor "*)
+                    [[ -n $n ]] && printf '%s|%s|%s\n' "$n" "$desc" "$modes"
+                    n=${line#Monitor } n=${n%% (ID*} desc="" modes=""
+                    ;;
+                *"description: "*) desc=${line#*description: } ;;
+                *"availableModes: "*) modes=${line#*availableModes: } modes=${modes//Hz/} ;;
+            esac
+        done <<< "$out"
+        [[ -n $n ]] && printf '%s|%s|%s\n' "$n" "$desc" "$modes"
+        return 0
+    fi
+    for d in /sys/class/drm/card*-*; do
+        [[ -r $d/status && $(< "$d/status") == connected ]] || continue
+        n=${d##*/} n=${n#card*-} # card1-HDMI-A-1 -> HDMI-A-1, the name hyprland gives it
+        modes=$(awk '!seen[$0]++' "$d/modes" 2> /dev/null | tr '\n' ' ')
+        printf '%s||%s\n' "$n" "$modes"
+    done
+}
+
+# ask_valid <question> <default> <regex>: asked again until the answer fits
+ask_valid() {
+    local a
+    while :; do
+        a=$(ask_text "$1" "$2")
+        a=${a// /}
+        [[ $a =~ $3 ]] && { printf '%s' "$a"; return 0; }
+        printf '    %snot like that:%s %s\n' "$red" "$off" "$a" > /dev/tty
+    done
+}
+
+# auto, or each monitor by hand: its mode from the ones it has (or typed), where it stands,
+# its scale, whether it's turned. Fills mon_auto and mon_rules
+monitors_ask() {
+    local mons=() line n desc modes all=() m seen mon_c mon_m items on=0 mode pos scale turned
+    mon_auto=1 mon_rules=()
+    can_ask || return 0
+    mapfile -t mons < <(list_monitors)
+    section "monitors"
+    for line in "${mons[@]}"; do
+        IFS='|' read -r n desc _ <<< "$line"
+        say "  $n ${dim}$desc${off}"
+    done
+    say "${dim}  ↑↓ move · enter pick${off}"
+    mon_c=0
+    choose mon_c "auto|each at its own best mode, side by side: hyprland decides (recommended)" \
+        "by hand|mode and refresh rate, position, scale, turning: for each one"
+    ((mon_c == 1)) || return 0
+    if ((${#mons[@]} == 0)); then
+        warn "no monitor found from here, so auto" "later, in hyprland: ./install.sh --monitors"
+        return 0
+    fi
+    mon_auto=0
+    for line in "${mons[@]}"; do
+        IFS='|' read -r n desc modes <<< "$line"
+        say ""
+        say "  ${acc}$n${off} ${dim}$desc${off}"
+        # the modes it has, each once, its own first (the console knows no refresh rates)
+        items=() seen=" "
+        read -ra all <<< "$modes"
+        for m in "${all[@]}"; do
+            [[ $seen == *" $m "* ]] && continue
+            seen+="$m "
+            if ((${#items[@]} == 0)); then items+=("$m|its own"); else items+=("$m|"); fi
+            ((${#items[@]} < 10)) || break
+        done
+        items+=("highest rate|highrr: the highest refresh rate it has" "type it|like 1920x1080@144" "off|this one stays dark")
+        mon_m=0
+        choose mon_m "${items[@]}"
+        mode=${items[mon_m]%%|*}
+        case $mode in
+            "highest rate") mode=highrr ;;
+            "type it") mode=$(ask_valid "    mode? (1920x1080@144, preferred, highrr, highres)" preferred '^(preferred|highrr|highres|maxwidth|[0-9]+x[0-9]+(@[0-9]+(\.[0-9]+)?)?)$') ;;
+            off)
+                mon_rules+=("$n|off|||")
+                continue
+                ;;
+        esac
+        # the first one on at 0x0, the others to its right
+        pos=$(ask_valid "    position? (0x0, 1920x0, auto-right, auto-left, auto-up, auto-down)" "$( ((on)) && echo auto-right || echo 0x0)" '^(auto(-center)?(-(right|left|up|down))?|-?[0-9]+x-?[0-9]+)$')
+        scale=$(ask_valid "    scale? (1, 1.25, 1.5, 2, auto)" 1 '^(auto|[0-9]+(\.[0-9]+)?)$')
+        turned=$(ask_valid "    turned? (0 no, 1 90°, 2 180°, 3 270°)" 0 '^[0-3]$')
+        mon_rules+=("$n|$mode|$pos|$scale|$turned")
+        on=$((on + 1))
+    done
+}
+
+# what was picked, in one line: "DP-1 2560x1440@164.96 at 0x0 x1, HDMI-A-1 off"
+monitors_said() {
+    local r n mode pos scale turned out=""
+    if ((mon_auto)); then
+        printf 'auto'
+        return 0
+    fi
+    for r in "${mon_rules[@]}"; do
+        IFS='|' read -r n mode pos scale turned <<< "$r"
+        [[ -n $out ]] && out+=", "
+        if [[ $mode == off ]]; then
+            out+="$n off"
+        else
+            out+="$n $mode at $pos x$scale"
+            ((turned)) && out+=" turned $((turned * 90))°"
+        fi
+    done
+    printf '%s' "$out"
+}
+
+# the block of rules, for lua (1) or hyprland.conf (0); nothing for auto
+monitor_block() {
+    local lua=$1 c="#" r n mode pos scale turned
+    ((mon_auto)) && return 0
+    ((lua)) && c="--"
+    printf '%s %s./install.sh --monitors writes these lines again)\n' "$c" "$mark_mon"
+    for r in "${mon_rules[@]}"; do
+        IFS='|' read -r n mode pos scale turned <<< "$r"
+        if ((lua)); then
+            if [[ $mode == off ]]; then
+                printf 'hl.monitor({ output = "%s", disabled = true })\n' "$n"
+            else
+                printf 'hl.monitor({ output = "%s", mode = "%s", position = "%s", scale = "%s"%s })\n' "$n" "$mode" "$pos" "$scale" "$( ((turned)) && printf ', transform = %s' "$turned")"
+            fi
+        elif [[ $mode == off ]]; then
+            printf 'monitor = %s, disable\n' "$n"
+        else
+            printf 'monitor = %s, %s, %s, %s%s\n' "$n" "$mode" "$pos" "$scale" "$( ((turned)) && printf ', transform, %s' "$turned")"
+        fi
+    done
+    printf '%s %s\n' "$c" "$mark_mon_end"
+}
+
+# write_monitors <file>: kawt's block in <file> is replaced (auto: taken out). A new one goes
+# under user.lua's "-- monitors:" lines, or at the end (last: it wins over rules before it)
+write_monitors() {
+    local file=$1 lua=0 tmp
+    [[ $file == *.lua ]] && lua=1
+    if ((mon_auto)) && ! grep -F "$mark_mon" "$file" > /dev/null 2>&1; then
+        ((dry)) || step " ok " "$file (monitors: auto)"
+        return 0
+    fi
+    if ((dry)); then
+        note "would write the monitors into $file: $(monitors_said)"
+        return 0
+    fi
+    stash_copy "$file" || return 1
+    tmp=$file.kawt-tmp
+    KAWT_BLOCK=$(monitor_block "$lua") awk -v b="$mark_mon" -v e="$mark_mon_end" '
+        BEGIN { blk = ENVIRON["KAWT_BLOCK"] }
+        skip { if (index($0, e)) skip = 0; next }
+        index($0, b) { skip = 1; if (!done && blk != "") print blk; done = 1; next }
+        { print }
+        anchor && !done && /^-- hl\.monitor\(/ { if (blk != "") print blk; done = 1 }
+        { anchor = /^-- monitors: / }
+        END { if (!done && blk != "") printf "\n%s\n", blk }
+    ' "$file" > "$tmp" && cat "$tmp" > "$file" && rm -f "$tmp" || { rm -f "$tmp"; return 1; }
+    step "edit" "$file (monitors: $(monitors_said))"
+}
+
 # Hyprland's own starting config: what it would write itself on the first start (there with an
 # "autogenerated" warning on top). Being brand new, it's fitted to kawt: its SUPER + R
 # (hyprlauncher) and SUPER + SHIFT + S (a window to the scratchpad) are kawt's run and
@@ -388,6 +562,7 @@ new_hypr() {
     ((dry)) || sed -i -E 's/^(hl\.bind\(mainMod \.\. " \+ (R|SHIFT \+ S)",)/-- (kawt uses this key) \1/' "$hypr_lua" || return 1
     step "copy" "$hypr_lua (hyprland's starting config; super+r, super+shift+s left to kawt)"
     set_layouts "$hypr_lua"
+    ((mon_auto)) || write_monitors "$hypr_lua"
 }
 
 # new_std [layouts] [old config]: kawt's standard config. hyprland.lua becomes its three lines;
@@ -399,14 +574,15 @@ new_std() {
     step "copy" "$hypr_lua (kawt's standard config: preset.lua, kawt.lua, then your user.lua)"
     if [[ -e $hypr_user ]]; then
         step "keep" "$hypr_user (yours)"
-        return 0
+    else
+        run cp -- "$hypr_user_tpl" "$hypr_user" || return 1
+        if [[ -n $old ]] && ((!dry)); then
+            sed -i "s|^-- What the standard config does: .*|&\n-- Your config from before kawt's: $(short "$old") (take what you miss from it)|" "$hypr_user" || return 1
+        fi
+        step "copy" "$hypr_user (yours: monitors, layouts, programs, your own keys)"
+        set_layouts "$hypr_user" "$suggest"
     fi
-    run cp -- "$hypr_user_tpl" "$hypr_user" || return 1
-    if [[ -n $old ]] && ((!dry)); then
-        sed -i "s|^-- What the standard config does: .*|&\n-- Your config from before kawt's: $(short "$old") (take what you miss from it)|" "$hypr_user" || return 1
-    fi
-    step "copy" "$hypr_user (yours: monitors, layouts, programs, your own keys)"
-    set_layouts "$hypr_user" "$suggest"
+    ((mon_auto)) || write_monitors "$hypr_user"
 }
 
 # move <path> into the backup folder, keeping its place relative to $HOME
@@ -493,6 +669,36 @@ undo_old_zsh_setup() {
         stash_copy "$zshrc" && run sed -i -E 's/^ZSH_THEME="kawt" # kawt, was: (.*)$/ZSH_THEME=\1/' "$zshrc" && step "edit" "$zshrc (ZSH_THEME back to what it was)"
     fi
 }
+
+# ------------------------------------------------------------------ --monitors
+# the monitors again, any time: auto, or each one by hand, into kawt's block of user.lua
+# (with the standard config; else hyprland.lua or hyprland.conf). Hyprland reads it at once
+if [[ $mode == monitors ]]; then
+    banner "monitors"
+    ((dry)) && say "${dim}dry run: nothing will be changed${off}"
+    if loads_kawt "$hypr_lua" "$marker_std" && [[ -f $hypr_user ]]; then
+        mon_file=$hypr_user
+    elif [[ -f $hypr_lua ]]; then
+        mon_file=$hypr_lua
+    elif [[ -f $hypr_conf ]]; then
+        mon_file=$hypr_conf
+    else
+        say "${red}no hyprland config yet${off}: ./install.sh first"
+        exit 1
+    fi
+    if ! can_ask; then
+        say "${red}this one asks you things${off}: run it in a terminal, without --yes"
+        exit 1
+    fi
+    monitors_ask
+    section "write"
+    write_monitors "$mon_file" || { fail "could not write $mon_file"; exit 1; }
+    if ((!dry)) && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl reload > /dev/null 2>&1; then
+        pass "hyprland read it again"
+    fi
+    [[ -d $backup ]] && say "${dim}the file before: $(short "$backup")${off}"
+    exit 0
+fi
 
 # ------------------------------------------------------------------ update
 # --update: kawt itself, from git. The configs are links into this folder, so a pull is most of
@@ -846,6 +1052,9 @@ if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
         ((c == 1)) && hypr_from=std
     fi
 fi
+
+# a new config: the monitors, auto or each one by hand (again any time: ./install.sh --monitors)
+[[ $hypr_from == std || $hypr_from == hypr ]] && monitors_ask
 
 # ------------------------------------------------------------------ 2c. nvidia
 # An nvidia card (from /sys: no lspci needed) gets two offers:
@@ -1246,6 +1455,7 @@ case $hypr_from in
     std) printf '  %-9s %s\n' "hyprland" "kawt's standard config + user.lua for yours$( [[ -f $hypr_lua ]] && printf ' %s(your hyprland.lua goes to the backup)%s' "$dim" "$off")" ;;
     hypr) printf '  %-9s %s\n' "hyprland" "hyprland's own starting config" ;;
 esac
+((mon_auto)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
 if ((nv_cfg || nv_driver)); then
     printf '  %-9s %s\n' "nvidia" "$( ((nv_cfg)) && printf 'hyprland env')$( ((nv_cfg && nv_driver)) && printf ' + ')$( ((nv_driver)) && printf 'the driver %s(a reboot after)%s' "$dim" "$off")"
 fi
