@@ -37,6 +37,11 @@ qs_dst=$config/quickshell/kawt-shell
 kitty_dst=$config/kitty/kitty.conf
 fastfetch_dst=$config/fastfetch/config.jsonc
 fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme switch
+# gtk apps (thunar, the "open file" windows) in kawt's colors, its folder icons: links into
+# what kawt writes on every theme switch (services/ThemeExport.qml)
+gtk3_dst=$config/gtk-3.0/gtk.css
+gtk4_dst=$config/gtk-4.0/gtk.css
+icons_dst=${XDG_DATA_HOME:-$HOME/.local/share}/icons/kawt
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
 # zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
@@ -87,6 +92,7 @@ parts=(
     "zsh|zsh prompt|┌[user]─[~/dir]─[branch], hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
     "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc, sandbox, voice"
+    "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"
 )
 # packages per part; "a|b" = the first of them the repos have
 pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2 hyprpicker)
@@ -101,6 +107,9 @@ pkgs_hypr=()
 pkgs_kitty=(kitty)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
 pkgs_fastfetch=(fastfetch)
+# thunar: its drives and trash (gvfs), pictures' thumbnails (tumbler); adw-gtk3, the gtk theme
+# that takes kawt's colors; dconf keeps the gtk settings; xdg-utils makes thunar open folders
+pkgs_files=(thunar gvfs tumbler "adw-gtk-theme|adw-gtk3" dconf xdg-utils)
 pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
@@ -139,6 +148,15 @@ if [[ -t 1 ]]; then
     dim=$'\e[2m' acc=$'\e[1m' red=$'\e[31m' nub=$'\e[38;2;226;35;26m' off=$'\e[0m'
 else
     dim='' acc='' red='' nub='' off=''
+fi
+# what an install or an update prints also goes to ~/.local/state/kawt/install.log (without the
+# colors): the one file to look at, or to send along, when something went wrong. The menus and
+# questions go to the terminal only. After --update pulled, the new installer adds to its log
+log=$state/install.log
+if [[ $mode == install || $mode == update ]] && ((!dry && EUID != 0)) && mkdir -p "$state" 2> /dev/null; then
+    [[ -n $updated_from ]] || : > "$log"
+    exec > >(tee >(sed -u $'s/\e\\[[0-9;?]*[a-zA-Z]//g' >> "$log")) 2>&1
+    log_pid=$!
 fi
 say() { printf '%s\n' "$*"; }
 short() { printf '%s' "${1//"$HOME"/\~}"; } # /home/you/x -> ~/x, for display only
@@ -220,7 +238,15 @@ cols() {
     c=$({ stty size < /dev/tty; } 2> /dev/null | cut -d' ' -f2) # braces: no terminal, no message
     ((c > 0)) 2> /dev/null && echo "$c" || echo 80
 }
-trap cursor_back EXIT
+# at the end: the cursor back, and the log written out before the prompt comes back
+on_exit() {
+    cursor_back
+    if [[ -n ${log_pid:-} ]]; then
+        exec > /dev/null 2>&1
+        wait "$log_pid" 2> /dev/null
+    fi
+}
+trap on_exit EXIT
 quit() {
     cursor_back
     say ""
@@ -585,6 +611,157 @@ new_std() {
     ((mon_auto)) || write_monitors "$hypr_user"
 }
 
+# gtk_files: gtk.css (3 and 4) and the kawt icons link to what kawt writes on every theme
+# switch; until kawt has run once there's a start (no colors yet, papirus icons). Then gtk is
+# told to use them (kawt keeps that matched to dark / light), and folders open in thunar
+gtk_files() {
+    local t=$state/theme mime
+    if [[ ! -f $t/icons/kawt/index.theme ]] && ((!dry)); then
+        mkdir -p "$t/icons/kawt" && touch "$t/gtk-3.css" "$t/gtk-4.css" || return 1
+        printf '[Icon Theme]\nName=kawt\nInherits=Papirus-Dark,Papirus,Adwaita,hicolor\nDirectories=\n' > "$t/icons/kawt/index.theme" || return 1
+    fi
+    link "$t/gtk-3.css" "$gtk3_dst" && link "$t/gtk-4.css" "$gtk4_dst" && link "$t/icons/kawt" "$icons_dst" || return 1
+    # (outside a session gsettings can't reach its store: kawt sets the same at its start)
+    if command -v gsettings > /dev/null && run gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark 2> /dev/null; then
+        run gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+        run gsettings set org.gnome.desktop.interface icon-theme kawt
+        step "edit" "gtk: the adw-gtk3 theme in kawt's colors, kawt's folder icons"
+    else
+        note "gtk's theme and icons: kawt sets them when it starts"
+    fi
+    if command -v xdg-mime > /dev/null && [[ -n $(desktop_file thunar.desktop) ]]; then
+        mime=$(xdg-mime query default inode/directory 2> /dev/null)
+        if [[ $mime != thunar.desktop ]]; then
+            run xdg-mime default thunar.desktop inode/directory && step "edit" "folders open in thunar${mime:+ (was ${mime%.desktop})}"
+        fi
+    fi
+    return 0
+}
+desktop_file() { # desktop_file <name>: where it is, if an app installed one
+    local d
+    for d in "${XDG_DATA_HOME:-$HOME/.local/share}/applications" /usr/local/share/applications /usr/share/applications; do
+        [[ -f $d/$1 ]] && { printf '%s' "$d/$1"; return 0; }
+    done
+    return 1
+}
+
+# ------------------------------------------------------------------ helpers (safety)
+# before pacman: what would stop it halfway, said now with what to do. Another pacman (or the
+# lock one left when it was cut off), a full disk, no internet
+pacman_ready() {
+    local free host
+    if [[ -e /var/lib/pacman/db.lck ]]; then
+        if pgrep -x pacman > /dev/null || pgrep -x paru > /dev/null || pgrep -x yay > /dev/null; then
+            fail "another pacman is running" "let it finish, then ./install.sh again"
+            return 1
+        fi
+        if ask "pacman's lock is there but no pacman runs (one was cut off): take the lock away?"; then
+            run sudo rm -f /var/lib/pacman/db.lck && step "rm" "/var/lib/pacman/db.lck" || return 1
+        else
+            fail "pacman is locked" "once nothing else installs: sudo rm /var/lib/pacman/db.lck"
+            return 1
+        fi
+    fi
+    free=$(df -Pk / 2> /dev/null | awk 'NR == 2 { print int($4 / 1024) }')
+    if [[ -n $free ]] && ((free < 1024)); then
+        fail "only $free MB free on /" "pacman needs more; sudo pacman -Sc empties its cache of old packages"
+        return 1
+    elif [[ -n $free ]] && ((free < 3072)); then
+        warn "only $free MB free on /" "it may run out; sudo pacman -Sc empties pacman's cache of old packages"
+    fi
+    # the first mirror's name found: there's internet (asks the dns, nothing more)
+    host=$(sed -nE 's|^[[:space:]]*Server[[:space:]]*=[[:space:]]*[a-z]+://([^/:]+).*|\1|p' /etc/pacman.d/mirrorlist 2> /dev/null | head -n 1)
+    if [[ -n $host ]] && ! getent hosts "$host" > /dev/null 2>&1; then
+        fail "no internet: $host can't be found" "connect first (nmtui, or iwctl for wifi), then ./install.sh again"
+        return 1
+    fi
+    return 0
+}
+
+# Other bars, notification daemons and wallpaper programs do what kawt does: two bars, and only
+# one of them can show notifications. The ones running, and the lines in hyprland's config that
+# start them, are listed; stopped and commented out if you say so (the files to the backup first)
+others_off() {
+    local p f n l running=() hits=() files=() cmt expr
+    local re='waybar|dunst|mako|swaync|fnott|hyprpaper|swaybg|hyprpanel'
+    for p in ${re//|/ }; do
+        pgrep -x "$p" > /dev/null && running+=("$p")
+    done
+    for f in "$hypr_lua" "$hypr_user" "$hypr_conf"; do
+        [[ -f $f ]] || continue
+        while IFS=: read -r n l; do
+            hits+=("$f:$n:$l")
+            [[ " ${files[*]} " == *" $f "* ]] || files+=("$f")
+        done < <(grep -nE "exec.*\b($re)\b" "$f" | grep -vE '^[0-9]+:[[:space:]]*(#|--)')
+    done
+    ((${#running[@]} + ${#hits[@]})) || return 0
+    section "others"
+    for p in "${running[@]}"; do
+        warn "$p is running" "$(case $p in waybar | hyprpanel) echo "a second bar" ;; hyprpaper | swaybg) echo "a wallpaper over kawt's" ;; *) echo "it takes the notifications from kawt" ;; esac)"
+    done
+    for f in "${hits[@]}"; do
+        IFS=: read -r p n l <<< "$f"
+        warn "$(short "$p"):$n starts it" "${l#"${l%%[![:space:]]*}"}"
+    done
+    ask "stop them and comment those lines out?" 1 || { note "left as they are: kawt works, next to them"; return 0; }
+    ((${#running[@]})) && run pkill -x "$(IFS='|'; printf '%s' "${running[*]}")" && step "stop" "${running[*]}"
+    for f in "${files[@]}"; do
+        cmt="#"
+        [[ $f == *.lua ]] && cmt="--"
+        expr=()
+        for l in "${hits[@]}"; do
+            IFS=: read -r p n _ <<< "$l"
+            [[ $p == "$f" ]] && expr+=(-e "${n}s/^/$cmt (kawt does this) /")
+        done
+        stash_copy "$f" && run sed -i "${expr[@]}" "$f" && step "edit" "$f ($((${#expr[@]} / 2)) line(s) commented out)"
+    done
+}
+
+# hyprland reads its config the way it would at the next start, and says what's wrong in it
+verify_hypr() {
+    local out res
+    command -v Hyprland > /dev/null || return 0
+    out=$(timeout 30 Hyprland --verify-config 2> /dev/null)
+    [[ $out == *"Config parsing result:"* ]] || return 0 # an older hyprland: it can't tell
+    res=$(sed '/^[[:space:]]*$/d' <<< "${out##*Config parsing result:}")
+    if [[ $res == "config ok" ]]; then
+        pass "hyprland reads its config without errors"
+    else
+        warn "hyprland finds errors in its config:"
+        while IFS= read -r l; do note "$l"; done < <(head -n 6 <<< "$res")
+        note "all of them: Hyprland --verify-config"
+    fi
+}
+
+# the shell started (again) and looked at: still running a few seconds later, and nothing in
+# its log that stopped part of it from loading. In a hyprland session only
+start_shell() {
+    local errs
+    qs kill -c kawt-shell > /dev/null 2>&1
+    for _ in {1..30}; do
+        pgrep -f 'qs -c kawt-shell' > /dev/null || break
+        sleep 0.1
+    done
+    # in a session of its own: it outlives this script and the terminal it runs in
+    if ! setsid -f qs -c kawt-shell -d > /dev/null 2>&1; then
+        warn "could not start the shell" "qs -c kawt-shell -d"
+        return 1
+    fi
+    sleep 4
+    errs=$(qs log -c kawt-shell 2> /dev/null | grep -E '\b(ERROR|FATAL|CRITICAL)\b' | head -n 3)
+    if ! pgrep -f 'qs -c kawt-shell' > /dev/null; then
+        warn "the shell stopped right after starting" "what it says: qs -c kawt-shell (in a terminal)"
+        return 1
+    elif [[ -n $errs ]]; then
+        warn "the shell runs, with errors:"
+        while IFS= read -r l; do note "$l"; done <<< "$errs"
+        note "all of it: qs log -c kawt-shell"
+    else
+        pass "the shell started, no errors"
+    fi
+    return 0
+}
+
 # move <path> into the backup folder, keeping its place relative to $HOME
 stash() {
     local path=$1 rel
@@ -813,7 +990,7 @@ if [[ $mode == uninstall ]]; then
         return 1
     }
 
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -824,6 +1001,13 @@ if [[ $mode == uninstall ]]; then
             run mkdir -p "$(dirname "$dst")" && run cp -a -- "$orig" "$dst" && step "back" "$dst"
         fi
     done
+
+    # the gtk theme and icons kawt picked: gtk's own again
+    if command -v gsettings > /dev/null && [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]]; then
+        run gsettings reset org.gnome.desktop.interface icon-theme
+        run gsettings reset org.gnome.desktop.interface gtk-theme
+        step "edit" "gtk: its own theme and icons again"
+    fi
 
     undo_old_zsh_setup
     if [[ -f $zshrc ]] && grep -F "$marker_zsh" "$zshrc" > /dev/null; then
@@ -962,30 +1146,31 @@ fi
 
 # ------------------------------------------------------------------ 2. what
 # on = which parts, in the order of `parts`
-on=(1 1 1 1 1 0)
+on=(1 1 1 1 1 0 1)
 case $preset in
-    all) on=(1 1 1 1 1 1) ;;
-    shell) on=(1 1 0 0 0 0) ;;
+    all) on=(1 1 1 1 1 1 1) ;;
+    shell) on=(1 1 0 0 0 0 0) ;;
     # the parts kawt finds here (the extras can't be told apart from anything else: ./install.sh adds them)
     update)
-        on=(0 0 0 0 0 0)
+        on=(0 0 0 0 0 0 0)
         [[ -L $qs_dst && $(resolve "$qs_dst") == "$(resolve "$repo/quickshell/kawt-shell")" ]] && on[0]=1
         { loads_kawt "$hypr_lua" "$marker_lua" || loads_kawt "$hypr_conf" "$marker_conf"; } && on[1]=1
         [[ -L $kitty_dst && $(resolve "$kitty_dst") == "$(resolve "$repo/kitty/kitty.conf")" ]] && on[2]=1
         loads_kawt "$zshrc" "$marker_zsh" && on[3]=1
         [[ -L $fastfetch_dst && $(resolve "$fastfetch_dst") == "$(resolve "$fastfetch_src")" ]] && on[4]=1
+        [[ -L $gtk3_dst && $(resolve "$gtk3_dst") == "$(resolve "$state/theme/gtk-3.css")" ]] && on[6]=1
         ;;
     *)
         if can_ask; then
             which=0
             section "what should go on this machine?"
             say "${dim}  ↑↓ move · enter pick · q quit${off}"
-            choose which "everything|shell, terminal, prompt, fastfetch and the extras" \
+            choose which "everything|shell, terminal, prompt, fastfetch, thunar and the extras" \
                 "only the shell|the bar and panels + hyprland binds, nothing else" \
                 "let me pick|part by part"
             case $which in
-                0) on=(1 1 1 1 1 1) ;;
-                1) on=(1 1 0 0 0 0) ;;
+                0) on=(1 1 1 1 1 1 1) ;;
+                1) on=(1 1 0 0 0 0 0) ;;
                 2)
                     section "parts"
                     say "${dim}  ↑↓ move · space on/off · enter go on${off}"
@@ -1152,7 +1337,7 @@ fi
 
 # what the picked parts need (arch package names; "a|b" = the first one there is)
 wanted=()
-for id in shell hypr kitty zsh fastfetch extras; do
+for id in shell hypr kitty zsh fastfetch extras files; do
     want "$id" || continue
     declare -n list="pkgs_$id"
     wanted+=("${list[@]}")
@@ -1295,6 +1480,7 @@ human() {
         quickshell) echo "quickshell (see quickshell.org)" ;;
         ttf-jetbrains-mono-nerd) echo "JetBrainsMono Nerd Font" ;;
         papirus-icon-theme) echo "Papirus icons" ;;
+        "adw-gtk-theme|adw-gtk3" | adw-gtk-theme) echo "the adw-gtk3 gtk theme" ;;
         libnotify) echo "notify-send (libnotify)" ;;
         glib2) echo "gdbus (glib2)" ;;
         hyprpolkitagent) echo "a polkit agent (hyprpolkitagent)" ;;
@@ -1477,6 +1663,11 @@ noconfirm=()
 ((yes)) && noconfirm=(--noconfirm)
 if ((packages)); then
     section "packages"
+    if ((!dry)) && { ((update)) || ((${#repo_pkgs[@]} + ${#aur_pkgs[@]})) || [[ -n $qs_update ]]; } && ! pacman_ready; then
+        say ""
+        say "${red}stopped before pacman:${off} nothing was installed or changed. ${dim}(log: $(short "$log"))${off}"
+        exit 1
+    fi
     if ((update)); then
         run sudo pacman -Syu --needed "${noconfirm[@]}" "${repo_pkgs[@]}" || { fail "pacman failed" "see above; then run ./install.sh again"; failed=1; }
     elif ((${#repo_pkgs[@]})); then
@@ -1590,6 +1781,7 @@ if want shell; then
 fi
 want kitty && need_cmd kitty "the terminal (package kitty)"
 want fastfetch && need_cmd fastfetch "package fastfetch"
+want files && need_cmd thunar "the file manager (package thunar)"
 if [[ -f $hypr_lua && $hypr_from != std ]]; then
     if grep -vE '^[[:space:]]*--' "$hypr_lua" | grep -E 'require[[:space:]]*\(?[[:space:]]*["'"'"']kawt' > /dev/null; then
         fail "hyprland.lua has an old require(\"kawt\") line" "delete it: the file it loads is gone and it breaks the config"
@@ -1629,6 +1821,9 @@ if want fastfetch; then
     fi
     link "$fastfetch_src" "$fastfetch_dst" || { fail "could not link $fastfetch_dst"; failed=1; }
 fi
+if want files; then
+    gtk_files || { fail "could not set up the gtk colors"; failed=1; }
+fi
 if want hypr; then
     if [[ $hypr_from == std && -f $hypr_lua ]]; then
         old_layouts=$(layouts_of "$hypr_lua")
@@ -1656,6 +1851,8 @@ if want zsh && command -v zsh > /dev/null; then
     fi
     hook "$zshrc" "$marker_zsh" "$line_zsh" || { fail "could not edit $zshrc"; failed=1; }
 fi
+# waybar, dunst, mako...: doing kawt's job next to it
+((dry)) || ! want shell || others_off
 
 # ------------------------------------------------------------------ 8. services
 # only asked, never just switched on (and not again after an update: that was answered)
@@ -1778,6 +1975,10 @@ if ((!dry)); then
         elif [[ -f $hypr_conf ]]; then
             if loads_kawt "$hypr_conf" "$marker_conf"; then pass "hyprland loads kawt"; else fail "hyprland.conf doesn't load kawt"; failed=1; fi
         fi
+        verify_hypr
+    fi
+    if want files && command -v gsettings > /dev/null; then
+        [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]] && pass "gtk apps use kawt's colors and folders"
     fi
 fi
 
@@ -1796,13 +1997,7 @@ if [[ -n $updated_from ]]; then
     ((nothing_new)) || diff=$(git -C "$repo" diff --name-only "$updated_from" HEAD 2> /dev/null)
     ((nothing_new && !touched)) || section "reload"
     if want shell && ((!nothing_new || touched)) && [[ -n ${WAYLAND_DISPLAY:-} ]] && { pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; }; then
-        qs kill -c kawt-shell > /dev/null 2>&1
-        for _ in {1..30}; do
-            pgrep -f 'qs -c kawt-shell' > /dev/null || break
-            sleep 0.1
-        done
-        # in a session of its own: it outlives this script and the terminal it runs in
-        if setsid -f qs -c kawt-shell -d > /dev/null 2>&1; then pass "the shell started again"; else warn "could not start the shell again" "qs -c kawt-shell -d"; fi
+        start_shell
     fi
     if want hypr && grep -E '^quickshell/kawt-shell/hypr/' <<< "$diff" > /dev/null && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
         hyprctl reload > /dev/null 2>&1 && pass "hyprland read its config again"
@@ -1820,7 +2015,20 @@ if [[ -n $updated_from ]]; then
     exit 0
 fi
 [[ -d $backup ]] && say "${dim}old configs are in $(short "$backup")  (undo: ./install.sh --uninstall)${off}"
-say "${acc}done.${off} start kawt:  ${acc}qs kill -c kawt-shell; qs -c kawt-shell -d${off}  ${dim}(or log in to hyprland again)${off}"
+# inside hyprland: kawt starts now, and is looked at
+started=0
+if want shell && [[ -n ${WAYLAND_DISPLAY:-} && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v qs > /dev/null; then
+    section "start"
+    start_shell && started=1
+    [[ -f $hypr_lua || -f $hypr_conf ]] && hyprctl reload > /dev/null 2>&1 && pass "hyprland read its config again"
+    say ""
+fi
+if ((started)); then
+    say "${acc}done.${off} kawt is running."
+else
+    say "${acc}done.${off} start kawt:  ${acc}qs kill -c kawt-shell; qs -c kawt-shell -d${off}  ${dim}(or log in to hyprland again)${off}"
+fi
+say "${dim}all it did: $(short "$log")${off}"
 if want zsh && command -v zsh > /dev/null; then
     sh_now=$(login_shell)
     if [[ -z $sh_now || $sh_now == */zsh ]]; then
