@@ -389,6 +389,16 @@ Variants {
             }
         }
 
+        // the first start's hello and tour (Panels opens it once)
+        Lazy {
+            when: Panels.isOpen("welcome", root.modelData)
+
+            WelcomePopover {
+                forScreen: root.modelData
+                barWindow: root
+            }
+        }
+
         // the companion out on an empty desktop, and peeking from the corner when something
         // happens while he's nowhere on the screen (services/Companion.qml)
         Lazy {
