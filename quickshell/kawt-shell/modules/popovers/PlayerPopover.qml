@@ -296,13 +296,13 @@ Popover {
     Label {
         id: seek
 
-        readonly property string right: Fmt.mmss(root.player?.length)
-        readonly property string left: Fmt.mmss(root.shownPos).padStart(right.length)
-        readonly property int barChars: Math.max(8, Math.floor(root.innerWidth / cell.advanceWidth) - left.length - right.length - 4)
+        readonly property string total: Fmt.mmss(root.player?.length)
+        readonly property string now: Fmt.mmss(root.shownPos).padStart(total.length)
+        readonly property int barChars: Math.max(8, Math.floor(root.innerWidth / cell.advanceWidth) - now.length - total.length - 4)
         property real wheelAcc: 0
 
         visible: Media.hasLength
-        text: `${left} [${Fmt.bar(root.shownPos / (root.player?.length || 1), barChars)}] ${right}`
+        text: `${now} [${Fmt.bar(root.shownPos / (root.player?.length || 1), barChars)}] ${total}`
         color: root.dragTo >= 0 ? Colors.fg : Colors.dim
 
         MouseArea {
@@ -312,7 +312,7 @@ Popover {
 
             // x on the bar -> seconds
             function at(x: real): real {
-                const start = (seek.left.length + 2) * cell.advanceWidth;
+                const start = (seek.now.length + 2) * cell.advanceWidth;
                 return Math.max(0, Math.min(1, (x - start) / (seek.barChars * cell.advanceWidth))) * root.player.length;
             }
 
