@@ -3,6 +3,8 @@
   - a type used without importing its module   ("Popover is not a type", "Type X unavailable")
   - the same property set twice in one object  ("Property value set multiple times")
   - JavaScript newer than Qt's engine            (matchAll, flatMap, ...)
+  - a property named like one an Item already has, left / x / visible...
+                                                 ("Cannot override FINAL property", Qt 6.10+)
 Run from anywhere, best before every commit:
     python3 tools/check.py
 Exits 1 if something is wrong."""
@@ -104,6 +106,25 @@ for dirpath, _, files in os.walk("."):
                 if re.search(pattern, code):
                     print(f"{path}:{n}: {name} is too new for Qt's JavaScript engine")
                     problems += 1
+
+# an Item's own properties that newer Qt marks FINAL (Qt 6.12: these 22, the same on Text,
+# Rectangle, MouseArea, the layouts...): a property of ours with one of those names stops the file
+# from loading. A QtObject or a Singleton has none of them, so its own top-level ones are fine
+final_names = "parent x y z width height opacity visible childrenRect anchors left right horizontalCenter top bottom verticalCenter baseline focus activeFocus activeFocusOnTab transform layer"
+final = re.compile(r"^(\s*)(?:(?:readonly|required|default)\s+)*property\s+[\w<>.]+\s+(" + "|".join(final_names.split()) + r")\b")
+not_items = ("QtObject", "Singleton", "Scope", "Variants", "Process", "Timer", "FileView", "Connections")
+for dirpath, _, files in os.walk("."):
+    for f in files:
+        if not f.endswith(".qml"):
+            continue
+        path = os.path.join(dirpath, f)
+        lines = open(path).read().split("\n")
+        root_type = next((m.group(1) for l in lines for m in [re.match(r"^(\w+)\s*\{", l)] if m), "")
+        for n, line in enumerate(lines, 1):
+            m = final.match(line)
+            if m and not (root_type in not_items and len(m.group(1)) == 4):
+                print(f"{path}:{n}: a property named {m.group(2)}: every Item has one already (Cannot override FINAL property)")
+                problems += 1
 
 print(f"{problems} problem(s)" if problems else "all checks ok")
 sys.exit(1 if problems else 0)
