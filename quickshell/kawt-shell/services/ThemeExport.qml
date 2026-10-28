@@ -21,7 +21,7 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         for (const name in f)
             args.push(name, f[name]);
@@ -49,6 +49,11 @@ Singleton {
 
         // only fastfetch's file changes: nothing to recolor live
         function onFetchLogoChanged(): void {
+            root.apply(false);
+        }
+
+        // gtk's font: apps started from now on
+        function onFontFamilyChanged(): void {
             root.apply(false);
         }
     }
