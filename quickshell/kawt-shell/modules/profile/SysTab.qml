@@ -11,7 +11,7 @@ import qs.utils
 //   [main]  power
 //
 //   ██ ▄█▀  ▀▀▀█▄ ██    ██ ▀██▀▀         ThinkPad T14s Gen 1
-//   ██▀█▄  ▄█▀▀██ ██▄██▄██  ██    ▄▄     20T0S0... · kawt bios 0.1
+//   ██▀█▄  ▄█▀▀██ ██▄██▄██  ██    ▄▄     20T0S0... · kawt bios 1.0
 //
 //   bios version ........ R1CET73W (1.42)
 //   cpu ................. AMD Ryzen 7 PRO 4750U · 16 threads
@@ -158,7 +158,7 @@ ColumnLayout {
                 }
 
                 Label {
-                    text: [Hardware.code !== SysInfo.model ? Hardware.code : "", "kawt bios 0.1"].filter(s => s).join(" · ")
+                    text: [Hardware.code !== SysInfo.model ? Hardware.code : "", `kawt bios ${Kawt.version}`].filter(s => s).join(" · ")
                     color: Colors.dim
                 }
             }
