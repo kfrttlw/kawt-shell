@@ -69,8 +69,13 @@ code=${PIPESTATUS[0]}
 
 echo "-- theme"
 theme=$(setting theme) light=$(setting light) term=$(setting termColors)
-want="${theme:-mono}-$([[ $light == true ]] && echo light || echo dark)"
-info "settings.json: theme=${theme:-mono} light=${light:-false} terminal=${term:-soft}  ->  $want"
+# a theme kawt doesn't have any more (mono, amber, phosphor) and that isn't one of your own shows as thinkpad
+case ${theme:=thinkpad} in
+    thinkpad | wallpaper) ;;
+    *) grep -qs "\"$theme\"" "${XDG_CONFIG_HOME:-$HOME/.config}/kawt/themes.json" || theme=thinkpad ;;
+esac
+want="$theme-$([[ $light == true ]] && echo light || echo dark)"
+info "settings.json: theme=$theme light=${light:-false} terminal=${term:-soft}  ->  $want"
 if [[ -f $state/theme/kitty.conf ]]; then
     have=$(sed -n '1s/.*kawt theme: \([^ ]*\).*/\1/p' "$state/theme/kitty.conf")
     if [[ $have == "$want" ]]; then
@@ -111,7 +116,7 @@ else
     else
         good "analysed: main hue ${phue%%.*}°, strength $(setting wallStrength)"
     fi
-    [[ $theme == wallpaper ]] && good "the wallpaper theme is selected" || info "selected theme: ${theme:-mono} (pick 'wallpaper' in super+w to use it)"
+    [[ $theme == wallpaper ]] && good "the wallpaper theme is selected" || info "selected theme: $theme (pick 'wallpaper' in super+w to use it)"
 fi
 
 echo "-- kitty"

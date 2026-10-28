@@ -4,15 +4,16 @@ import Quickshell
 import Quickshell.Io
 import "../utils/wallpalette.js" as WallPalette
 
-// Every theme comes in a dark (CRT) and a light (paper / printout) variant;
-// Settings.theme picks the theme, Settings.light the variant.
+// kawt's themes: thinkpad (black and its one red light, or paper and ink) and wallpaper (the same,
+// lit in the wallpaper's color: utils/wallpalette.js). Each comes in a dark (black) and a light
+// (white: paper) variant; Settings.theme picks the theme, Settings.light the variant.
 //
 // Your own themes go to ~/.config/kawt/themes.json, not here (a git pull would take a change
-// here back). A new name is a new theme; a name from below changes only the colors given:
+// here back). A new name is a new theme; "thinkpad" changes only the colors given:
 //   {
 //     "matrix":   { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
 //                             "accent": "#b6ffc8", "warn": "#ff3b30", "hoverFill": "#061a0b" } },
-//     "phosphor": { "dark": { "accent": "#ffffff" } }
+//     "thinkpad": { "dark": { "accent": "#ffffff" } }
 //   }
 // Colors are #rrggbb or #rrggbbaa; a missing one comes from the theme of the same name (or
 // thinkpad). A new theme given only "dark" (or "light") uses it for both. Names: lowercase
@@ -24,71 +25,9 @@ Singleton {
     // the fixed themes, your own over them, plus "wallpaper" once a palette was taken from the
     // wallpaper. That one is built from the analysed wallpaper + Settings.wallStrength, so
     // changing the strength recolors at once, without looking at the picture again
-    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, custom, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength) }) : Object.assign({}, fixed, custom)
+    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, custom, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength, fixed.thinkpad) }) : Object.assign({}, fixed, custom)
 
     readonly property var fixed: ({
-        mono: {
-            dark: {
-                bg: "#0a0a0a",
-                fg: "#e6e6e2",
-                dim: "#727270",
-                border: "#3a3a38",
-                accent: "#e6e6e2",
-                warn: "#c9564a",
-                hoverFill: "#1c1c1a"
-            },
-            light: {
-                bg: "#ecebe6",
-                fg: "#121212",
-                dim: "#75736c",
-                border: "#bcb9b0",
-                accent: "#121212",
-                warn: "#b3261e",
-                hoverFill: "#dcdad2"
-            }
-        },
-        amber: {
-            dark: {
-                bg: "#100f0d",
-                fg: "#d9d3c7",
-                dim: "#736c5e",
-                border: "#39352c",
-                accent: "#d97a3d",
-                warn: "#d97a3d",
-                hoverFill: "#211f1a"
-            },
-            // sepia paper
-            light: {
-                bg: "#f2ead8",
-                fg: "#2b2418",
-                dim: "#857a63",
-                border: "#cbbf9f",
-                accent: "#b4541a",
-                warn: "#b4541a",
-                hoverFill: "#e6dcc3"
-            }
-        },
-        phosphor: {
-            dark: {
-                bg: "#050a06",
-                fg: "#8ee6a0",
-                dim: "#3d6b48",
-                border: "#1e3a25",
-                accent: "#c8ffd4",
-                warn: "#ff6b5e",
-                hoverFill: "#0d1a10"
-            },
-            // green-bar printer paper
-            light: {
-                bg: "#e8f0e6",
-                fg: "#0f2a16",
-                dim: "#5f7a64",
-                border: "#b3c9b5",
-                accent: "#1f7a3a",
-                warn: "#c0392b",
-                hoverFill: "#d6e4d6"
-            }
-        },
         // kawt's own: a black thinkpad, its one red light. Red is only for where you are and what's
         // chosen (the trackpoint, the lit dot on the lid); everything else is ink and grey
         thinkpad: {

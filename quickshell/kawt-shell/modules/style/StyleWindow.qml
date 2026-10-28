@@ -14,6 +14,20 @@ PanelWindow {
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("style", forScreen)
 
+    // the themes to pick: black and white (the thinkpad theme, dark and light), the wallpaper's
+    // once one was looked at (in the variant you're in), then your own (themes.json)
+    readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...Colors.names.filter(n => n !== "thinkpad").map(n => ({ name: n, theme: n, light: null }))]
+
+    function isCurrent(c: var): bool {
+        return Colors.mode === c.theme && (c.light === null || Settings.light === c.light);
+    }
+
+    function choose(c: var): void {
+        Settings.theme = c.theme;
+        if (c.light !== null)
+            Settings.light = c.light;
+    }
+
     screen: forScreen
     visible: open
     color: "transparent"
@@ -73,8 +87,9 @@ PanelWindow {
             else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) && grid.count > 0)
                 Wallpapers.set(Wallpapers.files[grid.currentIndex]);
             else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight) {
-                const i = Colors.names.indexOf(Colors.mode) + (event.key === Qt.Key_BracketRight ? 1 : -1);
-                Settings.theme = Colors.names[(i + Colors.names.length) % Colors.names.length];
+                const n = root.choices.length;
+                const i = root.choices.findIndex(c => root.isCurrent(c)) + (event.key === Qt.Key_BracketRight ? 1 : -1);
+                root.choose(root.choices[(i + n) % n]);
             } else if (event.key === Qt.Key_T)
                 Settings.light = !Settings.light;
             else
@@ -139,9 +154,9 @@ PanelWindow {
                     }
                 }
 
-                // [dark] light   (super+shift+w)
+                // [dark] light   (super+shift+w): black and white are that already
                 Repeater {
-                    model: ["dark", "light"]
+                    model: Colors.mode !== "thinkpad" ? ["dark", "light"] : []
 
                     BracketButton {
                         required property string modelData
@@ -159,15 +174,15 @@ PanelWindow {
                 spacing: Metrics.spacing
 
                 Repeater {
-                    model: Colors.names
+                    model: root.choices
 
                     // a tiny preview drawn in the theme's own colors
                     Rectangle {
                         id: tile
 
-                        required property string modelData
-                        readonly property var t: Colors.preview(modelData)
-                        readonly property bool current: Colors.mode === modelData
+                        required property var modelData
+                        readonly property var t: Colors.themes[modelData.theme][modelData.light === null ? Colors.variant : modelData.light ? "light" : "dark"]
+                        readonly property bool current: root.isCurrent(modelData)
 
                         width: Math.round(132 * Metrics.scale)
                         height: tileCol.implicitHeight + 12
@@ -184,7 +199,7 @@ PanelWindow {
                             spacing: 4
 
                             Label {
-                                text: (tile.current ? "> " : "") + tile.modelData
+                                text: (tile.current ? "> " : "") + tile.modelData.name
                                 color: tile.t.fg
                             }
 
@@ -211,7 +226,7 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Settings.theme = tile.modelData
+                            onClicked: root.choose(tile.modelData)
                         }
                     }
                 }

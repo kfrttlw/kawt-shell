@@ -109,14 +109,20 @@ Singleton {
     // kawt's look changed: thinkpad black and red, ibm plex mono. Settings still at the old
     // look's standard (theme mono, jetbrains mono) come along once; a theme or a font you picked
     // yourself stays. Your own colors, fonts and themes are never touched
+    // Then the themes became two: thinkpad (black or white) and wallpaper (mono, amber and
+    // phosphor went: a theme that isn't there any more shows as thinkpad, config/Colors.qml), and
+    // the wallpaper theme is the thinkpad's with the wallpaper's color as its light ("calm", the
+    // new standard)
     function newLook(): void {
-        if (lookVersion >= 2)
+        if (lookVersion >= 3)
             return;
-        if (theme === "mono")
+        if (lookVersion < 2 && theme === "mono")
             theme = "thinkpad";
-        if (fontFamily === "JetBrainsMono Nerd Font Mono")
+        if (lookVersion < 2 && fontFamily === "JetBrainsMono Nerd Font Mono")
             fontFamily = "BlexMono Nerd Font Mono";
-        lookVersion = 2;
+        if (wallStrength === "strong")
+            wallStrength = "calm";
+        lookVersion = 3;
     }
 
     // "~/x" -> "/home/user/x"
@@ -166,7 +172,7 @@ Singleton {
             property bool screenshotFreeze: true // the screen stands still while an area is picked (needs hyprpicker)
             property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
-            property string wallStrength: "strong" // how hard the wallpaper theme colors things: "calm" | "strong" | "full"
+            property string wallStrength: "calm" // how much of the wallpaper's color the wallpaper theme takes: "calm" (only its light) | "strong" | "full"
             property string recordDir: "~/Videos/recordings"
             // ai (services/Ai.qml): provider, and how much the local model may take
             property string aiProvider: "ollama" // "ollama" | "api"
