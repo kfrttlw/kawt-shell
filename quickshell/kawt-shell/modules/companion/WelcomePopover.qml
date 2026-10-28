@@ -15,7 +15,7 @@ import qs.services
 // └────────────────────────────────────────────────────┘
 // The first start: the companion says hello and shows the few things worth knowing, in six
 // short steps, in his language (english or russian, picked on the first one, with his name).
-// Once: closed or done, it's not shown again (Settings.welcomed); again from profile -> cfg ->
+// Once: closed or done, it's not shown again (Settings.welcomed); again from profile -> cfg -> kawt ->
 // [tour], or `qs -c kawt-shell ipc call kawt welcome`.
 Popover {
     id: root
@@ -48,9 +48,9 @@ Popover {
             ["пустой стол", "я выхожу погулять"],
             ["", "не нужен? выключается в доме -> talk"]] },
         { say: "вот и всё! удачи", anim: "dance", lines: [
-            ["профиль", "слева на панели: настройки (cfg), обновления"],
+            ["профиль", "слева на панели: настройки (cfg), окна в своём размере"],
             ["мониторы", "~/kawt/install.sh --monitors"],
-            ["ещё раз", "профиль -> cfg -> [tour]"]] }
+            ["ещё раз", "профиль -> cfg -> kawt -> [tour]"]] }
     ] : [
         { say: `hi! I'm ${Companion.name}, I live here in kawt. let me show you around, it's quick`, anim: "wave", lines: [] },
         { say: "the keyboard does most things here", anim: "typing", lines: [
@@ -71,9 +71,9 @@ Popover {
             ["an empty desktop", "I go for a walk"],
             ["", "don't want me? off in my house -> talk"]] },
         { say: "that's all! have fun", anim: "dance", lines: [
-            ["the profile", "left in the bar: settings (cfg), updates"],
+            ["the profile", "left in the bar: settings (cfg), windows at their own size"],
             ["monitors", "~/kawt/install.sh --monitors"],
-            ["this again", "profile -> cfg -> [tour]"]] }
+            ["this again", "profile -> cfg -> kawt -> [tour]"]] }
     ]
     readonly property var now: steps[step]
     readonly property bool last: step === steps.length - 1

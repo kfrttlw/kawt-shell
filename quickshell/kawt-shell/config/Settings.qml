@@ -83,6 +83,7 @@ Singleton {
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
+    property alias floatClasses: adapter.floatClasses
     property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
     property alias companion: adapter.companion
@@ -202,6 +203,7 @@ Singleton {
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
             property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai"
+            property var floatClasses: [] // window classes that float at their own size (profile -> cfg -> windows)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // the companion (services/Companion.qml): his house is [⌂] in the bar
             property bool companion: true // off: no house, no walks, no peeks
