@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import qs.config
 
 // Real audio levels for the bar's media button, from cava (scripts/cava.conf).
 // One cava for all screens, and only while some player is playing: nothing runs in silence,
@@ -34,7 +35,7 @@ Singleton {
     Process {
         id: cava
 
-        running: root.available && root.playing && !Panels.locked && !root.wide
+        running: root.available && root.playing && !Panels.locked && !root.wide && !Settings.lite
         command: ["cava", "-p", `${Quickshell.shellDir}/scripts/cava.conf`]
         // "3;5;1;0;2;" per frame
         stdout: SplitParser {
@@ -49,7 +50,7 @@ Singleton {
     }
 
     Process {
-        running: root.available && root.playing && !Panels.locked && root.wide
+        running: root.available && root.playing && !Panels.locked && root.wide && !Settings.lite
         command: ["cava", "-p", `${Quickshell.shellDir}/scripts/cava-wide.conf`]
         stdout: SplitParser {
             onRead: line => {

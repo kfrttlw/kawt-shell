@@ -22,9 +22,11 @@ BarBox {
         color: Colors.accent
     }
 
+    // not on an old machine (cfg -> look -> old machine)
     Visualizer {
+        visible: !Settings.lite
         anchors.verticalCenter: parent.verticalCenter
-        active: root.player?.isPlaying ?? false
+        active: (root.player?.isPlaying ?? false) && !Settings.lite
     }
 
     Bracket {

@@ -1492,6 +1492,19 @@ ColumnLayout {
                             label: "boot screen: a bios-like check list at login (any key skips)"
                             onClicked: Settings.bootScreen = !Settings.bootScreen
                         }
+
+                        BracketButton {
+                            tag: Settings.scanlines ? "x" : " "
+                            label: "scanlines: faint lines over the screen (screenshots get them too)"
+                            onClicked: Settings.scanlines = !Settings.scanlines
+                        }
+
+                        // a t60, an x200: what costs the most goes
+                        BracketButton {
+                            tag: Settings.lite ? "x" : " "
+                            label: "old machine: no blur, shadows or animations, graphs half as often, no visualizer"
+                            onClicked: Settings.lite = !Settings.lite
+                        }
                     }
 
                     Label {
