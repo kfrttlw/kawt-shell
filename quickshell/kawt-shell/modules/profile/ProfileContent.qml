@@ -10,7 +10,7 @@ import qs.utils
 import "../popovers"
 
 // Everything inside the profile: tabs sys / top / todo / notes / cfg.
-// Used by the small popover under [~] and by the full-screen dashboard (super + i).
+// Used by the small popover under [●] and by the full-screen dashboard (super + i).
 ColumnLayout {
     id: root
 

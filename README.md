@@ -4,7 +4,7 @@
 
 A [Quickshell](https://quickshell.org) desktop shell for Hyprland, plus matching configs,<br>
 all in one monospace, square-cornered, text-first style.<br>
-<sub>ThinkPads, green phosphor, Mr. Robot, <code>[brackets]</code> everywhere</sub>
+<sub>a black ThinkPad and its one red light, IBM Plex Mono, old tubes, <code>[brackets]</code> around what you can press</sub>
 
 [![hyprland 0.55+](https://img.shields.io/badge/hyprland-0.55+-8ee6a0?style=flat-square&labelColor=0d1a10)](https://hypr.land)
 [![quickshell](https://img.shields.io/badge/quickshell-qml-8ee6a0?style=flat-square&labelColor=0d1a10)](https://quickshell.org)
@@ -18,8 +18,20 @@ all in one monospace, square-cornered, text-first style.<br>
 
 ## Look
 
-![the bar, dark (CRT) variant](assets/bar-dark.png)
-![the bar, light (paper) variant of the wallpaper theme](assets/bar-light.png)
+![the bar, dark](assets/bar-dark.png)
+![the bar, light: paper and ink](assets/bar-light.png)
+
+One rule for everything: `[ ]` mean you can press it. The brackets are a step dimmer than the
+words, red around what's chosen or open, darker around what's off; plain words are something to
+read. Red is the only light, like the dot on a ThinkPad's lid: where you are, what's chosen, a
+warning. Without brackets (profile → cfg → look → brackets off) the chosen ones turn red instead.
+
+<div align="center">
+<img src="assets/player.png" alt="the player, dark and light: the cover in big pixels, the position as segments with a red one where it is now, a level-meter spectrum" width="88%"><br>
+<sub>the player, dark and light</sub><br><br>
+<img src="assets/wallpaper-dither.png" alt="a picture as it is, then dithered in the dark and the light theme, its sun as red dots" width="100%"><br>
+<sub>any wallpaper in the theme's few tones, dithered like an old screen; its reds stay as red dots</sub>
+</div>
 
 <table>
 <tr>
@@ -64,30 +76,32 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 
 ## What's inside
 
-**bar**: `[~] [$] [1] 2 3 · [⌂] [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [>_]`
+**bar**: `[●] [$] 1 [2] 3 │ window title · [⌂] [wifi] [↓ ▁▃▅▇] [12:34] [> ▂▅▃] · [tray 3 v] [us] │ [bt] [mic] [vol ▮▮▮▯▯ 40] [br ▮▮▮▮▯ 60] [bat 72%] │ [log 2] [>_]`
 (the wheel on the workspaces walks them, and with several monitors each bar lists its own; `[eth]` instead of `[wifi]` on a cable, `[vpn]` while a tunnel is up (wireguard, openvpn, tailscale...); `[cast ● app]` shows while something captures the screen or the webcam, `[caf on]` while caffeine is on)
 
 | | |
 |---|---|
-| `[~]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo (folders, importance, icons, notes inside, reminders), notes in folders with search, settings, power buttons |
+| `[●]` profile | your `~/.face` as ascii art, live cpu/mem graphs, today's tasks, a `top` with kill, todo (folders, importance, icons, notes inside, reminders), notes in folders with search, settings, power buttons |
 | `[$]` dock | pinned apps |
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `$` a command from the ai (say what you want; it writes one command, marks the risky ones, and puts it into `>` for you to read and run: it never runs by itself) · `:` clipboard history · `;` open windows · `.` emoji; typed with the wrong layout on, it still finds it (`ашкуащч` → firefox, `ntrcn` → текст). An app's own actions are found by name (`private` → Firefox: New Private Window), `→` on an app lists them. With `qalc` the calculator does units, currencies and dates too (`=10 km to mi`, `=100 usd to eur`, `=today + 3 weeks`; exchange rates are only the ones qalc already has: kawt never makes it go online). Emoji by english or russian name (`.heart`, `.сердце`), yours first; enter copies, and with `wtype` types it in |
 | `[>_]` ai | chat with a local [ollama](https://ollama.com) model (nothing leaves the machine) or any OpenAI-compatible api; saved chats with times and speed, system prompt; a wide mode with a files column that can only attach text files from one folder you pick; personas, clipboard actions (explain / translate / fix / summary), markdown answers with framed code + copy, retry / edit / save to notes, compare two models, ctrl +/- text size, left or right side; context grows by itself for long messages and looping answers get stopped; installed models with sizes, pull / delete, what sits in ram and an unload button; limits for context, cpu threads, gpu and keep-alive so it doesn't eat the machine; a screenshot's `[ask]` brings the picture into the chat for a model that sees (`gemma3:4b`, `qwen2.5vl:3b`; ai → cfg → pictures), follow-up questions about it too; `[x] tasks` gives it your open todo list ("what's on tomorrow?"), and tasks it proposes get an `[add]`; `super + alt + a` works on the text you marked in any window (a small box: explain, translate, fix, summary; `[replace]` types the answer over it with `wtype`); `super + alt + v` or `[mic]`: speak, `whisper-cpp` writes it down (its model fetched once in ai → cfg → voice, then nothing goes out; the recording stays in memory and is gone after) |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb; keeps what the app asks for: `notify-send -t 1500` stays that long (`-t 0` until clicked), `-e` (transient) only pops up and never lands in the log, and one with a replace tag (`x-canonical-private-synchronous`, `x-dunst-stack-tag`: volume scripts) takes its earlier one's place |
-| style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config. A new one by itself every 15 min … 3 h if you like (the next in the folder or a random one), with awww's transition picked there: `crt` (drawn in from the top, in steps, like an old screen's beam), fade, grow, random or none |
+| style | wallpapers (arrow keys to pick), dithered into the theme's tones by default (`shown: dithered / as it is`; made once per picture and theme with `ffmpeg`, its reds kept as red dots) + themes: `thinkpad` (kawt's own: black and red, or paper and ink) `mono` `amber` `phosphor` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config. A new one by itself every 15 min … 3 h if you like (the next in the folder or a random one), with awww's transition picked there: `crt` (drawn in from the top, in steps, like an old screen's beam), fade, grow, random or none |
 | theme export | switching themes recolors open terminals and GTK apps (thunar) live and rewrites colors for kitty, Hyprland borders, GTK, foot, alacritty and shell scripts, and kawt's folder icons; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. With `bubblewrap` it can also ask to run a command (tests, a build): each one waits for `[run]`, then goes into a sandbox with no network, the system read-only and the project the only writable place (its `.git` read-only too, so no hooks), a time limit, 2 GB, output cut at 64 KB; or in podman with an image you pulled (ai → cfg). What a command changed isn't in `[undo]`: that's what git is for. Wide mode shows its thinking as a small ascii network |
 | windows | profile → cfg → windows: the open windows, rofi-like with a `find>`; pick an app and from then on it floats at the size it asks for, in the middle, instead of stretched by the tiling (open ones change at once; a hyprland.lua is needed, kawt's list is lua) |
 | companion | a little pixel friend in `[⌂]`: he lives in the bar, walks on an empty desktop and works next to the coder. [below](#the-companion) |
-| lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg → screen). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
+| lock | a text console at its login (the system, `host login: user`, `Password:` with the red block cursor, the time big in the corner) that switches on like an old picture tube and, with the right password, collapses into a line and a dot (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg → screen). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
-| player | `[> ▂▅▃▇▂]` next to the clock (real sound with `cava`); click: the cover as an old phosphor screen shows it (a few big pixels in the theme's color), a wide spectrum, `[-10] [<<] [||] [>>] [+10]`, a position bar to click, drag or scroll, shuffle and loop, the player's own volume, tabs when several play (spotify / firefox / mpv: the bar and the media keys follow the one picked, or the last one started) and this session's tracks (click copies "artist — title", nothing is written down). Keys inside: `space` `←→` `↑↓` `n` `p` `s` `r` `tab`. Covers that live online (spotify's) load only after `[cover load from the net]` |
+| player | `[> ▂▅▃▇▂]` next to the clock (real sound with `cava`); click: the cover as an old phosphor screen shows it (a few big pixels in the theme's ink), the title big, a spectrum like an old level meter, `[|<] [||] [>|]`, the position as segments (the red one is now) to click, drag or scroll, shuffle and loop, the player's own volume, tabs when several play (spotify / firefox / mpv: the bar and the media keys follow the one picked, or the last one started) and this session's tracks (click copies "artist — title", nothing is written down). Keys inside: `space` `←→` `↑↓` `n` `p` `s` `r` `tab`. Covers that live online (spotify's) load only after `[cover load from the net]` |
 | recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg → media) |
 | screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; it's on the clipboard at once; left alone, it goes and is saved). `[x] ask` off in profile → cfg → media: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch) in the theme's colors, or one of kawt's: kawt in blocks, the trackpoint between g h b, kawt in stripes (wallpaper & themes -> fastfetch); a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): the folder inverted like a bios's chosen line, the git branch on grey after it, a failed command's code on red, and below it `>` in red where you type (`user@host` only over ssh), the time on the right; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
+| boot screen | once per login a bios-like check list (`kawt bios 0.1 · ThinkPad T480`, cpu mem disk bat `ok`, `starting kawt-shell ok`), then the desktop opens from a bright line across the middle; any key skips it, profile → cfg → look switches it off (and `crt` the tube effects) |
+| old machine | profile → cfg → look → old machine (a T60, an X200): Hyprland without blur, shadows and animations, the graphs sampled half as often, no visualizer; `scanlines` puts faint tube lines over the screen |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
 | bar | at the top or the bottom, its height and buttons in profile → cfg → look; `super + shift + b` tucks it away (no room taken, a 2 px edge: touch it with the pointer and the bar comes out over the windows until you leave) |
 | also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness (on a desktop the monitors' own, over DDC/CI with `ddcutil`), battery + power profiles, calendar, tray, keyboard layout (and, if you switch it on in profile → cfg → device, a layout per window: each keeps its own, a new one starts with the first) |
@@ -262,7 +276,7 @@ without it, only while `super + w` is open.
 | `super + alt + v` | speak to the ai (again: stop); whisper.cpp writes it into the panel, on this machine |
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
 | `super + n` / `super + shift + n` | notifications / do not disturb |
-| `super + i` | profile, full screen (`[~]` opens the small one) |
+| `super + i` | profile, full screen (`[●]` opens the small one) |
 | `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in profile → cfg → screen) |
 | `super + /` | all keys (read from `hypr/kawt.lua`, then the binds of your config that end with a `-- comment`: `hyprland.lua`, or `user.lua` and the standard config) |
 | `super + shift + b` | tuck the bar away / back (tucked, it comes out when the pointer touches the edge) |
@@ -306,8 +320,10 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 Nothing in the repo has to be edited, so updates never fight with your changes:
 
 - **font, bar**: profile → cfg → look. Font size (the panels grow with it) and family (a monospace
-  one), the bar at the top or the bottom, its height, and which buttons it shows (one switched
-  off still works on its key; `[● rec]`, `[cast]` and `[caf]` always show while they're on)
+  one; `[plex]` is kawt's own, IBM Plex Mono), brackets on or off, the tube effects, the boot
+  screen, scanlines, old machine; the bar at the top or the bottom, its height, and which buttons
+  it shows (one switched off still works on its key; `[● rec]`, `[cast]` and `[caf]` always show
+  while they're on)
 - **colors**: `~/.config/kawt/themes.json`, read again whenever it's saved. A new name is a new
   theme; one of kawt's names changes only the colors you give:
 
@@ -319,7 +335,7 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
   }
   ```
 
-  a missing color comes from the theme of the same name (or `mono`); a new theme with only
+  a missing color comes from the theme of the same name (or `thinkpad`); a new theme with only
   `dark` (or `light`) uses it for both. Something wrong in the file: `super + w` says what
 - **hyprland**: `~/.config/hypr/user.lua` (see the install part above)
 
