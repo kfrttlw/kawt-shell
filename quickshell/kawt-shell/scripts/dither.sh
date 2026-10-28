@@ -16,8 +16,8 @@ command -v ffmpeg > /dev/null || exit 1
 rgb() {
     printf '%d %d %d' "0x$(echo "$1" | cut -c2-3)" "0x$(echo "$1" | cut -c4-5)" "0x$(echo "$1" | cut -c6-7)"
 }
-set -- $(rgb "$lo") $(rgb "$hi") $(rgb "$accent")
-r0=$1 g0=$2 b0=$3 r1=$4 g1=$5 b1=$6 ra=$7 ga=$8 ba=$9
+set -- $(rgb "$lo") $(rgb "$hi")
+r0=$1 g0=$2 b0=$3 r1=$4 g1=$5 b1=$6
 
 # the palette: 16x16 pixels as ffmpeg's paletteuse wants them, the five tones over and over
 tmp=$(mktemp -d) || exit 1

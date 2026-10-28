@@ -168,8 +168,10 @@ A pomodoro (25 + 5) in his house. He speaks english or russian, with your own ph
   refresh rate from the ones it has (or typed, `2560x1080@75`, `highrr`), or off; then its
   position (`0x0`, `auto-right`...), scale and turning. From a console it knows the sizes
   only; inside Hyprland the refresh rates too. Again any time: `./install.sh --monitors`, or `./install.sh` once more (with a config already there it asks whether to set them again)
-  (the rules go into a block of their own in `user.lua`, or the end of your `hyprland.lua` /
-  `hyprland.conf`, and Hyprland reads them at once; auto takes the block out)
+  (the rules go into a block of their own in `user.lua`, a field a line like the catch-all in
+  `hypr/preset.lua`, or the end of your `hyprland.lua` / `hyprland.conf`; inside Hyprland it's
+  read at once and each monitor checked: one that didn't get the mode asked for is said; auto
+  takes the block out)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
   the gpu, OpenGL through nvidia; not on a hybrid laptop, where the intel / amd gpu draws) and,
   if there's no driver yet, the driver: `nvidia-open-dkms` for Turing and newer (GTX 16xx,
@@ -228,6 +230,7 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --no-packages   # only link the configs, leave pacman alone
 ./install.sh --no-update     # install what's missing, no system update
 ./install.sh --uninstall     # remove the links and lines, put your old configs back
+./install.sh --fresh         # from scratch: all of kawt's setup to a backup, then every question again
 ./install.sh --update        # kawt itself, see below
 ./install.sh --check         # is everything it needs installed? only says (doctor.sh asks too)
 ./install.sh --monitors      # your monitors: auto, or each one by hand (mode, position, scale)
