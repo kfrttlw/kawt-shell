@@ -222,7 +222,7 @@ Singleton {
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
-            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai"
+            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "title", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai"
             property var floatClasses: [] // window classes that float at their own size (profile -> cfg -> windows)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // the companion (services/Companion.qml): his house is [⌂] in the bar

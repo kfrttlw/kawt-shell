@@ -108,10 +108,12 @@ Variants {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Metrics.spacing
 
+            // [●] the lit dot on the lid: you, your settings
             BracketButton {
                 id: profile
                 visible: Settings.barShows("profile")
-                label: "~"
+                label: "●"
+                ink: Colors.accent
                 active: Panels.isOpen("profile", root.modelData)
                 onClicked: Panels.toggle("profile", root.modelData)
             }
@@ -127,6 +129,24 @@ Variants {
             Workspaces {
                 visible: Settings.barShows("workspaces")
                 screen: root.modelData
+            }
+
+            BarSep {
+                visible: title.visible
+            }
+
+            // the window you're in, dim: something to read, not to press (on the screen with the
+            // focus; "desktop" when its workspace is empty)
+            Label {
+                id: title
+
+                readonly property string shownTitle: root.emptyDesk ? "desktop" : (Hyprland.activeToplevel?.title ?? "")
+
+                visible: Settings.barShows("title") && root.focusedHere && shownTitle !== ""
+                Layout.maximumWidth: Math.round(root.width * 0.22)
+                text: shownTitle
+                color: Colors.dim
+                elide: Text.ElideRight
             }
         }
 
@@ -213,6 +233,8 @@ Variants {
 
             KbButton {}
 
+            BarSep {}
+
             BtButton {
                 id: bluetooth
                 active: Panels.isOpen("bluetooth", root.modelData)
@@ -243,6 +265,8 @@ Variants {
                 active: Panels.isOpen("battery", root.modelData)
                 onClicked: Panels.toggle("battery", root.modelData)
             }
+
+            BarSep {}
 
             NotifButton {
                 id: notifs
