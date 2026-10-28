@@ -28,10 +28,10 @@ var X0 = 2; // where the 12-wide grid sits on the stage
 var Y0 = 4; // its top row, standing (room above for a jump, arms up, a flag)
 
 var feet = {
-    stand: ["...h....h...", "..hh....hh.."],
-    left: ["...h....hh..", "..hh........"],
-    right: ["..hh....h...", "........hh.."],
-    sit: ["............", "..hhhhhhhh.."]
+    stand: ["..h.h..h.h..", "..h.h..h.h.."],
+    left: [".h.h...h.h..", ".h.h...h.h.."],
+    right: ["..h.h...h.h.", "..h.h...h.h."],
+    sit: ["..h.h..h.h..", "............"]
 };
 
 // a ghost has a hem instead of feet
@@ -42,112 +42,120 @@ var hem = {
     sit: [".obbbbbbbbo.", ".oooooooooo."]
 };
 
+// Plain, like Claude Code's little one: a solid body (its edge "o" is the body's own color, so
+// there's no outline; it's there for the arms to find the sides), two dark eyes, little arms,
+// thin legs. One thing each to know them by: an antenna, horns, the shutter, feelers, the hem
 var skins = {
     phos: {
         name: { en: "phos", ru: "фос" },
         about: { en: "a little green monitor", ru: "зелёный мониторчик" },
-        colors: { o: "#0c2414", b: "#2e6b3e", l: "#5fae74", s: "#03110a", e: "#8dffa8", m: "#4fd672", a: "#c8ffd4", h: "#2e6b3e", c: "#2f8f4a" },
+        colors: { o: "#4caf6a", b: "#4caf6a", e: "#0c2414", c: "#0c2414", a: "#c8ffd4", l: "#8ee6a0" },
+        arm: 7,
         rows: [
+            "............",
+            "............",
+            "............",
             ".....a......",
             ".....o......",
-            "..oooooooo..",
+            ".oooooooooo.",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
             ".obbbbbbbbo.",
-            ".obssssssbo.",
-            ".obsessesbo.",
-            ".obssssssbo.",
-            ".obssmmssbo.",
-            ".obbbbbbblo.",
-            "..oooooooo.."
+            ".oooooooooo."
         ]
     },
     amber: {
         name: { en: "amber", ru: "янтарь" },
         about: { en: "warm, with two horns", ru: "тёплый, с рожками" },
-        colors: { o: "#4a2508", b: "#d27a2c", l: "#f2b46a", s: "#7a3e10", e: "#1c0d03", m: "#5a2c08", a: "#ffd27a", h: "#8a4512" },
+        colors: { o: "#d97757", b: "#d97757", e: "#2a1208", c: "#2a1208", a: "#f2b46a" },
+        arm: 7,
         rows: [
+            "............",
+            "............",
+            "............",
             "..a......a..",
             "..o......o..",
-            "..oooooooo..",
-            ".obbbbbbbbo.",
-            ".oblbbbbbbo.",
+            ".oooooooooo.",
             ".obebbbbebo.",
             ".obebbbbebo.",
-            ".obbbmmbbbo.",
             ".obbbbbbbbo.",
-            "..oooooooo.."
+            ".oooooooooo."
         ]
     },
     floppy: {
         name: { en: "floppy", ru: "дискета" },
-        about: { en: "steel, looks out of its window", ru: "стальная, смотрит из окошка" },
-        colors: { o: "#1c232c", b: "#4f6075", l: "#b9c4d1", s: "#0b0f14", e: "#9fe8ff", m: "#1c232c", a: "#e9e3cf", h: "#3a4757" },
-        blink: "shutter", // the metal slides over the window
+        about: { en: "steel, a shutter on top", ru: "стальная, с задвижкой сверху" },
+        colors: { o: "#5b6f88", b: "#5b6f88", e: "#0b0f14", c: "#0b0f14", l: "#b9c4d1", a: "#e9e3cf" },
+        arm: 7,
         rows: [
             "............",
-            ".ooooooooo..",
-            ".olllllllloo",
-            ".olsesseslbo",
-            ".olllllllbbo",
-            ".obbbbbbbbbo",
-            ".obaaaaaaabo",
-            ".obaaamaaabo",
-            ".obaaaaaaabo",
+            "............",
+            "............",
+            "............",
+            "............",
+            ".oolllllloo.",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
+            ".obbbbbbbbo.",
             ".oooooooooo."
         ]
     },
     bug: {
         name: { en: "bug", ru: "жук" },
         about: { en: "a purple beetle (not that kind)", ru: "фиолетовый жучок (не тот самый)" },
-        colors: { o: "#1e0f2e", b: "#6a3d9a", l: "#a77bd6", s: "#2e1745", e: "#f4e9ff", m: "#1e0f2e", a: "#d9b8ff", h: "#4a2a70" },
+        colors: { o: "#7b4bb0", b: "#7b4bb0", e: "#f4e9ff", c: "#2e1745", a: "#d9b8ff" },
+        arm: 7,
         rows: [
+            "............",
+            "............",
             "..a......a..",
             "...o....o...",
-            "...oooooo...",
-            "..obebbebo..",
-            "..obbmmbbo..",
-            ".oooooooooo.",
-            ".ollloobbbo.",
-            ".olbboobbbo.",
-            ".obbboobbbo.",
-            "..obboobbo.."
+            "....oooo....",
+            "..oooooooo..",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
+            ".obbbbbbbbo.",
+            "..oooooooo.."
         ]
     },
     ghost: {
         name: { en: "ghost", ru: "призрак" },
         about: { en: "pale, sways, a bit see-through", ru: "бледный, покачивается, чуть прозрачный" },
-        colors: { o: "#56769a", b: "#b9d6f0", l: "#eaf5ff", s: "#9cbfe0", e: "#18273a", m: "#18273a", a: "#eaf5ff", h: "#8fb3d6" },
-        alpha: 0.8,
+        colors: { o: "#cfe3f5", b: "#cfe3f5", e: "#18273a", c: "#18273a", a: "#eaf5ff", h: "#b9d6f0" },
+        alpha: 0.85,
         sway: true,
         hem: true,
+        arm: 7,
         rows: [
+            "............",
+            "............",
             "............",
             "...oooooo...",
             "..obbbbbbo..",
-            ".obllbbbbbo.",
-            ".obbebbebbo.",
-            ".obbebbebbo.",
             ".obbbbbbbbo.",
-            ".obbbmmbbbo.",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
             ".obbbbbbbbo.",
             ".obbbbbbbbo."
         ]
     },
-    // the shape of amber in the theme's own colors (filled in by Companion.qml)
+    // amber's shape in the theme's own colors (filled in by Companion.qml)
     theme: {
         name: { en: "theme", ru: "тема" },
         about: { en: "in your theme's colors", ru: "в цветах твоей темы" },
         colors: {},
+        arm: 7,
         rows: [
+            "............",
+            "............",
+            "............",
             "..a......a..",
             "..o......o..",
-            "..oooooooo..",
-            ".obbbbbbbbo.",
-            ".oblbbbbbbo.",
+            ".oooooooooo.",
             ".obebbbbebo.",
             ".obebbbbebo.",
-            ".obbbmmbbbo.",
             ".obbbbbbbbo.",
-            "..oooooooo.."
+            ".oooooooooo."
         ]
     }
 };

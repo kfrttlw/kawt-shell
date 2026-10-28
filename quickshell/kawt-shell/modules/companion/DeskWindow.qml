@@ -7,7 +7,8 @@ import qs.services
 // Him out on the desktop: a strip along the bottom edge, under the windows (made only while
 // the workspace has none: Bar.qml), where he walks about, naps, sulks, dances to music.
 // Only he takes clicks: the rest of the strip lets them through to the desktop.
-// Click: he talks. Drag: along the edge. Double click: home for an hour.
+// Click: he talks. Drag: along the edge (the pointer may go anywhere above). Double click: home
+// for an hour.
 PanelWindow {
     id: root
 
@@ -26,10 +27,20 @@ PanelWindow {
     anchors.bottom: true
     anchors.left: true
     anchors.right: true
+    // while he's dragged the strip is the whole screen: on an empty desktop nothing has the focus,
+    // and hyprland keeps the pointer on a surface only then, so going above the strip ended it
+    anchors.top: grab.dragging
     margins.bottom: Metrics.bottomGap
 
+    // only he takes the pointer; all of the strip while the button is down
     mask: Region {
-        item: actor
+        item: grab.pressed ? whole : actor
+    }
+
+    Item {
+        id: whole
+
+        anchors.fill: parent
     }
 
     Component.onCompleted: Companion.deskViews += 1
@@ -90,18 +101,26 @@ PanelWindow {
                 id: grab
 
                 property real startX: 0
+                property real startY: 0
                 property real startCell: 0
                 property bool dragging: false
+
+                function keep(): void {
+                    Companion.deskAt = walker.max > 0 ? walker.x / walker.max : 0;
+                }
 
                 anchors.fill: parent
                 cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                 onPressed: mouse => {
-                    startX = mapToItem(null, mouse.x, 0).x;
+                    const p = mapToGlobal(mouse.x, mouse.y);
+                    startX = p.x;
+                    startY = p.y;
                     startCell = walker.x;
                 }
+                // on the screen, not in the window: the window grows upward once it's a drag
                 onPositionChanged: mouse => {
-                    const dx = mapToItem(null, mouse.x, 0).x - startX;
-                    if (!dragging && Math.abs(dx) > 6)
+                    const p = mapToGlobal(mouse.x, mouse.y), dx = p.x - startX;
+                    if (!dragging && (Math.abs(dx) > 6 || Math.abs(p.y - startY) > 6))
                         dragging = true;
                     if (dragging)
                         walker.x = Math.max(walker.min, Math.min(walker.max, Math.round(startCell + dx / root.cell)));
@@ -109,12 +128,17 @@ PanelWindow {
                 // a drag isn't a click: the flag goes only after the click that follows it
                 onReleased: {
                     if (dragging)
-                        Companion.deskAt = walker.max > 0 ? walker.x / walker.max : 0;
+                        keep();
                     Qt.callLater(() => grab.dragging = false);
                 }
                 onClicked: if (!dragging)
                     Companion.talkNow()
-                onCanceled: dragging = false
+                // the pointer was taken away (over the bar): he stays where he got to
+                onCanceled: {
+                    if (dragging)
+                        keep();
+                    dragging = false;
+                }
                 onDoubleClicked: Companion.hide()
             }
         }

@@ -47,16 +47,15 @@ Singleton {
         return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1).toString();
     }
 
+    // the plain look in the theme: the body near the accent, eyes in the background's color
+    readonly property string themeBody: mix(Colors.bg, Colors.accent, 0.8)
     readonly property var themeColors: ({
-        o: Colors.border.toString(),
-        b: mix(Colors.bg, Colors.accent, 0.35),
-        l: Colors.accent.toString(),
-        s: Colors.bg.toString(),
-        e: Colors.fg.toString(),
-        m: Colors.bg.toString(),
-        a: Colors.accent.toString(),
-        h: Colors.dim.toString(),
-        c: Colors.border.toString()
+        o: themeBody,
+        b: themeBody,
+        l: Colors.fg.toString(),
+        e: Colors.bg.toString(),
+        c: Colors.bg.toString(),
+        a: Colors.fg.toString()
     })
 
     // letter -> color, for a sprite (skins can't change the warn color or the props)
@@ -305,12 +304,12 @@ Singleton {
         touch();
     }
 
+    // food and play always count: asleep, he's woken up for it (he used to only wake, and
+    // worn out he was asleep again the next minute, so nothing ever filled up)
     function feed(): void {
         touch();
-        if (sleeping) {
-            wake();
-            return;
-        }
+        if (sleeping)
+            wake(true);
         if (food > 0.9) {
             say(line("full", ""), 0);
             return;
@@ -327,13 +326,14 @@ Singleton {
 
     function play(): void {
         touch();
-        if (sleeping) {
-            wake();
-            return;
-        }
+        if (sleeping)
+            wake(true);
+        // too tired for a real game: a quiet one, a little fun and no energy taken
         if (energy < 0.15) {
+            set("fun", fun + 0.25);
             say(line("tired", ""), 0);
             move("yawn", 2500);
+            afterCare();
             return;
         }
         set("fun", fun + 0.4);
@@ -364,13 +364,17 @@ Singleton {
             say(line("sleep", ""), 2000);
     }
 
-    function wake(): void {
+    // quiet: woken for food or a game, which he talks about instead
+    function wake(quiet: bool): void {
         touch();
         if (!sleeping)
             return;
         const e = energy, long = Date.now() - (life.energy?.at ?? 0) > 4 * 3600000;
         life.energy = { v: e, at: Date.now() };
         life.sleeping = false;
+        life.wokeAt = Date.now();
+        if (quiet)
+            return;
         say(line(e < 0.3 ? "grumpy" : long ? "woke" : "hello", ""), 0);
         if (e >= 0.3)
             move("stretch", 1800);
@@ -468,10 +472,10 @@ Singleton {
         const h = new Date(now).getHours();
         if (sulking)
             life.wasSulking = true;
-        // rested: up by himself; worn out: asleep by himself
+        // rested: up by himself; worn out: asleep by himself, but not within the hour you woke him
         if (sleeping && energy >= 1 && !Panels.locked)
-            wake();
-        else if (!sleeping && energy <= 0.02)
+            wake(false);
+        else if (!sleeping && energy <= 0.02 && now - (life.wokeAt ?? 0) > 3600000)
             sleep(true);
         // "auto": every half hour he thinks about going out
         if (now - (life.outAt ?? 0) > 30 * 60000) {
@@ -638,7 +642,7 @@ Singleton {
             if (Panels.locked && !root.sleeping) {
                 root.sleep(true);
             } else if (!Panels.locked && root.sleeping && life.sleptBy === "auto" && root.energy > 0.3) {
-                root.wake();
+                root.wake(false);
             }
         }
     }
@@ -657,7 +661,7 @@ Singleton {
         else if (what === "sleep")
             sleep(false);
         else if (what === "wake")
-            wake();
+            wake(false);
         else if (what === "pet")
             talkNow();
         else if (what === "focus")
@@ -709,6 +713,7 @@ Singleton {
             property bool out: true // "auto": out on the desktop now
             property real outAt: 0
             property real hiddenUntil: 0 // a double click: off the desktop for an hour
+            property real wokeAt: 0 // he isn't put to bed by the clock for an hour after
             property real deskAt: 0.15
             property real askedAt: 0
             property string askedDay: ""
