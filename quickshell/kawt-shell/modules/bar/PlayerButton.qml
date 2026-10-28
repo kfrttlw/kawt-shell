@@ -13,13 +13,13 @@ BarBox {
     visible: Settings.barShows("player") && (player !== null)
     spacing: 4
 
-    Label {
-        text: "["
-        color: Colors.dim
+    Bracket {
+        look: root.active ? "on" : ""
     }
 
     Label {
         text: root.player?.isPlaying ? ">" : "="
+        color: Colors.accent
     }
 
     Visualizer {
@@ -27,8 +27,8 @@ BarBox {
         active: root.player?.isPlaying ?? false
     }
 
-    Label {
-        text: "]"
-        color: Colors.dim
+    Bracket {
+        closing: true
+        look: root.active ? "on" : ""
     }
 }

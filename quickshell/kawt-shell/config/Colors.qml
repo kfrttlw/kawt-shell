@@ -15,7 +15,7 @@ import "../utils/wallpalette.js" as WallPalette
 //     "phosphor": { "dark": { "accent": "#ffffff" } }
 //   }
 // Colors are #rrggbb or #rrggbbaa; a missing one comes from the theme of the same name (or
-// mono). A new theme given only "dark" (or "light") uses it for both. Names: lowercase
+// thinkpad). A new theme given only "dark" (or "light") uses it for both. Names: lowercase
 // letters, digits and -.
 // The file is read again whenever it's saved.
 Singleton {
@@ -89,24 +89,27 @@ Singleton {
                 hoverFill: "#d6e4d6"
             }
         },
+        // kawt's own: a black thinkpad, its one red light. Red is only for where you are and what's
+        // chosen (the trackpoint, the lit dot on the lid); everything else is ink and grey
         thinkpad: {
             dark: {
-                bg: "#0b0b0b",
-                fg: "#d6d6d6",
-                dim: "#6a6a6a",
-                border: "#2e2e2e",
+                bg: "#0c0c0c",
+                fg: "#d8d6d0",
+                dim: "#74726c",
+                border: "#2b2b2b",
                 accent: "#e2231a",
                 warn: "#e2231a",
-                hoverFill: "#1a1a1a"
+                hoverFill: "#1c1c1c"
             },
+            // paper and ink: a printed manual
             light: {
-                bg: "#e9e9e9",
-                fg: "#151515",
-                dim: "#6e6e6e",
-                border: "#bdbdbd",
-                accent: "#d81e13",
-                warn: "#d81e13",
-                hoverFill: "#d9d9d9"
+                bg: "#e8e5dd",
+                fg: "#1d1c1a",
+                dim: "#6b675e",
+                border: "#bdb8ac",
+                accent: "#c41a12",
+                warn: "#c41a12",
+                hoverFill: "#d5d1c6"
             }
         }
     })
@@ -132,7 +135,7 @@ Singleton {
             const t = user[name];
             if (!/^[a-z0-9-]{1,24}$/.test(name) || name === "wallpaper" || !t || typeof t !== "object")
                 continue;
-            const base = fixed[name] ?? fixed.mono;
+            const base = fixed[name] ?? fixed.thinkpad;
             let dark = Object.assign({}, base.dark, clean(t.dark));
             let light = Object.assign({}, base.light, clean(t.light));
             // a new theme given in one variant only: the other is the same. (New colors for one
@@ -169,7 +172,7 @@ Singleton {
     }
 
     readonly property list<string> names: Object.keys(themes)
-    readonly property string mode: themes[Settings.theme] ? Settings.theme : "mono"
+    readonly property string mode: themes[Settings.theme] ? Settings.theme : "thinkpad"
     readonly property bool light: Settings.light
     readonly property string variant: light ? "light" : "dark"
     readonly property string fullName: `${mode}-${variant}`
@@ -182,6 +185,15 @@ Singleton {
     readonly property color accent: palette.accent
     readonly property color warn: palette.warn
     readonly property color hoverFill: palette.hoverFill
+    // the [ ] around what you can press: a step dimmer than the words (components/Brackets.qml),
+    // darker still around what's switched off
+    readonly property color bracket: mix(dim, border, 0.3)
+    readonly property color bracketOff: mix(dim, border, 0.75)
+
+    // a between b and c: 0 = b, 1 = c
+    function mix(b: color, c: color, t: real): color {
+        return Qt.rgba(b.r + (c.r - b.r) * t, b.g + (c.g - b.g) * t, b.b + (c.b - b.b) * t, 1);
+    }
 
     // a theme's palette in the current variant (for previews)
     function preview(name: string): var {

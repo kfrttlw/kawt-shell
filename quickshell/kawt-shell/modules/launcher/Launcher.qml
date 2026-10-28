@@ -219,16 +219,17 @@ PanelWindow {
 
                         Rectangle {
                             anchors.fill: parent
-                            visible: tab.selected || tabArea.containsMouse
+                            visible: tabArea.containsMouse
                             color: Colors.hoverFill
                         }
 
-                        Label {
+                        Brackets {
                             id: tabText
 
                             anchors.centerIn: parent
-                            text: tab.selected ? `[${tab.modelData.name}]` : ` ${tab.modelData.name} `
-                            color: tab.selected ? Colors.fg : Colors.dim
+                            text: tab.modelData.name
+                            look: tab.selected ? "on" : "off"
+                            shown: tab.selected
                         }
 
                         MouseArea {

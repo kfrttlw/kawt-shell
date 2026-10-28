@@ -1392,7 +1392,8 @@ ColumnLayout {
                     }
 
                     // ------------------------------------------------------------ look
-                    //  font  [-] 13px [+]   font> JetBrainsMono Nerd Font Mono
+                    //  font  [-] 13px [+] [plex] [jetbrains]   font> BlexMono Nerd Font Mono
+                    //  brackets  [on] [off]
                     // (in settings.json, not in the repo: a git pull never takes it back)
                     Label {
                         Layout.topMargin: Metrics.spacing
@@ -1425,13 +1426,53 @@ ColumnLayout {
                             onClicked: Settings.fontSize = Math.min(28, Metrics.fontSize + 1)
                         }
 
+                        // the two kawt knows, the ones installed (ibm plex mono is kawt's own)
+                        Repeater {
+                            model: [["BlexMono Nerd Font Mono", "plex"], ["JetBrainsMono Nerd Font Mono", "jetbrains"]].filter(f => Metrics.installed.includes(f[0]))
+
+                            BracketButton {
+                                required property var modelData
+
+                                label: modelData[1]
+                                textColor: Metrics.fontFamily === modelData[0] ? Colors.accent : Colors.dim
+                                onClicked: Settings.fontFamily = modelData[0]
+                            }
+                        }
+
                         // a monospace one: kawt lines its text up in columns
                         TermInput {
                             Layout.fillWidth: true
                             prompt: "font>"
                             text: Settings.fontFamily
                             placeholder: "a monospace font, as fc-list calls it"
-                            onAccepted: t => Settings.fontFamily = t.trim() || "JetBrainsMono Nerd Font Mono"
+                            onAccepted: t => Settings.fontFamily = t.trim() || "BlexMono Nerd Font Mono"
+                        }
+                    }
+
+                    // [ ] around what you can press, or plain words (the chosen ones in the accent color)
+                    RowLayout {
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: "brackets:"
+                            color: Colors.dim
+                        }
+
+                        Repeater {
+                            model: [[true, "on"], [false, "off"]]
+
+                            BracketButton {
+                                required property var modelData
+
+                                label: modelData[1]
+                                textColor: Settings.brackets === modelData[0] ? Colors.accent : Colors.dim
+                                onClicked: Settings.brackets = modelData[0]
+                            }
+                        }
+
+                        Label {
+                            text: Settings.brackets ? "around what you can press, red: chosen" : "plain words, the chosen ones in color"
+                            color: Colors.dim
                         }
                     }
 

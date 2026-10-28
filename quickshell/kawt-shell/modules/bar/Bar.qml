@@ -85,6 +85,21 @@ Variants {
         anchors.left: true
         anchors.right: true
 
+        // one strip across the screen in the theme's background, a line along its inner edge
+        // (the buttons on it have no frames of their own: their brackets say what's pressable)
+        Rectangle {
+            anchors.fill: parent
+            visible: !root.tucked
+            color: Colors.bg
+
+            Rectangle {
+                width: parent.width
+                height: Metrics.borderWidth
+                y: Metrics.barBottom ? 0 : parent.height - height
+                color: Colors.border
+            }
+        }
+
         // left: profile, pinned apps, workspaces
         RowLayout {
             opacity: root.tucked ? 0 : 1
@@ -105,7 +120,6 @@ Variants {
                 id: dock
                 visible: Settings.barShows("dock")
                 label: "$"
-                textColor: Colors.accent
                 active: Panels.isOpen("dock", root.modelData)
                 onClicked: Panels.toggle("dock", root.modelData)
             }
@@ -240,7 +254,6 @@ Variants {
             BracketButton {
                 visible: Settings.barShows("ai")
                 label: ">_"
-                textColor: Colors.accent
                 active: Panels.isSidebarOpen(root.modelData)
                 onClicked: Panels.toggleSidebar(root.modelData)
             }

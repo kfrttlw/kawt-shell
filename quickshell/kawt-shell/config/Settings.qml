@@ -80,6 +80,7 @@ Singleton {
     property alias themeTerminals: adapter.themeTerminals
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
+    property alias brackets: adapter.brackets
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
@@ -97,6 +98,20 @@ Singleton {
     property alias updateAuto: adapter.updateAuto
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
+    property alias lookVersion: adapter.lookVersion
+
+    // kawt's look changed: thinkpad black and red, ibm plex mono. Settings still at the old
+    // look's standard (theme mono, jetbrains mono) come along once; a theme or a font you picked
+    // yourself stays. Your own colors, fonts and themes are never touched
+    function newLook(): void {
+        if (lookVersion >= 2)
+            return;
+        if (theme === "mono")
+            theme = "thinkpad";
+        if (fontFamily === "JetBrainsMono Nerd Font Mono")
+            fontFamily = "BlexMono Nerd Font Mono";
+        lookVersion = 2;
+    }
 
     // "~/x" -> "/home/user/x"
     function expand(path: string): string {
@@ -117,17 +132,21 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
-        onLoaded: root.loaded = true
+        onLoaded: {
+            root.newLook();
+            root.loaded = true;
+        }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();
+            root.newLook();
             root.loaded = true;
         }
 
         JsonAdapter {
             id: adapter
 
-            property string theme: "mono"
+            property string theme: "thinkpad"
             property bool light: false // light (paper) variant of the theme
             property string termColors: "soft" // terminal colors: "crt" | "soft" | "vivid" (utils/themegen.js)
             property bool clock24: true
@@ -197,8 +216,9 @@ Singleton {
             property string wallpaperTransition: "crt" // with awww: "crt" | "fade" | "grow" | "random" | "none" (scripts/wallpaper.sh)
             property bool themeTerminals: true // recolor open terminals on theme change
             // the look, yours without editing the repo (config/Metrics.qml reads these)
-            property string fontFamily: "JetBrainsMono Nerd Font Mono" // a monospace one: kawt lines text up in columns
+            property string fontFamily: "BlexMono Nerd Font Mono" // a monospace one: kawt lines text up in columns (BlexMono = ibm plex mono)
             property int fontSize: 13 // px; panels grow with it
+            property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
@@ -218,6 +238,7 @@ Singleton {
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
             property real updateCheckedAt: 0 // ms, the last check that got an answer
             property string updateNotified: "" // the upstream commit the last notification was about
+            property int lookVersion: 0 // which of kawt's looks the settings were last brought up to (newLook)
         }
     }
 }

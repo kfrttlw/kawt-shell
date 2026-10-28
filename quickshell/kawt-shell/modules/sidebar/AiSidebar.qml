@@ -161,12 +161,22 @@ PanelWindow {
                 Repeater {
                     model: ["chat", "chats", "models", "cfg"]
 
-                    Label {
+                    Item {
+                        id: aiTab
+
                         required property string modelData
                         required property int index
 
-                        text: index === root.tab ? `[${modelData}]` : ` ${modelData} `
-                        color: index === root.tab ? Colors.fg : tabArea.containsMouse ? Colors.fg : Colors.dim
+                        implicitWidth: aiTabText.implicitWidth
+                        implicitHeight: aiTabText.implicitHeight
+
+                        Brackets {
+                            id: aiTabText
+
+                            text: aiTab.modelData
+                            look: aiTab.index === root.tab ? "on" : tabArea.containsMouse ? "" : "off"
+                            shown: aiTab.index === root.tab
+                        }
 
                         MouseArea {
                             id: tabArea
@@ -174,7 +184,7 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Panels.aiTab = parent.index
+                            onClicked: Panels.aiTab = aiTab.index
                         }
                     }
                 }
