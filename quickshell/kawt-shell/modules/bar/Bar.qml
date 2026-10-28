@@ -116,13 +116,20 @@ Variants {
             }
         }
 
-        // network leads up to the clock
+        // the companion's house, then the network, up to the clock
         RowLayout {
             opacity: root.tucked ? 0 : 1
             anchors.right: clock.left
             anchors.rightMargin: Metrics.sectionGap
             anchors.verticalCenter: parent.verticalCenter
             spacing: Metrics.spacing
+
+            // the companion's house (modules/companion)
+            HouseButton {
+                id: home
+                active: Panels.isOpen("home", root.modelData)
+                onClicked: Panels.toggle("home", root.modelData)
+            }
 
             // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the wifi panel
             BracketButton {
@@ -228,13 +235,6 @@ Variants {
                 visible: Settings.barShows("log")
                 active: Panels.isOpen("notifs", root.modelData)
                 onClicked: Panels.toggle("notifs", root.modelData)
-            }
-
-            // the companion's house (modules/companion)
-            HouseButton {
-                id: home
-                active: Panels.isOpen("home", root.modelData)
-                onClicked: Panels.toggle("home", root.modelData)
             }
 
             BracketButton {

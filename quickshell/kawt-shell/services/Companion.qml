@@ -34,7 +34,7 @@ Singleton {
     property var custom: ({}) // ~/.config/kawt/companions.json, the valid ones
     readonly property var skins: Object.assign({}, Art.skins, custom, { theme: Object.assign({}, Art.skins.theme, { colors: themeColors }) })
     readonly property var order: Art.order.concat(Object.keys(custom).filter(k => !Art.order.includes(k)))
-    readonly property string skinName: skins[Settings.companionSkin] ? Settings.companionSkin : "phos"
+    readonly property string skinName: skins[Settings.companionSkin] ? Settings.companionSkin : "floppy"
     readonly property var skin: skins[skinName]
     readonly property string name: Settings.companionName || title(skinName)
 

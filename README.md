@@ -64,7 +64,7 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 
 ## What's inside
 
-**bar**: `[~] [$] [1] 2 3 · [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [⌂] [>_]`
+**bar**: `[~] [$] [1] 2 3 · [⌂] [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [12:34] · [tray 3 v] [us] [vol 40%] [br 60%] [bat 72%] [log 2] [>_]`
 (the wheel on the workspaces walks them, and with several monitors each bar lists its own; `[eth]` instead of `[wifi]` on a cable, `[vpn]` while a tunnel is up (wireguard, openvpn, tailscale...); `[cast ● app]` shows while something captures the screen or the webcam, `[caf on]` while caffeine is on)
 
 | | |
@@ -85,7 +85,7 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
 | player | `[> ▂▅▃▇▂]` next to the clock (real sound with `cava`); click: the cover as an old phosphor screen shows it (a few big pixels in the theme's color), a wide spectrum, `[-10] [<<] [||] [>>] [+10]`, a position bar to click, drag or scroll, shuffle and loop, the player's own volume, tabs when several play (spotify / firefox / mpv: the bar and the media keys follow the one picked, or the last one started) and this session's tracks (click copies "artist — title", nothing is written down). Keys inside: `space` `←→` `↑↓` `n` `p` `s` `r` `tab`. Covers that live online (spotify's) load only after `[cover load from the net]` |
 | recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg → media) |
-| screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg → media: saved and copied at once, like before |
+| screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; it's on the clipboard at once; left alone, it goes and is saved). `[x] ask` off in profile → cfg → media: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
@@ -95,10 +95,10 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 ## The companion
 
 <p align="center">
-<img src="assets/companions.gif" alt="the five looks: phos, amber, floppy, bug, ghost" width="100%">
+<img src="assets/companions.gif" alt="the five looks: floppy, phos, amber, bug, ghost" width="100%">
 </p>
 
-`[⌂]` in the bar is the house of a little pixel friend, plain like Claude Code's (a solid body, two eyes, little arms and legs): a green monitor with an antenna, an amber one with horns, a floppy disk with its shutter, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round.
+`[⌂]` in the bar is the house of a little pixel friend, plain like Claude Code's (a solid body, two eyes, little arms and legs): a floppy disk with its shutter (the one you meet first), a green monitor with an antenna, an amber one with horns, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round.
 
 On the first start he says hello and shows around in six short steps (keys, the look, the ai, his house), in english or russian, and you can name him there (again: profile → cfg → kawt → `[tour]`).
 
@@ -107,7 +107,7 @@ Out on an empty desktop he walks about, dances to music, naps (a window opens an
 A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg → kawt: no house, nothing runs for him
 
 <p align="center">
-<img src="assets/companion-moves.gif" alt="phos walks, eats, thinks, codes with you, raises a flag on a diff, sweeps up after undo, sleeps" width="100%">
+<img src="assets/companion-moves.gif" alt="floppy walks, eats, thinks, codes with you, raises a flag on a diff, sweeps up after undo, sleeps" width="100%">
 </p>
 
 ## What the installer does
