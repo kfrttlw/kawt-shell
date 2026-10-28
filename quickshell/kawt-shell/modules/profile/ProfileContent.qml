@@ -1476,6 +1476,24 @@ ColumnLayout {
                         }
                     }
 
+                    // the old picture tube: the lock switches on and off like one; the check list at login
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: Metrics.spacing
+
+                        BracketButton {
+                            tag: Settings.crt ? "x" : " "
+                            label: "crt: the lock switches on and off like an old tube"
+                            onClicked: Settings.crt = !Settings.crt
+                        }
+
+                        BracketButton {
+                            tag: Settings.bootScreen ? "x" : " "
+                            label: "boot screen: a bios-like check list at login (any key skips)"
+                            onClicked: Settings.bootScreen = !Settings.bootScreen
+                        }
+                    }
+
                     Label {
                         Layout.topMargin: Metrics.spacing
                         text: "bar"
