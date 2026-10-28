@@ -552,6 +552,20 @@ monitor_block() {
     printf '%s %s\n' "$c" "$mark_mon_end"
 }
 
+# the file the monitor rules go into: user.lua with kawt's standard config, else hyprland.lua,
+# else hyprland.conf; none: fails
+monitors_file() {
+    if loads_kawt "$hypr_lua" "$marker_std" && [[ -f $hypr_user ]]; then
+        printf '%s' "$hypr_user"
+    elif [[ -f $hypr_lua ]]; then
+        printf '%s' "$hypr_lua"
+    elif [[ -f $hypr_conf ]]; then
+        printf '%s' "$hypr_conf"
+    else
+        return 1
+    fi
+}
+
 # write_monitors <file>: kawt's block in <file> is replaced (auto: taken out). A new one goes
 # under user.lua's "-- monitors:" lines, or at the end (last: it wins over rules before it)
 write_monitors() {
@@ -853,13 +867,7 @@ undo_old_zsh_setup() {
 if [[ $mode == monitors ]]; then
     banner "monitors"
     ((dry)) && say "${dim}dry run: nothing will be changed${off}"
-    if loads_kawt "$hypr_lua" "$marker_std" && [[ -f $hypr_user ]]; then
-        mon_file=$hypr_user
-    elif [[ -f $hypr_lua ]]; then
-        mon_file=$hypr_lua
-    elif [[ -f $hypr_conf ]]; then
-        mon_file=$hypr_conf
-    else
+    if ! mon_file=$(monitors_file); then
         say "${red}no hyprland config yet${off}: ./install.sh first"
         exit 1
     fi
@@ -1238,8 +1246,27 @@ if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
     fi
 fi
 
-# a new config: the monitors, auto or each one by hand (again any time: ./install.sh --monitors)
-[[ $hypr_from == std || $hypr_from == hypr ]] && monitors_ask
+# a new config: the monitors, auto or each one by hand (again any time: ./install.sh --monitors).
+# One that's there already (kawt's standard from before, or yours): asked whether to set them
+# again, so running ./install.sh once more gets to them too
+mon_again=0
+if [[ $hypr_from == std || $hypr_from == hypr ]]; then
+    monitors_ask
+elif want hypr && [[ -z $updated_from ]] && can_ask && mon_file=$(monitors_file); then
+    section "monitors"
+    if grep -F "$mark_mon" "$mon_file" > /dev/null 2>&1; then
+        say "${dim}  now: by hand, in $(short "$mon_file") · ↑↓ move · enter pick${off}"
+    else
+        say "${dim}  now: auto (hyprland decides) · ↑↓ move · enter pick${off}"
+    fi
+    c=0
+    choose c "as they are|nothing changes" \
+        "set them again|auto, or each one by hand: mode, position, scale"
+    if ((c == 1)); then
+        mon_again=1
+        monitors_ask
+    fi
+fi
 
 # ------------------------------------------------------------------ 2c. nvidia
 # An nvidia card (from /sys: no lspci needed) gets two offers:
@@ -1641,7 +1668,7 @@ case $hypr_from in
     std) printf '  %-9s %s\n' "hyprland" "kawt's standard config + user.lua for yours$( [[ -f $hypr_lua ]] && printf ' %s(your hyprland.lua goes to the backup)%s' "$dim" "$off")" ;;
     hypr) printf '  %-9s %s\n' "hyprland" "hyprland's own starting config" ;;
 esac
-((mon_auto)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
+((mon_auto && !mon_again)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
 if ((nv_cfg || nv_driver)); then
     printf '  %-9s %s\n' "nvidia" "$( ((nv_cfg)) && printf 'hyprland env')$( ((nv_cfg && nv_driver)) && printf ' + ')$( ((nv_driver)) && printf 'the driver %s(a reboot after)%s' "$dim" "$off")"
 fi
@@ -1842,6 +1869,10 @@ if want hypr; then
     elif [[ -f $hypr_conf ]]; then
         hook "$hypr_conf" "$marker_conf" "$line_conf" || { fail "could not edit $hypr_conf"; failed=1; }
         ((nv_cfg)) && { hook "$hypr_conf" "$marker_nv_conf" "$line_nv_conf" "kawt's nvidia settings" || { fail "could not edit $hypr_conf"; failed=1; }; }
+    fi
+    # the monitors set again over a config that was there (auto takes kawt's block out)
+    if ((mon_again)); then
+        write_monitors "$mon_file" || { fail "could not write the monitors into $mon_file"; failed=1; }
     fi
 fi
 if want zsh && command -v zsh > /dev/null; then
