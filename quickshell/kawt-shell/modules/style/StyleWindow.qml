@@ -6,7 +6,7 @@ import qs.config
 import qs.components
 import qs.services
 
-// Themes (with color swatches) and a wallpaper grid. Picking a theme also recolors
+// Themes (with color swatches) and the wallpapers in two panes (WallpaperPicker.qml). Picking a theme also recolors
 // terminals and writes configs for other apps (services/ThemeExport.qml).
 PanelWindow {
     id: root
@@ -45,7 +45,7 @@ PanelWindow {
     OpenWatch {
         open: root.open
         onOpened: {
-            grid.currentIndex = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
+            picker.reset();
             Wallpapers.refresh();
             box.forceActiveFocus();
             fadeIn.restart();
@@ -72,20 +72,18 @@ PanelWindow {
         title: "style"
         hint: "esc"
 
-        // arrows walk the wallpapers, enter sets the selected one; [ and ] cycle the themes,
+        // ↑↓ (j k) pick a wallpaper, enter sets it, r a random one; [ and ] walk the themes,
         // t flips dark/light
         Keys.onEscapePressed: Panels.close()
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Left)
-                grid.moveCurrentIndexLeft();
-            else if (event.key === Qt.Key_Right)
-                grid.moveCurrentIndexRight();
-            else if (event.key === Qt.Key_Up)
-                grid.moveCurrentIndexUp();
-            else if (event.key === Qt.Key_Down)
-                grid.moveCurrentIndexDown();
-            else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) && grid.count > 0)
-                Wallpapers.set(Wallpapers.files[grid.currentIndex]);
+            if (event.key === Qt.Key_Up || event.key === Qt.Key_K || event.key === Qt.Key_Left)
+                picker.move(-1);
+            else if (event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_Right)
+                picker.move(1);
+            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)
+                picker.setPicked();
+            else if (event.key === Qt.Key_R)
+                picker.random();
             else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight) {
                 const n = root.choices.length;
                 const i = root.choices.findIndex(c => root.isCurrent(c)) + (event.key === Qt.Key_BracketRight ? 1 : -1);
@@ -446,99 +444,18 @@ PanelWindow {
 
             Label {
                 Layout.alignment: Qt.AlignRight
-                visible: grid.count > 0
-                text: "←↑↓→ pick · enter set · [ ] theme · t dark/light"
+                visible: Wallpapers.files.length > 0
+                text: "[ ] theme · t dark/light"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }
 
-            GridView {
-                id: grid
-
-                readonly property int columns: Math.max(2, Math.floor(width / 200))
+            WallpaperPicker {
+                id: picker
 
                 Layout.fillWidth: true
-                implicitHeight: Math.min(3, Math.ceil(count / columns)) * cellHeight
-                visible: count > 0
-                clip: true
-                cellWidth: Math.floor(width / columns)
-                cellHeight: Math.round((cellWidth - 8) * 9 / 16) + Metrics.fontSize + 16
-                boundsBehavior: Flickable.StopAtBounds
-                model: ScriptModel {
-                    values: Wallpapers.files
-                }
-
-                delegate: Item {
-                    id: thumb
-
-                    required property string modelData
-                    required property int index
-                    // the small copy from Wallpapers' thumbnail cache; the picture itself until it exists
-                    property bool thumbMissing: false
-                    readonly property bool current: Settings.wallpaper === modelData
-                    readonly property bool selected: GridView.isCurrentItem && box.activeFocus
-
-                    width: grid.cellWidth
-                    height: grid.cellHeight
-
-                    Rectangle {
-                        id: frame
-
-                        x: 4
-                        y: 4
-                        width: parent.width - 8
-                        height: Math.round(width * 9 / 16)
-                        color: Colors.hoverFill
-                        // set wallpaper: accent; keyboard cursor: thick fg frame; hover: dim
-                        border.width: thumb.current || thumb.selected ? 2 : 1
-                        border.color: thumb.current ? Colors.accent : thumb.selected ? Colors.fg : thumbArea.containsMouse ? Colors.dim : Colors.border
-
-                        Image {
-                            anchors.fill: parent
-                            anchors.margins: frame.border.width
-                            // the version makes it try the thumbnail again once new ones are made
-                            source: thumb.thumbMissing ? `file://${thumb.modelData}` : `file://${Wallpapers.thumb(thumb.modelData)}?v=${Wallpapers.thumbsVersion}`
-                            sourceSize.width: 320
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: true
-                            onStatusChanged: if (status === Image.Error && !thumb.thumbMissing)
-                                thumb.thumbMissing = true
-                        }
-
-                        Connections {
-                            target: Wallpapers
-
-                            function onThumbsVersionChanged(): void {
-                                thumb.thumbMissing = false;
-                            }
-                        }
-                    }
-
-                    Label {
-                        anchors.top: frame.bottom
-                        anchors.topMargin: 2
-                        x: frame.x
-                        width: frame.width
-                        elide: Text.ElideMiddle
-                        text: (thumb.current ? "> " : "") + Wallpapers.fileName(thumb.modelData)
-                        color: thumb.current ? Colors.accent : Colors.dim
-                        font.pixelSize: Metrics.fontSize - 2
-                    }
-
-                    MouseArea {
-                        id: thumbArea
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            grid.currentIndex = thumb.index;
-                            box.forceActiveFocus();
-                            Wallpapers.set(thumb.modelData);
-                        }
-                    }
-                }
+                active: root.open
+                visible: Wallpapers.files.length > 0
             }
         }
     }

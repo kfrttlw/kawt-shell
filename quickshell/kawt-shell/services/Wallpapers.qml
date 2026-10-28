@@ -131,14 +131,53 @@ Singleton {
         }
     }
 
+    // ---- the style window's preview: the picked one as it would look, small. Dithered in the
+    // theme's tones when that's on (made on the fly, a fraction of a second; kept with the other
+    // copies), the picture itself otherwise
+    property string previewFor: ""
+    property string preview: ""
+    property string previewOut: ""
+
+    function makePreview(path: string): void {
+        previewFor = path;
+        if (!path || !Settings.wallDither) {
+            preview = path;
+            return;
+        }
+        const args = [480, 270, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma)];
+        previewOut = `${ditherDir}/preview-${Qt.md5([path, ...args].join("|"))}.png`;
+        previewer.command = ["sh", "-c", '[ -s "$2" ] || { mkdir -p "${2%/*}" && sh "$0" "$@" && { cd "${2%/*}" && ls -t | tail -n +41 | xargs -r rm -f; }; } && [ -s "$2" ] && echo "$2"', `${Quickshell.shellDir}/scripts/dither.sh`, path, previewOut, ...args.map(String)];
+        previewer.running = true;
+    }
+
+    // a newer pick while one is made: Process runs again with the newest command; only the copy
+    // of the one picked last is shown
+    Process {
+        id: previewer
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = text.trim();
+                if (out && out === root.previewOut)
+                    root.preview = out;
+                else if (!out)
+                    root.preview = root.previewFor; // no ffmpeg, or a picture it can't read
+            }
+        }
+    }
+
     // a new theme (or light / dark): the copy is made again in its colors, drawn in like a new
     // wallpaper. Only once something is on screen (not the theme settling in at login)
     Timer {
         id: recolor
 
         interval: 300
-        onTriggered: if (root.shown !== "" && Settings.wallDither)
-            root.show(Settings.wallpaperTransition)
+        onTriggered: {
+            if (root.shown !== "" && Settings.wallDither)
+                root.show(Settings.wallpaperTransition);
+            if (root.previewFor)
+                root.makePreview(root.previewFor);
+        }
     }
 
     Connections {
@@ -195,6 +234,8 @@ Singleton {
 
         function onWallDitherChanged(): void {
             root.show(Settings.wallpaperTransition);
+            if (root.previewFor)
+                root.makePreview(root.previewFor);
         }
 
         function onLoadedChanged(): void {

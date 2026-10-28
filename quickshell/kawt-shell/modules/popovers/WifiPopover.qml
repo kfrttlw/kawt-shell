@@ -241,9 +241,11 @@ Popover {
                         color: row.modelData.connected ? Colors.accent : Colors.fg
                     }
 
+                    // saved: it knows the password; open: no password, others nearby can see
+                    // what goes over it unencrypted
                     Label {
-                        text: row.modelData.stateChanging ? "..." : (row.modelData.known ? "saved " : "") + (Wifi.isSecure(row.modelData) ? "*" : " ")
-                        color: Colors.dim
+                        text: row.modelData.stateChanging ? "..." : [row.modelData.known ? "saved" : "", Wifi.isSecure(row.modelData) ? "" : "open"].filter(s => s).join(" ")
+                        color: !row.modelData.stateChanging && !Wifi.isSecure(row.modelData) ? Colors.warn : Colors.dim
                         font.pixelSize: Metrics.fontSize - 2
                     }
 
