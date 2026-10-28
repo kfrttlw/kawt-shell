@@ -218,7 +218,7 @@ var skins = {
     }
 };
 
-var order = ["thinky", "nub", "stripes", "floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
+var order = ["stripes", "thinky", "nub", "floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
 
 // a skin from companions.json, checked: 10 rows of 12 known letters, colors as #rrggbb
 function valid(s) {
