@@ -1,5 +1,5 @@
 #!/bin/sh
-# usage: wallpaper.sh <awww|swww> <file> [start | crt | fade | grow | random | none]
+# usage: wallpaper.sh <awww|swww> <file> [start | crt | fade | grow | random | none] [nearest]
 # Shows <file> through awww (or swww, its old name), starting its daemon first if it isn't
 # running: kawt does that itself (services/Wallpapers.qml), so no config line or autostart is
 # needed for it. start: at login, when the daemon may already show it (it keeps the last one):
@@ -10,11 +10,13 @@
 #   grow    a circle from the middle
 #   random  one of awww's own, a different one each time
 #   none    at once
+# nearest: scaled without smoothing (a dithered one: its dots stay sharp on every screen)
 # exit 1: the daemon didn't come up
 
 w=$1
 file=$2
 start=${3:-}
+filter=${4:-}
 command -v "$w" > /dev/null || exit 1
 
 if ! "$w" query > /dev/null 2>&1; then
@@ -42,4 +44,5 @@ case $start in
     none) set -- --transition-type none ;;
     *) set -- ;;
 esac
+[ "$filter" = nearest ] && set -- "$@" --filter Nearest
 exec "$w" img "$@" -- "$file"
