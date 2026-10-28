@@ -290,7 +290,7 @@ ColumnLayout {
             Layout.fillWidth: true
             prompt: "motto>"
             text: Settings.motto
-            placeholder: "a line under your name · fortune · empty = none"
+            placeholder: "a line on the today tab · fortune · empty = none"
             onAccepted: t => Settings.motto = t.trim()
         }
 
@@ -310,7 +310,7 @@ ColumnLayout {
             }
 
             BracketButton {
-                label: "machine"
+                label: "kawt logo"
                 active: Settings.profileArt === "machine"
                 textColor: Settings.profileArt === "machine" ? Colors.accent : Colors.dim
                 onClicked: Settings.profileArt = "machine"
