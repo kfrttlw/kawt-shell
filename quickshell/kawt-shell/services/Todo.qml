@@ -20,6 +20,8 @@ import qs.config
 Singleton {
     id: root
 
+    property bool loaded: false // the file is read: until then there are no tasks, not none done
+
     // older tasks (before folders/importance/icons/notes) get the defaults. Complete ones are
     // passed through as they are: the same object stays the same object, so the lists keep their
     // rows (ScriptModel) instead of building every one again on each change
@@ -254,9 +256,11 @@ Singleton {
         path: `${Settings.dir}/todo.json`
         printErrors: false // missing on first run, created below
         onAdapterUpdated: writeAdapter()
+        onLoaded: root.loaded = true
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();
+            root.loaded = true;
         }
 
         JsonAdapter {

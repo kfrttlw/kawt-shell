@@ -98,9 +98,10 @@ Singleton {
 
     // Settings.updateAuto: a week after the last check (looked at hourly, so a machine that
     // sleeps a lot still gets it; the time is kept, so a restart doesn't ask again). A new
-    // install starts counting from now: it's up to date
+    // install starts counting from now: it's up to date. Only once the settings are read: before
+    // that the time is the default 0, and writing it then could put every setting back to its default
     Timer {
-        running: Settings.updateAuto && root.repo !== ""
+        running: Settings.loaded && Settings.updateAuto && root.repo !== ""
         repeat: true
         interval: 3600000
         triggeredOnStart: true

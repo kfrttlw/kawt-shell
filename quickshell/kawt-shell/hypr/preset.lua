@@ -32,9 +32,14 @@ local function norm(keys)
     return (keys:upper():gsub("%s+", ""))
 end
 
--- hl.bind, remembered by its keys
-local function bind(keys, action, opts)
-    local b = hl.bind(keys, action, opts)
+-- hl.bind, remembered by its keys. One at a time: a key this Hyprland doesn't take is skipped
+-- alone (said in hyprland's log), not with every key after it
+local function bind(keys, ...)
+    local ok, b = pcall(hl.bind, keys, ...)
+    if not ok then
+        print("preset.lua: " .. keys .. " skipped: " .. tostring(b))
+        return nil
+    end
     preset.binds[norm(keys)] = b
     return b
 end

@@ -6,9 +6,10 @@ import qs.config
 import qs.utils
 
 // Screenshots through scripts/screenshot.sh (grim + slurp).
-// Settings.screenshotAsk (the default): the shot waits in ~/.cache/kawt/shots and a preview in
-// the bottom-right corner offers [copy] [save] [open] (modules/shot/ShotPreview.qml). Left
-// alone, the preview goes and the shot isn't kept (the cache is cleaned after an hour).
+// Settings.screenshotAsk (the default): the shot waits in ~/.cache/kawt/shots, already on the
+// clipboard, and a preview in the bottom-right corner offers [copy] [save] [open]
+// (modules/shot/ShotPreview.qml). Left alone, or followed by the next shot, it's saved; only
+// [x] throws it away (the cache is cleaned after an hour).
 // Otherwise it's saved to Settings.screenshotDir at once, copied, and announced.
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen
 // With the tools installed (each optional, its button only shows with it):
@@ -116,8 +117,11 @@ Singleton {
         // press starts over instead of being ignored, so the key never just does nothing
         if (job.running)
             job.running = false;
-        // close kawt's panels first so they aren't in the picture; a waiting shot goes too
+        // close kawt's panels first so they aren't in the picture. A shot still waiting is saved,
+        // like one left alone: two in a row used to lose the first
         Panels.close();
+        if (shot)
+            save();
         dismiss();
         pending = m;
         asking = Settings.screenshotAsk;

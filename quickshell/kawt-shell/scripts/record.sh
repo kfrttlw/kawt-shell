@@ -5,7 +5,7 @@
 # sound: off | mic (the default microphone) | system (what you hear: the default output's
 #        monitor) | both (the two mixed: a temporary sink with two loopbacks into it, made with
 #        pactl and taken away again afterwards). "1" / "0" (older kawt) are mic / off.
-# exit 3: the region selection was cancelled (esc in slurp)
+# exit 3: the region selection was cancelled (esc in slurp, or kawt stopped it meanwhile)
 
 mode=${1:-region}
 file=$2
@@ -15,6 +15,11 @@ sound=${5:-off}
 case $sound in 1) sound=mic ;; 0 | "") sound=off ;; esac
 
 mkdir -p "$(dirname "$file")" || exit 1
+
+# stopped before the recording began (the key again while the area is picked): slurp goes too,
+# instead of staying on the screen, and it's a cancel, not a failed recording. Once wf-recorder
+# runs, the stop goes to it instead (below)
+trap 'pkill -P $$ 2> /dev/null; exit 3' INT TERM
 
 case $mode in
     region)

@@ -593,8 +593,10 @@ Singleton {
         }
     }
 
-    // a task ticked off
-    readonly property int doneCount: Todo.tasks.filter(t => t.done).length
+    // a task ticked off. Counted once both files are read: the list coming in at the start
+    // isn't news (it cheered and took the fun at every start, and could write his file before
+    // it was read)
+    readonly property int doneCount: Todo.loaded && loaded ? Todo.tasks.filter(t => t.done).length : -1
     property int doneSeen: -1
 
     Component.onCompleted: doneSeen = doneCount
