@@ -13,6 +13,8 @@ Item {
     property alias input: input
     property string prompt: ">"
     property string placeholder: ""
+    property bool framed: true // false: a bare line, like a tty's (the lock)
+    property color promptColor: Colors.accent
     property var completions: []
     property var highlight: []
     readonly property string suggestion: {
@@ -29,6 +31,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
+        visible: root.framed
         color: input.activeFocus ? Colors.hoverFill : Colors.bg
         border.color: input.activeFocus ? Colors.dim : Colors.border
         border.width: Metrics.borderWidth
@@ -38,10 +41,10 @@ Item {
         id: promptText
 
         anchors.left: parent.left
-        anchors.leftMargin: 4
+        anchors.leftMargin: root.framed ? 4 : 0
         anchors.verticalCenter: parent.verticalCenter
         text: root.prompt
-        color: Colors.accent
+        color: root.promptColor
     }
 
     TextInput {

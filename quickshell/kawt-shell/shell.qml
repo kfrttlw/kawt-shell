@@ -11,11 +11,14 @@ import qs.config
 import qs.services
 import "modules/bar"
 import "modules/lock"
+import "modules/boot"
 
 ShellRoot {
     Bar {}
 
     Lock {}
+
+    Boot {}
 
     // singletons start lazily; these have to run without anything on screen using them
     // (theme files for other apps, todo reminders, the wallpaper theme, locking)

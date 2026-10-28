@@ -83,6 +83,8 @@ Singleton {
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
     property alias brackets: adapter.brackets
+    property alias crt: adapter.crt
+    property alias bootScreen: adapter.bootScreen
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
@@ -223,6 +225,8 @@ Singleton {
             property string fontFamily: "BlexMono Nerd Font Mono" // a monospace one: kawt lines text up in columns (BlexMono = ibm plex mono)
             property int fontSize: 13 // px; panels grow with it
             property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
+            property bool crt: true // the lock (and the boot screen) switch on and off like an old picture tube (components/CrtTube.qml)
+            property bool bootScreen: true // a bios-like check list once at login, any key skips it (modules/boot)
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)

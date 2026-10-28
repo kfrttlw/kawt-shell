@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pam
+import qs.config
 import qs.services
 
 // kawt's lock screen (ext-session-lock). The password is checked by the system's own
@@ -14,6 +15,9 @@ Scope {
 
     property string status: ""
     property int fails: 0
+    // the right password: the lock switches off like an old tube first (LockSurface.qml says
+    // when it's done; a second at most), then it's gone
+    property bool leaving: false
     property string pending: "" // the password, until PAM asks for it
     property int testLeft: 0
 
@@ -29,12 +33,32 @@ Scope {
 
     function unlock(): void {
         pam.abort();
+        leaveTimeout.stop();
+        leaving = false;
         pending = "";
         status = "";
         fails = 0;
         testLeft = 0;
         Panels.lockTest = false;
         Panels.locked = false;
+    }
+
+    function leave(): void {
+        if (!Settings.crt) {
+            unlock();
+            return;
+        }
+        status = "";
+        leaving = true;
+        leaveTimeout.restart();
+    }
+
+    // never stuck behind an animation that didn't end
+    Timer {
+        id: leaveTimeout
+
+        interval: 1000
+        onTriggered: root.unlock()
     }
 
     Connections {
@@ -83,7 +107,7 @@ Scope {
         onCompleted: result => {
             root.pending = "";
             if (result === PamResult.Success) {
-                root.unlock();
+                root.leave();
             } else {
                 root.fails++;
                 root.status = result === PamResult.MaxTries ? "too many attempts, wait a bit"
