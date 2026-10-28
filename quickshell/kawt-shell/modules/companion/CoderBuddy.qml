@@ -51,7 +51,7 @@ Item {
 
         function onRunningChanged(): void {
             if (Coder.running && Companion.sleeping)
-                Companion.wake();
+                Companion.wake(false);
         }
     }
 

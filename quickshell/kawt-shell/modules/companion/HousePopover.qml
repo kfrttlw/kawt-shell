@@ -106,7 +106,7 @@ Popover {
         BracketButton {
             label: Companion.sleeping ? "wake" : "sleep"
             textColor: Companion.wants === "sleep" ? Colors.accent : Colors.fg
-            onClicked: Companion.sleeping ? Companion.wake() : Companion.sleep(false)
+            onClicked: Companion.sleeping ? Companion.wake(false) : Companion.sleep(false)
         }
 
         // 25 minutes of work, 5 of rest: he tells you when
@@ -371,7 +371,7 @@ Popover {
         Layout.fillWidth: true
         visible: root.tab === 2
         wrapMode: Text.Wrap
-        text: "off: no house, no walks, nothing runs for him. on again in profile -> cfg"
+        text: "off: no house, no walks, nothing runs for him. on again in profile -> cfg -> kawt"
         color: Colors.dim
         font.pixelSize: Metrics.fontSize - 2
     }
