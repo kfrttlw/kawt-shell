@@ -1567,13 +1567,13 @@ ColumnLayout {
                         }
                     }
 
-                    //  [x] ~  [x] $  [x] 1 2 3  [x] wifi ...   which buttons the bar shows
+                    //  [x ●]  [x $]  [x 1 2 3]  [x window title]  [x wifi] ...   which buttons the bar shows
                     Flow {
                         Layout.fillWidth: true
                         spacing: Metrics.spacing
 
                         Repeater {
-                            model: [["profile", "~"], ["dock", "$"], ["workspaces", "1 2 3"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["home", "⌂"], ["ai", ">_"]]
+                            model: [["profile", "●"], ["dock", "$"], ["workspaces", "1 2 3"], ["title", "window title"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["home", "⌂"], ["ai", ">_"]]
 
                             BracketButton {
                                 required property var modelData

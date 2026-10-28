@@ -15,7 +15,8 @@ Item {
     signal clicked
     signal scrolled(int steps) // +1 = wheel up, -1 = wheel down
 
-    implicitWidth: row.implicitWidth + Metrics.padding * 2
+    // no frame: less room around it (the brackets already make the edge)
+    implicitWidth: row.implicitWidth + (bordered ? Metrics.padding * 2 : Metrics.padding)
     implicitHeight: Metrics.barHeight - Metrics.spacing
 
     Rectangle {

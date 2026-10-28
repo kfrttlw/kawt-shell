@@ -12,6 +12,8 @@ Row {
     property string tag: "" // [tag label]: the tag dim before the label
     property string look: "" // "" | "on" | "off" | "warn"
     property bool shown: true // false: the room stays, the brackets don't (tabs that line up)
+    property real meter: -1 // 0..1: a level in segments between the tag and the label (vol, br)
+    property color ink: "transparent" // the label in its own color (the profile's red dot)
     property alias font: label.font
 
     Bracket {
@@ -27,11 +29,18 @@ Row {
         font: label.font
     }
 
+    Meter {
+        visible: root.meter >= 0
+        anchors.verticalCenter: parent.verticalCenter
+        value: root.meter
+    }
+
     Label {
         id: label
 
+        leftPadding: root.meter >= 0 ? Metrics.spacing : 0
         text: root.text
-        color: root.look === "warn" ? Colors.warn : root.look === "off" ? Colors.dim : root.look === "on" && !Settings.brackets ? Colors.accent : Colors.fg
+        color: root.ink.a > 0 ? root.ink : root.look === "warn" ? Colors.warn : root.look === "off" ? Colors.dim : root.look === "on" && !Settings.brackets ? Colors.accent : Colors.fg
     }
 
     Bracket {
