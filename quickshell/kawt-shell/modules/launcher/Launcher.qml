@@ -298,7 +298,10 @@ PanelWindow {
                         Clipboard.remove(root.clips[root.current]);
                     else if (ctrl && event.key === Qt.Key_S && root.results[root.current])
                         Apps.togglePin(root.results[root.current]);
-                    else
+                    else if (ctrl && event.key === Qt.Key_O && root.results[root.current]) {
+                        const app = root.results[root.current];
+                        Apps.setOffline(app.isAction ? app.app.id : app.id, !Apps.isOffline(app));
+                    } else
                         return;
                     event.accepted = true;
                 }
@@ -561,6 +564,14 @@ PanelWindow {
                             color: Colors.accent
                         }
 
+                        // started without internet (ctrl+o)
+                        Label {
+                            visible: Apps.isOffline(entry.modelData)
+                            text: "no net"
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+
                         Label {
                             Layout.fillWidth: true
                             horizontalAlignment: Text.AlignRight
@@ -755,7 +766,7 @@ PanelWindow {
                     : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
                     : root.mode === "$" ? "enter: write it · enter again: into the terminal · tab: copy · ctrl+tab mode"
                     : root.expanded ? "↑↓ select · enter run · esc back"
-                    : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+tab mode"
+                    : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+o no net · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }

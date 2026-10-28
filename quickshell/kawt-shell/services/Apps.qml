@@ -149,16 +149,47 @@ Singleton {
         adapter.pinned = isPinned(app) ? adapter.pinned.filter(id => id !== app.id) : [...adapter.pinned, app.id];
     }
 
+    // ---- apps started without internet (ctrl+o in the launcher, [offline] in the wifi panel's
+    // [who's out]): in a network of their own with nothing in it, unshare's, as the same user
+    // (no root, no sandbox otherwise: files, sound, the screen as always). Only what kawt starts:
+    // the launcher, the dock (an app started another way has the internet as usual). One that's
+    // already running gets a new window from the running one, internet and all: it has to be
+    // closed first
+    readonly property list<string> offline: adapter.offline
+
+    function isOffline(app: var): bool {
+        return adapter.offline.includes(app?.isAction ? app.app?.id : app?.id);
+    }
+
+    function setOffline(id: string, on: bool): void {
+        if (id && on !== adapter.offline.includes(id))
+            adapter.offline = on ? [...adapter.offline, id] : adapter.offline.filter(i => i !== id);
+    }
+
+    function nameOf(id: string): string {
+        return apps.find(a => a.id === id)?.name ?? id;
+    }
+
+    // a kernel without user namespaces for everyone (linux-hardened) can't do it: then the app
+    // isn't started at all (rather than with the internet after all), and a message says why
+    readonly property list<string> noNet: ["sh", "-c", 'unshare --net --map-current-user true 2> /dev/null || { notify-send -a kawt "not started" "$1: this system cannot start an app without internet (user namespaces are off)"; exit 1; }; exec unshare --net --map-current-user -- "$@"', "sh"]
+
     function launch(app: var): void {
         adapter.counts = Object.assign({}, adapter.counts, { [app.id]: (adapter.counts[app.id] ?? 0) + 1 });
+        const off = isOffline(app);
         if (app.isAction) {
-            if (typeof app.action.execute === "function")
+            if (typeof app.action.execute === "function" && !off)
                 app.action.execute();
             else
-                Quickshell.execDetached(app.action.command);
+                Quickshell.execDetached(off ? [...noNet, ...app.action.command] : app.action.command);
         } else if (app.runInTerminal)
             Quickshell.execDetached({
-                command: [...terminalCmd(), ...app.command],
+                command: [...terminalCmd(), ...(off ? noNet : []), ...app.command],
+                workingDirectory: app.workingDirectory
+            });
+        else if (off)
+            Quickshell.execDetached({
+                command: [...noNet, ...app.command],
                 workingDirectory: app.workingDirectory
             });
         else
@@ -278,6 +309,7 @@ Singleton {
 
             property var counts: ({}) // desktop entry id -> launches
             property var pinned: [] // desktop entry ids, in dock order
+            property var offline: [] // desktop entry ids started without internet
         }
     }
 }
