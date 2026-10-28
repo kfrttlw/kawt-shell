@@ -9,23 +9,76 @@ import qs.services
 import qs.utils
 import "../popovers"
 
+// The notes tab:
+//
+//   folders        │ / search█                       [+ new] [from clipboard]
+//   > notes     4  │ * shopping list                  28.10 14:30     (* pinned, on top)
+//     ideas     2  │ > kawt ideas                     27.10 09:12
+//     all       6  │ ┌───────────────────────────────────────────────┐
+//   + folder       │ │ kawt ideas                                    │  read: # headings bold,
+//                  │ │ [x] quick switches on top                     │  - [ ] boxes tick with a
+//                  │ │ [ ] focus timer with thinky                   │  click; a click elsewhere
+//                  │ └───────────────────────────────────────────────┘  writes in it
+//                  │ [pin] [make a task]  notes ideas         [delete]
 RowLayout {
-    required property var profile
-
     id: notesTab
 
+    required property var profile
     readonly property var list: Notes.inFolder(profile.notesFolder, noteSearch.text)
     property bool loaded: false // the editor holds the opened note: from now on, typing saves it
+    property bool editing: false // the note is written in; otherwise it's read (boxes, headings)
+    readonly property var note: Notes.notes.find(n => n.id === profile.noteOpen) ?? null
+    property string said: ""
 
-    // open a note in the editor (0 = close). Saves the one being left first.
+    // open a note (0 = close). Saves the one being left first. One with text is shown to read,
+    // an empty one to write in
     function openNote(id: real): void {
         Notes.flush();
         loaded = false;
         profile.noteOpen = id;
         noteEdit.text = Notes.bodyOf(id);
         loaded = true;
-        if (id)
+        editing = id !== 0 && noteEdit.text.trim() === "";
+        if (editing)
             noteEdit.forceActiveFocus();
+    }
+
+    // the text again first: boxes ticked while reading changed it
+    function write(): void {
+        loaded = false;
+        noteEdit.text = Notes.bodyOf(profile.noteOpen);
+        loaded = true;
+        editing = true;
+        noteEdit.forceActiveFocus();
+        noteEdit.cursorPosition = noteEdit.length;
+    }
+
+    function say(text: string): void {
+        said = text;
+        saidTimer.restart();
+    }
+
+    Timer {
+        id: saidTimer
+
+        interval: 3000
+        onTriggered: notesTab.said = ""
+    }
+
+    // [from clipboard]: its text as a new note
+    Process {
+        id: paste
+
+        command: ["wl-paste", "--no-newline", "--type", "text"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "") {
+                    notesTab.say("nothing to paste: the clipboard has no text");
+                    return;
+                }
+                notesTab.openNote(Notes.createWith(notesTab.profile.notesFolder, text));
+            }
+        }
     }
 
     spacing: Metrics.padding
@@ -153,6 +206,11 @@ RowLayout {
                 textColor: Colors.accent
                 onClicked: notesTab.openNote(Notes.create(profile.notesFolder))
             }
+
+            BracketButton {
+                label: "from clipboard"
+                onClicked: paste.running = true
+            }
         }
 
         Label {
@@ -212,7 +270,8 @@ RowLayout {
 
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
-                                text: (noteRow.current ? "> " : "  ") + Notes.title(noteRow.modelData)
+                                textFormat: Text.StyledText
+                                text: `<font color="${Colors.accent}">${noteRow.modelData.pinned ? "*" : noteRow.current ? ">" : "&nbsp;"}</font>&nbsp;` + Notes.title(noteRow.modelData).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                                 color: noteRow.current ? Colors.accent : Colors.fg
                             }
 
@@ -258,7 +317,7 @@ RowLayout {
             }
         }
 
-        // the editor of the opened note
+        // the opened note: read (boxes, headings) or written in
         Rectangle {
             Layout.fillWidth: true
             Layout.topMargin: Metrics.spacing
@@ -268,10 +327,83 @@ RowLayout {
             border.color: noteEdit.activeFocus ? Colors.dim : Colors.border
             border.width: Metrics.borderWidth
 
+            // read: a line each; - [ ] boxes tick, a click anywhere else writes in it
+            Flickable {
+                id: readFlick
+
+                anchors.fill: parent
+                anchors.margins: Metrics.spacing
+                visible: !notesTab.editing
+                clip: true
+                contentHeight: readCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                MouseArea {
+                    width: readFlick.width
+                    height: Math.max(readFlick.height, readCol.implicitHeight)
+                    cursorShape: Qt.IBeamCursor
+                    onClicked: notesTab.write()
+                }
+
+                Column {
+                    id: readCol
+
+                    width: readFlick.width
+                    spacing: 2
+
+                    Repeater {
+                        model: notesTab.editing ? [] : Notes.bodyOf(profile.noteOpen).split("\n")
+
+                        Item {
+                            id: line
+
+                            required property string modelData
+                            required property int index
+                            readonly property var box: /^\s*(?:[-*]\s+)?\[([ xX])\]\s?(.*)$/.exec(modelData)
+                            readonly property var heading: /^(#{1,3})\s+(.*)$/.exec(modelData)
+                            readonly property var point: /^\s*[-*]\s+(.*)$/.exec(modelData)
+
+                            width: readCol.width
+                            implicitHeight: modelData.trim() === "" ? Metrics.fontSize * 0.6 : Math.max(lineText.implicitHeight, boxMark.implicitHeight)
+
+                            Brackets {
+                                id: boxMark
+
+                                visible: line.box !== null
+                                text: line.box && line.box[1] !== " " ? "x" : " "
+                                look: line.box && line.box[1] !== " " ? "off" : ""
+                            }
+
+                            Label {
+                                id: lineText
+
+                                x: line.box ? boxMark.width + Metrics.spacing : line.point ? Metrics.fontSize : 0
+                                width: parent.width - x
+                                wrapMode: Text.Wrap
+                                // the first line is the title
+                                text: line.box ? line.box[2] : line.heading ? line.heading[2] : line.point ? `· ${line.point[1]}` : line.modelData
+                                color: line.box && line.box[1] !== " " ? Colors.dim : Colors.fg
+                                font.strikeout: line.box !== null && line.box[1] !== " "
+                                font.bold: line.heading !== null || line.index === 0
+                                font.pixelSize: line.heading && line.heading[1] === "#" ? Metrics.fontSize + 1 : Metrics.fontSize
+                            }
+
+                            MouseArea {
+                                visible: line.box !== null
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Notes.toggleBox(profile.noteOpen, line.index)
+                            }
+                        }
+                    }
+                }
+            }
+
             Flickable {
                 id: noteFlick
 
                 anchors.fill: parent
+                visible: notesTab.editing
                 anchors.margins: Metrics.spacing
                 clip: true
                 contentHeight: noteEdit.contentHeight
@@ -308,19 +440,48 @@ RowLayout {
                     }
 
                     Label {
-                        visible: !noteEdit.text && !noteEdit.activeFocus
-                        text: "first line = title\n..."
+                        visible: !noteEdit.text
+                        text: "first line = title\n# a heading · - [ ] a box · - a point"
                         color: Colors.dim
                     }
+
+                    // done writing (esc, or a click elsewhere): read it again
+                    Keys.onEscapePressed: notesTab.editing = false
+                    onActiveFocusChanged: if (!activeFocus && text.trim() !== "")
+                        notesTab.editing = false
                 }
             }
         }
 
-        // move to a folder · delete
+        // pin · a task of it · move to a folder · delete
         Flow {
             Layout.fillWidth: true
             visible: profile.noteOpen !== 0
             spacing: Metrics.spacing
+
+            BracketButton {
+                label: notesTab.note?.pinned ? "unpin" : "pin"
+                active: !!notesTab.note?.pinned
+                onClicked: Notes.togglePin(profile.noteOpen)
+            }
+
+            // its title becomes a task, the rest of it the task's note
+            BracketButton {
+                label: "make a task"
+                onClicked: {
+                    Notes.flush();
+                    const body = Notes.bodyOf(profile.noteOpen);
+                    const said = Todo.add(Notes.title(notesTab.note), "inbox");
+                    const t = Todo.tasks.slice().sort((a, b) => b.id - a.id)[0];
+                    if (said && t)
+                        Todo.update(t.id, { note: body.split("\n").slice(1).join("\n").trim() });
+                    notesTab.say(said ? `task ${said}` : "the note has no title to make a task of");
+                }
+            }
+
+            Label {
+                text: " "
+            }
 
             Repeater {
                 model: Notes.folders
@@ -347,6 +508,13 @@ RowLayout {
                     Notes.remove(id);
                 }
             }
+        }
+
+        Label {
+            visible: notesTab.said !== ""
+            text: notesTab.said
+            color: Colors.accent
+            font.pixelSize: Metrics.fontSize - 2
         }
 
         Label {
