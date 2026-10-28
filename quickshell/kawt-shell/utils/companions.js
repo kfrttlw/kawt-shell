@@ -46,6 +46,64 @@ var hem = {
 // there's no outline; it's there for the arms to find the sides), two dark eyes, little arms,
 // thin legs. One thing each to know them by: an antenna, horns, the shutter, feelers, the hem
 var skins = {
+    // kawt's own: a closed black thinkpad, the red dot of its logo in the corner
+    thinky: {
+        name: { en: "thinky", ru: "синки" },
+        about: { en: "a little black thinkpad, its red dot", ru: "чёрный thinkpad с красной точкой" },
+        colors: { o: "#3d3c39", b: "#262624", e: "#d8d6d0", c: "#d8d6d0", a: "#e2231a", h: "#3d3c39" },
+        arm: 7,
+        rows: [
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            ".oooooooooo.",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
+            ".obbbbbbbao.",
+            ".oooooooooo."
+        ]
+    },
+    // the trackpoint: round and red
+    nub: {
+        name: { en: "nub", ru: "нуб" },
+        about: { en: "the red trackpoint, round", ru: "красный трекпоинт, круглый" },
+        colors: { o: "#e2231a", b: "#e2231a", e: "#1c0504", c: "#1c0504", h: "#9e130d" },
+        arm: 7,
+        rows: [
+            "............",
+            "............",
+            "............",
+            "............",
+            "...oooooo...",
+            "..obbbbbbo..",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
+            ".obbbbbbbbo.",
+            "..oooooooo.."
+        ]
+    },
+    // kawt's stripes, like an old logo; in the theme's ink (filled in by Companion.qml), so he
+    // shows on black and on paper alike
+    stripes: {
+        name: { en: "stripes", ru: "полоски" },
+        about: { en: "kawt's stripes, eyes between them", ru: "полоски kawt, глаза между ними" },
+        colors: {},
+        arm: 7,
+        rows: [
+            "............",
+            "............",
+            "............",
+            ".....a......",
+            ".oooooooooo.",
+            ".llllllllll.",
+            ".obebbbbebo.",
+            ".obebbbbebo.",
+            ".llllllllll.",
+            ".oooooooooo."
+        ]
+    },
     phos: {
         name: { en: "phos", ru: "фос" },
         about: { en: "a little green monitor", ru: "зелёный мониторчик" },
@@ -160,7 +218,7 @@ var skins = {
     }
 };
 
-var order = ["floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
+var order = ["thinky", "nub", "stripes", "floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
 
 // a skin from companions.json, checked: 10 rows of 12 known letters, colors as #rrggbb
 function valid(s) {
