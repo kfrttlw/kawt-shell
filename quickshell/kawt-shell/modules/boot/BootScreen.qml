@@ -6,7 +6,7 @@ import qs.config
 import qs.components
 import qs.services
 
-// kawt bios 0.1 · ThinkPad T14s Gen 1     (the model as the machine says it; a pc: its own)
+// kawt bios 1.0 · ThinkPad T14s Gen 1     (the model as the machine says it; a pc: its own)
 //
 // cpu    i5-8350U (8) ...................... ok
 // mem    15872 MB .......................... ok
@@ -194,7 +194,7 @@ PanelWindow {
 
             Label {
                 visible: root.lit > 0
-                text: `kawt bios 0.1 · ${SysInfo.model || SysInfo.host || "this machine"}`
+                text: `kawt bios ${Kawt.version} · ${SysInfo.model || SysInfo.host || "this machine"}`
                 font.bold: true
             }
 
