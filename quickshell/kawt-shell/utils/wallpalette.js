@@ -6,8 +6,9 @@
 //
 // The accent is the most *noticeable* hue, not the most common color: every pixel votes for
 // its hue with weight saturation × brightness, so a small bright neon sign beats a large dark
-// sky. Everything else (background, text, borders) stays near-neutral with a hint of that hue,
-// so the theme keeps the kawt look. A gray / black-and-white wallpaper gives a plain gray theme.
+// sky. It becomes the one light; everything else (background, text, borders) is the thinkpad
+// theme's, with a breath of the hue if you like (build). A grey or black-and-white wallpaper
+// keeps the thinkpad's red.
 
 function hsv(r, g, b) {
     r /= 255;
@@ -101,48 +102,44 @@ function analyse(px) {
     return { hue: d.hue, sat: d.sat, colorful: d.colorful, hues: d.colorful ? d.hues.map(x => x[0]) : [] };
 }
 
-// How the wallpaper's hue goes into the theme: [saturation, lightness] per role.
-// The rule that makes it look good: big surfaces stay clean (almost white / deep and dark,
-// only a breath of the hue), text is a dark or light shade of the hue instead of black or
-// white, and the real color goes to the accent: borders, selection, highlights.
-//   calm    barely there
-//   strong  like a clean desktop matched to its wallpaper (the default)
+// How the wallpaper's hue goes into the theme, kawt's way: the thinkpad's black and grey (or paper
+// and ink) stay, and the one light is the wallpaper's color instead of red: where you are, what's
+// chosen. [saturation, lightness] per role, at the thinkpad's own lightness:
+//   calm    the thinkpad's colors as they are, only the light changes (the default)
+//   strong  the greys take a breath of the hue
 //   full    surfaces carry the color too
+// A grey or black-and-white picture keeps the thinkpad's red.
 const strengths = {
-    calm: {
-        dark: { bg: [0.18, 0.08], fg: [0.12, 0.88], dim: [0.1, 0.58], border: [0.18, 0.24], hoverFill: [0.2, 0.13] },
-        light: { bg: [0.2, 0.97], fg: [0.25, 0.15], dim: [0.12, 0.46], border: [0.18, 0.82], hoverFill: [0.25, 0.92] }
-    },
     strong: {
-        dark: { bg: [0.3, 0.095], fg: [0.25, 0.9], dim: [0.16, 0.62], border: [0.35, 0.3], hoverFill: [0.38, 0.16] },
-        light: { bg: [0.4, 0.965], fg: [0.45, 0.17], dim: [0.2, 0.47], border: [0.38, 0.8], hoverFill: [0.5, 0.9] }
+        dark: { bg: [0.18, 0.05], fg: [0.1, 0.84], dim: [0.08, 0.44], border: [0.15, 0.17], hoverFill: [0.16, 0.11] },
+        light: { bg: [0.22, 0.89], fg: [0.2, 0.11], dim: [0.1, 0.39], border: [0.16, 0.71], hoverFill: [0.22, 0.8] }
     },
     full: {
-        dark: { bg: [0.45, 0.13], fg: [0.3, 0.92], dim: [0.22, 0.65], border: [0.5, 0.36], hoverFill: [0.5, 0.2] },
-        light: { bg: [0.55, 0.92], fg: [0.5, 0.15], dim: [0.25, 0.42], border: [0.5, 0.72], hoverFill: [0.6, 0.84] }
+        dark: { bg: [0.35, 0.075], fg: [0.2, 0.86], dim: [0.16, 0.47], border: [0.3, 0.2], hoverFill: [0.32, 0.135] },
+        light: { bg: [0.4, 0.875], fg: [0.35, 0.13], dim: [0.18, 0.38], border: [0.3, 0.69], hoverFill: [0.4, 0.785] }
     }
 };
 
-// analysis + strength -> { dark, light } in the shape of the themes in config/Colors.qml
-function build(a, strength) {
-    const st = strengths[strength] || strengths.strong;
+// analysis + strength + the thinkpad theme (config/Colors.qml) -> { dark, light } in the shape
+// of the themes there
+function build(a, strength, base) {
     const t = a && a.colorful ? 1 : 0;
-    const h = a ? a.hue : 0;
-    const accentSat = t ? Math.max(0.55, Math.min(0.75, a.sat + 0.15)) : 0;
-    const hues = t ? a.hues : [];
-    const make = (k, accent, warn) => {
-        const out = { accent, warn, hues };
-        for (const role in st[k])
-            out[role] = hsl2hex(h, st[k][role][0] * t, st[k][role][1]);
+    if (!t)
+        return { dark: Object.assign({ hues: [] }, base.dark), light: Object.assign({ hues: [] }, base.light) };
+    const h = a.hue;
+    const sat = Math.max(0.6, Math.min(0.85, a.sat + 0.2));
+    // yellows and greens look far brighter than reds and blues at the same lightness
+    const bright = h > 40 && h < 200;
+    const make = (k, accent) => {
+        const out = Object.assign({}, base[k], { accent, hues: a.hues });
+        const st = strengths[strength];
+        if (st)
+            for (const role in st[k])
+                out[role] = hsl2hex(h, st[k][role][0], st[k][role][1]);
         return out;
     };
     return {
-        dark: make("dark", t ? hsl2hex(h, accentSat, 0.68) : "#e6e6e2", "#e8796d"),
-        light: make("light", t ? hsl2hex(h, accentSat, h > 40 && h < 200 ? 0.3 : 0.4) : "#121212", "#c0392b")
+        dark: make("dark", hsl2hex(h, sat, bright ? 0.5 : 0.58)),
+        light: make("light", hsl2hex(h, sat, bright ? 0.3 : 0.4))
     };
-}
-
-// kept for older callers: analyse + the default strength
-function palette(px) {
-    return build(analyse(px), "strong");
 }
