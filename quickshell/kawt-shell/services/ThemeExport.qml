@@ -21,7 +21,7 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         for (const name in f)
             args.push(name, f[name]);
@@ -45,6 +45,11 @@ Singleton {
 
         function onTermColorsChanged(): void {
             root.apply(true);
+        }
+
+        // only fastfetch's file changes: nothing to recolor live
+        function onFetchLogoChanged(): void {
+            root.apply(false);
         }
     }
 

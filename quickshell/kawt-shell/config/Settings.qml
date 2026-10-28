@@ -78,6 +78,7 @@ Singleton {
     property alias wallpaperOrder: adapter.wallpaperOrder
     property alias wallpaperTransition: adapter.wallpaperTransition
     property alias themeTerminals: adapter.themeTerminals
+    property alias fetchLogo: adapter.fetchLogo
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
     property alias brackets: adapter.brackets
@@ -215,6 +216,7 @@ Singleton {
             property string wallpaperOrder: "next" // "next" (the folder's order) | "random"
             property string wallpaperTransition: "crt" // with awww: "crt" | "fade" | "grow" | "random" | "none" (scripts/wallpaper.sh)
             property bool themeTerminals: true // recolor open terminals on theme change
+            property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in the theme's colors) | "kawt" | "trackpoint" | "stripes" (utils/themegen.js)
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "BlexMono Nerd Font Mono" // a monospace one: kawt lines text up in columns (BlexMono = ibm plex mono)
             property int fontSize: 13 // px; panels grow with it
