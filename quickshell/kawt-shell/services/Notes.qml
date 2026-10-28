@@ -5,15 +5,17 @@ import Quickshell.Io
 import qs.config
 
 // Notes in folders, saved to ~/.local/state/kawt/notes.json.
-// A note's title is simply its first line. The old single scratchpad (notes.txt) becomes
+// A note's title is simply its first line. Pinned ones come first. Inside a note, lines like
+//   # a heading        - [ ] a box to tick (- [x] ticked)        - a point
+// are drawn as such while it's read (profile -> notes), and the boxes tick with a click. The old single scratchpad (notes.txt) becomes
 // the first note the first time this runs; the file itself is left in place.
 Singleton {
     id: root
 
     readonly property var notes: adapter.notes
     readonly property list<string> folders: adapter.folders
-    // newest edit first
-    readonly property var sorted: notes.slice().sort((a, b) => b.updated - a.updated)
+    // pinned first, then the newest edit
+    readonly property var sorted: notes.slice().sort((a, b) => (!!b.pinned - !!a.pinned) || b.updated - a.updated)
 
     // notes of a folder ("all" = every folder), optionally filtered by a search text
     function inFolder(folder: string, search: string): var {
@@ -44,6 +46,29 @@ Singleton {
 
     function update(id: real, fields: var): void {
         adapter.notes = adapter.notes.map(n => n.id === id ? Object.assign({}, n, fields, { updated: Date.now() }) : n);
+    }
+
+    // pinned or not: not an edit, the date stays
+    function togglePin(id: real): void {
+        adapter.notes = adapter.notes.map(n => n.id === id ? Object.assign({}, n, { pinned: !n.pinned }) : n);
+    }
+
+    // the box on line i of a note ticked or not: "- [ ] x" <-> "- [x] x"
+    function toggleBox(id: real, i: int): void {
+        flush();
+        const lines = bodyOf(id).split("\n");
+        const m = /^(\s*(?:[-*]\s+)?\[)([ xX])(\].*)$/.exec(lines[i] ?? "");
+        if (!m)
+            return;
+        lines[i] = m[1] + (m[2] === " " ? "x" : " ") + m[3];
+        update(id, { body: lines.join("\n") });
+    }
+
+    // a new note with this text (the clipboard's): returns its id
+    function createWith(folder: string, body: string): real {
+        const id = create(folder);
+        update(id, { body });
+        return id;
     }
 
     function remove(id: real): void {
@@ -117,7 +142,7 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var notes: [] // [{ id, body, folder, updated (ms) }]
+            property var notes: [] // [{ id, body, folder, updated (ms), pinned }]
             property var folders: ["notes"]
         }
     }
