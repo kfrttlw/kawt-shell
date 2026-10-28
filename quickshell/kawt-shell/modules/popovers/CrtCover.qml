@@ -2,7 +2,7 @@ import QtQuick
 import qs.config
 
 // The album cover as an old phosphor screen shows it: a few big pixels in four shades of the
-// theme's text color (ordered dithering; green on phosphor, ink on thinkpad), a dark line under every row of them, drawn top to bottom
+// theme's text color (ordered dithering), a dark line under every row of them, drawn top to bottom
 // when the cover changes. Painted once per cover and theme, nothing moves meanwhile.
 // Without a cover (or one only online, while those aren't allowed): a note in the same pixels.
 Item {

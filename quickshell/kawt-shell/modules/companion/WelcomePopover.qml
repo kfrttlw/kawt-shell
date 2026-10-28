@@ -7,7 +7,7 @@ import qs.services
 
 // ┌─hello: 1 / 6──────────────────────────────────esc┐
 // │  ▄█▄   ┌──────────────────────────────────┐        │
-// │  ███   │ hi! I'm phos, I live here in kawt │        │
+// │  ███   │ hi! I'm stripes, I live in kawt   │        │
 // │        └──────────────────────────────────┘        │
 // │  super + space      apps                          │
 // │  ...                                               │

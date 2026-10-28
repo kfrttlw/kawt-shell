@@ -43,8 +43,8 @@ var hem = {
 };
 
 // Plain, like Claude Code's little one: a solid body (its edge "o" is the body's own color, so
-// there's no outline; it's there for the arms to find the sides), two dark eyes, little arms,
-// thin legs. One thing each to know them by: an antenna, horns, the shutter, feelers, the hem
+// there's no outline; it's there for the arms to find the sides), two eyes, little arms, thin
+// legs. One thing each to know them by: the stripes, the red dot, round and red, the hem, the horns
 var skins = {
     // kawt's own: a closed black thinkpad, the red dot of its logo in the corner
     thinky: {
@@ -104,78 +104,6 @@ var skins = {
             ".oooooooooo."
         ]
     },
-    phos: {
-        name: { en: "phos", ru: "фос" },
-        about: { en: "a little green monitor", ru: "зелёный мониторчик" },
-        colors: { o: "#4caf6a", b: "#4caf6a", e: "#0c2414", c: "#0c2414", a: "#c8ffd4", l: "#8ee6a0" },
-        arm: 7,
-        rows: [
-            "............",
-            "............",
-            "............",
-            ".....a......",
-            ".....o......",
-            ".oooooooooo.",
-            ".obebbbbebo.",
-            ".obebbbbebo.",
-            ".obbbbbbbbo.",
-            ".oooooooooo."
-        ]
-    },
-    amber: {
-        name: { en: "amber", ru: "янтарь" },
-        about: { en: "warm, with two horns", ru: "тёплый, с рожками" },
-        colors: { o: "#d97757", b: "#d97757", e: "#2a1208", c: "#2a1208", a: "#f2b46a" },
-        arm: 7,
-        rows: [
-            "............",
-            "............",
-            "............",
-            "..a......a..",
-            "..o......o..",
-            ".oooooooooo.",
-            ".obebbbbebo.",
-            ".obebbbbebo.",
-            ".obbbbbbbbo.",
-            ".oooooooooo."
-        ]
-    },
-    floppy: {
-        name: { en: "floppy", ru: "дискета" },
-        about: { en: "steel, a shutter on top", ru: "стальная, с задвижкой сверху" },
-        colors: { o: "#5b6f88", b: "#5b6f88", e: "#0b0f14", c: "#0b0f14", l: "#b9c4d1", a: "#e9e3cf" },
-        arm: 7,
-        rows: [
-            "............",
-            "............",
-            "............",
-            "............",
-            "............",
-            ".oolllllloo.",
-            ".obebbbbebo.",
-            ".obebbbbebo.",
-            ".obbbbbbbbo.",
-            ".oooooooooo."
-        ]
-    },
-    bug: {
-        name: { en: "bug", ru: "жук" },
-        about: { en: "a purple beetle (not that kind)", ru: "фиолетовый жучок (не тот самый)" },
-        colors: { o: "#7b4bb0", b: "#7b4bb0", e: "#f4e9ff", c: "#2e1745", a: "#d9b8ff" },
-        arm: 7,
-        rows: [
-            "............",
-            "............",
-            "..a......a..",
-            "...o....o...",
-            "....oooo....",
-            "..oooooooo..",
-            ".obebbbbebo.",
-            ".obebbbbebo.",
-            ".obbbbbbbbo.",
-            "..oooooooo.."
-        ]
-    },
     ghost: {
         name: { en: "ghost", ru: "призрак" },
         about: { en: "pale, sways, a bit see-through", ru: "бледный, покачивается, чуть прозрачный" },
@@ -197,10 +125,10 @@ var skins = {
             ".obbbbbbbbo."
         ]
     },
-    // amber's shape in the theme's own colors (filled in by Companion.qml)
+    // two horns, in the theme's own colors (filled in by Companion.qml)
     theme: {
         name: { en: "theme", ru: "тема" },
-        about: { en: "in your theme's colors", ru: "в цветах твоей темы" },
+        about: { en: "in your theme's colors, two horns", ru: "в цветах твоей темы, с рожками" },
         colors: {},
         arm: 7,
         rows: [
@@ -215,10 +143,10 @@ var skins = {
             ".obbbbbbbbo.",
             ".oooooooooo."
         ]
-    }
+    },
 };
 
-var order = ["stripes", "thinky", "nub", "floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
+var order = ["stripes", "thinky", "nub", "ghost", "theme"]; // the first one is who you meet
 
 // a skin from companions.json, checked: 10 rows of 12 known letters, colors as #rrggbb
 function valid(s) {

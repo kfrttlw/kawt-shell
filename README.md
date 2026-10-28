@@ -133,15 +133,15 @@ pulled and unloaded from the panel, with limits so it doesn't eat the machine.
 ## The companion
 
 <p align="center">
-<img src="assets/companions.gif" alt="the looks: stripes, thinky, nub, floppy, phos, amber, bug, ghost" width="100%">
+<img src="assets/companions.gif" alt="the looks: stripes, thinky, nub, ghost, theme" width="100%">
 </p>
 
 `[⌂]` in the bar is the house of a little pixel friend, plain like Claude Code's: **stripes**
 (kawt's stripes, in your theme's ink; the one you meet first), **thinky** (a little black
-ThinkPad with its red dot), **nub** (the red trackpoint), or floppy, phos, amber, bug, ghost, one
-in your theme's colors, or your own (`~/.config/kawt/companions.json`, the format is in
-`utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to
-bed; left alone too long he sulks (he never dies).
+ThinkPad with its red dot), **nub** (the red trackpoint), **ghost** (pale, a bit see-through),
+**theme** (two horns, in your theme's colors), or your own (`~/.config/kawt/companions.json`,
+the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him,
+play, put him to bed; left alone too long he sulks (he never dies).
 
 <table>
 <tr>
