@@ -22,6 +22,7 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt close
 //   qs -c kawt-shell ipc call kawt bar [show|hide]             (tucked away it peeks out at the edge)
 //   qs -c kawt-shell ipc call kawt dnd
+//   qs -c kawt-shell ipc call kawt focus [stop|pause]          (the focus timer: a round, or off again)
 //   qs -c kawt-shell ipc call kawt toggleLight
 //   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
 //   qs -c kawt-shell ipc call kawt clearNotifs
@@ -211,6 +212,15 @@ Singleton {
 
         function wallpaper(arg: string): void {
             Wallpapers.pick(arg || "next");
+        }
+
+        function focus(arg: string): void {
+            if (arg === "stop")
+                Focus.stop();
+            else if (arg === "pause")
+                Focus.paused ? Focus.resume() : Focus.pause();
+            else
+                Focus.toggle();
         }
 
         function dnd(): void {

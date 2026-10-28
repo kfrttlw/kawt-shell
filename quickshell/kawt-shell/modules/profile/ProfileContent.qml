@@ -109,72 +109,68 @@ ColumnLayout {
         onTriggered: root.armed = ""
     }
 
+    // the tabs, by name: show("focus"), and the task opened in todo
+    readonly property list<string> tabNames: ["today", "todo", "notes", "focus", "sys", "top", "cfg"]
+
+    function show(name: string): void {
+        tabs.current = Math.max(0, tabNames.indexOf(name));
+    }
+
+    function openTask(task: var): void {
+        todoFolder = task.folder ?? "inbox";
+        todoOpen = task.id;
+        show("todo");
+    }
+
+    // [wifi] [bt] [dnd] [night] [caf] [mic]          bat 72% ▮▮▮▮▮▮▮▯▯▯
+    QuickSwitches {
+        Layout.fillWidth: true
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: Metrics.borderWidth
+        color: Colors.border
+    }
+
     Tabs {
         id: tabs
 
-        tabs: ["sys", "top", "todo", "notes", "cfg"]
+        tabs: root.tabNames
     }
 
     // the process list is only sampled while its tab is on screen
     Binding {
         target: SysInfo
         property: "topActive"
-        value: tabs.current === 1
+        value: tabs.current === root.tabNames.indexOf("top")
         when: root.open
     }
 
-    // Every tab is in a Loader: only the shown one exists. With all five made at once (and
-    // hidden), opening the profile built the todo list, the notes, the cfg and the process
-    // list every time, and the cfg tab alone pulled in the whole ai service.
+    // Every tab is in a Loader: only the shown one exists. With all of them made at once (and
+    // hidden), opening the profile built the todo list, the notes, the cfg and the process list
+    // every time, and the cfg tab alone pulled in the whole ai service.
+    component Page: Loader {
+        required property string name
 
-    // ---------------------------------------------------------------- sys
-    //  ascii face / machine   user@host
-    //                         arch · tp T480 · hyprland 0.55
-    //                         up 3h 12m · sat 04.10 · 14:32
-    //                         > stay curious
-    //  ┌─cpu────── 42%┐ ┌─mem────── 61%┐ ┌─today──── 2 open┐
-    //  │ ▁▂▅▇▆▃▂▁▂▅▇ │ │ ▃▃▄▄▅▅▅▆▆▆▆ │ │ 14:30 call mom    │
-    //  └─────────────┘ └──────────────┘ └──────────────────┘
-    //  net ↓1.2M ↑34K · disk 61% · bat 72% 3h left
-    Loader {
         Layout.fillWidth: true
-        active: tabs.current === 0
+        active: tabs.current === root.tabNames.indexOf(name)
         visible: active
+    }
+
+    Page {
+        name: "today"
 
         sourceComponent: Component {
-            SysTab {
+            TodayTab {
                 profile: root
             }
         }
     }
 
-    // ---------------------------------------------------------------- top
-    Loader {
-        Layout.fillWidth: true
-        active: tabs.current === 1
-        visible: active
-
-        sourceComponent: Component {
-            TopTab {
-                profile: root
-            }
-        }
-    }
-
-
-    // --------------------------------------------------------------- todo
-    //  folders        │ + 2pm call mom #family !!█
-    //  > inbox     3  │ !!  2:00 pm  call mom
-    //    work      2  │ ·            buy milk
-    //    all       5  │   ┌ note ────────────────────────┐
-    //  + folder       │   │ take the blue bag            │
-    //                 │   └──────────────────────────────┘
-    //                 │   icon  · ! !! !!!  inbox work  [delete]
-    Loader {
-        Layout.fillWidth: true
+    Page {
+        name: "todo"
         Layout.topMargin: Metrics.spacing
-        active: tabs.current === 2
-        visible: active
 
         sourceComponent: Component {
             TodoTab {
@@ -183,20 +179,9 @@ ColumnLayout {
         }
     }
 
-    // -------------------------------------------------------------- notes
-    //  folders        │ / search█                      [+ new]
-    //  > notes     4  │ > shopping list         04.10 14:30
-    //    ideas     2  │   kawt ideas            03.10 09:12   x
-    //    all       6  │ ┌─────────────────────────────────────┐
-    //  + folder       │ │ shopping list                        │
-    //                 │ │ - milk█                              │
-    //                 │ └─────────────────────────────────────┘
-    //                 │  notes ideas                 [delete]
-    Loader {
-        Layout.fillWidth: true
+    Page {
+        name: "notes"
         Layout.topMargin: Metrics.spacing
-        active: tabs.current === 3
-        visible: active
 
         sourceComponent: Component {
             NotesTab {
@@ -205,11 +190,38 @@ ColumnLayout {
         }
     }
 
-    // ---------------------------------------------------------------- cfg
-    Loader {
-        Layout.fillWidth: true
-        active: tabs.current === 4
-        visible: active
+    Page {
+        name: "focus"
+
+        sourceComponent: Component {
+            FocusTab {
+                profile: root
+            }
+        }
+    }
+
+    Page {
+        name: "sys"
+
+        sourceComponent: Component {
+            SysTab {
+                profile: root
+            }
+        }
+    }
+
+    Page {
+        name: "top"
+
+        sourceComponent: Component {
+            TopTab {
+                profile: root
+            }
+        }
+    }
+
+    Page {
+        name: "cfg"
 
         sourceComponent: Component {
             CfgTab {
