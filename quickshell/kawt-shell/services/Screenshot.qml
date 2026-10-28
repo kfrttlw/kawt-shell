@@ -112,8 +112,10 @@ Singleton {
     signal taken
 
     function take(m: string): void {
+        // one still running (an area being picked, or one stuck under the frozen screen): a new
+        // press starts over instead of being ignored, so the key never just does nothing
         if (job.running)
-            return; // the area selection is still open
+            job.running = false;
         // close kawt's panels first so they aren't in the picture; a waiting shot goes too
         Panels.close();
         dismiss();
@@ -170,14 +172,19 @@ Singleton {
 
         onDone: (code, out) => {
             const file = out.trim().split("\n").pop();
-            if (code !== 0 || !file)
+            // 1: esc in the selection, or stopped for a new press: nothing to say. 3 and 4 say why
+            if (code !== 0 || !file) {
+                if (code === 3 || code === 4)
+                    Quickshell.execDetached(["notify-send", "-a", "screenshot", "-u", "critical", "screenshot not taken", code === 3 ? `${file} (sudo pacman -S grim slurp wl-clipboard)` : file]);
                 return;
+            }
             root.taken();
             if (!root.asking)
                 return;
             root.mode = root.pending;
-            root.copied = false;
             root.shot = file;
+            // on the clipboard at once: pasting works right away, whatever the preview is asked
+            root.copy();
         }
     }
 }
