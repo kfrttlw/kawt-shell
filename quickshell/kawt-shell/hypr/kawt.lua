@@ -21,6 +21,15 @@ local function try(what, fn)
     end
 end
 
+-- one key at a time: a key this Hyprland doesn't take is skipped alone (said in hyprland's log),
+-- not with every key after it (print among them)
+local function bind(keys, ...)
+    local ok, err = pcall(hl.bind, keys, ...)
+    if not ok then
+        print("kawt.lua: " .. keys .. " skipped: " .. tostring(err))
+    end
+end
+
 -- start the shell with Hyprland
 try("autostart", function()
     hl.on("hyprland.start", function()
@@ -32,45 +41,45 @@ try("autostart", function()
 end)
 
 try("binds", function()
-    hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- rofi-style launcher
-    hl.bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- launcher in run mode, like windows' win+r
-    hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
-    hl.bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle dock")) -- pinned apps
-    hl.bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
-    hl.bind(mod .. " + ALT + A", hl.dsp.exec_cmd(kawt .. "selection")) -- the ai on the text you marked
-    hl.bind(mod .. " + ALT + V", hl.dsp.exec_cmd(kawt .. "voice")) -- speak to the ai (again: stop)
-    hl.bind(mod .. " + W", hl.dsp.exec_cmd(kawt .. "toggle style")) -- wallpaper & themes
-    hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(kawt .. "toggleLight")) -- dark <-> light
-    hl.bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
-    hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
-    hl.bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
-    hl.bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
-    hl.bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
-    hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)
-    hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
+    bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- rofi-style launcher
+    bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- launcher in run mode, like windows' win+r
+    bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
+    bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle dock")) -- pinned apps
+    bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
+    bind(mod .. " + ALT + A", hl.dsp.exec_cmd(kawt .. "selection")) -- the ai on the text you marked
+    bind(mod .. " + ALT + V", hl.dsp.exec_cmd(kawt .. "voice")) -- speak to the ai (again: stop)
+    bind(mod .. " + W", hl.dsp.exec_cmd(kawt .. "toggle style")) -- wallpaper & themes
+    bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(kawt .. "toggleLight")) -- dark <-> light
+    bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
+    bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
+    bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
+    bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
+    bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
+    bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)
+    bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
     -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in the profile's
     -- cfg tab, saved to the folder from there and copied at once)
-    hl.bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
-    hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
-    hl.bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen")) -- screenshot of the screen
-    hl.bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window")) -- screenshot of the window
+    bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
+    bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
+    bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen")) -- screenshot of the screen
+    bind("ALT + Print", hl.dsp.exec_cmd(kawt .. "screenshot window")) -- screenshot of the window
     -- screen recording: the same key again stops it
-    hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(kawt .. "record region")) -- record an area (again: stop)
-    hl.bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen")) -- record the screen (again: stop)
+    bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(kawt .. "record region")) -- record an area (again: stop)
+    bind(mod .. " + ALT + R", hl.dsp.exec_cmd(kawt .. "record screen")) -- record the screen (again: stop)
 end)
 
 -- Media keys through kawt (optional): the osd shows at once and kawt doesn't have to poll the
 -- brightness. Remove your own XF86 binds first (both would fire), then uncomment:
 -- try("media keys", function()
---     hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(kawt .. "volume up"), { locked = true })
---     hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(kawt .. "volume down"), { locked = true })
---     hl.bind("XF86AudioMute", hl.dsp.exec_cmd(kawt .. "volume mute"), { locked = true })
---     hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
---     hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true })
---     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true })
---     hl.bind("XF86AudioPlay", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
---     hl.bind("XF86AudioNext", hl.dsp.exec_cmd(kawt .. "media next"), { locked = true })
---     hl.bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
+--     bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(kawt .. "volume up"), { locked = true })
+--     bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(kawt .. "volume down"), { locked = true })
+--     bind("XF86AudioMute", hl.dsp.exec_cmd(kawt .. "volume mute"), { locked = true })
+--     bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
+--     bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true })
+--     bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true })
+--     bind("XF86AudioPlay", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
+--     bind("XF86AudioNext", hl.dsp.exec_cmd(kawt .. "media next"), { locked = true })
+--     bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
 -- end)
 -- Locking: kawt locks by itself before sleep (the lid too), on `loginctl lock-session` and after
 -- 10 idle minutes (profile -> cfg). No hypridle / hyprlock needed; if you keep them, turn
