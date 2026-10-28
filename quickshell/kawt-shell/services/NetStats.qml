@@ -11,7 +11,7 @@ import qs.config
 Singleton {
     id: root
 
-    readonly property int historyLength: 24
+    readonly property int historyLength: 60 // a minute: the bar shows the last few, the wifi panel all
     readonly property int interval: Settings.lite ? 2000 : 1000 // an old machine: half as often
 
     property real rx: 0 // bytes/s

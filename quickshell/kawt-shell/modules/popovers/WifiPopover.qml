@@ -5,6 +5,7 @@ import Quickshell.Networking
 import qs.config
 import qs.components
 import qs.services
+import qs.utils
 
 Popover {
     id: root
@@ -18,7 +19,7 @@ Popover {
     title: "wifi"
     // [who's out]: who talks to the internet right now (WhoOut.qml), wider for its columns
     readonly property int page: pageTabs.current
-    cardWidth: page === 1 ? 480 : 320
+    cardWidth: page === 1 ? 480 : 400
 
     function pick(net: var): void {
         if (net.connected || net.stateChanging)
@@ -89,6 +90,87 @@ Popover {
             elide: Text.ElideRight
             text: [NetLinks.wired ? `cable ${NetLinks.wired}` : "", NetLinks.vpn ? `vpn ${NetLinks.vpn}` : ""].filter(s => s).join(" · ")
             color: Colors.accent
+        }
+
+        // ---- the connection in use:
+        //   > home   ▂▄▆█ 82%                 5 GHz · ch 36 · 866 Mb/s · WPA2
+        //   ┌ the last minute ─────────────────────── ↓ 1.2M ↑ 34K ┐
+        //   │ in, up from the line; out, down                      │
+        //   └──────────────────────────────────────────────────────┘
+        //   ip ........ 192.168.1.30/24     gateway ... 192.168.1.1
+        //   dns ....... 192.168.1.1 · 1.1.1.1
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: Metrics.spacing
+            visible: NetInfo.dev !== "" || Wifi.active !== null
+            spacing: 4
+
+            RowLayout {
+                Layout.fillWidth: true
+                visible: Wifi.active !== null
+                spacing: Metrics.spacing
+
+                Label {
+                    text: `> ${Wifi.active?.name ?? ""}`
+                    color: Colors.accent
+                    font.bold: true
+                }
+
+                Label {
+                    text: Wifi.active ? `${Wifi.signalBars(Wifi.active.signalStrength)} ${Math.round(Wifi.active.signalStrength * 100)}%` : ""
+                    color: Colors.dim
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                    text: NetInfo.wifiLine
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+            }
+
+            TitledBox {
+                Layout.fillWidth: true
+                Layout.topMargin: titleOverhang
+                implicitHeight: graph.implicitHeight + Metrics.padding * 2 + titleOverhang
+                title: "the last minute"
+                hint: `↓${Fmt.rate(NetStats.rx)} ↑${Fmt.rate(NetStats.tx)}`
+
+                TrafficGraph {
+                    id: graph
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: Metrics.padding
+                    anchors.topMargin: Metrics.padding + parent.titleOverhang
+                }
+            }
+
+            // name ...... value, the way the sys tab shows the machine
+            Repeater {
+                model: [["ip", NetInfo.ip], ["ipv6", NetInfo.ip6], ["gateway", NetInfo.gw], ["dns", NetInfo.dns], ["device", [NetInfo.dev, NetInfo.mac].filter(s => s).join(" · ")]].filter(r => r[1])
+
+                RowLayout {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    spacing: 0
+
+                    Label {
+                        text: `${modelData[0]} ${".".repeat(Math.max(2, 10 - modelData[0].length))} `
+                        color: Colors.dim
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideMiddle
+                        text: modelData[1]
+                    }
+                }
+            }
         }
 
         Rectangle {
@@ -287,6 +369,13 @@ Popover {
             color: shown.startsWith("failed") ? Colors.warn : Colors.dim
             font.pixelSize: Metrics.fontSize - 2
         }
+    }
+
+    // the connection's details: looked at while the networks page is open
+    Binding {
+        target: NetInfo
+        property: "watching"
+        value: root.open && root.page === 0
     }
 
     // made only while it's shown: it looks at the connections every few seconds
