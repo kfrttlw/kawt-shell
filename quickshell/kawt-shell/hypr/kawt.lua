@@ -102,6 +102,19 @@ try("layer rule", function()
     })
 end)
 
+-- Apps you picked in profile -> cfg -> windows: floating from the start, in the middle, at the
+-- size the app asks for (not stretched by the layout). kawt writes the list; none yet: nothing
+try("windows at their own size", function()
+    local state = os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")
+    local ok, classes = pcall(dofile, state .. "/kawt/windows.lua")
+    if not ok or type(classes) ~= "table" then
+        return
+    end
+    for _, c in ipairs(classes) do
+        hl.window_rule({ match = { class = c }, float = true, center = true })
+    end
+end)
+
 -- Border and shadow colors of the current kawt theme. kawt rewrites this file and reloads
 -- Hyprland on every theme switch. This file is loaded last, so it wins over earlier colors.
 try("theme colors", function()
