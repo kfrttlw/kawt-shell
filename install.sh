@@ -13,6 +13,11 @@
 #   ./install.sh --yes           ask nothing (pacman too: --noconfirm)
 #   ./install.sh --dry-run       show what would happen, change nothing
 #   ./install.sh --uninstall     remove kawt's links and lines, put the old configs back
+#   ./install.sh --fresh         from scratch, as on a new machine: everything kawt set up (its
+#                                configs, hyprland's, its lines in .zshrc and the like, its settings,
+#                                what it remembered not to ask) goes to the backup, the caches away,
+#                                then the install asks everything again. Your todo, notes, ai chats
+#                                and companion stay, unless you say otherwise
 #   ./install.sh --update        kawt itself: git pull, then what the new version needs; up to date,
 #                                it still makes sure all its packages and their libraries are there.
 #                                Right after a git pull by hand (a version from before --update):
@@ -128,8 +133,9 @@ for arg in "$@"; do
         -y | --yes) yes=1 ;;
         -n | --dry-run) dry=1 ;;
         -u | --uninstall) mode=uninstall ;;
+        --fresh) mode=fresh ;;
         -h | --help)
-            sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -153,7 +159,7 @@ fi
 # colors): the one file to look at, or to send along, when something went wrong. The menus and
 # questions go to the terminal only. After --update pulled, the new installer adds to its log
 log=$state/install.log
-if [[ $mode == install || $mode == update ]] && ((!dry && EUID != 0)) && mkdir -p "$state" 2> /dev/null; then
+if [[ $mode == install || $mode == update || $mode == fresh ]] && ((!dry && EUID != 0)) && mkdir -p "$state" 2> /dev/null; then
     [[ -n $updated_from ]] || : > "$log"
     exec > >(tee >(sed -u $'s/\e\\[[0-9;?]*[a-zA-Z]//g' >> "$log")) 2>&1
     log_pid=$!
@@ -537,12 +543,16 @@ monitor_block() {
     printf '%s %s./install.sh --monitors writes these lines again)\n' "$c" "$mark_mon"
     for r in "${mon_rules[@]}"; do
         IFS='|' read -r n mode pos scale turned <<< "$r"
+        # written out like the catch-all in hypr/preset.lua, a field a line
         if ((lua)); then
+            printf 'hl.monitor({\n    output   = "%s",\n' "$n"
             if [[ $mode == off ]]; then
-                printf 'hl.monitor({ output = "%s", disabled = true })\n' "$n"
+                printf '    disabled = true,\n'
             else
-                printf 'hl.monitor({ output = "%s", mode = "%s", position = "%s", scale = "%s"%s })\n' "$n" "$mode" "$pos" "$scale" "$( ((turned)) && printf ', transform = %s' "$turned")"
+                printf '    mode     = "%s",\n    position = "%s",\n    scale    = "%s",\n' "$mode" "$pos" "$scale"
+                ((turned)) && printf '    transform = %s,\n' "$turned"
             fi
+            printf '})\n'
         elif [[ $mode == off ]]; then
             printf 'monitor = %s, disable\n' "$n"
         else
@@ -591,6 +601,42 @@ write_monitors() {
         END { if (!done && blk != "") printf "\n%s\n", blk }
     ' "$file" > "$tmp" && cat "$tmp" > "$file" && rm -f "$tmp" || { rm -f "$tmp"; return 1; }
     step "edit" "$file (monitors: $(monitors_said))"
+}
+
+# in hyprland: the config read again, then whether each monitor got what was asked (a mode it
+# doesn't have, a typo in a name: hyprland falls back quietly otherwise), and hyprland's own
+# complaints about its config. Nothing to do from a console: hyprland reads it when it starts
+check_monitors() {
+    local r n mode pos scale turned now cur res hz cur_res cur_hz errs
+    ((mon_auto || dry)) && return 0
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v hyprctl > /dev/null || return 0
+    hyprctl reload > /dev/null 2>&1 || return 0
+    sleep 1.5
+    # "DP-1 2560x1440@164.95599" for each monitor that's on
+    now=$(hyprctl monitors 2> /dev/null | awk '/^Monitor / { n = $2 } n != "" && /^\t[0-9]+x[0-9]+@/ { print n, $1; n = "" }')
+    for r in "${mon_rules[@]}"; do
+        IFS='|' read -r n mode pos scale turned <<< "$r"
+        cur=$(awk -v n="$n" '$1 == n { print $2; exit }' <<< "$now")
+        if [[ $mode == off ]]; then
+            if [[ -z $cur ]]; then pass "$n stays dark"; else warn "$n is still on" "hyprctl configerrors says why"; fi
+        elif [[ -z $cur ]]; then
+            warn "$n isn't on" "plugged in? its name: hyprctl monitors all"
+        elif [[ $mode =~ ^([0-9]+)x([0-9]+)(@([0-9.]+))?$ ]]; then
+            res=${BASH_REMATCH[1]}x${BASH_REMATCH[2]} hz=${BASH_REMATCH[4]%.*}
+            cur_res=${cur%@*} cur_hz=${cur#*@} cur_hz=${cur_hz%.*}
+            # turned a quarter: hyprland may give the size the other way round
+            if [[ $cur_res == "$res" || $cur_res == "${BASH_REMATCH[2]}x${BASH_REMATCH[1]}" ]] && { [[ -z $hz ]] || ((cur_hz - hz <= 1 && hz - cur_hz <= 1)); }; then
+                pass "$n at ${cur%.*}"
+            else
+                warn "$n is at ${cur%.*}, not $mode" "the modes it has: hyprctl monitors all"
+            fi
+        else
+            pass "$n at ${cur%.*} ($mode)"
+        fi
+    done
+    errs=$(hyprctl configerrors 2> /dev/null | grep -v '^[[:space:]]*$' | head -n 3)
+    [[ -n $errs ]] && warn "hyprland says its config has a problem:" "$errs"
+    return 0
 }
 
 # Hyprland's own starting config: what it would write itself on the first start (there with an
@@ -878,8 +924,10 @@ if [[ $mode == monitors ]]; then
     monitors_ask
     section "write"
     write_monitors "$mon_file" || { fail "could not write $mon_file"; exit 1; }
-    if ((!dry)) && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl reload > /dev/null 2>&1; then
-        pass "hyprland read it again"
+    if ((mon_auto)); then
+        ((!dry)) && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl reload > /dev/null 2>&1 && pass "hyprland read it again"
+    else
+        check_monitors
     fi
     [[ -d $backup ]] && say "${dim}the file before: $(short "$backup")${off}"
     exit 0
@@ -1077,6 +1125,97 @@ if [[ $mode == uninstall ]]; then
     say ""
     say "done. ${dim}packages stay installed; settings and notes in $(short "$state") were kept.${off}"
     exit 0
+fi
+
+# ------------------------------------------------------------------ --fresh
+# Everything kawt set up goes to the backup (nothing is deleted but caches), so the install that
+# follows finds a machine kawt was never on and asks every question again:
+#   links        quickshell, kitty, fastfetch, gtk, icons: just removed (they point into this folder)
+#   hyprland     kawt's standard config (hyprland.lua + user.lua) to the backup; a config of your
+#                own only loses kawt's lines (it's asked about again: keep it or kawt's standard)
+#   lines        the prompt in .zshrc, hyprland at login, the start command
+#   kawt's state settings, the launcher's counts and pins, the theme files, what it was told not
+#                to ask again; todo, notes, ai chats and key, the companion: kept unless you say no
+#   caches       thumbnails, dithered wallpapers: made again when they're needed
+#   system       networkmanager's internet check and i2c-dev at boot, if kawt set them (sudo):
+#                taken back, so they're asked about again
+# The packages stay; the old files: ./install.sh --uninstall still finds them in the backups
+if [[ $mode == fresh ]]; then
+    banner "from scratch"
+    ((dry)) && say "${dim}dry run: nothing will be changed${off}"
+    say ""
+    say "everything kawt set up goes to $(short "$backup"), then the install starts as on a new machine."
+    if can_ask; then
+        printf '%s %s[y/N]%s ' "start from scratch?" "$dim" "$off" > /dev/tty
+        IFS= read -r answer < /dev/tty
+        [[ $answer == [yYдД]* ]] || { say "nothing changed."; exit 0; }
+    fi
+    keep_own=1
+    ask "keep your todo, notes, ai chats (and the api key) and the companion?" 1 || keep_own=0
+
+    section "clearing"
+    # kawt itself, so it doesn't write its settings back while they're moved
+    if pgrep -f 'qs -c kawt-shell' > /dev/null; then
+        run qs kill -c kawt-shell > /dev/null 2>&1
+        step "stop" "kawt (started again at the end)"
+    fi
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
+        if [[ -L $dst ]]; then
+            run rm -- "$dst" && step "rm" "$dst (link)"
+        elif [[ -e $dst ]]; then
+            stash "$dst"
+        fi
+    done
+    if command -v gsettings > /dev/null && [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]]; then
+        run gsettings reset org.gnome.desktop.interface icon-theme
+        run gsettings reset org.gnome.desktop.interface gtk-theme
+        step "edit" "gtk: its own theme and icons until kawt sets them again"
+    fi
+
+    # hyprland: kawt's standard config goes whole; a config of your own keeps all but kawt's lines
+    if [[ -f $hypr_lua ]] && loads_kawt "$hypr_lua" "$marker_std"; then
+        stash "$hypr_lua"
+        [[ -f $hypr_user ]] && stash "$hypr_user"
+    fi
+    for f in "$hypr_lua" "$hypr_conf"; do
+        [[ -f $f ]] || continue
+        if grep -F -e "$marker_lua" -e "$marker_conf" -e "$marker_nv_lua" -e "$marker_nv_conf" -e "$mark_mon" "$f" > /dev/null; then
+            stash_copy "$f" && run sed -i -e "\|$marker_lua|d" -e "\|$marker_conf|d" -e "\|$marker_nv_lua|d" -e "\|$marker_nv_conf|d" -e "\|$mark_mon|,\|$mark_mon_end|d" "$f" && step "edit" "$f (kawt's lines out, the rest is yours)"
+        fi
+    done
+
+    undo_old_zsh_setup
+    for f in "$zshrc" "${ZDOTDIR:-$HOME}/.zprofile" "$HOME/.bash_profile" "$HOME/.bashrc"; do
+        if [[ -f $f ]] && grep -F -e "$marker_zsh" -e "$marker_login" -e "$marker_start" "$f" > /dev/null; then
+            stash_copy "$f" && run sed -i -e "\|$marker_zsh|d" -e "\|$marker_login|d" -e "\|$marker_start|d" "$f" && step "edit" "$f (kawt's lines out)"
+        fi
+    done
+
+    # kawt's state: what's yours stays (if you said so), the rest to the backup. The backups
+    # themselves and this run's log stay where they are
+    own=" todo.json notes.json notes.txt chats.json secrets.json companion.json "
+    for f in "$state"/* "$state"/.[!.]*; do
+        [[ -e $f || -L $f ]] || continue
+        name=${f##*/}
+        case $name in backups | install.log | shell-before) continue ;; esac
+        ((keep_own)) && [[ $own == *" $name "* ]] && { step "keep" "$f"; continue; }
+        stash "$f"
+    done
+    cache=${XDG_CACHE_HOME:-$HOME/.cache}/kawt
+    for d in thumbs dither; do
+        [[ -d $cache/$d ]] && run rm -rf -- "${cache:?}/$d" && step "rm" "$cache/$d (made again when needed)"
+    done
+
+    # what kawt set up for the whole system: taken back, so the install asks about it again
+    if [[ -f $nm_quiet ]] && grep -F "$marker_nm" "$nm_quiet" > /dev/null; then
+        run sudo rm -f -- "$nm_quiet" && run sudo systemctl reload NetworkManager && step "rm" "$nm_quiet (asked again)"
+    fi
+    if [[ -f $i2c_conf ]] && grep -F "$marker_i2c" "$i2c_conf" > /dev/null; then
+        run sudo rm -f -- "$i2c_conf" && step "rm" "$i2c_conf (asked again)"
+    fi
+    mode=install
+    say ""
+    say "${dim}now the install, from the start${off}"
 fi
 
 # ------------------------------------------------------------------ 0. who and where
@@ -2009,6 +2148,7 @@ if ((!dry)); then
             if loads_kawt "$hypr_conf" "$marker_conf"; then pass "hyprland loads kawt"; else fail "hyprland.conf doesn't load kawt"; failed=1; fi
         fi
         verify_hypr
+        ((mon_auto)) || check_monitors
     fi
     if want files && command -v gsettings > /dev/null; then
         [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]] && pass "gtk apps use kawt's colors and folders"
