@@ -1,7 +1,7 @@
 import QtQuick
 import qs.config
 
-// [Commits] Settings  — lazygit-style tab strip
+// [Commits] Settings  — lazygit-style tab strip: the open one in red brackets
 Row {
     id: root
 
@@ -25,16 +25,18 @@ Row {
 
             Rectangle {
                 anchors.fill: parent
-                visible: tab.selected || area.containsMouse
+                visible: area.containsMouse
                 color: Colors.hoverFill
             }
 
-            Label {
+            // the open one in red brackets, the others plain and dim (the same room: no jumping)
+            Brackets {
                 id: text
 
                 anchors.centerIn: parent
-                text: tab.selected ? `[${tab.modelData}]` : ` ${tab.modelData} `
-                color: tab.selected ? Colors.fg : Colors.dim
+                text: tab.modelData
+                look: tab.selected ? "on" : "off"
+                shown: tab.selected
             }
 
             MouseArea {

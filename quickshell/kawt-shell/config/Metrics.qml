@@ -5,7 +5,10 @@ import QtQuick
 // ~/.local/state/kawt/settings.json), so they're yours without editing this file; the panels
 // grow with the font.
 QtObject {
-    readonly property string fontFamily: Settings.fontFamily || "JetBrainsMono Nerd Font Mono"
+    // the one picked, if it's installed: a missing one would leave qt to pick any font, often
+    // not a monospace one, and kawt lines text up in columns. Then kawt's own, then the old one
+    readonly property var installed: Qt.fontFamilies()
+    readonly property string fontFamily: [Settings.fontFamily, "BlexMono Nerd Font Mono", "JetBrainsMono Nerd Font Mono"].find(f => f && installed.includes(f)) ?? (Settings.fontFamily || "monospace")
     readonly property int fontSize: Math.max(9, Math.min(28, Settings.fontSize || 13))
     readonly property real scale: fontSize / 13 // 1 at the standard 13 px
     readonly property int barHeight: Settings.barHeight > 0 ? Math.max(fontSize + 10, Settings.barHeight) : fontSize + 21

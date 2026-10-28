@@ -95,7 +95,7 @@ parts=(
     "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"
 )
 # packages per part; "a|b" = the first of them the repos have
-pkgs_shell=(quickshell hyprland ttf-jetbrains-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2 hyprpicker)
+pkgs_shell=(quickshell hyprland ttf-ibmplex-mono-nerd papirus-icon-theme libnotify grim slurp wl-clipboard cliphist wf-recorder ffmpeg pipewire wireplumber upower glib2 hyprpicker)
 # what a fresh hyprland is missing (arch keeps them optional), with the shell too:
 #   pipewire-pulse, -alsa       sound for apps that speak pulseaudio / alsa (browsers, discord...)
 #   xdg-desktop-portal-*        screen sharing (hyprland), "open file" windows (gtk)
@@ -1505,7 +1505,7 @@ aur_build() {
 human() {
     case $1 in
         quickshell) echo "quickshell (see quickshell.org)" ;;
-        ttf-jetbrains-mono-nerd) echo "JetBrainsMono Nerd Font" ;;
+        ttf-ibmplex-mono-nerd) echo "IBM Plex Mono as a Nerd Font (BlexMono Nerd Font)" ;;
         papirus-icon-theme) echo "Papirus icons" ;;
         "adw-gtk-theme|adw-gtk3" | adw-gtk-theme) echo "the adw-gtk3 gtk theme" ;;
         libnotify) echo "notify-send (libnotify)" ;;
@@ -1791,12 +1791,14 @@ if want shell; then
         fi
     fi
     need_cmd hyprctl "the compositor (package hyprland)"
-    if fc-list : family 2> /dev/null | grep -F "JetBrainsMono Nerd Font" > /dev/null; then
-        pass "JetBrainsMono Nerd Font"
+    # ibm plex mono, patched by nerd fonts: they call it BlexMono (plex's license keeps the name
+    # for ibm's own files)
+    if fc-list : family 2> /dev/null | grep -F "BlexMono Nerd Font" > /dev/null; then
+        pass "BlexMono Nerd Font (ibm plex mono)"
     elif ((is_arch)); then
-        fail "JetBrainsMono Nerd Font not found" "the font of everything (ttf-jetbrains-mono-nerd)"
+        fail "BlexMono Nerd Font not found" "the font of everything (ttf-ibmplex-mono-nerd)"
     else
-        warn "JetBrainsMono Nerd Font not found" "the font of everything: nerdfonts.com, JetBrainsMono"
+        warn "BlexMono Nerd Font not found" "the font of everything: nerdfonts.com, IBMPlexMono"
     fi
     # NetworkManager isn't installed for you: next to iwd or systemd-networkd it can take the
     # network over. The wifi panel needs it, the rest of kawt doesn't

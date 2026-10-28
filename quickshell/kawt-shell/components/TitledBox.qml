@@ -27,7 +27,7 @@ Rectangle {
 
             anchors.centerIn: parent
             text: root.title
-            color: Colors.accent
+            color: Colors.fg
         }
     }
 

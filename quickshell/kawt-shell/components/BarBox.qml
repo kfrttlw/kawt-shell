@@ -1,12 +1,13 @@
 import QtQuick
 import qs.config
 
-// Bordered clickable box; children are laid out in a Row
+// Clickable box; children are laid out in a Row. No frame (the brackets say it's a button,
+// red ones that it's open or chosen): filled while hovered; framed where one asks (bordered)
 Item {
     id: root
 
     property bool active: false
-    property bool bordered: true
+    property bool bordered: false
     readonly property bool hovered: area.containsMouse
     property alias spacing: row.spacing
     default property alias content: row.data
@@ -20,7 +21,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Metrics.radius
-        color: root.active || root.hovered ? Colors.hoverFill : root.bordered ? Colors.bg : "transparent"
+        color: root.hovered || (root.active && root.bordered) ? Colors.hoverFill : root.bordered ? Colors.bg : "transparent"
         border.color: Colors.border
         border.width: root.bordered ? Metrics.borderWidth : 0
     }

@@ -15,8 +15,8 @@ BarBox {
 
     visible: Companion.enabled && Settings.barShows("home")
 
-    Label {
-        text: "["
+    Bracket {
+        look: root.active ? "on" : ""
     }
 
     Label {
@@ -30,7 +30,8 @@ BarBox {
         color: root.tag === "!" ? Colors.warn : Colors.dim
     }
 
-    Label {
-        text: "]"
+    Bracket {
+        closing: true
+        look: root.active ? "on" : ""
     }
 }

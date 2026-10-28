@@ -10,13 +10,17 @@ BarBox {
 
     readonly property int samples: 12
 
+    Bracket {
+        look: root.active ? "on" : ""
+    }
+
     Label {
-        text: `[↓${Fmt.rate(NetStats.rx)} `
+        text: `↓${Fmt.rate(NetStats.rx)} `
     }
 
     Label {
         text: Fmt.spark(NetStats.rxHistory.slice(-root.samples))
-        color: Colors.accent
+        color: Colors.dim
     }
 
     Label {
@@ -24,7 +28,8 @@ BarBox {
         color: Colors.dim
     }
 
-    Label {
-        text: "]"
+    Bracket {
+        closing: true
+        look: root.active ? "on" : ""
     }
 }

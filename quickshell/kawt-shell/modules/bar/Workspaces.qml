@@ -32,14 +32,6 @@ Item {
     implicitWidth: row.implicitWidth + 4 + (specialLabel.visible ? specialLabel.implicitWidth + 4 : 0)
     implicitHeight: Metrics.barHeight - Metrics.spacing
 
-    Rectangle {
-        anchors.fill: parent
-        color: Colors.bg
-        border.color: Colors.border
-        border.width: Metrics.borderWidth
-        radius: Metrics.radius
-    }
-
     // the wheel: one workspace per notch (touchpads send many small steps)
     MouseArea {
         anchors.fill: parent
@@ -85,16 +77,19 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    visible: ws.current || area.containsMouse
+                    visible: area.containsMouse
                     color: Colors.hoverFill
                 }
 
-                Label {
+                // [5] the one you're on, in red brackets; with windows bright, empty dim
+                Brackets {
                     id: text
 
                     anchors.centerIn: parent
-                    text: ws.current ? `[${ws.wsId}]` : ` ${ws.wsId} `
-                    color: ws.urgent ? Colors.warn : ws.current ? Colors.accent : ws.used ? Colors.fg : Colors.dim
+                    text: String(ws.wsId)
+                    look: ws.urgent ? "warn" : ws.current ? "on" : ws.used ? "" : "off"
+                    shown: ws.current
+                    font.bold: ws.current
                 }
 
                 MouseArea {
@@ -109,14 +104,14 @@ Item {
         }
     }
 
-    Label {
+    Brackets {
         id: specialLabel
 
         anchors.left: row.right
         anchors.leftMargin: 2
         anchors.verticalCenter: parent.verticalCenter
         visible: root.special !== ""
-        text: root.special === "special" ? "[s]" : `[s:${root.special.replace(/^special:/, "")}]`
-        color: Colors.accent
+        text: root.special === "special" ? "s" : `s:${root.special.replace(/^special:/, "")}`
+        look: "on"
     }
 }
