@@ -6,7 +6,7 @@ import qs.components
 import qs.services
 
 // The profile, big and centered over a dimmed screen (super + i).
-// Same content as the [~] popover, with more room for the graphs.
+// Same content as the [●] popover, with more room for the graphs.
 PanelWindow {
     id: root
 

@@ -4,7 +4,7 @@ import qs.components
 import qs.services
 import "../profile"
 
-// [~] in the bar
+// [●] in the bar
 Popover {
     id: root
 
