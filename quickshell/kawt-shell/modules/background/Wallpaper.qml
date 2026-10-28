@@ -26,8 +26,9 @@ PanelWindow {
 
     Image {
         anchors.fill: parent
-        source: Settings.wallpaper ? `file://${Settings.wallpaper}` : ""
+        source: Wallpapers.shown ? `file://${Wallpapers.shown}` : ""
         fillMode: Image.PreserveAspectCrop
+        smooth: !Settings.wallDither // a dithered one keeps its dots sharp
         asynchronous: true
         // decode at screen resolution, not the file's (a 6K jpg would eat ~100MB otherwise).
         // From the screen, not the window: the window's size is 0 until the compositor sets it,

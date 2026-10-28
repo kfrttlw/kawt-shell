@@ -330,6 +330,37 @@ PanelWindow {
                 }
             }
 
+            //  [dithered] as it is   the picture in the theme's tones, dots like an old screen
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Metrics.spacing
+
+                Label {
+                    text: "shown:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: [[true, "dithered"], [false, "as it is"]]
+
+                    BracketButton {
+                        required property var modelData
+
+                        label: modelData[1]
+                        textColor: Settings.wallDither === modelData[0] ? Colors.accent : Colors.dim
+                        onClicked: Settings.wallDither = modelData[0]
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: Settings.wallDither ? "in the theme's tones, its reds as red dots; made again for every theme" : "the picture as it is"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+            }
+
             //  every [off] 15m 30m 1h 3h   [next] random   ·   crt  fade  grow  random  none
             Flow {
                 Layout.fillWidth: true

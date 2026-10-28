@@ -77,6 +77,7 @@ Singleton {
     property alias wallpaperEvery: adapter.wallpaperEvery
     property alias wallpaperOrder: adapter.wallpaperOrder
     property alias wallpaperTransition: adapter.wallpaperTransition
+    property alias wallDither: adapter.wallDither
     property alias themeTerminals: adapter.themeTerminals
     property alias fetchLogo: adapter.fetchLogo
     property alias fontFamily: adapter.fontFamily
@@ -215,6 +216,7 @@ Singleton {
             property int wallpaperEvery: 0 // minutes until the next one comes by itself, 0 = never (services/Wallpapers.qml)
             property string wallpaperOrder: "next" // "next" (the folder's order) | "random"
             property string wallpaperTransition: "crt" // with awww: "crt" | "fade" | "grow" | "random" | "none" (scripts/wallpaper.sh)
+            property bool wallDither: true // the wallpaper in the theme's few tones, dithered like an old screen (scripts/dither.sh); off: the picture as it is
             property bool themeTerminals: true // recolor open terminals on theme change
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in the theme's colors) | "kawt" | "trackpoint" | "stripes" (utils/themegen.js)
             // the look, yours without editing the repo (config/Metrics.qml reads these)

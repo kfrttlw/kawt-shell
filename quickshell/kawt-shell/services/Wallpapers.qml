@@ -13,6 +13,8 @@ import "../utils/wallpalette.js" as WallPalette
 // needed. Never picked one here (hyprpaper and the like draw it): kawt leaves awww alone.
 // A new one by itself every Settings.wallpaperEvery minutes if you like (super+w), the next in
 // the folder or a random one, with awww's transition picked there (crt: drawn in from the top).
+// Dithered (Settings.wallDither, on by default): what's on screen is a copy in the theme's few
+// tones, made by scripts/dither.sh, and made again when the theme changes.
 Singleton {
     id: root
 
@@ -64,11 +66,87 @@ Singleton {
 
     function set(path: string): void {
         Settings.wallpaper = path;
-        if (path && (backend === "awww" || backend === "swww"))
-            Quickshell.execDetached(["sh", script, backend, path, Settings.wallpaperTransition]);
+        show(Settings.wallpaperTransition);
+    }
+
+    // ---- what's on screen: the picture, or its dithered copy once that's made
+    property string shown: ""
+
+    // the copy: the picture in five tones between lo and hi (black and white become them) and
+    // its reds in the accent. Dark themes go from the background up to a dim ink, light ones from
+    // ink up to the paper: a wallpaper stays behind the windows either way
+    readonly property var tones: Colors.light ? ({ lo: Colors.mix(Colors.bg, Colors.fg, 0.85), hi: Colors.bg, gamma: 1 }) : ({ lo: Colors.bg, hi: Colors.mix(Colors.bg, Colors.fg, 0.85), gamma: 1.3 })
+    // the dots are two pixels big: half the biggest screen, doubled back to it
+    readonly property size ditherSize: {
+        let w = 0, h = 0;
+        for (const s of Quickshell.screens) {
+            w = Math.max(w, s.width * (s.devicePixelRatio || 1));
+            h = Math.max(h, s.height * (s.devicePixelRatio || 1));
+        }
+        return Qt.size(Math.ceil(w / 2) || 960, Math.ceil(h / 2) || 540);
+    }
+    readonly property string ditherDir: `${Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache"}/kawt/dither`
+    readonly property var ditherArgs: [ditherSize.width, ditherSize.height, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma)]
+    property string pendingTransition: ""
+
+    // the picture, or its copy (made first if it isn't there yet: one per picture, theme and
+    // screen size; the 30 newest are kept)
+    function show(transition: string): void {
+        const path = Settings.wallpaper;
+        if (!path) {
+            shown = "";
+            return;
+        }
+        if (!Settings.wallDither) {
+            display(path, transition);
+            return;
+        }
+        const out = `${ditherDir}/${Qt.md5([path, ...ditherArgs].join("|"))}.png`;
+        pendingTransition = transition;
+        ditherer.command = ["sh", "-c", '[ -s "$2" ] || { mkdir -p "${2%/*}" && sh "$0" "$@" && { cd "${2%/*}" && ls -t | tail -n +31 | xargs -r rm -f; }; } && [ -s "$2" ] && echo "$2"', `${Quickshell.shellDir}/scripts/dither.sh`, path, out, ...ditherArgs.map(String)];
+        ditherer.running = true;
+    }
+
+    function display(file: string, transition: string): void {
+        shown = file;
+        if (backend === "awww" || backend === "swww")
+            Quickshell.execDetached(["sh", script, backend, file, transition, Settings.wallDither ? "nearest" : ""]);
         // hyprlock (and other scripts) read the current wallpaper from here
-        if (path)
-            Quickshell.execDetached(["sh", "-c", 'mkdir -p ~/.cache && printf "%s" "$1" > ~/.cache/current_wallpaper.txt', "sh", path]);
+        Quickshell.execDetached(["sh", "-c", 'mkdir -p ~/.cache && printf "%s" "$1" > ~/.cache/current_wallpaper.txt', "sh", file]);
+    }
+
+    // a newer request while one is being made: Process runs again with the newest command once
+    // this one is done, and only a finished copy is ever shown (its path is what the script prints)
+    Process {
+        id: ditherer
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = text.trim();
+                if (out)
+                    root.display(out, root.pendingTransition);
+                else
+                    root.display(Settings.wallpaper, root.pendingTransition); // no ffmpeg, or a picture it can't read
+            }
+        }
+    }
+
+    // a new theme (or light / dark): the copy is made again in its colors, drawn in like a new
+    // wallpaper. Only once something is on screen (not the theme settling in at login)
+    Timer {
+        id: recolor
+
+        interval: 300
+        onTriggered: if (root.shown !== "" && Settings.wallDither)
+            root.show(Settings.wallpaperTransition)
+    }
+
+    Connections {
+        target: Colors
+
+        function onPaletteChanged(): void {
+            recolor.restart();
+        }
     }
 
     // "next" | "prev" | "random" | "none" | a path (ipc: kawt wallpaper <arg>)
@@ -114,6 +192,26 @@ Singleton {
             if (every.running)
                 every.restart();
         }
+
+        function onWallDitherChanged(): void {
+            root.show(Settings.wallpaperTransition);
+        }
+
+        function onLoadedChanged(): void {
+            root.start();
+        }
+    }
+
+    // at login: the daemon up and the last wallpaper on it (awww usually keeps that itself), once
+    // both the backend and the settings are known
+    property bool started: false
+
+    function start(): void {
+        if (started || backend === "" || !Settings.loaded)
+            return;
+        started = true;
+        if (Settings.wallpaper)
+            show("start");
     }
 
     function fileName(path: string): string {
@@ -174,9 +272,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.backend = text.trim().split("/").pop() || "kawt";
-                // at login: the daemon up, and the last wallpaper on it (it usually keeps that itself)
-                if (root.backend !== "kawt" && Settings.wallpaper)
-                    Quickshell.execDetached(["sh", root.script, root.backend, Settings.wallpaper, "start"]);
+                root.start();
             }
         }
     }
