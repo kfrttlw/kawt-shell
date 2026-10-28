@@ -13,7 +13,7 @@ import qs.utils
 //
 //   Arch Linux 6.18.44-1 (kawt-lock)                                    kawt■
 //
-//   t480 login: kfrtl
+//   host login: user
 //   Password: ••••••█
 //   [!] access denied (1)
 //
