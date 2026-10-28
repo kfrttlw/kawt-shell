@@ -10,7 +10,7 @@ Popover {
 
     name: "profile"
     title: `${SysInfo.user}@${SysInfo.host}`
-    cardWidth: 600
+    cardWidth: 700
 
     ProfileContent {
         Layout.fillWidth: true

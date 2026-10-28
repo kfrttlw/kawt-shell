@@ -405,45 +405,35 @@ Singleton {
         life.own = o;
     }
 
-    // ---- pomodoro: 25 minutes of focus, 5 of rest; he keeps the time with you
-    readonly property string pomoPhase: life.pomo?.phase ?? ""
-    readonly property int pomoLeft: pomoPhase ? Math.max(0, Math.ceil((life.pomo.until - now) / 60000)) : 0
+    // ---- the focus timer (services/Focus.qml): he keeps the time with you, says when it starts
+    // and ends, and sits quietly in between (dnd keeps him from peeking out)
+    readonly property string pomoPhase: Focus.phase === "work" ? "focus" : Focus.phase
+    readonly property int pomoLeft: Focus.running ? Math.ceil(Focus.remaining / 60000) : 0
 
     function focus(): void {
         touch();
-        if (pomoPhase) {
-            life.pomo = ({});
-            pomoTimer.stop();
+        if (Focus.running) {
+            Focus.stop();
             say(line("pomoStop", ""), 0);
-            return;
+        } else {
+            Focus.start(0);
         }
-        life.pomo = { phase: "focus", until: now + 25 * 60000 };
-        say(line("pomoStart", ""), 0);
-        schedulePomo();
     }
 
-    function schedulePomo(): void {
-        if (!pomoPhase) {
-            pomoTimer.stop();
-            return;
-        }
-        pomoTimer.interval = Math.max(1000, life.pomo.until - Date.now());
-        pomoTimer.restart();
-    }
+    Connections {
+        target: Focus
 
-    Timer {
-        id: pomoTimer
-
-        onTriggered: {
+        function onStarted(): void {
             root.touch();
-            if (root.pomoPhase === "focus") {
-                life.pomo = { phase: "break", until: root.now + 5 * 60000 };
+            root.say(root.line("pomoStart", ""), 0);
+        }
+
+        function onEnded(what: string): void {
+            root.touch();
+            if (what === "work")
                 root.react("pomoBreak", "", "stretch", true);
-                root.schedulePomo();
-            } else if (root.pomoPhase === "break") {
-                life.pomo = ({});
+            else
                 root.react("pomoBack", "", "wave", true);
-            }
         }
     }
 
@@ -682,7 +672,6 @@ Singleton {
         onAdapterUpdated: writeAdapter()
         onLoaded: {
             root.loaded = true;
-            root.schedulePomo();
             if (root.version && life.seen !== root.version) {
                 if (life.seen)
                     lvlUp.restart();
@@ -722,7 +711,6 @@ Singleton {
             property int asked: 0
             property string nightOn: ""
             property string seen: "" // the kawt version he last saw
-            property var pomo: ({}) // { phase: "focus" | "break", until: ms }
             property var own: ({}) // { en: [...], ru: [...] }
         }
     }

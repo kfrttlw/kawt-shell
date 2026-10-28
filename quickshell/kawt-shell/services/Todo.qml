@@ -96,11 +96,17 @@ Singleton {
         adapter.folders = adapter.folders.filter(f => f !== name);
     }
 
+    // ticked off: when, for "done today"
     function toggle(id: real): void {
         const t = tasks.find(t => t.id === id);
         if (t)
-            update(id, { done: !t.done });
+            update(id, { done: !t.done, doneAt: t.done ? 0 : Time.ms() });
     }
+
+    // ticked off today (Time.day: worked out once a day and on every change of the list)
+    readonly property var doneToday: Time.day ? tasks.filter(t => t.done && t.doneAt && sameDay(new Date(t.doneAt), new Date(Time.ms()))) : []
+    // open and due today or before
+    readonly property var dueToday: Time.day ? sorted.filter(t => !t.done && t.due && t.due < new Date(new Date(Time.ms()).setHours(24, 0, 0, 0)).getTime()) : []
 
     function remove(id: real): void {
         if (id === noteDraftId)
@@ -266,7 +272,7 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, notified, folder, prio 0-3, icon, note }]
+            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, doneAt (ms), notified, folder, prio 0-3, icon, note }]
             property var folders: ["inbox"]
         }
     }
