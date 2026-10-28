@@ -14,7 +14,11 @@ import qs.config
 // Tags anywhere in the line:
 //   #work                     put it in the "work" folder (created if it doesn't exist)
 //   !  !!  !!!                importance: low / medium / high
-// Each task also has an icon and a free-text note, edited in the todo tab.
+//   every day  daily  weekdays  every week  weekly  every month  monthly
+//                             it comes again: ticked off, it moves on to its next time (and a
+//                             ticked-off copy stays for today's list)
+// Each task also has an icon, a free-text note and steps of its own (subtasks), edited in the
+// todo tab.
 // When a task is due, a notification is sent (it shows up in [log] like any other).
 // Times follow the shell clock (services/Time.qml), the same one the bar shows.
 Singleton {
@@ -25,7 +29,7 @@ Singleton {
     // older tasks (before folders/importance/icons/notes) get the defaults. Complete ones are
     // passed through as they are: the same object stays the same object, so the lists keep their
     // rows (ScriptModel) instead of building every one again on each change
-    readonly property var tasks: adapter.tasks.map(t => t.folder !== undefined && t.prio !== undefined && t.icon !== undefined && t.note !== undefined ? t : Object.assign({ folder: "inbox", prio: 0, icon: "", note: "" }, t))
+    readonly property var tasks: adapter.tasks.map(t => t.folder !== undefined && t.prio !== undefined && t.icon !== undefined && t.note !== undefined && t.subs !== undefined && t.repeat !== undefined ? t : Object.assign({ folder: "inbox", prio: 0, icon: "", note: "", subs: [], repeat: "" }, t))
     readonly property list<string> folders: adapter.folders
     // nerd font glyphs to pick from: none, note, home, work, book, cart, heart, bolt, code, phone, star, bug
     readonly property list<string> icons: ["", "\uf0f6", "\uf015", "\uf0b1", "\uf02d", "\uf07a", "\uf004", "\uf0e7", "\uf121", "\uf095", "\uf005", "\uf188"]
@@ -57,6 +61,12 @@ Singleton {
             prio = marks.length;
             return sp;
         });
+        let repeat = "";
+        text = text.replace(/(^|\s)(every\s+(day|week|month)|daily|weekly|monthly|weekdays)(?=\s|$)/gi, (all, sp, word, unit) => {
+            const w = word.toLowerCase();
+            repeat = unit ? unit.toLowerCase() : w === "daily" ? "day" : w === "weekly" ? "week" : w === "monthly" ? "month" : "weekdays";
+            return sp;
+        });
         const parsed = parse(text.replace(/\s+/g, " ").trim());
         if (!parsed.text)
             return "";
@@ -72,9 +82,11 @@ Singleton {
             folder: target,
             prio,
             icon: "",
-            note: ""
+            note: "",
+            subs: [],
+            repeat
         }];
-        return [`added to ${target}`, parsed.due ? `reminder ${when(parsed.due)}` : ""].filter(s => s).join(" · ");
+        return [`added to ${target}`, parsed.due ? `reminder ${when(parsed.due)}` : "", repeat ? `again ${repeatName(repeat)}` : ""].filter(s => s).join(" · ");
     }
 
     // change some fields of a task: update(id, { note: "...", prio: 2 })
@@ -96,11 +108,109 @@ Singleton {
         adapter.folders = adapter.folders.filter(f => f !== name);
     }
 
-    // ticked off: when, for "done today"
+    // ticked off: when, for "done today". One that comes again moves on to its next time instead,
+    // and a ticked-off copy of it stays (today's list, the count)
     function toggle(id: real): void {
         const t = tasks.find(t => t.id === id);
+        if (!t)
+            return;
+        const now = Time.ms();
+        if (!t.done && t.repeat) {
+            const copy = Object.assign({}, t, { id: Date.now(), done: true, doneAt: now, repeat: "", notified: true });
+            adapter.tasks = [...adapter.tasks.map(x => x.id === id ? Object.assign({}, x, { due: nextTime(x), notified: false, subs: (x.subs ?? []).map(st => ({ text: st.text, done: false })) }) : x), copy];
+        } else {
+            update(id, { done: !t.done, doneAt: t.done ? 0 : now });
+        }
+        count(t.done ? -1 : 1, t.done ? t.doneAt : now);
+    }
+
+    // ---- what's done, per day, for "done today" and the streak (kept apart from the tasks:
+    // clearing done ones doesn't undo the days). { "2026-10-28": 5 }, a year of them
+    readonly property var doneDays: adapter.doneDays
+    readonly property int doneTodayCount: Time.day ? doneDays[Time.day] ?? 0 : 0
+    // days in a row with something done, up to today (or yesterday, while today has nothing yet)
+    readonly property int streak: {
+        const d = new Date(Time.ms());
+        if (!doneDays[Time.day])
+            d.setDate(d.getDate() - 1);
+        let n = 0;
+        while (doneDays[Qt.formatDate(d, "yyyy-MM-dd")] > 0) {
+            n++;
+            d.setDate(d.getDate() - 1);
+        }
+        return n;
+    }
+
+    function count(by: int, at: real): void {
+        if (!at)
+            return;
+        const key = Qt.formatDate(new Date(at), "yyyy-MM-dd");
+        const d = Object.assign({}, adapter.doneDays);
+        d[key] = Math.max(0, (d[key] ?? 0) + by);
+        if (!d[key])
+            delete d[key];
+        const keys = Object.keys(d).sort();
+        for (const k of keys.slice(0, Math.max(0, keys.length - 370)))
+            delete d[k];
+        adapter.doneDays = d;
+    }
+
+    // ---- coming again: "day" | "weekdays" | "week" | "month"
+    function repeatName(r: string): string {
+        return r === "day" ? "every day" : r === "weekdays" ? "on weekdays" : r === "week" ? "every week" : r === "month" ? "every month" : "";
+    }
+
+    // the next time after this one, never in the past; one without a time gets 9:00
+    function nextTime(t: var): real {
+        const now = new Date(Time.ms());
+        const d = t.due ? new Date(t.due) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0);
+        do {
+            if (t.repeat === "month")
+                d.setMonth(d.getMonth() + 1);
+            else if (t.repeat === "week")
+                d.setDate(d.getDate() + 7);
+            else
+                d.setDate(d.getDate() + 1);
+            while (t.repeat === "weekdays" && (d.getDay() === 0 || d.getDay() === 6))
+                d.setDate(d.getDate() + 1);
+        } while (d <= now);
+        return d.getTime();
+    }
+
+    function setRepeat(id: real, r: string): void {
+        const t = tasks.find(t => t.id === id);
+        if (!t)
+            return;
+        // coming again needs a time to come at: 9:00, today's or tomorrow's, if it had none
+        let due = t.due;
+        if (r && !due) {
+            const d = new Date(Time.ms());
+            d.setHours(9, 0, 0, 0);
+            if (d.getTime() <= Time.ms())
+                d.setDate(d.getDate() + 1);
+            due = d.getTime();
+        }
+        update(id, { repeat: r, due, notified: due <= Time.ms() });
+    }
+
+    // ---- steps of a task: [{ text, done }]
+    function addSub(id: real, text: string): void {
+        text = text.trim();
+        const t = tasks.find(t => t.id === id);
+        if (t && text)
+            update(id, { subs: [...t.subs, { text, done: false }] });
+    }
+
+    function toggleSub(id: real, i: int): void {
+        const t = tasks.find(t => t.id === id);
+        if (t && t.subs[i])
+            update(id, { subs: t.subs.map((st, k) => k === i ? { text: st.text, done: !st.done } : st) });
+    }
+
+    function removeSub(id: real, i: int): void {
+        const t = tasks.find(t => t.id === id);
         if (t)
-            update(id, { done: !t.done, doneAt: t.done ? 0 : Time.ms() });
+            update(id, { subs: t.subs.filter((st, k) => k !== i) });
     }
 
     // ticked off today (Time.day: worked out once a day and on every change of the list)
@@ -262,7 +372,13 @@ Singleton {
         path: `${Settings.dir}/todo.json`
         printErrors: false // missing on first run, created below
         onAdapterUpdated: writeAdapter()
-        onLoaded: root.loaded = true
+        onLoaded: {
+            // tasks from an older kawt get their missing fields written in once: otherwise each
+            // would be a new object on every change, and every row of the list made again
+            if (adapter.tasks.some(t => t.subs === undefined || t.repeat === undefined || t.folder === undefined || t.prio === undefined || t.icon === undefined || t.note === undefined))
+                adapter.tasks = root.tasks;
+            root.loaded = true;
+        }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();
@@ -272,8 +388,9 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, doneAt (ms), notified, folder, prio 0-3, icon, note }]
+            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, doneAt (ms), notified, folder, prio 0-3, icon, note, subs: [{ text, done }], repeat }]
             property var folders: ["inbox"]
+            property var doneDays: ({}) // "yyyy-MM-dd" -> tasks ticked off that day
         }
     }
 }
