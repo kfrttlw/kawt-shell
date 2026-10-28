@@ -77,19 +77,20 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 | style | wallpapers (arrow keys to pick) + themes: `mono` `amber` `phosphor` `thinkpad` and `wallpaper` (colors taken from the wallpaper: background, borders, terminal, in calm / strong / full strength), each dark (CRT) or light (paper); your own in `~/.config/kawt/themes.json` (see [your own look](#your-own-look)). With awww installed kawt starts its daemon itself, at login with the last wallpaper: no line in hyprland's config. A new one by itself every 15 min … 3 h if you like (the next in the folder or a random one), with awww's transition picked there: `crt` (drawn in from the top, in steps, like an old screen's beam), fade, grow, random or none |
 | theme export | switching themes recolors open terminals and GTK apps (thunar) live and rewrites colors for kitty, Hyprland borders, GTK, foot, alacritty and shell scripts, and kawt's folder icons; terminal colors in three looks: `crt` (monochrome ink), `soft` (calm, in the theme's hues), `vivid` (bright) |
 | coder | `[coder]` in the ai panel: an agent working in one project folder you pick. It lists, searches and reads files by itself; every change comes as a diff to `[apply]` or `[skip]`; `[undo]` puts back everything it changed. Nothing outside the folder can be touched. With `bubblewrap` it can also ask to run a command (tests, a build): each one waits for `[run]`, then goes into a sandbox with no network, the system read-only and the project the only writable place (its `.git` read-only too, so no hooks), a time limit, 2 GB, output cut at 64 KB; or in podman with an image you pulled (ai → cfg). What a command changed isn't in `[undo]`: that's what git is for. Wide mode shows its thinking as a small ascii network |
+| windows | profile → cfg → windows: the open windows, rofi-like with a `find>`; pick an app and from then on it floats at the size it asks for, in the middle, instead of stretched by the tiling (open ones change at once; a hyprland.lua is needed, kawt's list is lua) |
 | companion | a little pixel friend in `[⌂]`: he lives in the bar, walks on an empty desktop and works next to the coder. [below](#the-companion) |
-| lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
+| lock | a terminal-style lock screen (`kawt lockTest` tries it safely: it unlocks itself after 30 s). It locks by itself before the machine sleeps (the lid, `systemctl suspend`, anything), on `loginctl lock-session`, and after 10 idle minutes (on a laptop the backlight dims 30 s before). A minute after locking the picture goes off: only the picture, wifi, music and downloads keep going, and any key or the mouse brings it back (off / 1 / 2 / 5 min in profile → cfg → screen). `[caf]` in the profile keeps the screen on. The lock screen says `[!] caps lock is on` when it is. No hypridle / hyprlock needed. Behind the lock kawt rests too: the net graph, brightness, cava and the bar's animations pause |
 | osd | volume / brightness pop up when they change; plugging the charger in or out shows the battery; low battery notifies at 20 / 10 / 5% |
 | bluetooth | `[bt airpods 80%]`: on/off, scan, pair, connect, forget, headphone battery |
 | mic | `[mic ● discord]` appears while an app records you (red), click to mute |
 | player | `[> ▂▅▃▇▂]` next to the clock (real sound with `cava`); click: the cover as an old phosphor screen shows it (a few big pixels in the theme's color), a wide spectrum, `[-10] [<<] [||] [>>] [+10]`, a position bar to click, drag or scroll, shuffle and loop, the player's own volume, tabs when several play (spotify / firefox / mpv: the bar and the media keys follow the one picked, or the last one started) and this session's tracks (click copies "artist — title", nothing is written down). Keys inside: `space` `←→` `↑↓` `n` `p` `s` `r` `tab`. Covers that live online (spotify's) load only after `[cover load from the net]` |
-| recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg) |
-| screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg: saved and copied at once, like before |
+| recording | `[● rec 0:42]` in the bar; area or whole screen; sound: off, the mic, what you hear, or both mixed (profile → cfg → media) |
+| screenshots | area / window / screen; the screen stands still while you pick the area (`hyprpicker`); a preview in the corner asks: `[copy]` `[save]` `[open]`, `[edit]` (arrows, boxes, text, blur in `satty`) and `[text]` (what's written in the shot, onto the clipboard, with `tesseract`) (click the picture: open, right click: away; left alone, it goes and nothing is kept). `[x] ask` off in profile → cfg → media: saved and copied at once, like before |
 | fastfetch | short system info next to your system's own logo (arch on arch), a `[####----]` memory meter, in the current theme's colors (rewritten on every theme switch); nothing that says who or where you are (no user@host, laptop model or addresses), so it's safe to screenshot |
 | prompt | for zsh (plain zsh, oh-my-zsh not needed): `┌[user]─[~/dir]─[branch*]` / `└$` (`[user@host]` only over ssh), the time on the right, the exit code when a command fails; while typing, the rest of a command from history (→ takes it) and the command marked: accent if it exists, warn if it's a typo; in the theme's own accent / dim / warn colors, switching with it at the next prompt |
 | night light | warmer colors in the `[br]` panel or the profile's cfg (runs `hyprsunset`) |
-| bar | at the top or the bottom, its height and buttons in profile → cfg; `super + shift + b` tucks it away (no room taken, a 2 px edge: touch it with the pointer and the bar comes out over the windows until you leave) |
-| also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness (on a desktop the monitors' own, over DDC/CI with `ddcutil`), battery + power profiles, calendar, tray, keyboard layout (and, if you switch it on in profile → cfg, a layout per window: each keeps its own, a new one starts with the first) |
+| bar | at the top or the bottom, its height and buttons in profile → cfg → look; `super + shift + b` tucks it away (no room taken, a 2 px edge: touch it with the pointer and the bar comes out over the windows until you leave) |
+| also | wifi (hidden networks too: `[+ hidden network]` in the panel), volume per app, brightness (on a desktop the monitors' own, over DDC/CI with `ddcutil`), battery + power profiles, calendar, tray, keyboard layout (and, if you switch it on in profile → cfg → device, a layout per window: each keeps its own, a new one starts with the first) |
 
 ## The companion
 
@@ -97,13 +98,13 @@ and running it again is safe. More below: [what the installer does](#what-the-in
 <img src="assets/companions.gif" alt="the five looks: phos, amber, floppy, bug, ghost" width="100%">
 </p>
 
-`[⌂]` in the bar is the house of a little pixel friend, a few cells like Claude Code's: a green monitor, an amber one with horns, a floppy disk that looks out of its window, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round.
+`[⌂]` in the bar is the house of a little pixel friend, plain like Claude Code's (a solid body, two eyes, little arms and legs): a green monitor with an antenna, an amber one with horns, a floppy disk with its shutter, a purple bug, a pale ghost, or one in your theme's colors (your own: `~/.config/kawt/companions.json`, the format is in `utils/companions.js`). He gets hungry, bored and sleepy with time: feed him, play, put him to bed; left alone too long he sulks (he never dies), and food and a game bring him round.
 
-On the first start he says hello and shows around in six short steps (keys, the look, the ai, his house), in english or russian, and you can name him there (again: profile → cfg → `[tour]`).
+On the first start he says hello and shows around in six short steps (keys, the look, the ai, his house), in english or russian, and you can name him there (again: profile → cfg → kawt → `[tour]`).
 
 Out on an empty desktop he walks about, dances to music, naps (a window opens and he goes home; drag him along the edge, click him to talk, double click: home for an hour). He peeks out of the corner when the battery gets low, the charger comes, a screenshot is taken, the recording starts (a red light on his antenna), a reminder rings, a new kawt is out (lvl up), and once a night to say it's late; never over a fullscreen window or in do not disturb. Next to the coder he thinks, types, raises a flag on a diff, cheers, holds his head on an error, sweeps up after `[undo]`.
 
-A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg: no house, nothing runs for him
+A pomodoro (25 + 5) in his house. He speaks english or russian, with your own phrases; asks for food and play in a notification if you like (3 a day at most). Off in profile → cfg → kawt: no house, nothing runs for him
 
 <p align="center">
 <img src="assets/companion-moves.gif" alt="phos walks, eats, thinks, codes with you, raises a flag on a diff, sweeps up after undo, sleeps" width="100%">
@@ -152,7 +153,7 @@ A pomodoro (25 + 5) in his house. He speaks english or russian, with your own ph
   (each at its own best mode, side by side) or by hand, each one by its name: its mode and
   refresh rate from the ones it has (or typed, `2560x1080@75`, `highrr`), or off; then its
   position (`0x0`, `auto-right`...), scale and turning. From a console it knows the sizes
-  only; inside Hyprland the refresh rates too. Again any time: `./install.sh --monitors`
+  only; inside Hyprland the refresh rates too. Again any time: `./install.sh --monitors`, or `./install.sh` once more (with a config already there it asks whether to set them again)
   (the rules go into a block of their own in `user.lua`, or the end of your `hyprland.lua` /
   `hyprland.conf`, and Hyprland reads them at once; auto takes the block out)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
@@ -219,7 +220,7 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --help
 ```
 
-**Updating.** `./install.sh --update` (or `[update]` in profile → cfg, or
+**Updating.** `./install.sh --update` (or `[update]` in profile → cfg → kawt, or
 `qs -c kawt-shell ipc call kawt update`): shows what's new, asks, `git pull`s, then the new
 installer adds what the new version needs for the parts you have (new packages, links), starts
 the shell again and reloads Hyprland. Optional packages new in that version (like `satty` for
@@ -228,7 +229,7 @@ checks that all the packages of your parts are there and that their libraries ar
 `pacman -Dk` finds missing gets installed, and an AUR quickshell that can't load its own
 libraries (`ldd`) is built again. Your own things are outside the repo and stay as they
 are; changes made inside the repo stop it, with a list (`git stash` can put them aside).
-Knowing about a new version means asking github: `[check]` in profile → cfg does it once
+Knowing about a new version means asking github: `[check]` in profile → cfg → kawt does it once
 (`git fetch`), and kawt does it by itself once a week, with a notification only when there's
 something new (`[update]` on it; the companion jumps). "look for updates once a week" there
 switches that off: then nothing goes out unless you press `[check]`.
@@ -262,7 +263,7 @@ without it, only while `super + w` is open.
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
 | `super + n` / `super + shift + n` | notifications / do not disturb |
 | `super + i` | profile, full screen (`[~]` opens the small one) |
-| `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in profile → cfg) |
+| `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in profile → cfg → screen) |
 | `super + /` | all keys (read from `hypr/kawt.lua`, then the binds of your config that end with a `-- comment`: `hyprland.lua`, or `user.lua` and the standard config) |
 | `super + shift + b` | tuck the bar away / back (tucked, it comes out when the pointer touches the edge) |
 | `super + escape` | power menu: shutdown / reboot / suspend / logout / lock, with a 5 s countdown |
@@ -304,7 +305,7 @@ if you switch it to an OpenAI-compatible api, the key is kept in
 
 Nothing in the repo has to be edited, so updates never fight with your changes:
 
-- **font, bar**: profile → cfg. Font size (the panels grow with it) and family (a monospace
+- **font, bar**: profile → cfg → look. Font size (the panels grow with it) and family (a monospace
   one), the bar at the top or the bottom, its height, and which buttons it shows (one switched
   off still works on its key; `[● rec]`, `[cast]` and `[caf]` always show while they're on)
 - **colors**: `~/.config/kawt/themes.json`, read again whenever it's saved. A new name is a new
