@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.config
 
 // Throughput of physical interfaces (wl*, en*, eth*, ww*), sampled from /proc/net/dev.
 // Virtual ones (lo, docker, veth, VPN tunnels) are skipped so traffic isn't counted twice.
@@ -11,7 +12,7 @@ Singleton {
     id: root
 
     readonly property int historyLength: 24
-    readonly property int interval: 1000
+    readonly property int interval: Settings.lite ? 2000 : 1000 // an old machine: half as often
 
     property real rx: 0 // bytes/s
     property real tx: 0

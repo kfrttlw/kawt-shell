@@ -265,7 +265,7 @@ Singleton {
     Timer {
         running: root.active && root.topActive
         repeat: true
-        interval: 1500
+        interval: Settings.lite ? 3000 : 1500 // an old machine: half as often
         triggeredOnStart: true
         onTriggered: procProc.running = true
     }
@@ -305,7 +305,7 @@ Singleton {
     Timer {
         running: root.active
         repeat: true
-        interval: 2000
+        interval: Settings.lite ? 4000 : 2000
         triggeredOnStart: true
         onTriggered: {
             stat.reload();

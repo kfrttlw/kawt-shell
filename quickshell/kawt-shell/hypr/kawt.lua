@@ -126,6 +126,7 @@ end)
 
 -- Border and shadow colors of the current kawt theme. kawt rewrites this file and reloads
 -- Hyprland on every theme switch. This file is loaded last, so it wins over earlier colors.
+-- lite (profile -> cfg -> look -> old machine): no blur, shadows or animations
 try("theme colors", function()
     local colors = dofile(os.getenv("HOME") .. "/.local/state/kawt/theme/hyprland_colors.lua")
     hl.config({
@@ -139,4 +140,13 @@ try("theme colors", function()
             shadow = { color = colors.m_shadow },
         },
     })
+    if colors.lite then
+        hl.config({
+            decoration = {
+                blur = { enabled = false },
+                shadow = { enabled = false },
+            },
+            animations = { enabled = false },
+        })
+    end
 end)

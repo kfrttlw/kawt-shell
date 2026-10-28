@@ -293,6 +293,15 @@ Variants {
             }
         }
 
+        // the faint lines of an old tube over everything (cfg -> look -> scanlines)
+        Lazy {
+            when: Settings.scanlines
+
+            Scanlines {
+                forScreen: root.modelData
+            }
+        }
+
         // Panels are created when opened and destroyed when closed (components/Lazy.qml):
         // a hidden window would keep all its items in memory, on every screen.
         Lazy {

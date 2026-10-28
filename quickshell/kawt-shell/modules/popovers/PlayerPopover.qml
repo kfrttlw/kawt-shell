@@ -312,7 +312,7 @@ Popover {
 
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        visible: Cava.available && root.player !== null
+        visible: Cava.available && root.player !== null && !Settings.lite
         implicitHeight: Cava.wideMax * seg
 
         Rectangle {

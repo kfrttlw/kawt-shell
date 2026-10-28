@@ -85,6 +85,8 @@ Singleton {
     property alias brackets: adapter.brackets
     property alias crt: adapter.crt
     property alias bootScreen: adapter.bootScreen
+    property alias lite: adapter.lite
+    property alias scanlines: adapter.scanlines
     property alias barHeight: adapter.barHeight
     property alias barBottom: adapter.barBottom
     property alias barHide: adapter.barHide
@@ -227,6 +229,8 @@ Singleton {
             property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
             property bool crt: true // the lock (and the boot screen) switch on and off like an old picture tube (components/CrtTube.qml)
             property bool bootScreen: true // a bios-like check list once at login, any key skips it (modules/boot)
+            property bool lite: false // an old machine (a t60, an x200): no blur, shadows or animations in hyprland, graphs half as often, no visualizer
+            property bool scanlines: false // faint dark lines over the whole screen, like an old tube's (modules/background/Scanlines.qml)
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
