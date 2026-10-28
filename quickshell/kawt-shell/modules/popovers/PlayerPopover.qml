@@ -8,19 +8,18 @@ import qs.components
 import qs.services
 import qs.utils
 
-//  _spotify_________________________________ esc
-// | [spotify]  firefox   mpv                 |   tabs: which player the bar and the keys follow
-// | ▓▒░▓▒░  title                            |
-// | ░▓▒░▓▒  artist                           |   the cover in phosphor pixels (CrtCover.qml)
-// | ▒░▓▒░▓  album                            |
-// |         [shuffle] [loop: all]            |
-// | ▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂                  |   cava, only while this is open
-// |  1:23 [##########--------------]  3:45   |   click / drag / wheel to seek
-// |     [-10] [<<] [||] [>>] [+10]           |
-// | vol [▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯▯▯]  50%           |   this player's own volume
-// | -- earlier --                            |
-// | artist — title                   spotify |   this session's tracks; click copies
-// | space · ←→ 5 s · ↑↓ vol · n p · s r · tab|
+//  ┌─spotify──────────────────────────────── esc┐
+//  │ [spotify]  firefox   mpv                  │  tabs: which player the bar and the keys follow
+//  │ ▓▒░▓▒░  now playing                       │
+//  │ ░▓▒░▓▒  teardrop                          │  the cover in phosphor pixels (CrtCover.qml)
+//  │ ▒░▓▒░▓  massive attack · mezzanine        │
+//  │         1:42 ▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯ 5:29       │  click / drag / wheel to seek; the red one is now
+//  │ [|<] [||] [>|]   [shuffle] [loop: all]          │  || red while it plays
+//  │ ▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂                   │  cava, only while this is open
+//  │ vol ▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯▯▯  50%              │  this player's own volume
+//  │ -- earlier · click copies --              │
+//  │ artist — title ···················· spotify│  this session's tracks
+//  │ [space] play [←→] seek [↑↓] vol [n p] next [s] [r] [tab]
 Popover {
     id: root
 
@@ -32,11 +31,10 @@ Popover {
     // where a drag on the position would put it, in seconds; -1 = no drag
     property real dragTo: -1
     readonly property real shownPos: dragTo >= 0 ? dragTo : (player?.position ?? 0)
-    readonly property int innerWidth: cardW - Metrics.padding * 2
 
     name: "player"
     title: root.player ? Media.name(root.player) : "player"
-    cardWidth: 360
+    cardWidth: 440
 
     // MPRIS doesn't push position updates; poll while visible
     Timer {
@@ -140,14 +138,6 @@ Popover {
         event.accepted = true;
     }
 
-    TextMetrics {
-        id: cell
-
-        font.family: Metrics.fontFamily
-        font.pixelSize: Metrics.fontSize
-        text: "0"
-    }
-
     // ---- which player: two firefoxes are "firefox" and "firefox 2"
     Tabs {
         visible: root.players.length > 1
@@ -168,26 +158,39 @@ Popover {
         }
     }
 
+    // ---- the cover, then what's playing and where it is
     RowLayout {
         Layout.fillWidth: true
-        spacing: Metrics.padding
+        spacing: Metrics.padding * 2
 
         CrtCover {
+            id: cover
+
             Layout.alignment: Qt.AlignTop
             source: root.artOnline && !Settings.playerNetCovers ? "" : root.art
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignTop
+            Layout.fillHeight: true
+            Layout.minimumHeight: cover.implicitHeight
             spacing: 2
+
+            Label {
+                text: !root.player ? "no media" : root.player.isPlaying ? "now playing" : "paused"
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
+            }
 
             Label {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
-                text: root.player?.trackTitle || (root.player ? "nothing playing" : "no media")
+                visible: root.player !== null
+                text: root.player?.trackTitle || "nothing playing"
+                font.pixelSize: Math.round(Metrics.fontSize * 1.35)
+                font.weight: Font.Medium
             }
 
             Label {
@@ -195,7 +198,6 @@ Popover {
                 elide: Text.ElideRight
                 visible: text !== ""
                 text: root.player?.trackArtist ?? ""
-                color: Colors.dim
             }
 
             Label {
@@ -212,7 +214,6 @@ Popover {
                 visible: root.artOnline && !Settings.playerNetCovers
                 tag: "cover"
                 label: "load from the net"
-                bordered: false
                 onClicked: Settings.playerNetCovers = true
             }
 
@@ -220,30 +221,88 @@ Popover {
                 Layout.fillHeight: true
             }
 
-            Flow {
+            // ---- the position: click, drag or wheel (5 s a notch) on the segments; the red
+            // one is where it is now
+            RowLayout {
                 Layout.fillWidth: true
+                visible: Media.hasLength
                 spacing: Metrics.spacing
-                visible: (root.player?.shuffleSupported ?? false) || (root.player?.loopSupported ?? false)
 
-                BracketButton {
-                    visible: root.player?.shuffleSupported ?? false
-                    label: "shuffle"
-                    textColor: root.player?.shuffle ? Colors.accent : Colors.dim
-                    onClicked: root.toggleShuffle()
+                Label {
+                    text: Fmt.mmss(root.shownPos)
+                    color: root.dragTo >= 0 ? Colors.fg : Colors.dim
                 }
 
-                BracketButton {
-                    visible: root.player?.loopSupported ?? false
-                    label: "loop: " + (root.player?.loopState === MprisLoopState.Track ? "one" : root.player?.loopState === MprisLoopState.Playlist ? "all" : "off")
-                    textColor: root.player?.loopState !== MprisLoopState.None ? Colors.accent : Colors.dim
-                    onClicked: root.cycleLoop()
+                LevelSlider {
+                    Layout.fillWidth: true
+                    enabled: root.player?.canSeek ?? false
+                    playhead: true
+                    value: root.shownPos / (root.player?.length || 1)
+                    wheelStep: 5 / (root.player?.length || 1)
+                    onMoved: v => root.dragTo = v * (root.player?.length ?? 0)
+                    onReleased: {
+                        if (root.dragTo >= 0 && root.player) {
+                            root.player.position = Math.min(root.dragTo, root.player.length - 1);
+                            root.player.positionChanged();
+                        }
+                        root.dragTo = -1;
+                    }
+                }
+
+                Label {
+                    text: Fmt.mmss(root.player?.length)
+                    color: Colors.dim
                 }
             }
         }
     }
 
+    // ---- play, and how (seeking: the segments above, or ←→)
+    Flow {
+        Layout.fillWidth: true
+        spacing: Metrics.spacing
+
+        BracketButton {
+            label: "|<"
+            textColor: root.player?.canGoPrevious ? Colors.fg : Colors.dim
+            onClicked: Media.command("prev")
+        }
+
+        // red while it plays
+        BracketButton {
+            label: root.player?.isPlaying ? "||" : ">"
+            textColor: root.player?.isPlaying ? Colors.accent : Colors.fg
+            onClicked: Media.command("toggle")
+        }
+
+        BracketButton {
+            label: ">|"
+            textColor: root.player?.canGoNext ? Colors.fg : Colors.dim
+            onClicked: Media.command("next")
+        }
+
+        Item {
+            width: Metrics.padding
+            height: 1
+        }
+
+        BracketButton {
+            visible: root.player?.shuffleSupported ?? false
+            label: "shuffle"
+            textColor: root.player?.shuffle ? Colors.accent : Colors.dim
+            onClicked: root.toggleShuffle()
+        }
+
+        BracketButton {
+            visible: root.player?.loopSupported ?? false
+            label: "loop: " + (root.player?.loopState === MprisLoopState.Track ? "one" : root.player?.loopState === MprisLoopState.Playlist ? "all" : "off")
+            textColor: root.player?.loopState !== MprisLoopState.None ? Colors.accent : Colors.dim
+            onClicked: root.cycleLoop()
+        }
+    }
+
     // ---- the spectrum: cava runs wide while this is open (services/Cava.qml); blocks stacked
-    // like an old level meter: the bars, then lines in the card's color across them
+    // like an old level meter: grey bars with a bright cap, lines in the card's color across them
     Item {
         id: spectrum
 
@@ -274,7 +333,13 @@ Popover {
                 width: spectrum.barW
                 height: (Cava.wideLevels[index] ?? 0) * spectrum.seg
                 anchors.bottom: parent.bottom
-                color: Colors.accent
+                color: Colors.dim
+
+                Rectangle {
+                    width: parent.width
+                    height: Math.min(parent.height, spectrum.seg)
+                    color: Colors.fg
+                }
             }
         }
 
@@ -289,90 +354,6 @@ Popover {
                 height: 1
                 color: Colors.bg
             }
-        }
-    }
-
-    // ---- the position: click, drag or wheel inside [####----]
-    Label {
-        id: seek
-
-        readonly property string total: Fmt.mmss(root.player?.length)
-        readonly property string now: Fmt.mmss(root.shownPos).padStart(total.length)
-        readonly property int barChars: Math.max(8, Math.floor(root.innerWidth / cell.advanceWidth) - now.length - total.length - 4)
-        property real wheelAcc: 0
-
-        visible: Media.hasLength
-        text: `${now} [${Fmt.bar(root.shownPos / (root.player?.length || 1), barChars)}] ${total}`
-        color: root.dragTo >= 0 ? Colors.fg : Colors.dim
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: root.player?.canSeek ?? false
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
-            // x on the bar -> seconds
-            function at(x: real): real {
-                const start = (seek.now.length + 2) * cell.advanceWidth;
-                return Math.max(0, Math.min(1, (x - start) / (seek.barChars * cell.advanceWidth))) * root.player.length;
-            }
-
-            onPressed: mouse => root.dragTo = at(mouse.x)
-            onPositionChanged: mouse => {
-                if (pressed)
-                    root.dragTo = at(mouse.x);
-            }
-            onReleased: {
-                if (root.dragTo >= 0 && root.player) {
-                    root.player.position = Math.min(root.dragTo, root.player.length - 1);
-                    root.player.positionChanged();
-                }
-                root.dragTo = -1;
-            }
-            onCanceled: root.dragTo = -1
-            // a notch: 5 s (touchpads send small steps: they add up to one)
-            onWheel: wheel => {
-                seek.wheelAcc += wheel.angleDelta.y;
-                while (Math.abs(seek.wheelAcc) >= 120) {
-                    Media.seekBy(seek.wheelAcc > 0 ? 5 : -5);
-                    seek.wheelAcc -= Math.sign(seek.wheelAcc) * 120;
-                }
-            }
-        }
-    }
-
-    RowLayout {
-        Layout.alignment: Qt.AlignHCenter
-        spacing: Metrics.spacing
-
-        BracketButton {
-            visible: root.player?.canSeek ?? false
-            label: "-10"
-            textColor: Colors.dim
-            onClicked: Media.seekBy(-10)
-        }
-
-        BracketButton {
-            label: "<<"
-            textColor: root.player?.canGoPrevious ? Colors.fg : Colors.dim
-            onClicked: Media.command("prev")
-        }
-
-        BracketButton {
-            label: root.player?.isPlaying ? "||" : ">"
-            onClicked: Media.command("toggle")
-        }
-
-        BracketButton {
-            label: ">>"
-            textColor: root.player?.canGoNext ? Colors.fg : Colors.dim
-            onClicked: Media.command("next")
-        }
-
-        BracketButton {
-            visible: root.player?.canSeek ?? false
-            label: "+10"
-            textColor: Colors.dim
-            onClicked: Media.seekBy(10)
         }
     }
 
@@ -441,26 +422,31 @@ Popover {
                     color: Colors.hoverFill
                 }
 
-                Label {
-                    id: line
+                // artist — title ··········· spotify
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: Metrics.spacing
 
-                    anchors.left: parent.left
-                    anchors.right: from.left
-                    anchors.rightMargin: Metrics.spacing
-                    anchors.verticalCenter: parent.verticalCenter
-                    elide: Text.ElideRight
-                    text: earlier.copied === track.index ? "copied" : Media.line(track.modelData)
-                    color: earlier.copied === track.index ? Colors.accent : Colors.fg
-                }
+                    Label {
+                        id: line
 
-                Label {
-                    id: from
+                        Layout.maximumWidth: track.width - from.implicitWidth - Metrics.spacing * 4
+                        elide: Text.ElideRight
+                        text: earlier.copied === track.index ? "copied" : Media.line(track.modelData)
+                        color: earlier.copied === track.index ? Colors.accent : Colors.fg
+                    }
 
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: track.modelData.player
-                    color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    Leader {
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        id: from
+
+                        text: track.modelData.player
+                        color: Colors.dim
+                        font.pixelSize: Metrics.fontSize - 2
+                    }
                 }
 
                 MouseArea {
@@ -486,13 +472,32 @@ Popover {
         }
     }
 
-    Label {
+    // ---- the keys, like a bios's legend: [key] what it does
+    Flow {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
         visible: root.player !== null
-        elide: Text.ElideRight
-        text: "space · ←→ 5 s · ↑↓ vol · n p · s r" + (root.players.length > 1 ? " · tab" : "")
-        color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        spacing: Metrics.padding
+
+        Repeater {
+            model: [["space", "play"], ["←→", "5 s"], ["↑↓", "vol"], ["n p", "next"], ["s", "shuffle"], ["r", "loop"], ...(root.players.length > 1 ? [["tab", "player"]] : [])]
+
+            Row {
+                required property var modelData
+
+                spacing: 4
+
+                Brackets {
+                    text: modelData[0]
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+
+                Label {
+                    text: modelData[1]
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+            }
+        }
     }
 }
