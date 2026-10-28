@@ -6,7 +6,7 @@ import qs.config
 import qs.components
 import qs.services
 
-// kawt bios 0.1 · ThinkPad T480 (20L5)
+// kawt bios 0.1 · ThinkPad T14s Gen 1     (the model as the machine says it; a pc: its own)
 //
 // cpu    i5-8350U (8) ...................... ok
 // mem    15872 MB .......................... ok
