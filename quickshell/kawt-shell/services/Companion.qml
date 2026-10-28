@@ -47,7 +47,7 @@ Singleton {
         return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1).toString();
     }
 
-    // the plain look in the theme: the body near the accent, eyes in the background's color
+    // the horned one in the theme: the body near the accent, eyes in the background's color
     readonly property string themeBody: mix(Colors.bg, Colors.accent, 0.8)
     readonly property var themeColors: ({
         o: themeBody,
@@ -98,7 +98,7 @@ Singleton {
             }
             const ok = {};
             for (const k of Object.keys(all ?? {}))
-                if (/^[a-z0-9-]+$/.test(k) && k !== "theme" && Art.valid(all[k]))
+                if (/^[a-z0-9-]+$/.test(k) && k !== "theme" && k !== "stripes" && Art.valid(all[k]))
                     ok[k] = all[k];
                 else
                     console.warn(`companions.json: "${k}" skipped (10 rows of 12 letters, colors as #rrggbb)`);
