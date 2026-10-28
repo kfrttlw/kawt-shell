@@ -21,7 +21,7 @@
 //                          ".obebbbbebo.", ".obbbbbbbbo.", ".obbbmmbbbo.", ".obbbbbbbbo.",
 //                          ".obbbbbbbbo.", "..oooooooo.." ] } }
 // Also possible: "alpha": 0.8 (see-through), "sway": true, "hem": true (a ghost's hem for
-// feet), "blink": "shutter" (the light metal covers the window, like the floppy).
+// feet), "blink": "shutter" (the light "l" slides over the window "s" when the eyes close).
 
 var W = 16, H = 16;
 var X0 = 2; // where the 12-wide grid sits on the stage
@@ -160,7 +160,7 @@ var skins = {
     }
 };
 
-var order = ["phos", "amber", "floppy", "bug", "ghost", "theme"];
+var order = ["floppy", "phos", "amber", "bug", "ghost", "theme"]; // the first one is who you meet
 
 // a skin from companions.json, checked: 10 rows of 12 known letters, colors as #rrggbb
 function valid(s) {
