@@ -1,5 +1,6 @@
 #!/bin/sh
 # usage: screenshot.sh <region|window|screen> <dir> [selection color] [shade color] [quiet]
+# exit: 0 the path printed, 1 cancelled (esc), 3 "missing: <tools>" printed, 4 a failure said
 # Saves a png to <dir>, copies it to the clipboard and sends a notification. Prints the path.
 # quiet: only saves and prints the path (kawt's preview asks what to do with it).
 # Needs grim, slurp and wl-clipboard. Colors are #rrggbb[aa] (the kawt theme passes its own).
@@ -12,7 +13,23 @@ color=${3:-#ffffffff}
 shade=${4:-#00000066}
 quiet=${5:-}
 
-mkdir -p "$dir" || exit 1
+# kawt stops a shot that hangs (a new press starts over): what this started goes with it
+trap 'pkill -P $$ 2> /dev/null; exit 1' TERM INT
+
+# what's missing is said (exit 3), so kawt can tell you instead of doing nothing
+need="grim wl-copy"
+[ "$mode" = region ] && need="$need slurp"
+[ "$mode" = region ] || need="$need hyprctl"
+missing=""
+for c in $need; do
+    command -v "$c" > /dev/null 2>&1 || missing="$missing $c"
+done
+if [ -n "$missing" ]; then
+    echo "missing:$missing"
+    exit 3
+fi
+
+mkdir -p "$dir" || { echo "can't write: $dir"; exit 4; }
 # two shots in the same second: the second one gets -2 (-3...), nothing is written over
 name=$(date +%Y-%m-%d_%H-%M-%S)
 file="$dir/$name.png"
@@ -29,11 +46,19 @@ case $mode in
             hyprpicker -r -z > /dev/null 2>&1 &
             frozen=$!
             trap 'kill "$frozen" 2> /dev/null' EXIT
-            sleep 0.2 # until it's drawn: slurp has to come up above it
+            # slurp has to come up above it: started first, hyprpicker would take the click
+            # (it picks a color and quits, and the shot is gone). So wait until hyprland has its
+            # layer, 1.5 s at most, instead of a fixed guess
+            i=0
+            until hyprctl layers 2> /dev/null | grep -q 'namespace: hyprpicker' || [ "$i" -ge 30 ]; do
+                sleep 0.05
+                i=$((i + 1))
+            done
+            sleep 0.05 # its first frame
         fi
         # esc in slurp cancels: no file, no notification
         geo=$(slurp -d -c "$color" -b "$shade" -w 1) || exit 1
-        grim -g "$geo" "$file" || exit 1
+        grim -g "$geo" "$file" || { echo "grim failed"; exit 4; }
         ;;
     window)
         # hyprctl activewindow:  "at: 10,40"  "size: 800,600"

@@ -10,9 +10,10 @@ import qs.services
 // │ ░░░░░░░░ the picture ░░░░░░░ │
 // │ [copy] [save] [open]     [x] │
 // └──────────────────────────────┘
-// bottom-right corner of the focused screen, after a screenshot (Settings.screenshotAsk).
-// Click the picture: open it. Right click: away. It goes by itself after Screenshot.timeout,
-// unless the pointer is on it; a shot that wasn't saved isn't kept (services/Screenshot.qml).
+// bottom-right corner of the focused screen, after a screenshot (Settings.screenshotAsk). The
+// shot is on the clipboard already. Click the picture: open it. Right click or [x]: thrown away.
+// Left alone it goes by itself after Screenshot.timeout (not while the pointer is on it), and
+// then it's saved: a shot is never lost just because nobody answered (services/Screenshot.qml).
 PanelWindow {
     id: root
 
@@ -38,7 +39,7 @@ PanelWindow {
     Timer {
         running: !hover.hovered && !Screenshot.editing && !Screenshot.reading
         interval: Screenshot.timeout
-        onTriggered: Screenshot.dismiss()
+        onTriggered: Screenshot.save()
     }
 
     // edited: the same file, new picture
