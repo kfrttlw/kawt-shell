@@ -32,9 +32,9 @@ Singleton {
     // ------------------------------------------------------------------ looks
 
     property var custom: ({}) // ~/.config/kawt/companions.json, the valid ones
-    readonly property var skins: Object.assign({}, Art.skins, custom, { theme: Object.assign({}, Art.skins.theme, { colors: themeColors }) })
+    readonly property var skins: Object.assign({}, Art.skins, custom, { theme: Object.assign({}, Art.skins.theme, { colors: themeColors }), stripes: Object.assign({}, Art.skins.stripes, { colors: stripeColors }) })
     readonly property var order: Art.order.concat(Object.keys(custom).filter(k => !Art.order.includes(k)))
-    readonly property string skinName: skins[Settings.companionSkin] ? Settings.companionSkin : "floppy"
+    readonly property string skinName: skins[Settings.companionSkin] ? Settings.companionSkin : "thinky"
     readonly property var skin: skins[skinName]
     readonly property string name: Settings.companionName || title(skinName)
 
@@ -56,6 +56,17 @@ Singleton {
         e: Colors.bg.toString(),
         c: Colors.bg.toString(),
         a: Colors.fg.toString()
+    })
+
+    // stripes: the theme's ink with gaps a shade of it, eyes in the background, the dot lit
+    readonly property var stripeColors: ({
+        o: Colors.fg.toString(),
+        b: Colors.fg.toString(),
+        h: Colors.fg.toString(),
+        l: mix(Colors.bg, Colors.fg, 0.35),
+        e: Colors.bg.toString(),
+        c: Colors.bg.toString(),
+        a: Colors.accent.toString()
     })
 
     // letter -> color, for a sprite (skins can't change the warn color or the props)
