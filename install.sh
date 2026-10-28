@@ -89,7 +89,7 @@ parts=(
     "shell|shell|the bar, panels, launcher, lock screen, ai (quickshell)"
     "hypr|hyprland|kawt's binds and border colors in your hyprland config"
     "kitty|kitty|the terminal, in the theme's colors"
-    "zsh|zsh prompt|┌[user]─[~/dir]─[branch], hints from history, typos marked"
+    "zsh|zsh prompt| ~/dir  branch  then > to type, hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
     "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc, sandbox, voice"
     "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"

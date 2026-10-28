@@ -1,16 +1,18 @@
 # kawt: an old-terminal prompt for zsh (with or without oh-my-zsh).
 #
-#   ┌[user]─[~/kawt/kawt-shell]─[main*]─[1]
-#   └$ █                                              14:32:05
+#    ~/kawt/kawt-shell  main*  127           the folder inverted, like a bios's chosen line
+#   > █                                              14:32:05
 #
 # Loaded by one line at the end of ~/.zshrc (install.sh adds it), so it wins over any
 # ZSH_THEME, wherever oh-my-zsh lives. Colors are the kawt theme's own (accent, dim, warn),
 # read from ~/.local/state/kawt/theme/colors.sh before every prompt: a theme switch shows at
 # the next one. Without that file, or in a terminal without truecolor (the tty), it falls back
 # to the 16 terminal colors.
-#   [main*]  git branch, * = uncommitted changes      [1]  the last command failed (exit code)
-#   [user@host] only over ssh: on your own machine the host is always the same (and it stays
+#    main*   git branch on grey, * = uncommitted changes
+#    127     on red: the last command failed (its exit code)
+#    user@host  only over ssh: on your own machine the host is always the same (and it stays
 #   out of screenshots)
+#   >  where you type, red like the cursor in kawt's menus (# as root)
 #
 # Plus two helpers when they're installed (install.sh does that on Arch), in the theme's colors:
 #   zsh-autosuggestions      while typing, the rest of a command from history in dim; → takes it
@@ -24,17 +26,21 @@ setopt prompt_subst
 # terminal blinking on every paste. Keep the other highlights, drop that one.
 zle_highlight=(${zle_highlight:#paste:*} paste:none)
 
-# the theme's colors -> kawt_c[accent|dim|warn], as prompt color codes (%F{...})
+# the theme's colors -> kawt_c[accent|dim|warn|fg|bg|border], as prompt color codes (%F{...})
+# (onwarn: the text on the red of a failed command)
 typeset -gA kawt_c
 kawt_colors() {
     local f=${XDG_STATE_HOME:-$HOME/.local/state}/kawt/theme/colors.sh
-    kawt_c=(accent 2 dim 8 warn 1)
+    kawt_c=(accent 1 dim 8 warn 1 fg 7 bg 0 border 8 onwarn 15)
     if [[ $COLORTERM == (truecolor|24bit) && -r $f ]]; then
-        local KAWT_ACCENT KAWT_DIM KAWT_WARN
+        local KAWT_ACCENT KAWT_DIM KAWT_WARN KAWT_FG KAWT_BG KAWT_BORDER
         source "$f"
-        [[ $KAWT_ACCENT == \#* ]] && kawt_c[accent]=$KAWT_ACCENT
-        [[ $KAWT_DIM == \#* ]] && kawt_c[dim]=$KAWT_DIM
-        [[ $KAWT_WARN == \#* ]] && kawt_c[warn]=$KAWT_WARN
+        local k v
+        for k in accent dim warn fg bg border; do
+            v=KAWT_${(U)k}
+            [[ ${(P)v} == \#* ]] && kawt_c[$k]=${(P)v}
+        done
+        kawt_c[onwarn]='#f4f2ec'
         kawt_ls_colors
     fi
     kawt_plugin_colors
@@ -74,31 +80,31 @@ kawt_plugin_colors() {
 autoload -Uz add-zsh-hook
 add-zsh-hook precmd kawt_colors
 
-# ─[branch*] inside a git repo, nothing outside. Plain git, no oh-my-zsh needed.
+#  branch*  on grey inside a git repo, nothing outside. Plain git, no oh-my-zsh needed.
 kawt_git() {
     local branch
     branch=$(git symbolic-ref --short HEAD 2> /dev/null || git rev-parse --short HEAD 2> /dev/null) || return
     local dirty=""
-    [[ -n $(git status --porcelain --ignore-submodules=dirty 2> /dev/null | head -n 1) ]] && dirty="%F{$kawt_c[warn]}*"
-    print -rn -- "%F{$kawt_c[dim]}─%f[%F{$kawt_c[accent]}${branch//\%/%%}${dirty}%f]"
+    [[ -n $(git status --porcelain --ignore-submodules=dirty 2> /dev/null | head -n 1) ]] && dirty="%F{$kawt_c[accent]}*"
+    print -rn -- "%K{$kawt_c[border]}%F{$kawt_c[fg]} ${branch//\%/%%}${dirty} %f%k"
 }
 
 # Narrowing the window makes the terminal re-wrap what's already printed. Two things keep
 # the prompt out of that mess:
 #  - the clock on the right only on the current line (old lines don't drag it along)
 #  - the directory shortened from the left (…/kawt-shell) so the first line always fits:
-#    the width left after user, host, frame and a branch, never less than 10
+#    the width left after the blocks around it and a branch, never less than 10
 setopt transient_rprompt
-typeset -g kawt_at="" kawt_reserve=$(( ${#USERNAME} + 23 ))
+typeset -g kawt_who="" kawt_reserve=24
 if [[ -n $SSH_CONNECTION ]]; then
-    kawt_at='%F{$kawt_c[dim]}@%f%m'
-    (( kawt_reserve += ${#${(%):-%m}} + 1 ))
+    kawt_who='%K{$kawt_c[border]}%F{$kawt_c[fg]} %n@%m %f%k'
+    (( kawt_reserve += ${#USERNAME} + ${#${(%):-%m}} + 3 ))
 fi
 
-#   %n user · %m host · %~ directory · %? last exit code · %(!.#.$) # when root
-#   frame dim · user, branch, $ accent · directory bold · errors warn
-PROMPT='%F{$kawt_c[dim]}┌%f[%F{$kawt_c[accent]}%n'$kawt_at']%F{$kawt_c[dim]}─%f[%B%$(( COLUMNS - kawt_reserve > 10 ? COLUMNS - kawt_reserve : 10 ))<…<%~%<<%b]$(kawt_git)%(?..%F{$kawt_c[dim]}─%f[%F{$kawt_c[warn]}%?%f])
-%F{$kawt_c[dim]}└%f%(!.%F{$kawt_c[warn]}#.%F{$kawt_c[accent]}$)%f '
+#   %n user · %m host · %~ directory · %? last exit code · %(!.#.>) # when root
+#   directory inverted and bold · branch on grey · a failed command's code on red · > accent
+PROMPT=$kawt_who'%K{$kawt_c[fg]}%F{$kawt_c[bg]}%B %$(( COLUMNS - kawt_reserve > 10 ? COLUMNS - kawt_reserve : 10 ))<…<%~%<< %b%f%k$(kawt_git)%(?..%K{$kawt_c[warn]}%F{$kawt_c[onwarn]} %? %f%k)
+%(!.%F{$kawt_c[warn]}#.%F{$kawt_c[accent]}>)%f '
 RPROMPT='%F{$kawt_c[dim]}%*%f'
 
 # The helpers, from where the distros put them (Arch: /usr/share/zsh/plugins/<name>/,

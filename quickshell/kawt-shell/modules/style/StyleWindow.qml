@@ -269,6 +269,37 @@ PanelWindow {
                 }
             }
 
+            // fastfetch's logo: your system's in the theme's colors, or one of kawt's own
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Metrics.spacing
+
+                Label {
+                    text: "fastfetch:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: [["distro", "distro"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
+
+                    BracketButton {
+                        required property var modelData
+
+                        label: modelData[1]
+                        textColor: Settings.fetchLogo === modelData[0] ? Colors.accent : Colors.dim
+                        onClicked: Settings.fetchLogo = modelData[0]
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: Settings.fetchLogo === "distro" ? "your system's logo, in the theme's colors" : Settings.fetchLogo === "stripes" ? "kawt in stripes, above the info" : Settings.fetchLogo === "trackpoint" ? "g h b and the red nub" : "kawt in half blocks"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+            }
+
             // --------------------------------------------------------- wallpaper
             Label {
                 Layout.topMargin: Metrics.spacing
