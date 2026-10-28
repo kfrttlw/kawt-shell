@@ -8,6 +8,10 @@
 #   tools/net.sh -a       the local network too (router, printer, phone...), marked "lan"
 #   sudo tools/net.sh     every program's (without sudo, the system's own services show as "?")
 #
+# The same is in the wifi panel, [who's out]: with each program's speed, [!] to close it or start
+# it without internet from then on. Without internet from a terminal:
+#   unshare --net --map-current-user <program>
+#
 # kawt itself shows nothing here while you just use the desktop, but for one git fetch to
 # github a week (is there a new kawt; off in profile -> cfg). The rest of kawt's that goes out:
 # the ai panel on an "api" provider you picked, ollama pull, the voice model's [get] (once),
@@ -19,7 +23,7 @@ while (($#)); do
         -w | --watch) watch=1 ;;
         -a | --all) lan=1 ;;
         -h | --help)
-            sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
