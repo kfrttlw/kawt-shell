@@ -243,6 +243,7 @@ Singleton {
     FileView {
         path: `${Settings.dir}/focus.json`
         printErrors: false // there's none until the first round
+        blockWrites: true // at once: in the background a quick second change was undone (config/Settings.qml)
         onAdapterUpdated: writeAdapter()
         onLoaded: {
             root.loaded = true;

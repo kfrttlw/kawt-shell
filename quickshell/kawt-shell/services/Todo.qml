@@ -391,6 +391,7 @@ Singleton {
     FileView {
         path: `${Settings.dir}/todo.json`
         printErrors: false // missing on first run, created below
+        blockWrites: true // at once: in the background a quick second change was undone (config/Settings.qml)
         onAdapterUpdated: writeAdapter()
         onLoaded: {
             // tasks from an older kawt get their missing fields written in once: otherwise each

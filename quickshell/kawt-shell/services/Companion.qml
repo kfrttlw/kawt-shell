@@ -680,6 +680,7 @@ Singleton {
     FileView {
         path: root.enabled ? `${Settings.dir}/companion.json` : ""
         printErrors: false // missing until his first day
+        blockWrites: true // at once: in the background a quick second change was undone (config/Settings.qml)
         onAdapterUpdated: writeAdapter()
         onLoaded: {
             root.loaded = true;

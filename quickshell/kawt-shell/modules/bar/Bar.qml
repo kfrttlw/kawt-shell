@@ -102,6 +102,8 @@ Variants {
 
         // left: profile, pinned apps, workspaces
         RowLayout {
+            id: leftRow
+
             opacity: root.tucked ? 0 : 1
             anchors.left: parent.left
             anchors.leftMargin: Metrics.padding
@@ -130,20 +132,35 @@ Variants {
                 visible: Settings.barShows("workspaces")
                 screen: root.modelData
             }
+        }
+
+        // the window you're in, dim: something to read, not to press (on the screen with the
+        // focus; "desktop" when its workspace is empty). It gets what's left up to the network
+        // (a long title ran over the wifi), a fifth of the bar at most, and goes when that's
+        // under a few letters
+        RowLayout {
+            id: titleRow
+
+            readonly property real room: netRow.x - Metrics.sectionGap - x - titleSep.implicitWidth - spacing
+
+            opacity: root.tucked ? 0 : 1
+            anchors.left: leftRow.right
+            anchors.leftMargin: Metrics.spacing
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Metrics.spacing
 
             BarSep {
+                id: titleSep
                 visible: title.visible
             }
 
-            // the window you're in, dim: something to read, not to press (on the screen with the
-            // focus; "desktop" when its workspace is empty)
             Label {
                 id: title
 
                 readonly property string shownTitle: root.emptyDesk ? "desktop" : (Hyprland.activeToplevel?.title ?? "")
 
-                visible: Settings.barShows("title") && root.focusedHere && shownTitle !== ""
-                Layout.maximumWidth: Math.round(root.width * 0.22)
+                visible: Settings.barShows("title") && root.focusedHere && shownTitle !== "" && titleRow.room >= Metrics.fontSize * 3
+                Layout.maximumWidth: Math.floor(Math.min(root.width * 0.22, titleRow.room))
                 text: shownTitle
                 color: Colors.dim
                 elide: Text.ElideRight
@@ -152,6 +169,8 @@ Variants {
 
         // the companion's house, then the network, up to the clock
         RowLayout {
+            id: netRow
+
             opacity: root.tucked ? 0 : 1
             anchors.right: clock.left
             anchors.rightMargin: Metrics.sectionGap

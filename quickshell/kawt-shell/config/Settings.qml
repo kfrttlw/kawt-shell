@@ -143,6 +143,10 @@ Singleton {
         path: `${root.dir}/settings.json`
         watchChanges: true
         onFileChanged: reload()
+        // written at once and waited for: quickshell's background write read the last write
+        // back when the next one began, and undid what had changed in between (three
+        // changes in a row kept the first and the last: fed, he got his meal but no food)
+        blockWrites: true
         onAdapterUpdated: writeAdapter()
         onLoaded: {
             root.newLook();
