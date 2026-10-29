@@ -1064,6 +1064,7 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
     FileView {
         path: `${Settings.dir}/chats.json`
         printErrors: false // missing on first run
+        blockWrites: true // at once: in the background a quick second change was undone (config/Settings.qml)
         onAdapterUpdated: writeAdapter()
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)

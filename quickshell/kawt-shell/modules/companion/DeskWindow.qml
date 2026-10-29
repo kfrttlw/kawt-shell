@@ -4,9 +4,9 @@ import Quickshell.Wayland
 import qs.config
 import qs.services
 
-// Him out on the desktop: a strip along the bottom edge, under the windows (made only while
-// the workspace has none: Bar.qml), where he walks about, naps, sulks, dances to music.
-// Only he takes clicks: the rest of the strip lets them through to the desktop.
+// Him out on the desktop: along the bottom edge, under the windows (made only while the
+// workspace has none: Bar.qml), where he walks about, naps, sulks, dances to music.
+// Only he takes clicks: the rest of the screen lets them through to the desktop.
 // Click: he talks. Drag: along the edge (the pointer may go anywhere above). Double click: home
 // for an hour.
 PanelWindow {
@@ -17,22 +17,23 @@ PanelWindow {
 
     screen: forScreen
     color: "transparent"
-    implicitHeight: him.height + Math.round(110 * Metrics.scale) // room for a long saying
 
     WlrLayershell.namespace: "kawt-companion"
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
+    // the whole screen, though only he and what he says are drawn: dragged, he follows the
+    // pointer anywhere above (on an empty desktop nothing has the focus, and hyprland keeps the
+    // pointer on a surface only then). A strip that grew for the drag had him jump up for a
+    // frame each time: hyprland showed the strip's last picture at the top of the bigger window
+    anchors.top: true
     anchors.bottom: true
     anchors.left: true
     anchors.right: true
-    // while he's dragged the strip is the whole screen: on an empty desktop nothing has the focus,
-    // and hyprland keeps the pointer on a surface only then, so going above the strip ended it
-    anchors.top: grab.dragging
     margins.bottom: Metrics.bottomGap
 
-    // only he takes the pointer; all of the strip while the button is down
+    // only he takes the pointer; all of the screen while the button is down
     mask: Region {
         item: grab.pressed ? whole : actor
     }
@@ -117,7 +118,6 @@ PanelWindow {
                     startY = p.y;
                     startCell = walker.x;
                 }
-                // on the screen, not in the window: the window grows upward once it's a drag
                 onPositionChanged: mouse => {
                     const p = mapToGlobal(mouse.x, mouse.y), dx = p.x - startX;
                     if (!dragging && (Math.abs(dx) > 6 || Math.abs(p.y - startY) > 6))

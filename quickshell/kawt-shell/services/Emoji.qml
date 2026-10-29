@@ -92,6 +92,7 @@ Singleton {
     FileView {
         path: root.wanted ? `${Settings.dir}/emoji.json` : ""
         printErrors: false // missing until the first pick
+        blockWrites: true // at once: in the background a quick second change was undone (config/Settings.qml)
         onAdapterUpdated: writeAdapter()
 
         JsonAdapter {
