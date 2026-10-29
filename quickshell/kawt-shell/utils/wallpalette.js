@@ -120,6 +120,27 @@ const strengths = {
     }
 };
 
+// how far apart two colors read (WCAG's contrast: 1 the same .. 21 black on white)
+function contrast(a, b) {
+    const lum = h => {
+        const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const x = lum(a), y = lum(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+// the hue at lightness l, made lighter (on black) or darker (on paper) until it reads as well
+// as the thinkpad's red does there (about 4:1): a deep blue on black, a yellow on paper
+function readable(h, s, l, bg, dark) {
+    let c = hsl2hex(h, s, l);
+    for (let i = 0; i < 40 && contrast(c, bg) < 4.2; i++) {
+        l = Math.max(0, Math.min(1, l + (dark ? 0.01 : -0.01)));
+        c = hsl2hex(h, s, l);
+    }
+    return c;
+}
+
 // analysis + strength + the thinkpad theme (config/Colors.qml) -> { dark, light } in the shape
 // of the themes there
 function build(a, strength, base) {
@@ -130,16 +151,17 @@ function build(a, strength, base) {
     const sat = Math.max(0.6, Math.min(0.85, a.sat + 0.2));
     // yellows and greens look far brighter than reds and blues at the same lightness
     const bright = h > 40 && h < 200;
-    const make = (k, accent) => {
-        const out = Object.assign({}, base[k], { accent, hues: a.hues });
+    const make = (k, l) => {
+        const out = Object.assign({}, base[k], { hues: a.hues });
         const st = strengths[strength];
         if (st)
             for (const role in st[k])
                 out[role] = hsl2hex(h, st[k][role][0], st[k][role][1]);
+        out.accent = readable(h, sat, l, out.bg, k === "dark");
         return out;
     };
     return {
-        dark: make("dark", hsl2hex(h, sat, bright ? 0.5 : 0.58)),
-        light: make("light", hsl2hex(h, sat, bright ? 0.3 : 0.4))
+        dark: make("dark", bright ? 0.5 : 0.58),
+        light: make("light", bright ? 0.3 : 0.4)
     };
 }

@@ -6,6 +6,8 @@
 # It only reads (ip, nmcli, /etc/resolv.conf) and asks nothing on the network: the wifi
 # details are networkmanager's last scan, not a new one. No default route: nothing printed.
 
+export LC_ALL=C # nmcli speaks the system's language otherwise ("да" for yes in russian)
+
 route=$(ip route show default 2> /dev/null | head -n 1)
 dev=$(printf '%s\n' "$route" | awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }')
 [ -n "$dev" ] || exit 0
