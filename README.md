@@ -32,6 +32,15 @@ paper and ink) and **wallpaper** (the same greys, lit in your wallpaper's own co
 red). Everything follows: GTK apps and Thunar, kitty and other terminals, Hyprland's borders,
 fastfetch, the prompt, the folder icons.
 
+Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
+bars, the companion, the trackpoint, a sunset, an old prompt, graph paper. The installer puts
+them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
+delete it and it stays gone).
+
+<p align="center">
+<img src="assets/wallpaper-pack.png" alt="kawt's twelve wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, the companion dark and light, graph paper, the trackpoint, an old prompt, a speaker grille, pinstripes" width="100%">
+</p>
+
 <div align="center">
 <img src="assets/wallpapers.png" alt="the wallpaper picker: the folder on the left, the picked one big on the right, dithered" width="88%"><br>
 <sub><code>super + w</code>: the folder on the left, the picked one big on the right, as it will look</sub><br><br>
@@ -464,6 +473,7 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   zsh/starter.zshrc      a first ~/.zshrc (copied only if you have none)
 kitty/kitty.conf         terminal         -> ~/.config/kitty/kitty.conf
 fastfetch/config.jsonc   fastfetch        -> ~/.local/state/kawt/theme/fastfetch.jsonc (kept in the theme's colors)
+wallpapers/              kawt's own       -> ~/Pictures/wallpapers/kawt
 install.sh
 ```
 

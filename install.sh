@@ -47,6 +47,10 @@ fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme sw
 gtk3_dst=$config/gtk-3.0/gtk.css
 gtk4_dst=$config/gtk-4.0/gtk.css
 icons_dst=${XDG_DATA_HOME:-$HOME/.local/share}/icons/kawt
+# kawt's own wallpapers (wallpapers/ in the repo): a link in the folder super + w looks in, so a
+# git pull brings new ones. Taken out by you, it stays out (walls_given: it was made once)
+walls_dst=$HOME/Pictures/wallpapers/kawt
+walls_given=$state/wallpapers-given
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
 # zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
@@ -198,7 +202,7 @@ banner() {
     say ""
     say "${dim}  ____________${off}"
     say "${dim} | ${off}${acc}>_${off}${dim}         |${off}    ${acc}kawt${off} ${dim}// $1${off}"
-    say "${dim} |            |${off}    ${dim}a hyprland rice that looks like an old terminal${off}"
+    say "${dim} |            |${off}    ${dim}a hyprland desktop like a black thinkpad: one red light${off}"
     say "${dim} |____________|${off}"
     say "${dim}/ :::::${off}${nub}●${off}${dim}:::::: \\${off}"
     say "${dim}\\______________/${off}"
@@ -1073,7 +1077,7 @@ if [[ $mode == uninstall ]]; then
         return 1
     }
 
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -1084,6 +1088,9 @@ if [[ $mode == uninstall ]]; then
             run mkdir -p "$(dirname "$dst")" && run cp -a -- "$orig" "$dst" && step "back" "$dst"
         fi
     done
+
+    # kawt's wallpapers come again with a new install
+    [[ -f $walls_given ]] && run rm -f -- "$walls_given"
 
     # the gtk theme and icons kawt picked: gtk's own again
     if command -v gsettings > /dev/null && [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]]; then
@@ -1186,7 +1193,7 @@ if [[ $mode == fresh ]]; then
         run qs kill -c kawt-shell > /dev/null 2>&1
         step "stop" "kawt (started again at the end)"
     fi
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -2017,6 +2024,18 @@ fi
 # where the style window (super + w) looks for wallpapers
 if want shell && [[ ! -d $HOME/Pictures/wallpapers ]]; then
     run mkdir -p "$HOME/Pictures/wallpapers" && step "make" "$HOME/Pictures/wallpapers (put wallpapers here: super + w picks them)"
+fi
+# and kawt's own in it: stripes, the companion, the trackpoint, a sunset...
+if want shell; then
+    if [[ -L $walls_dst && $(resolve "$walls_dst") == "$(resolve "$repo/wallpapers")" ]]; then
+        step " ok " "$walls_dst"
+    elif [[ -L $walls_dst && -z $(resolve "$walls_dst") ]] || [[ ! -e $walls_dst && ! -L $walls_dst && ! -f $walls_given ]]; then
+        # none yet, or a link to a clone that isn't there any more
+        if run ln -sfn -- "$repo/wallpapers" "$walls_dst"; then
+            step "link" "$walls_dst (kawt's own wallpapers: super + w)"
+            ((dry)) || { mkdir -p "$state" && : > "$walls_given"; }
+        fi
+    fi
 fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
