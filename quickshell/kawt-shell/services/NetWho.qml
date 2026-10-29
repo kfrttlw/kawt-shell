@@ -176,8 +176,12 @@ Singleton {
             cb(entries[app.name]);
             return;
         }
-        if (finder.running || !app.pids.length)
+        // another one is being looked up this very moment (or no process to look at): can't
+        // tell now, rather than no answer at all
+        if (finder.running || !app.pids.length) {
+            cb("");
             return;
+        }
         finding = app.name;
         findCb = cb;
         const args = ["sh", script, "find", String(app.pids[0])];

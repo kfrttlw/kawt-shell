@@ -32,6 +32,15 @@ paper and ink) and **wallpaper** (the same greys, lit in your wallpaper's own co
 red). Everything follows: GTK apps and Thunar, kitty and other terminals, Hyprland's borders,
 fastfetch, the prompt, the folder icons.
 
+Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
+bars, the companion, the trackpoint, a sunset, an old prompt, graph paper. The installer puts
+them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
+delete it and it stays gone) and asks which one to start with, or none if you have your own.
+
+<p align="center">
+<img src="assets/wallpaper-pack.png" alt="kawt's twelve wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, the companion dark and light, graph paper, the trackpoint, an old prompt, a speaker grille, pinstripes" width="100%">
+</p>
+
 <div align="center">
 <img src="assets/wallpapers.png" alt="the wallpaper picker: the folder on the left, the picked one big on the right, dithered" width="88%"><br>
 <sub><code>super + w</code>: the folder on the left, the picked one big on the right, as it will look</sub><br><br>
@@ -276,6 +285,9 @@ charge thresholds, a keyboard light) simply doesn't show.
   `hypr/preset.lua`, or the end of your `hyprland.lua` / `hyprland.conf`; inside Hyprland it's
   read at once and each monitor checked: one that didn't get the mode asked for is said; auto
   takes the block out)
+- the first wallpaper, on a new install: kawt in stripes, the sunset, the companion, the bars,
+  or none (picked first when hyprpaper, swaybg or the like still draws yours). kawt puts it on
+  when it starts; another one any time in `super + w`
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
   the gpu, OpenGL through nvidia; not on a hybrid laptop, where the intel / amd gpu draws) and,
   if there's no driver yet, the driver: `nvidia-open-dkms` for Turing and newer (GTX 16xx,
@@ -300,8 +312,10 @@ charge thresholds, a keyboard light) simply doesn't show.
   installed for you: next to iwd or systemd-networkd it can take the network over. It asks
   whether NetworkManager may keep asking a server every few minutes if there's internet (the
   one thing on a fresh Arch that goes out by itself; it finds wifi login pages in cafés)
-- with only the shell picked, asks whether wallpapers should go through `awww` (transitions);
-  makes `~/Pictures/wallpapers`, where `super + w` looks
+- who draws the wallpapers, while neither `awww` nor `swww` is there: `awww` (transitions,
+  `crt` among them; kawt starts it), kawt itself (nothing more to install, a plain fade), or
+  yours (hyprpaper, swaybg...: kawt leaves the wallpaper alone; picked first when one of those
+  draws it now). Makes `~/Pictures/wallpapers`, where `super + w` looks
 - thunar (a part of its own): installs it with `gvfs` (drives, trash) and `tumbler`
   (thumbnails), and folders open in it. GTK apps (thunar, the "open file" windows) take the
   theme's colors through `adw-gtk3`: `~/.config/gtk-3.0/gtk.css` and `gtk-4.0/gtk.css` link to
@@ -464,6 +478,7 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   zsh/starter.zshrc      a first ~/.zshrc (copied only if you have none)
 kitty/kitty.conf         terminal         -> ~/.config/kitty/kitty.conf
 fastfetch/config.jsonc   fastfetch        -> ~/.local/state/kawt/theme/fastfetch.jsonc (kept in the theme's colors)
+wallpapers/              kawt's own       -> ~/Pictures/wallpapers/kawt
 install.sh
 ```
 

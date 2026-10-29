@@ -47,6 +47,11 @@ fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme sw
 gtk3_dst=$config/gtk-3.0/gtk.css
 gtk4_dst=$config/gtk-4.0/gtk.css
 icons_dst=${XDG_DATA_HOME:-$HOME/.local/share}/icons/kawt
+# kawt's own wallpapers (wallpapers/ in the repo): a link in the folder super + w looks in, so a
+# git pull brings new ones. Taken out by you, it stays out (walls_given: it was made once)
+walls_dst=$HOME/Pictures/wallpapers/kawt
+walls_given=$state/wallpapers-given
+walls_first=$state/first-wallpaper # the one picked here, put on by kawt at its next start
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
 # zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
@@ -96,7 +101,7 @@ parts=(
     "kitty|kitty|the terminal, in the theme's colors"
     "zsh|zsh prompt| ~/dir  branch  then > to type, hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
-    "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc, sandbox, voice"
+    "extras|extras|ollama (ai), cava, fortune, night light, power, screenshot tools, qalc, sandbox, voice"
     "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"
 )
 # packages per part; "a|b" = the first of them the repos have
@@ -115,7 +120,7 @@ pkgs_fastfetch=(fastfetch)
 # thunar: its drives and trash (gvfs), pictures' thumbnails (tumbler); adw-gtk3, the gtk theme
 # that takes kawt's colors; dconf keeps the gtk settings; xdg-utils makes thunar open folders
 pkgs_files=(thunar gvfs tumbler "adw-gtk-theme|adw-gtk3" dconf xdg-utils)
-pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
+pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
@@ -198,7 +203,7 @@ banner() {
     say ""
     say "${dim}  ____________${off}"
     say "${dim} | ${off}${acc}>_${off}${dim}         |${off}    ${acc}kawt${off} ${dim}// $1${off}"
-    say "${dim} |            |${off}    ${dim}a hyprland rice that looks like an old terminal${off}"
+    say "${dim} |            |${off}    ${dim}a hyprland desktop like a black thinkpad: one red light${off}"
     say "${dim} |____________|${off}"
     say "${dim}/ :::::${off}${nub}●${off}${dim}:::::: \\${off}"
     say "${dim}\\______________/${off}"
@@ -744,6 +749,7 @@ pacman_ready() {
 others_off() {
     local p f n l running=() hits=() files=() cmt expr
     local re='waybar|dunst|mako|swaync|fnott|hyprpaper|swaybg|hyprpanel'
+    [[ $wall_mode == own ]] && re='waybar|dunst|mako|swaync|fnott|hyprpanel' # yours draws the wallpaper
     for p in ${re//|/ }; do
         pgrep -x "$p" > /dev/null && running+=("$p")
     done
@@ -955,11 +961,29 @@ if [[ $mode == update ]]; then
         note "with git: git clone https://github.com/kfrttlw/kawt-shell ~/kawt && ~/kawt/install.sh"
         exit 1
     fi
-    if ! up=$(g rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null); then
-        say "${red}the branch $(g branch --show-current) follows no branch of the remote${off}"
-        note "to follow main: git -C $repo branch -u origin/main"
-        exit 1
-    fi
+    # the branch it follows is gone from the remote (dev, merged into main and deleted there),
+    # or it follows none: main, if you say so (with --yes: main)
+    to_main() {
+        local cur
+        cur=$(g branch --show-current)
+        g rev-parse -q --verify refs/remotes/origin/main > /dev/null || g fetch -q origin 2> /dev/null
+        say "${red}$1${off}"
+        if ! g rev-parse -q --verify refs/remotes/origin/main > /dev/null; then
+            note "follow another one: git -C $repo branch -u origin/<branch>"
+            exit 1
+        fi
+        if ((dry)) || ! ask "follow main from now on? (git switch main)" 1; then
+            note "by hand: git -C $repo switch main"
+            exit 1
+        fi
+        if g rev-parse -q --verify refs/heads/main > /dev/null; then
+            g switch -q main && g branch -q -u origin/main main || { fail "git switch failed" "see above"; exit 1; }
+        else
+            g switch -q -c main --track origin/main || { fail "git switch failed" "see above"; exit 1; }
+        fi
+        step "edit" "this clone follows main now (it was on ${cur:-a commit of its own})"
+        up=origin/main
+    }
     changed=$(g status --porcelain --untracked-files=no)
     if [[ -n $changed ]]; then
         say "files of the repo were changed here:"
@@ -973,16 +997,25 @@ if [[ $mode == update ]]; then
             exit 1
         fi
     fi
+    was=$(g rev-parse HEAD)
+    up=$(g rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null) || to_main "the branch $(g branch --show-current) follows no branch of the remote"
     # for the new installer, which does the rest: it may know more than this one
     fwd=()
     ((yes)) && fwd+=(--yes)
     ((packages)) || fwd+=(--no-packages)
     ((update)) || fwd+=(--no-update)
     step "ask" "$up for news"
-    g fetch -q || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
-    old=$(g rev-parse HEAD)
+    # --prune: a branch deleted there is gone here too, not "up to date" with it forever
+    g fetch -q --prune || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
+    g rev-parse -q --verify '@{u}' > /dev/null || to_main "$up is gone from the remote (merged into main?)"
+    old=$was
     behind=$(g rev-list --count 'HEAD..@{u}')
     ahead=$(g rev-list --count '@{u}..HEAD')
+    if ((behind == 0)) && [[ $(g rev-parse HEAD) != "$old" ]]; then
+        # moved over to main just now: that was the update
+        pass "kawt is at $(g log -1 --format='%h')"
+        exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
+    fi
     if ((behind == 0)); then
         # pulled by hand a moment ago (the first update from a version that had no --update,
         # or a plain git pull): what's new since then, as if this had pulled it. Once per pull
@@ -1046,7 +1079,7 @@ if [[ $mode == uninstall ]]; then
         return 1
     }
 
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -1057,6 +1090,9 @@ if [[ $mode == uninstall ]]; then
             run mkdir -p "$(dirname "$dst")" && run cp -a -- "$orig" "$dst" && step "back" "$dst"
         fi
     done
+
+    # kawt's wallpapers come again with a new install
+    [[ -f $walls_given ]] && run rm -f -- "$walls_given"
 
     # the gtk theme and icons kawt picked: gtk's own again
     if command -v gsettings > /dev/null && [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]]; then
@@ -1159,7 +1195,7 @@ if [[ $mode == fresh ]]; then
         run qs kill -c kawt-shell > /dev/null 2>&1
         step "stop" "kawt (started again at the end)"
     fi
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -1348,11 +1384,38 @@ fi
 installed() { pacman -T -- "$1" > /dev/null 2>&1; } # also true for a package that provides it (quickshell-git)
 in_repos() { pacman -Si -- "$1" > /dev/null 2>&1; }
 
-# wallpapers: awww draws them, with transitions, and kawt starts its daemon itself (no line in
-# hyprland's config). It comes with the extras; with the shell alone it's asked on its own
-wall_awww=0
-if want shell && ! want extras && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
-    ask "wallpapers through awww? (smooth transitions; kawt starts it with hyprland)" 1 && wall_awww=1
+# a program of your own that draws the wallpaper, running or started in hyprland's config
+wall_program() {
+    local p
+    for p in hyprpaper swaybg wpaperd mpvpaper; do
+        if pgrep -x "$p" > /dev/null || grep -sE "exec.*\b$p\b" "$hypr_lua" "$hypr_user" "$hypr_conf" | grep -vqE '^[^:]*:[[:space:]]*(#|--)'; then
+            printf '%s' "$p"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Who draws the wallpapers (wall_mode), asked on a new install while neither awww nor swww is there:
+#   awww   with transitions (crt: drawn in from the top); kawt starts its daemon itself, no line
+#          in hyprland's config. The default
+#   kawt   kawt itself, on the background layer: nothing more to install, a plain fade
+#   own    hyprpaper, swaybg...: kawt leaves the wallpaper alone (and doesn't offer to stop it);
+#          picked first when one of those draws it now
+wall_mode=""
+if want shell && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
+    wall_mode=awww
+    wall_other=$(wall_program) && wall_mode=own
+    if can_ask; then
+        section "wallpapers"
+        say "${dim}  who draws them · ↑↓ move · enter pick${off}"
+        c=0
+        [[ $wall_mode == own ]] && c=2
+        CHOOSE_AT=$c choose c "awww|smooth transitions (crt: drawn in from the top), kawt starts it (recommended)" \
+            "kawt itself|nothing more to install, a plain fade" \
+            "yours|$([[ -n $wall_other ]] && echo "$wall_other, as now: kawt leaves the wallpaper alone" || echo "hyprpaper, swaybg...: kawt leaves the wallpaper alone")"
+        wall_mode=$(case $c in 0) echo awww ;; 1) echo kawt ;; *) echo own ;; esac)
+    fi
 fi
 
 # ------------------------------------------------------------------ 2b. hyprland's config
@@ -1375,13 +1438,26 @@ if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
                 "hyprland's own|the starting config hyprland ships, kawt's keys added"
             ((c == 1)) && hypr_from=hypr
         fi
-    elif ! loads_kawt "$hypr_lua" "$marker_std" && can_ask; then
-        section "hyprland config"
-        say "${dim}  you have one · ↑↓ move · enter pick${off}"
-        c=0
-        choose c "keep mine|kawt only adds its line at the end (recommended)" \
-            "kawt standard|kawt's config, updated with kawt; yours to the backup, changes in user.lua"
-        ((c == 1)) && hypr_from=std
+    elif ! loads_kawt "$hypr_lua" "$marker_std"; then
+        # the copy --uninstall left (kawt's own config): back to the standard one, unless you say
+        # otherwise; that copy goes to the backup like any other
+        left=0
+        head -n 1 "$hypr_lua" | grep -F -- "-- kawt was uninstalled" > /dev/null && left=1
+        if can_ask; then
+            section "hyprland config"
+            say "${dim}  you have one · ↑↓ move · enter pick${off}"
+            c=0
+            if ((left)); then
+                CHOOSE_AT=1 choose c "keep mine|kawt only adds its line at the end" \
+                    "kawt standard|the one --uninstall left is kawt's own: back to the real one (recommended)"
+            else
+                choose c "keep mine|kawt only adds its line at the end (recommended)" \
+                    "kawt standard|kawt's config, updated with kawt; yours to the backup, changes in user.lua"
+            fi
+            ((c == 1)) && hypr_from=std
+        elif ((left)); then
+            hypr_from=std
+        fi
     fi
 fi
 
@@ -1510,7 +1586,7 @@ for id in shell hypr kitty zsh fastfetch extras files; do
     unset -n list
 done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
-((wall_awww)) && wanted+=("awww|swww")
+[[ $wall_mode == awww ]] && wanted+=("awww|swww")
 # [text] on a screenshot reads english, and your language when tesseract knows it (ru_RU -> rus)
 tess_lang() {
     case ${LC_ALL:-${LANG:-}} in
@@ -1978,6 +2054,18 @@ fi
 if want shell && [[ ! -d $HOME/Pictures/wallpapers ]]; then
     run mkdir -p "$HOME/Pictures/wallpapers" && step "make" "$HOME/Pictures/wallpapers (put wallpapers here: super + w picks them)"
 fi
+# and kawt's own in it: stripes, the companion, the trackpoint, a sunset...
+if want shell; then
+    if [[ -L $walls_dst && $(resolve "$walls_dst") == "$(resolve "$repo/wallpapers")" ]]; then
+        step " ok " "$walls_dst"
+    elif [[ -L $walls_dst && -z $(resolve "$walls_dst") ]] || [[ ! -e $walls_dst && ! -L $walls_dst && ! -f $walls_given ]]; then
+        # none yet, or a link to a clone that isn't there any more
+        if run ln -sfn -- "$repo/wallpapers" "$walls_dst"; then
+            step "link" "$walls_dst (kawt's own wallpapers: super + w)"
+            ((dry)) || { mkdir -p "$state" && : > "$walls_given"; }
+        fi
+    fi
+fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
 fi
@@ -2025,6 +2113,38 @@ if want zsh && command -v zsh > /dev/null; then
 fi
 # waybar, dunst, mako...: doing kawt's job next to it
 ((dry)) || ! want shell || others_off
+
+# The first wallpaper, one of kawt's own: asked on a new install, while none was picked in kawt
+# yet. "none" is first when another program still draws one (hyprpaper, swaybg...). kawt puts it
+# on at its next start (it reads walls_first once), or now if it's running
+first_wallpaper() {
+    local c=0 other f path
+    local files=(kawt-stripes-dark horizon companion-dark zebra-dark "")
+    other=$(wall_program) && c=4
+    if can_ask; then
+        section "wallpaper"
+        say "${dim}  kawt's own to start with (super + w: all twelve) · ↑↓ move · enter pick${off}"
+        CHOOSE_AT=$c choose c "kawt in stripes|black, the red block" \
+            "horizon|a red sun setting in bars" \
+            "companion|stripes, sitting at the bottom" \
+            "zebra|black and white bars" \
+            "none|$([[ -n $other ]] && echo "$other draws yours" || echo "later, in super + w")"
+    fi
+    f=${files[c]}
+    [[ -n $f ]] || return 0
+    path=$walls_dst/$f.png
+    if ((dry)); then
+        note "would put on: $path"
+        return 0
+    fi
+    mkdir -p "$state" && printf '%s\n' "$path" > "$walls_first" || return 0
+    # kawt running already (installed again): on at once
+    pgrep -f 'qs -c kawt-shell' > /dev/null && qs -c kawt-shell ipc call kawt wallpaper "$path" > /dev/null 2>&1 && rm -f -- "$walls_first"
+    step "edit" "the wallpaper: $f (another one: super + w)"
+}
+if want shell && [[ -z $updated_from && -e $walls_dst && $wall_mode != own ]] && ! grep -sqE '"wallpaper": *"[^"]' "$state/settings.json"; then
+    first_wallpaper
+fi
 
 # ------------------------------------------------------------------ 8. services
 # only asked, never just switched on (and not again after an update: that was answered)

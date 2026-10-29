@@ -63,6 +63,7 @@ Singleton {
 
     // a round of work, on a task (its id; 0: none)
     function start(task: real): void {
+        now = Date.now();
         const t = task ? Todo.tasks.find(x => x.id === task) : null;
         adapter.task = t ? t.id : 0;
         adapter.taskText = t ? t.text : "";
@@ -160,23 +161,32 @@ Singleton {
     }
 
     function partDone(): void {
+        // kawt (or the machine) was off past the end: the round still counts, on the day it
+        // ended; a break that would be over by now too isn't started, nothing is said about it
+        const over = now - adapter.until;
         if (phase === "work") {
+            const day = Qt.formatDate(new Date(Math.min(now, adapter.until)), "yyyy-MM-dd");
             const d = Object.assign({}, adapter.days);
-            const was = d[today] ?? [0, 0];
-            d[today] = [was[0] + 1, was[1] + workMin * 60000];
+            const was = d[day] ?? [0, 0];
+            d[day] = [was[0] + 1, was[1] + workMin * 60000];
             // a year of days is plenty for any chart
             const keys = Object.keys(d).sort();
             for (const k of keys.slice(0, Math.max(0, keys.length - 370)))
                 delete d[k];
             adapter.days = d;
-            const n = d[today][0];
-            notify(`focus done · ${n} of ${goal} today`, `${breakMin} min break${taskText ? ` · ${taskText}` : ""}`);
+            if (over > breakMin * 60000) {
+                finish();
+                return;
+            }
+            notify(`focus done · ${d[day][0]} of ${goal} today`, `${breakMin} min break${taskText ? ` · ${taskText}` : ""}`);
             begin("break");
             ended("work");
         } else if (phase === "break") {
-            notify("break's over", "the next round: profile -> focus");
             finish();
-            ended("break");
+            if (over < 60000) {
+                notify("break's over", "the next round: profile -> focus");
+                ended("break");
+            }
         }
     }
 
@@ -219,6 +229,16 @@ Singleton {
     }
 
     property bool loaded: false
+
+    // a new day while nothing runs: today's rounds and the week move on too (the clock above
+    // only ticks while a round runs)
+    Connections {
+        target: Time
+
+        function onDayChanged(): void {
+            root.now = Date.now();
+        }
+    }
 
     FileView {
         path: `${Settings.dir}/focus.json`

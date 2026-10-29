@@ -253,6 +253,23 @@ Singleton {
         started = true;
         if (Settings.wallpaper)
             show("start");
+        else
+            first.reload();
+    }
+
+    // the one picked in the installer (one of kawt's own), put on at the first start; read once
+    FileView {
+        id: first
+
+        path: `${Settings.dir}/first-wallpaper`
+        preload: false
+        printErrors: false
+        onLoaded: {
+            const p = text().trim();
+            Quickshell.execDetached(["rm", "-f", path]);
+            if (p && !Settings.wallpaper)
+                root.set(Settings.expand(p));
+        }
     }
 
     function fileName(path: string): string {

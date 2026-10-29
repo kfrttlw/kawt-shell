@@ -283,13 +283,14 @@ try("keys", function()
     bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
     bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
-    -- volume / brightness through kawt: its osd shows at once
-    bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd(kawt .. "volume up"),       { locked = true, repeating = true })
-    bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd(kawt .. "volume down"),     { locked = true, repeating = true })
-    bind("XF86AudioMute",         hl.dsp.exec_cmd(kawt .. "volume mute"),     { locked = true })
-    bind("XF86AudioMicMute",      hl.dsp.exec_cmd(kawt .. "mic mute"),        { locked = true })
-    bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(kawt .. "brightness up"),   { locked = true, repeating = true })
-    bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true, repeating = true })
+    -- volume / brightness through kawt: its osd shows at once. Without kawt running (it crashed,
+    -- or this file is all that's left of it) straight through wireplumber and brightnessctl
+    bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd(kawt .. "volume up || wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+    bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd(kawt .. "volume down || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),    { locked = true, repeating = true })
+    bind("XF86AudioMute",         hl.dsp.exec_cmd(kawt .. "volume mute || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),   { locked = true })
+    bind("XF86AudioMicMute",      hl.dsp.exec_cmd(kawt .. "mic mute || wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),    { locked = true })
+    bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(kawt .. "brightness up || brightnessctl -q set 5%+"),                   { locked = true, repeating = true })
+    bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down || brightnessctl -q set 5%-"),                 { locked = true, repeating = true })
 
     -- play / pause / next go to the player kawt shows (the one picked in its player panel, or
     -- the last one started); playerctl if kawt isn't running

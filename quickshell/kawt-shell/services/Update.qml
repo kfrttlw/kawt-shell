@@ -32,7 +32,9 @@ Singleton {
             return;
         checker.auto = !!auto;
         status = "asking the remote...";
-        checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q || exit 1; git rev-list --count "HEAD..@{u}" && git rev-parse "@{u}" && git log --no-merges --format=%s -n 1 "HEAD..@{u}"', "sh", repo];
+        // the branch it follows gone from the remote (dev, merged and deleted): what main has
+        // that this doesn't, which [update] moves it to (install.sh --update)
+        checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q --prune || exit 1; u="@{u}"; git rev-parse -q --verify "$u" > /dev/null || u=origin/main; git rev-list --count "HEAD..$u" && git rev-parse "$u" && git log --no-merges --format=%s -n 1 "HEAD..$u"', "sh", repo];
         checker.running = true;
     }
 

@@ -74,7 +74,7 @@ Singleton {
         if (!adapter.folders.includes(target))
             adapter.folders = [...adapter.folders, target];
         adapter.tasks = [...adapter.tasks, {
-            id: Date.now(), // just a unique id, real time is fine
+            id: newId(),
             text: parsed.text,
             due: parsed.due,
             done: false,
@@ -87,6 +87,15 @@ Singleton {
             repeat
         }];
         return [`added to ${target}`, parsed.due ? `reminder ${when(parsed.due)}` : "", repeat ? `again ${repeatName(repeat)}` : ""].filter(s => s).join(" · ");
+    }
+
+    // the time it was made, as an id; one more if that's taken (several added at once: the ai's
+    // [add 3 tasks]), or ticking one would tick them all
+    function newId(): real {
+        let id = Date.now();
+        while (adapter.tasks.some(t => t.id === id))
+            id++;
+        return id;
     }
 
     // change some fields of a task: update(id, { note: "...", prio: 2 })
@@ -109,15 +118,19 @@ Singleton {
     }
 
     // ticked off: when, for "done today". One that comes again moves on to its next time instead,
-    // and a ticked-off copy of it stays (today's list, the count)
+    // and a ticked-off copy of it stays (today's list, the count). That copy unticked: a tick by
+    // mistake, undone (the task back to the time it had, the copy gone)
     function toggle(id: real): void {
         const t = tasks.find(t => t.id === id);
         if (!t)
             return;
         const now = Time.ms();
+        const from = t.done && t.of ? tasks.find(x => x.id === t.of && !x.done && x.repeat) : null;
         if (!t.done && t.repeat) {
-            const copy = Object.assign({}, t, { id: Date.now(), done: true, doneAt: now, repeat: "", notified: true });
-            adapter.tasks = [...adapter.tasks.map(x => x.id === id ? Object.assign({}, x, { due: nextTime(x), notified: false, subs: (x.subs ?? []).map(st => ({ text: st.text, done: false })) }) : x), copy];
+            const copy = Object.assign({}, t, { id: newId(), done: true, doneAt: now, repeat: "", notified: true, of: id });
+            adapter.tasks = [...adapter.tasks.map(x => x.id === id ? Object.assign({}, x, { due: nextTime(x), mday: x.repeat === "month" ? x.mday || (x.due ? new Date(x.due).getDate() : 0) : 0, notified: false, subs: (x.subs ?? []).map(st => ({ text: st.text, done: false })) }) : x), copy];
+        } else if (from) {
+            adapter.tasks = adapter.tasks.filter(x => x.id !== id).map(x => x.id === from.id ? Object.assign({}, x, { due: t.due, notified: t.due > 0 && t.due <= now, subs: t.subs }) : x);
         } else {
             update(id, { done: !t.done, doneAt: t.done ? 0 : now });
         }
@@ -160,14 +173,18 @@ Singleton {
         return r === "day" ? "every day" : r === "weekdays" ? "on weekdays" : r === "week" ? "every week" : r === "month" ? "every month" : "";
     }
 
-    // the next time after this one, never in the past; one without a time gets 9:00
+    // the next time after this one, never in the past; one without a time gets 9:00. Monthly: on
+    // the same day of the month (mday, the one it started on), the last day of a shorter month
     function nextTime(t: var): real {
         const now = new Date(Time.ms());
         const d = t.due ? new Date(t.due) : new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0);
+        const mday = t.mday || d.getDate();
         do {
-            if (t.repeat === "month")
+            if (t.repeat === "month") {
+                d.setDate(1);
                 d.setMonth(d.getMonth() + 1);
-            else if (t.repeat === "week")
+                d.setDate(Math.min(mday, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+            } else if (t.repeat === "week")
                 d.setDate(d.getDate() + 7);
             else
                 d.setDate(d.getDate() + 1);
@@ -190,7 +207,7 @@ Singleton {
                 d.setDate(d.getDate() + 1);
             due = d.getTime();
         }
-        update(id, { repeat: r, due, notified: due <= Time.ms() });
+        update(id, { repeat: r, due, notified: due <= Time.ms(), mday: 0 });
     }
 
     // ---- steps of a task: [{ text, done }]
@@ -277,10 +294,13 @@ Singleton {
         const tm = "(\\d{1,2}(?::\\d{2})?(?:\\s*(?:am|pm|a\\.m\\.|p\\.m\\.))?)";
         let c;
         if ((m = line.match(new RegExp(`^(\\d{1,2})\\.(\\d{1,2})\\s+${tm}\\s+(.+)$`, "i"))) && (c = Time.parseClock(m[3]))) {
-            const d = new Date(now.getFullYear(), parseInt(m[2]) - 1, parseInt(m[1]), c.h, c.m);
+            const day = parseInt(m[1]), month = parseInt(m[2]) - 1;
+            const d = new Date(now.getFullYear(), month, day, c.h, c.m);
             if (d < now)
                 d.setFullYear(d.getFullYear() + 1); // "05.01" in december means next january
-            return { due: d.getTime(), text: m[4] };
+            // a date that isn't one (31.02, 10.13) would roll over into another: none at all
+            if (d.getMonth() === month && d.getDate() === day)
+                return { due: d.getTime(), text: m[4] };
         }
         if ((m = line.match(new RegExp(`^${tm}\\s+(.+)$`, "i"))) && (c = Time.parseClock(m[1]))) {
             const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), c.h, c.m);
@@ -388,7 +408,7 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, doneAt (ms), notified, folder, prio 0-3, icon, note, subs: [{ text, done }], repeat }]
+            property var tasks: [] // [{ id, text, due (ms, 0 = none), done, doneAt (ms), notified, folder, prio 0-3, icon, note, subs: [{ text, done }], repeat, mday (monthly: its day), of (a ticked-off copy: the task's id) }]
             property var folders: ["inbox"]
             property var doneDays: ({}) // "yyyy-MM-dd" -> tasks ticked off that day
         }
