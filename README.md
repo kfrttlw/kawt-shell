@@ -35,7 +35,7 @@ fastfetch, the prompt, the folder icons.
 Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
 bars, the companion, the trackpoint, a sunset, an old prompt, graph paper. The installer puts
 them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
-delete it and it stays gone).
+delete it and it stays gone) and asks which one to start with, or none if you have your own.
 
 <p align="center">
 <img src="assets/wallpaper-pack.png" alt="kawt's twelve wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, the companion dark and light, graph paper, the trackpoint, an old prompt, a speaker grille, pinstripes" width="100%">
@@ -285,6 +285,9 @@ charge thresholds, a keyboard light) simply doesn't show.
   `hypr/preset.lua`, or the end of your `hyprland.lua` / `hyprland.conf`; inside Hyprland it's
   read at once and each monitor checked: one that didn't get the mode asked for is said; auto
   takes the block out)
+- the first wallpaper, on a new install: kawt in stripes, the sunset, the companion, the bars,
+  or none (picked first when hyprpaper, swaybg or the like still draws yours). kawt puts it on
+  when it starts; another one any time in `super + w`
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
   the gpu, OpenGL through nvidia; not on a hybrid laptop, where the intel / amd gpu draws) and,
   if there's no driver yet, the driver: `nvidia-open-dkms` for Turing and newer (GTX 16xx,

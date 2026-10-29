@@ -51,6 +51,7 @@ icons_dst=${XDG_DATA_HOME:-$HOME/.local/share}/icons/kawt
 # git pull brings new ones. Taken out by you, it stays out (walls_given: it was made once)
 walls_dst=$HOME/Pictures/wallpapers/kawt
 walls_given=$state/wallpapers-given
+walls_first=$state/first-wallpaper # the one picked here, put on by kawt at its next start
 hypr_lua=$config/hypr/hyprland.lua
 hypr_conf=$config/hypr/hyprland.conf
 # zsh prompt: one guarded line at the end of .zshrc, after oh-my-zsh, so it wins over any
@@ -2084,6 +2085,44 @@ if want zsh && command -v zsh > /dev/null; then
 fi
 # waybar, dunst, mako...: doing kawt's job next to it
 ((dry)) || ! want shell || others_off
+
+# The first wallpaper, one of kawt's own: asked on a new install, while none was picked in kawt
+# yet. "none" is first when another program still draws one (hyprpaper, swaybg...). kawt puts it
+# on at its next start (it reads walls_first once), or now if it's running
+first_wallpaper() {
+    local c=0 other="" p f path
+    local files=(kawt-stripes-dark horizon companion-dark zebra-dark "")
+    for p in hyprpaper swaybg wpaperd mpvpaper; do
+        if pgrep -x "$p" > /dev/null || grep -sE "exec.*\b$p\b" "$hypr_lua" "$hypr_user" "$hypr_conf" | grep -vqE '^[^:]*:[[:space:]]*(#|--)'; then
+            other=$p
+            break
+        fi
+    done
+    [[ -n $other ]] && c=4
+    if can_ask; then
+        section "wallpaper"
+        say "${dim}  kawt's own to start with (super + w: all twelve) · ↑↓ move · enter pick${off}"
+        CHOOSE_AT=$c choose c "kawt in stripes|black, the red block" \
+            "horizon|a red sun setting in bars" \
+            "companion|stripes, sitting at the bottom" \
+            "zebra|black and white bars" \
+            "none|$([[ -n $other ]] && echo "$other draws yours" || echo "later, in super + w")"
+    fi
+    f=${files[c]}
+    [[ -n $f ]] || return 0
+    path=$walls_dst/$f.png
+    if ((dry)); then
+        note "would put on: $path"
+        return 0
+    fi
+    mkdir -p "$state" && printf '%s\n' "$path" > "$walls_first" || return 0
+    # kawt running already (installed again): on at once
+    pgrep -f 'qs -c kawt-shell' > /dev/null && qs -c kawt-shell ipc call kawt wallpaper "$path" > /dev/null 2>&1 && rm -f -- "$walls_first"
+    step "edit" "the wallpaper: $f (another one: super + w)"
+}
+if want shell && [[ -z $updated_from && -e $walls_dst ]] && ! grep -sqE '"wallpaper": *"[^"]' "$state/settings.json"; then
+    first_wallpaper
+fi
 
 # ------------------------------------------------------------------ 8. services
 # only asked, never just switched on (and not again after an update: that was answered)
