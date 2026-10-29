@@ -955,11 +955,29 @@ if [[ $mode == update ]]; then
         note "with git: git clone https://github.com/kfrttlw/kawt-shell ~/kawt && ~/kawt/install.sh"
         exit 1
     fi
-    if ! up=$(g rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null); then
-        say "${red}the branch $(g branch --show-current) follows no branch of the remote${off}"
-        note "to follow main: git -C $repo branch -u origin/main"
-        exit 1
-    fi
+    # the branch it follows is gone from the remote (dev, merged into main and deleted there),
+    # or it follows none: main, if you say so (with --yes: main)
+    to_main() {
+        local cur
+        cur=$(g branch --show-current)
+        g rev-parse -q --verify refs/remotes/origin/main > /dev/null || g fetch -q origin 2> /dev/null
+        say "${red}$1${off}"
+        if ! g rev-parse -q --verify refs/remotes/origin/main > /dev/null; then
+            note "follow another one: git -C $repo branch -u origin/<branch>"
+            exit 1
+        fi
+        if ((dry)) || ! ask "follow main from now on? (git switch main)" 1; then
+            note "by hand: git -C $repo switch main"
+            exit 1
+        fi
+        if g rev-parse -q --verify refs/heads/main > /dev/null; then
+            g switch -q main && g branch -q -u origin/main main || { fail "git switch failed" "see above"; exit 1; }
+        else
+            g switch -q -c main --track origin/main || { fail "git switch failed" "see above"; exit 1; }
+        fi
+        step "edit" "this clone follows main now (it was on ${cur:-a commit of its own})"
+        up=origin/main
+    }
     changed=$(g status --porcelain --untracked-files=no)
     if [[ -n $changed ]]; then
         say "files of the repo were changed here:"
@@ -973,16 +991,25 @@ if [[ $mode == update ]]; then
             exit 1
         fi
     fi
+    was=$(g rev-parse HEAD)
+    up=$(g rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null) || to_main "the branch $(g branch --show-current) follows no branch of the remote"
     # for the new installer, which does the rest: it may know more than this one
     fwd=()
     ((yes)) && fwd+=(--yes)
     ((packages)) || fwd+=(--no-packages)
     ((update)) || fwd+=(--no-update)
     step "ask" "$up for news"
-    g fetch -q || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
-    old=$(g rev-parse HEAD)
+    # --prune: a branch deleted there is gone here too, not "up to date" with it forever
+    g fetch -q --prune || { fail "git fetch failed" "no internet, or the remote isn't there any more"; exit 1; }
+    g rev-parse -q --verify '@{u}' > /dev/null || to_main "$up is gone from the remote (merged into main?)"
+    old=$was
     behind=$(g rev-list --count 'HEAD..@{u}')
     ahead=$(g rev-list --count '@{u}..HEAD')
+    if ((behind == 0)) && [[ $(g rev-parse HEAD) != "$old" ]]; then
+        # moved over to main just now: that was the update
+        pass "kawt is at $(g log -1 --format='%h')"
+        exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
+    fi
     if ((behind == 0)); then
         # pulled by hand a moment ago (the first update from a version that had no --update,
         # or a plain git pull): what's new since then, as if this had pulled it. Once per pull
@@ -1375,13 +1402,26 @@ if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
                 "hyprland's own|the starting config hyprland ships, kawt's keys added"
             ((c == 1)) && hypr_from=hypr
         fi
-    elif ! loads_kawt "$hypr_lua" "$marker_std" && can_ask; then
-        section "hyprland config"
-        say "${dim}  you have one · ↑↓ move · enter pick${off}"
-        c=0
-        choose c "keep mine|kawt only adds its line at the end (recommended)" \
-            "kawt standard|kawt's config, updated with kawt; yours to the backup, changes in user.lua"
-        ((c == 1)) && hypr_from=std
+    elif ! loads_kawt "$hypr_lua" "$marker_std"; then
+        # the copy --uninstall left (kawt's own config): back to the standard one, unless you say
+        # otherwise; that copy goes to the backup like any other
+        left=0
+        head -n 1 "$hypr_lua" | grep -F -- "-- kawt was uninstalled" > /dev/null && left=1
+        if can_ask; then
+            section "hyprland config"
+            say "${dim}  you have one · ↑↓ move · enter pick${off}"
+            c=0
+            if ((left)); then
+                CHOOSE_AT=1 choose c "keep mine|kawt only adds its line at the end" \
+                    "kawt standard|the one --uninstall left is kawt's own: back to the real one (recommended)"
+            else
+                choose c "keep mine|kawt only adds its line at the end (recommended)" \
+                    "kawt standard|kawt's config, updated with kawt; yours to the backup, changes in user.lua"
+            fi
+            ((c == 1)) && hypr_from=std
+        elif ((left)); then
+            hypr_from=std
+        fi
     fi
 fi
 
