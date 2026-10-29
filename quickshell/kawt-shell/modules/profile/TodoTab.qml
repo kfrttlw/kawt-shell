@@ -50,10 +50,19 @@ RowLayout {
         }
     }
 
-    // ticking off is drawn first (struck through), the list moves a moment later
+    // ticking off is drawn first (struck through), the list moves a moment later. Another one
+    // ticked meanwhile: the first goes through at once; the same one again: not ticked after all
     property real ticking: 0
 
     function tick(task: var): void {
+        if (tickLater.running) {
+            tickLater.stop();
+            const was = ticking;
+            ticking = 0;
+            if (was === task.id)
+                return;
+            Todo.toggle(was);
+        }
         if (task.done) {
             Todo.toggle(task.id);
             return;
@@ -71,6 +80,11 @@ RowLayout {
             tab.ticking = 0;
         }
     }
+
+    // the menu closed (or another tab opened) within that moment: ticked all the same, once this
+    // tab is gone (its list can't be rebuilt while it's being taken down)
+    Component.onDestruction: if (tickLater.running)
+        Qt.callLater(Todo.toggle, ticking)
 
     readonly property list<string> repeats: ["", "day", "weekdays", "week", "month"]
 

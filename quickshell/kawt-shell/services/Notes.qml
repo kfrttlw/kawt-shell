@@ -32,9 +32,11 @@ Singleton {
         return first.trim().replace(/^#+\s*/, "") || "untitled";
     }
 
-    // returns the new note's id
+    // returns the new note's id (the time it was made; one more if that's taken)
     function create(folder: string): real {
-        const id = Date.now();
+        let id = Date.now();
+        while (adapter.notes.some(n => n.id === id))
+            id++;
         adapter.notes = [...adapter.notes, {
             id,
             body: "",
