@@ -101,7 +101,7 @@ parts=(
     "kitty|kitty|the terminal, in the theme's colors"
     "zsh|zsh prompt| ~/dir  branch  then > to type, hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
-    "extras|extras|ollama (ai), cava, fortune, wallpapers, night light, power, screenshot tools, qalc, sandbox, voice"
+    "extras|extras|ollama (ai), cava, fortune, night light, power, screenshot tools, qalc, sandbox, voice"
     "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"
 )
 # packages per part; "a|b" = the first of them the repos have
@@ -120,7 +120,7 @@ pkgs_fastfetch=(fastfetch)
 # thunar: its drives and trash (gvfs), pictures' thumbnails (tumbler); adw-gtk3, the gtk theme
 # that takes kawt's colors; dconf keeps the gtk settings; xdg-utils makes thunar open folders
 pkgs_files=(thunar gvfs tumbler "adw-gtk-theme|adw-gtk3" dconf xdg-utils)
-pkgs_extras=(ollama cava fortune-mod "awww|swww" hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
+pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
@@ -749,6 +749,7 @@ pacman_ready() {
 others_off() {
     local p f n l running=() hits=() files=() cmt expr
     local re='waybar|dunst|mako|swaync|fnott|hyprpaper|swaybg|hyprpanel'
+    [[ $wall_mode == own ]] && re='waybar|dunst|mako|swaync|fnott|hyprpanel' # yours draws the wallpaper
     for p in ${re//|/ }; do
         pgrep -x "$p" > /dev/null && running+=("$p")
     done
@@ -1383,11 +1384,38 @@ fi
 installed() { pacman -T -- "$1" > /dev/null 2>&1; } # also true for a package that provides it (quickshell-git)
 in_repos() { pacman -Si -- "$1" > /dev/null 2>&1; }
 
-# wallpapers: awww draws them, with transitions, and kawt starts its daemon itself (no line in
-# hyprland's config). It comes with the extras; with the shell alone it's asked on its own
-wall_awww=0
-if want shell && ! want extras && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
-    ask "wallpapers through awww? (smooth transitions; kawt starts it with hyprland)" 1 && wall_awww=1
+# a program of your own that draws the wallpaper, running or started in hyprland's config
+wall_program() {
+    local p
+    for p in hyprpaper swaybg wpaperd mpvpaper; do
+        if pgrep -x "$p" > /dev/null || grep -sE "exec.*\b$p\b" "$hypr_lua" "$hypr_user" "$hypr_conf" | grep -vqE '^[^:]*:[[:space:]]*(#|--)'; then
+            printf '%s' "$p"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Who draws the wallpapers (wall_mode), asked on a new install while neither awww nor swww is there:
+#   awww   with transitions (crt: drawn in from the top); kawt starts its daemon itself, no line
+#          in hyprland's config. The default
+#   kawt   kawt itself, on the background layer: nothing more to install, a plain fade
+#   own    hyprpaper, swaybg...: kawt leaves the wallpaper alone (and doesn't offer to stop it);
+#          picked first when one of those draws it now
+wall_mode=""
+if want shell && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
+    wall_mode=awww
+    wall_other=$(wall_program) && wall_mode=own
+    if can_ask; then
+        section "wallpapers"
+        say "${dim}  who draws them · ↑↓ move · enter pick${off}"
+        c=0
+        [[ $wall_mode == own ]] && c=2
+        CHOOSE_AT=$c choose c "awww|smooth transitions (crt: drawn in from the top), kawt starts it (recommended)" \
+            "kawt itself|nothing more to install, a plain fade" \
+            "yours|$([[ -n $wall_other ]] && echo "$wall_other, as now: kawt leaves the wallpaper alone" || echo "hyprpaper, swaybg...: kawt leaves the wallpaper alone")"
+        wall_mode=$(case $c in 0) echo awww ;; 1) echo kawt ;; *) echo own ;; esac)
+    fi
 fi
 
 # ------------------------------------------------------------------ 2b. hyprland's config
@@ -1558,7 +1586,7 @@ for id in shell hypr kitty zsh fastfetch extras files; do
     unset -n list
 done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
-((wall_awww)) && wanted+=("awww|swww")
+[[ $wall_mode == awww ]] && wanted+=("awww|swww")
 # [text] on a screenshot reads english, and your language when tesseract knows it (ru_RU -> rus)
 tess_lang() {
     case ${LC_ALL:-${LANG:-}} in
@@ -2090,15 +2118,9 @@ fi
 # yet. "none" is first when another program still draws one (hyprpaper, swaybg...). kawt puts it
 # on at its next start (it reads walls_first once), or now if it's running
 first_wallpaper() {
-    local c=0 other="" p f path
+    local c=0 other f path
     local files=(kawt-stripes-dark horizon companion-dark zebra-dark "")
-    for p in hyprpaper swaybg wpaperd mpvpaper; do
-        if pgrep -x "$p" > /dev/null || grep -sE "exec.*\b$p\b" "$hypr_lua" "$hypr_user" "$hypr_conf" | grep -vqE '^[^:]*:[[:space:]]*(#|--)'; then
-            other=$p
-            break
-        fi
-    done
-    [[ -n $other ]] && c=4
+    other=$(wall_program) && c=4
     if can_ask; then
         section "wallpaper"
         say "${dim}  kawt's own to start with (super + w: all twelve) · ↑↓ move · enter pick${off}"
@@ -2120,7 +2142,7 @@ first_wallpaper() {
     pgrep -f 'qs -c kawt-shell' > /dev/null && qs -c kawt-shell ipc call kawt wallpaper "$path" > /dev/null 2>&1 && rm -f -- "$walls_first"
     step "edit" "the wallpaper: $f (another one: super + w)"
 }
-if want shell && [[ -z $updated_from && -e $walls_dst ]] && ! grep -sqE '"wallpaper": *"[^"]' "$state/settings.json"; then
+if want shell && [[ -z $updated_from && -e $walls_dst && $wall_mode != own ]] && ! grep -sqE '"wallpaper": *"[^"]' "$state/settings.json"; then
     first_wallpaper
 fi
 

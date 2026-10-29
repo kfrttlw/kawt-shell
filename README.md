@@ -312,8 +312,10 @@ charge thresholds, a keyboard light) simply doesn't show.
   installed for you: next to iwd or systemd-networkd it can take the network over. It asks
   whether NetworkManager may keep asking a server every few minutes if there's internet (the
   one thing on a fresh Arch that goes out by itself; it finds wifi login pages in cafés)
-- with only the shell picked, asks whether wallpapers should go through `awww` (transitions);
-  makes `~/Pictures/wallpapers`, where `super + w` looks
+- who draws the wallpapers, while neither `awww` nor `swww` is there: `awww` (transitions,
+  `crt` among them; kawt starts it), kawt itself (nothing more to install, a plain fade), or
+  yours (hyprpaper, swaybg...: kawt leaves the wallpaper alone; picked first when one of those
+  draws it now). Makes `~/Pictures/wallpapers`, where `super + w` looks
 - thunar (a part of its own): installs it with `gvfs` (drives, trash) and `tumbler`
   (thumbnails), and folders open in it. GTK apps (thunar, the "open file" windows) take the
   theme's colors through `adw-gtk3`: `~/.config/gtk-3.0/gtk.css` and `gtk-4.0/gtk.css` link to
