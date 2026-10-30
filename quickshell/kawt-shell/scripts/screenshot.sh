@@ -15,7 +15,9 @@ shade=${4:-#00000066}
 quiet=${5:-}
 
 # kawt stops a shot that hangs (a new press starts over): what this started goes with it
-trap 'pkill -P $$ 2> /dev/null; exit 1' TERM INT
+geofile=""
+err=""
+trap 'pkill -P $$ 2> /dev/null; rm -f "$geofile" "$err"; exit 1' TERM INT
 
 # what's missing is said (exit 3), so kawt can tell you instead of doing nothing
 need="grim wl-copy"
@@ -63,18 +65,26 @@ case $mode in
                 sleep 0.05 # its first frame
             fi
         fi
-        # esc in slurp cancels: no file, no notification. Anything else it says is said
+        # esc in slurp cancels: no file, no notification. Anything else it says is said.
+        # slurp runs in the background and is waited for: a stop from kawt is heard at once.
+        # Waited for in front (in $(...)), a stop was heard only once slurp was done, and a
+        # slurp nobody could see was never done: every press after it waited behind it
+        geofile=$(mktemp)
         err=$(mktemp)
-        if ! geo=$(slurp -d -c "$color" -b "$shade" -w 1 2> "$err"); then
-            if grep -qi cancel "$err"; then
-                rm -f "$err"
+        slurp -d -c "$color" -b "$shade" -w 1 > "$geofile" 2> "$err" &
+        wait $!
+        st=$?
+        geo=$(cat "$geofile")
+        if [ "$st" -ne 0 ] || [ -z "$geo" ]; then
+            if [ "$st" -eq 0 ] || grep -qi cancel "$err"; then
+                rm -f "$geofile" "$err"
                 exit 1
             fi
             echo "slurp: $(tr '\n' ' ' < "$err" | cut -c1-200)"
-            rm -f "$err"
+            rm -f "$geofile" "$err"
             exit 4
         fi
-        rm -f "$err"
+        rm -f "$geofile" "$err"
         out=$(grim -g "$geo" "$file" 2>&1) || { echo "grim: ${out:-failed}"; exit 4; }
         ;;
     window)

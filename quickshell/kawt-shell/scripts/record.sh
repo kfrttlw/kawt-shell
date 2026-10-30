@@ -19,11 +19,19 @@ mkdir -p "$(dirname "$file")" || exit 1
 # stopped before the recording began (the key again while the area is picked): slurp goes too,
 # instead of staying on the screen, and it's a cancel, not a failed recording. Once wf-recorder
 # runs, the stop goes to it instead (below)
-trap 'pkill -P $$ 2> /dev/null; exit 3' INT TERM
+geofile=""
+trap 'pkill -P $$ 2> /dev/null; rm -f "$geofile"; exit 3' INT TERM
 
 case $mode in
     region)
-        geo=$(slurp -d -c "$color" -b "$shade" -w 1) || exit 3
+        # in the background and waited for: the stop is heard at once (waited for in front, it
+        # was heard only once slurp was done, so slurp stayed until a click)
+        geofile=$(mktemp)
+        slurp -d -c "$color" -b "$shade" -w 1 > "$geofile" &
+        wait $! || { rm -f "$geofile"; exit 3; }
+        geo=$(cat "$geofile")
+        rm -f "$geofile"
+        [ -n "$geo" ] || exit 3
         set -- -g "$geo"
         ;;
     screen)
