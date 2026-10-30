@@ -44,6 +44,7 @@ Singleton {
     property bool sidebarOpen: false
     property string sidebarScreen: ""
     property string voice: "" // services/Voice.qml while it listens or writes: the bar shows it
+    property string styleEdit: "" // "new" | "edit": the style window opens with its theme editor
 
     readonly property string focusedScreen: Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? ""
 

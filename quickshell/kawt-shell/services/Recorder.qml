@@ -39,7 +39,7 @@ Singleton {
         interval: 200
         onTriggered: {
             root.file = `${Settings.expand(Settings.recordDir)}/${Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh-mm-ss")}.mp4`;
-            proc.command = ["sh", `${Quickshell.shellDir}/scripts/record.sh`, root.pending, root.file, Colors.palette.accent + "ff", Colors.palette.bg + "88", root.sound];
+            proc.command = ["sh", `${Quickshell.shellDir}/scripts/record.sh`, root.pending, root.file, Colors.palette.accent.slice(0, 7) + "ff", Colors.palette.bg.slice(0, 7) + "88", root.sound];
             root.elapsed = 0;
             root.started = Date.now();
             proc.running = true;

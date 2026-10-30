@@ -17,8 +17,9 @@ import "../utils/wallpalette.js" as WallPalette
 //   }
 // Colors are #rrggbb or #rrggbbaa; a missing one comes from the theme of the same name (or
 // thinkpad). A new theme given only "dark" (or "light") uses it for both. Names: lowercase
-// letters, digits and -.
-// The file is read again whenever it's saved.
+// letters, digits and -. "bar" (optional) is the bar's own color; without it, it's bg.
+// The file is read again whenever it's saved. The style window writes it too: [+ new] and
+// [edit] there (modules/style/ThemeEditor.qml) make and change themes without typing json.
 Singleton {
     id: root
 
@@ -54,7 +55,7 @@ Singleton {
     })
 
     // ---- ~/.config/kawt/themes.json
-    readonly property list<string> keys: ["bg", "fg", "dim", "border", "accent", "warn", "hoverFill"]
+    readonly property list<string> keys: ["bg", "fg", "dim", "border", "accent", "warn", "hoverFill", "bar"]
     property var user: ({}) // the file, parsed
     property string userError: "" // what's wrong with it, for the style window; "" = fine
 
@@ -88,7 +89,53 @@ Singleton {
         return out;
     }
 
+    // ---- written from the theme editor. Yours whole, in both variants; kawt's own (thinkpad:
+    // black and white) only in what differs from it, so a later kawt can still change the rest
+    function saveTheme(name: string, dark: var, light: var): void {
+        const u = Object.assign({}, user);
+        if (fixed[name]) {
+            const t = {};
+            const d = differs(dark, fixed[name].dark), l = differs(light, fixed[name].light);
+            if (Object.keys(d).length)
+                t.dark = d;
+            if (Object.keys(l).length)
+                t.light = l;
+            if (Object.keys(t).length)
+                u[name] = t;
+            else
+                delete u[name];
+        } else {
+            u[name] = { dark: clean(dark), light: clean(light) };
+        }
+        writeUser(u);
+    }
+
+    function differs(v: var, base: var): var {
+        const c = clean(v), out = {};
+        for (const k in c)
+            if (c[k].toLowerCase() !== (base[k] ?? "").toLowerCase())
+                out[k] = c[k];
+        return out;
+    }
+
+    // yours goes; for kawt's own, its colors come back
+    function removeTheme(name: string): void {
+        const u = Object.assign({}, user);
+        delete u[name];
+        if (Settings.theme === name && !fixed[name])
+            Settings.theme = "thinkpad";
+        writeUser(u);
+    }
+
+    function writeUser(u: var): void {
+        user = u;
+        userError = "";
+        themesFile.setText(JSON.stringify(u, null, 2) + "\n");
+    }
+
     FileView {
+        id: themesFile
+
         path: `${Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"}/kawt/themes.json`
         printErrors: false // there's none until you make one
         watchChanges: true
@@ -124,6 +171,7 @@ Singleton {
     readonly property color accent: palette.accent
     readonly property color warn: palette.warn
     readonly property color hoverFill: palette.hoverFill
+    readonly property color bar: palette.bar ?? palette.bg // the bar's own, if the theme has one
     // the [ ] around what you can press: a step dimmer than the words (components/Brackets.qml),
     // darker still around what's switched off
     readonly property color bracket: mix(dim, border, 0.3)
@@ -137,5 +185,27 @@ Singleton {
     // a theme's palette in the current variant (for previews)
     function preview(name: string): var {
         return themes[name][variant];
+    }
+
+    // ---- the themes to pick, in order: black and white (the thinkpad theme, dark and light),
+    // the wallpaper's once one was looked at (in the variant you're in), then your own. The style
+    // window shows them all; [<] [>] in profile -> cfg and [ ] in the style window walk them
+    readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...names.filter(n => n !== "thinkpad").map(n => ({ name: n, theme: n, light: null }))]
+    readonly property int chosen: choices.findIndex(c => isCurrent(c))
+    readonly property string chosenName: choices[chosen]?.name ?? mode
+
+    function isCurrent(c: var): bool {
+        return mode === c.theme && (c.light === null || light === c.light);
+    }
+
+    function choose(c: var): void {
+        Settings.theme = c.theme;
+        if (c.light !== null)
+            Settings.light = c.light;
+    }
+
+    function step(d: int): void {
+        const n = choices.length;
+        choose(choices[((chosen < 0 ? 0 : chosen) + d + n) % n]);
     }
 }
