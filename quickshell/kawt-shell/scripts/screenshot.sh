@@ -66,12 +66,14 @@ case $mode in
             fi
         fi
         # esc in slurp cancels: no file, no notification. Anything else it says is said.
-        # slurp runs in the background and is waited for: a stop from kawt is heard at once.
-        # Waited for in front (in $(...)), a stop was heard only once slurp was done, and a
-        # slurp nobody could see was never done: every press after it waited behind it
+        # < /dev/null: slurp whose stdin isn't a terminal first reads boxes to offer from it,
+        # until it ends, before it even shows. kawt's stdin never ends (quickshell closes it
+        # before the start, and that never reaches the child), so slurp waited there for good,
+        # out of sight: print and super+shift+s did nothing. In a terminal it worked.
+        # In the background and waited for: a stop from kawt is heard at once
         geofile=$(mktemp)
         err=$(mktemp)
-        slurp -d -c "$color" -b "$shade" -w 1 > "$geofile" 2> "$err" &
+        slurp -d -c "$color" -b "$shade" -w 1 < /dev/null > "$geofile" 2> "$err" &
         wait $!
         st=$?
         geo=$(cat "$geofile")

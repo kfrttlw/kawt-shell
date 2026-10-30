@@ -24,10 +24,11 @@ trap 'pkill -P $$ 2> /dev/null; rm -f "$geofile"; exit 3' INT TERM
 
 case $mode in
     region)
-        # in the background and waited for: the stop is heard at once (waited for in front, it
-        # was heard only once slurp was done, so slurp stayed until a click)
+        # < /dev/null: slurp reads boxes from a stdin that isn't a terminal before it shows, and
+        # kawt's never ends (scripts/screenshot.sh says more). In the background and waited
+        # for: the stop is heard at once (waited for in front, only once slurp was done)
         geofile=$(mktemp)
-        slurp -d -c "$color" -b "$shade" -w 1 > "$geofile" &
+        slurp -d -c "$color" -b "$shade" -w 1 < /dev/null > "$geofile" &
         wait $! || { rm -f "$geofile"; exit 3; }
         geo=$(cat "$geofile")
         rm -f "$geofile"
