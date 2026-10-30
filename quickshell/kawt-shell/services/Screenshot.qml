@@ -108,6 +108,7 @@ Singleton {
     property string mode: "" // the shot's mode, for the preview's title
     property string screen: "" // the preview shows on the screen that had the focus
     property bool copied: false
+    property bool stopping: false // the run being stopped for a new press: its end isn't news
 
     // a shot was taken (the companion goes "click!")
     signal taken
@@ -115,8 +116,10 @@ Singleton {
     function take(m: string): void {
         // one still running (an area being picked, or one stuck under the frozen screen): a new
         // press starts over instead of being ignored, so the key never just does nothing
-        if (job.running)
+        if (job.running) {
+            stopping = true;
             job.running = false;
+        }
         // close kawt's panels first so they aren't in the picture. A shot still waiting is saved,
         // like one left alone: two in a row used to lose the first
         Panels.close();
@@ -175,11 +178,20 @@ Singleton {
         id: job
 
         onDone: (code, out) => {
-            const file = out.trim().split("\n").pop();
-            // 1: esc in the selection, or stopped for a new press: nothing to say. 3 and 4 say why
+            const file = out.trim().split("\n").pop() ?? "";
+            // 1: esc in the selection, or stopped for a new press (a signal: 128 and up): nothing
+            // to say. Anything else says why, here and in kawt's log (qs log -c kawt-shell):
+            // a shot never just doesn't happen
+            if (root.stopping) {
+                root.stopping = false;
+                return;
+            }
+            if (code === 1 || code >= 128)
+                return;
             if (code !== 0 || !file) {
-                if (code === 3 || code === 4)
-                    Quickshell.execDetached(["notify-send", "-a", "screenshot", "-u", "critical", "screenshot not taken", code === 3 ? `${file} (sudo pacman -S grim slurp wl-clipboard)` : file]);
+                const why = code === 3 ? `${file} (sudo pacman -S grim slurp wl-clipboard)` : file || `the script stopped with ${code}`;
+                console.warn(`screenshot not taken: ${why}`);
+                Quickshell.execDetached(["notify-send", "-a", "screenshot", "-u", "critical", "screenshot not taken", why]);
                 return;
             }
             root.taken();

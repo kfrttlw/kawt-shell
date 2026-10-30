@@ -1,6 +1,7 @@
 #!/bin/sh
 # usage: screenshot.sh <region|window|screen> <dir> [selection color] [shade color] [quiet]
 # exit: 0 the path printed, 1 cancelled (esc), 3 "missing: <tools>" printed, 4 a failure said
+# (what slurp, grim or hyprctl said is printed too: kawt shows it instead of doing nothing)
 # Saves a png to <dir>, copies it to the clipboard and sends a notification. Prints the path.
 # quiet: only saves and prints the path (kawt's preview asks what to do with it).
 # Needs grim, slurp and wl-clipboard. Colors are #rrggbb[aa] (the kawt theme passes its own).
@@ -54,22 +55,38 @@ case $mode in
                 sleep 0.05
                 i=$((i + 1))
             done
-            sleep 0.05 # its first frame
+            # never came up: no freezing this time. Coming up later it would lie over slurp
+            # and take the click
+            if [ "$i" -ge 30 ]; then
+                kill "$frozen" 2> /dev/null
+            else
+                sleep 0.05 # its first frame
+            fi
         fi
-        # esc in slurp cancels: no file, no notification
-        geo=$(slurp -d -c "$color" -b "$shade" -w 1) || exit 1
-        grim -g "$geo" "$file" || { echo "grim failed"; exit 4; }
+        # esc in slurp cancels: no file, no notification. Anything else it says is said
+        err=$(mktemp)
+        if ! geo=$(slurp -d -c "$color" -b "$shade" -w 1 2> "$err"); then
+            if grep -qi cancel "$err"; then
+                rm -f "$err"
+                exit 1
+            fi
+            echo "slurp: $(tr '\n' ' ' < "$err" | cut -c1-200)"
+            rm -f "$err"
+            exit 4
+        fi
+        rm -f "$err"
+        out=$(grim -g "$geo" "$file" 2>&1) || { echo "grim: ${out:-failed}"; exit 4; }
         ;;
     window)
         # hyprctl activewindow:  "at: 10,40"  "size: 800,600"
         geo=$(hyprctl activewindow | awk '/^\tat:/ {split($2, a, ",")} /^\tsize:/ {split($2, s, ",")} END {if (s[1]) printf "%s,%s %sx%s", a[1], a[2], s[1], s[2]}')
         [ -n "$geo" ] || { echo "no window has the focus"; exit 4; }
-        grim -g "$geo" "$file" || { echo "grim failed"; exit 4; }
+        out=$(grim -g "$geo" "$file" 2>&1) || { echo "grim: ${out:-failed}"; exit 4; }
         ;;
     screen)
         # the monitor with the focus: "Monitor eDP-1 (ID 0):" ... "focused: yes"
         out=$(hyprctl monitors | awk '/^Monitor/ {m = $2} /focused: yes/ {print m; exit}')
-        if [ -n "$out" ]; then grim -o "$out" "$file"; else grim "$file"; fi || { echo "grim failed"; exit 4; }
+        if [ -n "$out" ]; then out=$(grim -o "$out" "$file" 2>&1); else out=$(grim "$file" 2>&1); fi || { echo "grim: ${out:-failed}"; exit 4; }
         ;;
     *)
         echo "unknown mode: $mode (region|window|screen)" >&2
