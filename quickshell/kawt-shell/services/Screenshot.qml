@@ -165,7 +165,7 @@ Singleton {
             // asked shots nobody saved: an hour later they go
             if (root.asking)
                 Quickshell.execDetached(["sh", "-c", 'find "$1" -maxdepth 1 -name "*.png" -mmin +60 -delete 2> /dev/null', "sh", root.cacheDir]);
-            job.command = ["env", `KAWT_FREEZE=${Settings.screenshotFreeze && root.canFreeze ? 1 : 0}`, "sh", `${Quickshell.shellDir}/scripts/screenshot.sh`, root.pending, root.asking ? root.cacheDir : Settings.expand(Settings.screenshotDir), Colors.palette.accent + "ff", Colors.palette.bg + "88", root.asking ? "quiet" : ""];
+            job.command = ["env", `KAWT_FREEZE=${Settings.screenshotFreeze && root.canFreeze ? 1 : 0}`, "sh", `${Quickshell.shellDir}/scripts/screenshot.sh`, root.pending, root.asking ? root.cacheDir : Settings.expand(Settings.screenshotDir), Colors.palette.accent.slice(0, 7) + "ff", Colors.palette.bg.slice(0, 7) + "88", root.asking ? "quiet" : ""];
             job.running = true;
         }
     }

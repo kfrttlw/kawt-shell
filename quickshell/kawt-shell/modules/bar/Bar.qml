@@ -85,12 +85,13 @@ Variants {
         anchors.left: true
         anchors.right: true
 
-        // one strip across the screen in the theme's background, a line along its inner edge
-        // (the buttons on it have no frames of their own: their brackets say what's pressable)
+        // one strip across the screen in the theme's bar color (its background, unless the theme
+        // gives the bar one of its own), a line along its inner edge (the buttons on it have no
+        // frames of their own: their brackets say what's pressable)
         Rectangle {
             anchors.fill: parent
             visible: !root.tucked
-            color: Colors.bg
+            color: Colors.bar
 
             Rectangle {
                 width: parent.width

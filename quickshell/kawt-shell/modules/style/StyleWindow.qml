@@ -7,29 +7,17 @@ import qs.components
 import qs.services
 
 // Themes (with color swatches) and the wallpapers in two panes (WallpaperPicker.qml). Picking a theme also recolors
-// terminals and writes configs for other apps (services/ThemeExport.qml).
+// terminals and writes configs for other apps (services/ThemeExport.qml). [+ new] and [edit] open
+// the theme editor over it (ThemeEditor.qml): your own colors, the bar's among them.
 PanelWindow {
     id: root
 
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("style", forScreen)
 
-    // the themes to pick: black and white (the thinkpad theme, dark and light), the wallpaper's
-    // once one was looked at (in the variant you're in), then your own (themes.json)
-    readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...Colors.names.filter(n => n !== "thinkpad").map(n => ({ name: n, theme: n, light: null }))]
-
-    function isCurrent(c: var): bool {
-        return Colors.mode === c.theme && (c.light === null || Settings.light === c.light);
-    }
-
-    function choose(c: var): void {
-        Settings.theme = c.theme;
-        if (c.light !== null)
-            Settings.light = c.light;
-    }
-
     screen: forScreen
-    visible: open
+    // off the screen while a color is picked off it
+    visible: open && !editor.picking
     color: "transparent"
 
     WlrLayershell.namespace: "kawt-style"
@@ -49,6 +37,12 @@ PanelWindow {
             Wallpapers.refresh();
             box.forceActiveFocus();
             fadeIn.restart();
+            // [edit] / [+ new] in profile -> cfg: straight into the editor
+            if (Panels.styleEdit === "new")
+                editor.openNew();
+            else if (Panels.styleEdit === "edit")
+                editor.openEdit();
+            Panels.styleEdit = "";
         }
     }
 
@@ -84,12 +78,14 @@ PanelWindow {
                 picker.setPicked();
             else if (event.key === Qt.Key_R)
                 picker.random();
-            else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight) {
-                const n = root.choices.length;
-                const i = root.choices.findIndex(c => root.isCurrent(c)) + (event.key === Qt.Key_BracketRight ? 1 : -1);
-                root.choose(root.choices[(i + n) % n]);
-            } else if (event.key === Qt.Key_T)
+            else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight)
+                Colors.step(event.key === Qt.Key_BracketRight ? 1 : -1);
+            else if (event.key === Qt.Key_T)
                 Settings.light = !Settings.light;
+            else if (event.key === Qt.Key_E)
+                editor.openEdit();
+            else if (event.key === Qt.Key_N)
+                editor.openNew();
             else
                 return;
             event.accepted = true;
@@ -137,6 +133,13 @@ PanelWindow {
                     color: Colors.dim
                 }
 
+                // the one you're in, in the editor (the wallpaper's: a copy of it, as a new one)
+                BracketButton {
+                    label: Colors.mode === "wallpaper" ? "edit a copy" : "edit"
+                    bordered: false
+                    onClicked: editor.openEdit()
+                }
+
                 // wallpaper theme strength: [calm] strong full
                 Repeater {
                     model: Colors.mode === "wallpaper" ? ["calm", "strong", "full"] : []
@@ -172,15 +175,15 @@ PanelWindow {
                 spacing: Metrics.spacing
 
                 Repeater {
-                    model: root.choices
+                    model: Colors.choices
 
-                    // a tiny preview drawn in the theme's own colors
+                    // a tiny preview drawn in the theme's own colors, its bar on top
                     Rectangle {
                         id: tile
 
                         required property var modelData
                         readonly property var t: Colors.themes[modelData.theme][modelData.light === null ? Colors.variant : modelData.light ? "light" : "dark"]
-                        readonly property bool current: root.isCurrent(modelData)
+                        readonly property bool current: Colors.isCurrent(modelData)
 
                         width: Math.round(132 * Metrics.scale)
                         height: tileCol.implicitHeight + 12
@@ -218,14 +221,67 @@ PanelWindow {
                             }
                         }
 
+                        // its bar, when it has one of its own
+                        Rectangle {
+                            visible: !!tile.t.bar
+                            width: parent.width - 2
+                            height: 3
+                            x: 1
+                            y: 1
+                            color: tile.t.bar ?? "transparent"
+                        }
+
+                        // a click picks it; a right click opens it in the editor too
                         MouseArea {
                             id: tileArea
 
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.choose(tile.modelData)
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: mouse => {
+                                Colors.choose(tile.modelData);
+                                if (mouse.button === Qt.RightButton)
+                                    editor.openEdit();
+                            }
                         }
+                    }
+                }
+
+                // [+ new]: a theme of your own, from the one you're in
+                Rectangle {
+                    width: Math.round(132 * Metrics.scale)
+                    height: newCol.implicitHeight + 12
+                    color: newArea.containsMouse ? Colors.hoverFill : "transparent"
+                    border.width: 1
+                    border.color: newArea.containsMouse ? Colors.dim : Colors.border
+
+                    Column {
+                        id: newCol
+
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.margins: 6
+                        spacing: 4
+
+                        Label {
+                            text: "+ new"
+                        }
+
+                        Label {
+                            text: "your colors"
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        id: newArea
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: editor.openNew()
                     }
                 }
             }
@@ -234,7 +290,7 @@ PanelWindow {
             Label {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: Colors.userError || "own themes, or other colors for these: ~/.config/kawt/themes.json"
+                text: Colors.userError || "[+ new] makes one, [edit] (or a right click) changes it · ~/.config/kawt/themes.json"
                 color: Colors.userError ? Colors.warn : Colors.dim
                 font.pixelSize: Metrics.fontSize - 2
             }
@@ -445,7 +501,7 @@ PanelWindow {
             Label {
                 Layout.alignment: Qt.AlignRight
                 visible: Wallpapers.files.length > 0
-                text: "[ ] theme · t dark/light"
+                text: "[ ] theme · t dark/light · e edit · n new"
                 color: Colors.dim
                 font.pixelSize: Metrics.fontSize - 3
             }
@@ -458,5 +514,13 @@ PanelWindow {
                 visible: Wallpapers.files.length > 0
             }
         }
+    }
+
+    // over the style box: a theme of your own; esc comes back here
+    ThemeEditor {
+        id: editor
+
+        anchors.fill: parent
+        onClosed: box.forceActiveFocus()
     }
 }

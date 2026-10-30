@@ -29,13 +29,46 @@ ColumnLayout {
         visible: cfgPages.current === 0
         spacing: Metrics.spacing
 
+        //  theme: < black >  [edit] [+ new]  [wallpaper & themes]
         RowLayout {
             Layout.topMargin: Metrics.spacing
             spacing: Metrics.spacing
 
             Label {
-                text: `theme: ${Colors.fullName}`
+                text: "theme:"
                 color: Colors.dim
+            }
+
+            BracketButton {
+                label: "<"
+                bordered: false
+                onClicked: Colors.step(-1)
+            }
+
+            Label {
+                text: Colors.chosenName
+                color: Colors.accent
+            }
+
+            BracketButton {
+                label: ">"
+                bordered: false
+                onClicked: Colors.step(1)
+            }
+
+            // the theme editor, in the style window
+            Repeater {
+                model: [["edit", Colors.mode === "wallpaper" ? "edit a copy" : "edit"], ["new", "+ new"]]
+
+                BracketButton {
+                    required property var modelData
+
+                    label: modelData[1]
+                    onClicked: {
+                        Panels.styleEdit = modelData[0];
+                        Panels.toggle("style", profile.forScreen);
+                    }
+                }
             }
 
             BracketButton {
