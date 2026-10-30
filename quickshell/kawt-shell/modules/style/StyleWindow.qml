@@ -370,10 +370,38 @@ PanelWindow {
             }
 
             // --------------------------------------------------------- wallpaper
-            Label {
+            //  -- wallpaper --                          drawn by: [awww] kawt
+            RowLayout {
                 Layout.topMargin: Metrics.spacing
-                text: `-- wallpaper${Wallpapers.backend && Wallpapers.backend !== "kawt" ? ` (via ${Wallpapers.backend})` : ""} --`
-                color: Colors.dim
+                Layout.fillWidth: true
+                spacing: Metrics.spacing
+
+                Label {
+                    Layout.fillWidth: true
+                    text: `-- wallpaper${Wallpapers.backend && Wallpapers.backend !== "kawt" ? ` (via ${Wallpapers.backend})` : ""} --`
+                    color: Colors.dim
+                }
+
+                // only when awww (swww) is there: without it kawt draws it anyway
+                Label {
+                    visible: Wallpapers.found === "awww" || Wallpapers.found === "swww"
+                    text: "drawn by:"
+                    color: Colors.dim
+                }
+
+                Repeater {
+                    model: Wallpapers.found === "awww" || Wallpapers.found === "swww" ? [["", Wallpapers.found], ["kawt", "kawt"]] : []
+
+                    BracketButton {
+                        required property var modelData
+
+                        label: modelData[1]
+                        active: Settings.wallpaperBy === modelData[0]
+                        textColor: Settings.wallpaperBy === modelData[0] ? Colors.accent : Colors.dim
+                        bordered: false
+                        onClicked: Settings.wallpaperBy = modelData[0]
+                    }
+                }
             }
 
             RowLayout {

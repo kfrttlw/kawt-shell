@@ -7,7 +7,8 @@ import "../utils/wallpalette.js" as WallPalette
 
 // Images in Settings.wallpaperDir (and one level of subfolders), and setting one.
 // If awww (or its old name swww) is installed it does the drawing, with its transitions;
-// otherwise kawt draws the wallpaper itself (modules/background/Wallpaper.qml).
+// otherwise kawt draws the wallpaper itself (modules/background/Wallpaper.qml), and also when
+// it's asked to (Settings.wallpaperBy "kawt": the installer's question, or super+w).
 // awww's daemon is started by kawt (scripts/wallpaper.sh): at login, once a wallpaper was
 // picked here, and whenever one is set while it isn't running. No line in hyprland's config
 // needed. Never picked one here (hyprpaper and the like draw it): kawt leaves awww alone.
@@ -19,7 +20,20 @@ Singleton {
     id: root
 
     readonly property string dir: Settings.expand(Settings.wallpaperDir)
-    property string backend: "" // "awww" | "swww" | "kawt", detected at start
+    property string found: "" // what's installed: "awww" | "swww", or "kawt" (neither), looked for at start
+    // who draws it: awww (swww) when it's there, unless kawt was asked to
+    readonly property string backend: found === "" ? "" : Settings.wallpaperBy === "kawt" ? "kawt" : found
+
+    // switched in super+w: awww's daemon goes (kawt's own window takes over), or comes back
+    // with the wallpaper on it
+    onBackendChanged: {
+        if (!started)
+            return;
+        if (backend === "kawt" && found !== "kawt")
+            Quickshell.execDetached([found, "kill"]);
+        else if (backend !== "kawt")
+            show("start");
+    }
     property list<string> files: []
     property bool loading: false
 
@@ -329,7 +343,7 @@ Singleton {
         command: ["sh", "-c", "command -v awww || command -v swww || true"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.backend = text.trim().split("/").pop() || "kawt";
+                root.found = text.trim().split("/").pop() || "kawt";
                 root.start();
             }
         }

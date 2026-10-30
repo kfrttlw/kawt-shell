@@ -124,7 +124,7 @@ pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tess
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
-mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from=""
+mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from="" fresh=0
 for arg in "$@"; do
     case $arg in
         --update) mode=update ;;
@@ -1249,7 +1249,7 @@ if [[ $mode == fresh ]]; then
     if [[ -f $i2c_conf ]] && grep -F "$marker_i2c" "$i2c_conf" > /dev/null; then
         run sudo rm -f -- "$i2c_conf" && step "rm" "$i2c_conf (asked again)"
     fi
-    mode=install
+    mode=install fresh=1
     say ""
     say "${dim}now the install, from the start${off}"
 fi
@@ -1396,14 +1396,16 @@ wall_program() {
     return 1
 }
 
-# Who draws the wallpapers (wall_mode), asked on a new install while neither awww nor swww is there:
+# Who draws the wallpapers (wall_mode), asked on a new install while neither awww nor swww is there,
+# and on --fresh always (it was answered before, and awww stayed installed):
 #   awww   with transitions (crt: drawn in from the top); kawt starts its daemon itself, no line
 #          in hyprland's config. The default
-#   kawt   kawt itself, on the background layer: nothing more to install, a plain fade
+#   kawt   kawt itself, on the background layer: nothing more to install, a plain fade. With
+#          awww there (--fresh), kawt's settings say so: wallpaperBy (super+w switches it too)
 #   own    hyprpaper, swaybg...: kawt leaves the wallpaper alone (and doesn't offer to stop it);
 #          picked first when one of those draws it now
 wall_mode=""
-if want shell && ((packages)) && [[ -z $updated_from ]] && ! installed awww && ! installed swww; then
+if want shell && ((packages)) && [[ -z $updated_from ]] && { ((fresh)) || { ! installed awww && ! installed swww; }; }; then
     wall_mode=awww
     wall_other=$(wall_program) && wall_mode=own
     if can_ask; then
@@ -2142,6 +2144,17 @@ first_wallpaper() {
     pgrep -f 'qs -c kawt-shell' > /dev/null && qs -c kawt-shell ipc call kawt wallpaper "$path" > /dev/null 2>&1 && rm -f -- "$walls_first"
     step "edit" "the wallpaper: $f (another one: super + w)"
 }
+# kawt draws them itself though awww is there (--fresh): its settings say so before it starts.
+# They're new here (--fresh moved the old ones aside); some already there are left alone
+if [[ $wall_mode == kawt ]] && { installed awww || installed swww; }; then
+    if ((dry)); then
+        note "would tell kawt to draw the wallpapers itself (wallpaperBy in settings.json)"
+    elif [[ ! -e $state/settings.json ]]; then
+        mkdir -p "$state" && printf '{\n    "wallpaperBy": "kawt"\n}\n' > "$state/settings.json" && step "edit" "kawt draws the wallpapers itself, awww stays unused (super + w switches it)"
+    else
+        note "awww is there: super + w -> drawn by: kawt, for kawt to draw them itself"
+    fi
+fi
 if want shell && [[ -z $updated_from && -e $walls_dst && $wall_mode != own ]] && ! grep -sqE '"wallpaper": *"[^"]' "$state/settings.json"; then
     first_wallpaper
 fi
