@@ -114,8 +114,10 @@ Singleton {
     signal taken
 
     function take(m: string): void {
+        console.log(`screenshot: ${m}${job.running ? " (stopping the one still running)" : ""}`);
         // one still running (an area being picked, or one stuck under the frozen screen): a new
-        // press starts over instead of being ignored, so the key never just does nothing
+        // press starts over instead of being ignored, so the key never just does nothing (the
+        // script stops at once, slurp and hyprpicker with it: scripts/screenshot.sh)
         if (job.running) {
             stopping = true;
             job.running = false;
@@ -179,6 +181,7 @@ Singleton {
 
         onDone: (code, out) => {
             const file = out.trim().split("\n").pop() ?? "";
+            console.log(`screenshot: done, ${code}${out.trim() ? ": " + out.trim().replace(/\s+/g, " ") : ""}`);
             // 1: esc in the selection, or stopped for a new press (a signal: 128 and up): nothing
             // to say. Anything else says why, here and in kawt's log (qs log -c kawt-shell):
             // a shot never just doesn't happen
