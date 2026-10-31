@@ -11,21 +11,21 @@ import qs.utils
 //
 //   goes out now                                        [lan]
 //   firefox          12  140.82.112.3:443 +11   ↓ 1.2M ↑  34K  [!]
-//     [close] [offline]   closes it · no internet from its next start
+//     [kill] [offline]    closes it · no internet from its next start
 //   telegram          2  149.154.167.51:443     ↓   3K ↑   1K  [!]
 //   ?                 3  system services, other users: sudo tools/net.sh
 //   ───────────────────────────────────────────────────────────
 //   no net: [firefox x] [steam x]
 //   kawt itself: one git fetch a week (the update check)
 //
-// A new connection turns its program red until the next look. [close] asks once more, then the
+// A new connection turns its program red until the next look. [kill] asks once more, then the
 // program is asked to quit; [offline]: started from the launcher or the dock it gets no internet
 // from then on (ctrl+o in the launcher does the same)
 ColumnLayout {
     id: root
 
     property string opened: "" // the program whose [!] is open
-    property bool armed: false // [close] pressed once: once more and it's asked to quit
+    property bool armed: false // [kill] pressed once: once more and it's asked to quit
     property string status: ""
     readonly property real charW: Metrics.fontSize * 0.6
 
@@ -139,7 +139,7 @@ ColumnLayout {
                 spacing: Metrics.spacing
 
                 BracketButton {
-                    label: root.armed ? "sure? close" : "close"
+                    label: root.armed ? "sure? kill" : "kill"
                     textColor: root.armed ? Colors.warn : Colors.fg
                     onClicked: {
                         if (!root.armed) {
