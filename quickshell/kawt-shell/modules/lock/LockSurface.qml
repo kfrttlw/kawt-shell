@@ -15,7 +15,7 @@ import qs.utils
 //
 //   host login: user
 //   Password: ••••••█
-//   [!] wrong password (1)
+//   [!] access denied (1)
 //
 //
 //   [us] bat 72% 3h left · 54°C · wifi home · 2 messages                 14:32
