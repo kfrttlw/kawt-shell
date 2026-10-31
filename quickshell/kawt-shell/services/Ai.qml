@@ -693,7 +693,7 @@ Singleton {
             [/>\s*\/dev\/(sd|nvme|mmcblk|vd|hd)/, "writes to a disk"],
             [/\b(chmod|chown)\s+(-\w+\s+)*-R|\b(chmod|chown)\s+-\w*R/, "changes many files"],
             [/\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(ba|z|da)?sh\b/, "runs a script from the internet"],
-            [/:\(\)\s*\{/, "a fork bomb"],
+            [/:\(\)\s*\{/, "floods the machine with copies of itself"],
             [/\b(shutdown|reboot|poweroff|halt)\b|systemctl\s+(poweroff|reboot|halt)/, "turns the machine off"],
             [/\bkill(all)?\s+-(9|KILL)\b|\bpkill\b/, "kills processes"],
             [/\bgit\s+(push\s+.*(-f\b|--force)|reset\s+--hard|clean\s+-\w*f)/, "throws work away"],

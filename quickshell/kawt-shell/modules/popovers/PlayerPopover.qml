@@ -11,8 +11,8 @@ import qs.utils
 //  ┌─spotify──────────────────────────────── esc┐
 //  │ [spotify]  firefox   mpv                  │  tabs: which player the bar and the keys follow
 //  │ ▓▒░▓▒░  now playing                       │
-//  │ ░▓▒░▓▒  teardrop                          │  the cover in phosphor pixels (CrtCover.qml)
-//  │ ▒░▓▒░▓  massive attack · mezzanine        │
+//  │ ░▓▒░▓▒  roads                             │  the cover in phosphor pixels (CrtCover.qml)
+//  │ ▒░▓▒░▓  portishead · dummy                │
 //  │         1:42 ▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯ 5:29       │  click / drag / wheel to seek; the red one is now
 //  │ [|<] [||] [>|]   [shuffle] [loop: all]          │  || red while it plays
 //  │ ▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂▁▂▅▇▅▂                   │  cava, only while this is open
