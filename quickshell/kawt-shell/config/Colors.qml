@@ -11,7 +11,7 @@ import "../utils/wallpalette.js" as WallPalette
 // Your own themes go to ~/.config/kawt/themes.json, not here (a git pull would take a change
 // here back). A new name is a new theme; "thinkpad" changes only the colors given:
 //   {
-//     "matrix":   { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
+//     "phosphor": { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
 //                             "accent": "#b6ffc8", "warn": "#ff3b30", "hoverFill": "#061a0b" } },
 //     "thinkpad": { "dark": { "accent": "#ffffff" } }
 //   }

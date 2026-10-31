@@ -95,7 +95,7 @@ delete it and it stays gone) and asks which one to start with, or none if you ha
 The wifi panel shows the connection in use (band, channel, speed, security), the last minute
 big (what comes in up from the line, what goes out down), ip, gateway, dns. A network without a
 password says `open`. Its second page, **who's out**, lists every program talking to the
-internet right now, with its connections and speed; `[!]` on one: `[kill]`, or `[offline]`:
+internet right now, with its connections and speed; `[!]` on one: `[close]`, or `[offline]`:
 started from the launcher or the dock it gets no internet from then on (its own empty network,
 no root; `ctrl + o` in the launcher does the same). It's looked at only while the page is open.
 
@@ -218,7 +218,7 @@ charge thresholds, a keyboard light) simply doesn't show.
 | launcher | rofi-like, with modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `$` a command from the ai · `:` clipboard history · `;` open windows · `.` emoji; typed in the wrong layout, it still finds it (`ашкуащч` → firefox). An app's own actions by name (`private` → Firefox: New Private Window); `ctrl + s` pins, `ctrl + o` starts an app without internet from then on. With `qalc` the calculator does units, currencies and dates (`=10 km to mi`, `=today + 3 weeks`; exchange rates only the ones qalc has: kawt never makes it go online) |
 | `[>_]` ai | [above](#ai) |
 | `[log]` | notification daemon, `dmesg`-style history, do-not-disturb; keeps what the app asks for (`notify-send -t`, `-e` transient, replace tags) |
-| wifi | [above](#network): the connection, the last minute, ip / gateway / dns, `open` networks marked, hidden networks; who's out, `[kill]` and `[offline]` |
+| wifi | [above](#network): the connection, the last minute, ip / gateway / dns, `open` networks marked, hidden networks; who's out, `[close]` and `[offline]` |
 | style | `super + w`: the wallpapers in two panes, dithered into the theme's tones (or as they are); black, white and wallpaper themes, dark or light (`super + shift + w`); your own with `[+ new]` (a little editor: the colors as hex or picked off the screen, the bar's own among them, drawn in a small bar as you type), and `[edit]` for the one you're in. With awww kawt starts its daemon itself; a new wallpaper by itself every 15 min … 3 h if you like, with a transition (`crt`: drawn in from the top like an old screen's beam) |
 | theme export | a theme switch recolors open terminals and GTK apps live and rewrites colors for kitty, Hyprland borders, GTK, foot, alacritty, shell scripts and kawt's folder icons; terminal colors as `crt`, `soft` or `vivid` |
 | coder | an agent in one project folder: lists, searches, reads; every change a diff to `[apply]` or `[skip]`; `[undo]` puts everything back; commands (with `bubblewrap`) only after `[run]`, in a sandbox without network, the project the only writable place |
@@ -460,7 +460,7 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
 
   ```json
   {
-    "matrix":   { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
+    "phosphor": { "dark": { "bg": "#000000", "fg": "#00ff41", "dim": "#00802a", "border": "#003b00",
                             "accent": "#b6ffc8", "warn": "#ff3b30", "hoverFill": "#061a0b" } },
     "thinkpad": { "dark": { "accent": "#ffffff", "bar": "#1c1c1c" } }
   }
@@ -486,7 +486,7 @@ wallpapers/              kawt's own       -> ~/Pictures/wallpapers/kawt
 install.sh
 ```
 
-## Hacking
+## Development
 
 ```sh
 python3 tools/check.py   # catches the mistakes that stop the shell from loading

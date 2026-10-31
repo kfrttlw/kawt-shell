@@ -15,12 +15,12 @@ import qs.utils
 //
 //   host login: user
 //   Password: ••••••█
-//   [!] access denied (1)
+//   [!] wrong password (1)
 //
 //
 //   [us] bat 72% 3h left · 54°C · wifi home · 2 messages                 14:32
 //   next: today 15:00  dentist                                   tue 28.10.2026
-//   massive attack — teardrop   [<<] [||] [>>]
+//   portishead — roads   [<<] [||] [>>]
 // (who you are, the wifi, messages, the next task and the music only with Settings.lockDetails:
 // anyone at the screen sees them)
 WlSessionLockSurface {

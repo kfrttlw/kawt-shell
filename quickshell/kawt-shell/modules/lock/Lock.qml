@@ -112,7 +112,7 @@ Scope {
                 root.fails++;
                 root.status = result === PamResult.MaxTries ? "too many attempts, wait a bit"
                     : result === PamResult.Error ? `pam error: ${message || "unknown"}`
-                    : `access denied (${root.fails})`;
+                    : `wrong password (${root.fails})`;
             }
         }
     }
