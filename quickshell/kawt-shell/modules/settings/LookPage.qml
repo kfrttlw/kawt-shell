@@ -131,7 +131,7 @@ ColumnLayout {
                 text: Strings.t("ownTheme")
                 onClicked: {
                     Panels.styleEdit = "new";
-                    Panels.toggle("style", page.forScreen);
+                    Panels.openWindow("style", "");
                 }
             }
         }

@@ -14,6 +14,7 @@ import "modules/lock"
 import "modules/boot"
 import "modules/profile"
 import "modules/settings"
+import "modules/style"
 import qs.components
 
 ShellRoot {
@@ -40,6 +41,12 @@ ShellRoot {
         when: Panels.isWindowOpen("settings")
 
         SettingsWindow {}
+    }
+
+    Lazy {
+        when: Panels.isWindowOpen("style")
+
+        StyleWindow {}
     }
 
     // singletons start lazily; these have to run without anything on screen using them
