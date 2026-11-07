@@ -5,7 +5,7 @@ import qs.components
 
 // [mic on] · [mic ●] some app is recording (accent) · [mic off] muted
 // click: the mic panel (apps, per-app mute), scroll: mic volume
-BracketButton {
+BarIcon {
     id: root
 
     readonly property PwNode source: Pipewire.defaultAudioSource
@@ -13,10 +13,13 @@ BracketButton {
     // apps recording right now: pipewire calls them "Stream/Input/Audio"
     readonly property int recording: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio").length
 
-    visible: Settings.barShows("mic") && (source !== null)
-    tag: "mic"
-    label: muted ? "off" : recording > 0 ? "●" : "on"
-    textColor: muted ? Colors.dim : recording > 0 ? Colors.accent : Colors.fg
+    // only while some app listens, red; or while it's muted
+    visible: Settings.barShows("mic") && source !== null && (recording > 0 || muted)
+    icon: "mic"
+    ink: recording > 0 && !muted ? Colors.accent : "transparent"
+    text: muted ? "off" : ""
+    textColor: Colors.dim
+    tip: muted ? `${Strings.t("mic")}: off` : Strings.t("mic")
 
     onScrolled: steps => {
         if (source?.audio)

@@ -15,6 +15,7 @@ Item {
     property bool bordered: false
     property bool down: active
     property bool plain: inPlainRow
+    property bool dotted: false // the dotted face (a window button in focus)
     readonly property bool raised: Colors.bevel && !plain
     readonly property bool hovered: area.containsMouse
     readonly property bool pushed: area.pressed || down // drawn pressed in (bevel)
@@ -51,6 +52,12 @@ Item {
         anchors.fill: parent
         visible: Colors.bevel && (root.raised || root.hovered || root.pushed)
         color: root.raised && root.hovered && !root.pushed ? Colors.mix(Colors.face, Colors.hi, 0.12) : root.raised || root.pushed ? Colors.face : Colors.hoverFill
+
+        Dots {
+            visible: root.dotted
+            anchors.fill: parent
+            anchors.margins: 2
+        }
 
         Bevel {
             visible: root.raised || root.pushed

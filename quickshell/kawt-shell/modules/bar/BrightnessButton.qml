@@ -1,11 +1,12 @@
+import QtQuick
+import qs.config
 import qs.components
 import qs.services
-import qs.config
 
-BracketButton {
-    visible: Settings.barShows("br") && (Brightness.available)
-    tag: "br"
-    label: String(Brightness.pct)
-    meter: Brightness.pct / 100
+// the sun, where the screen's brightness can be set: the wheel steps it
+BarIcon {
+    visible: Settings.barShows("br") && Brightness.available
+    icon: "sun"
+    tip: `${Brightness.pct}%`
     onScrolled: steps => Brightness.step(steps * 0.05)
 }
