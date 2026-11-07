@@ -5,20 +5,23 @@ import qs.config
 import qs.components
 import qs.services
 
-// ┌─ai: the selection──────────────────────────────esc┐
+// ┌────────────────────────────────────────────────────┐
+// │ ✦ AI on the selection                              │
 // │ "the text you marked in any window, a few lines…"  │
-// │ [1 explain] [2 translate] [3 fix] [4 summary]      │
+// │ [1 Explain] [2 Translate] [3 Fix] [4 Summary]      │
 // │ the answer, which you can select and copy          │
-// │ [c copy] [r replace] [enter chat]    llama3.2 · 3s │
+// │ [c Copy] [r Replace] [enter Chat]    llama3.2 · 3s │
 // └────────────────────────────────────────────────────┘
 // super + alt + a (kawt selection): the text you marked with the mouse, read without copying it
 // (the primary selection; nothing marked: the clipboard). One answer, not into the chat:
-// [replace] types it over the marked text (with wtype), [chat] carries both into the ai panel.
+// Replace types it over the marked text (with wtype), Chat carries both into the ai panel.
 Popover {
     id: root
 
     name: "selection"
-    title: Ai.selFromClipboard ? "ai: the clipboard" : "ai: the selection"
+    title: Ai.selFromClipboard ? Strings.t("aiOnClipboard") : Strings.t("aiOnSelection")
+    icon: "ai"
+    note: Strings.t("aiSelKeys")
     cardWidth: 520
 
     readonly property bool canReplace: Ai.canType && Ai.selAnswer !== "" && (Ai.selActions.find(a => a[0] === Ai.selAction) ?? [])[2] === true
@@ -70,7 +73,7 @@ Popover {
     Label {
         Layout.fillWidth: true
         visible: Ai.selText === "" && Ai.selError === ""
-        text: "reading the selection..."
+        text: Strings.t("aiReadingSel")
         color: Colors.dim
     }
 
@@ -82,14 +85,14 @@ Popover {
         Repeater {
             model: Ai.selActions
 
-            BracketButton {
+            PushButton {
                 required property var modelData
                 required property int index
 
+                small: true
                 tag: `${index + 1}`
-                label: modelData[0]
+                text: Strings.t(`aiAct_${modelData[0]}`)
                 active: Ai.selAction === modelData[0]
-                textColor: Ai.selAction === modelData[0] ? Colors.accent : Colors.fg
                 onClicked: {
                     root.copied = false;
                     Ai.selDo(modelData[0]);
@@ -99,7 +102,7 @@ Popover {
 
         Label {
             visible: Ai.selText.length > 300
-            text: `${Ai.selText.length} characters`
+            text: Strings.t("aiChars").arg(Ai.selText.length)
             color: Colors.dim
             font.pixelSize: Metrics.size(-2)
         }
@@ -113,7 +116,7 @@ Popover {
     Label {
         Layout.fillWidth: true
         visible: Ai.selBusy && Ai.selAction !== ""
-        text: `~ ${Ai.modelName} is thinking...`
+        text: Strings.t("aiThinking").arg(Ai.modelName)
         color: Colors.accent
     }
 
@@ -157,25 +160,27 @@ Popover {
         visible: Ai.selText !== ""
         spacing: Metrics.spacing
 
-        BracketButton {
+        PushButton {
+            small: true
             visible: Ai.selAnswer !== ""
             tag: "c"
-            label: root.copied ? "copied" : "copy"
-            textColor: root.copied ? Colors.accent : Colors.fg
+            text: root.copied ? Strings.t("copiedWord") : Strings.t("copyWord")
             onClicked: root.copy()
         }
 
         // typed over the marked text, in its window (only for translate / fix, with wtype)
-        BracketButton {
+        PushButton {
+            small: true
             visible: root.canReplace
             tag: "r"
-            label: "replace"
+            text: Strings.t("aiReplace")
             onClicked: Ai.selReplace()
         }
 
-        BracketButton {
+        PushButton {
+            small: true
             tag: "enter"
-            label: "chat"
+            text: Strings.t("aiToChat")
             onClicked: Ai.selToChat()
         }
 
