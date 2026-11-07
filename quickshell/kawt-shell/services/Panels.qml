@@ -9,7 +9,7 @@ import qs.config
 // Only one popover can be open at a time; the sidebar is independent.
 //
 //   qs -c kawt-shell ipc call kawt toggle launcher|menu|style|tray|today|system|settings|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
-//   qs -c kawt-shell ipc call kawt window today|system <tab>   (today todo notes focus · sys top net power)
+//   qs -c kawt-shell ipc call kawt window today|system|style <tab>   (today todo notes focus · sys top net power · wall theme change)
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest | suspend   (suspend: locks first, then sleeps)
@@ -39,9 +39,10 @@ Singleton {
     property string settingsPage: "" // the settings window opens at this page ("bar", "screen"...; modules/settings)
     // kawt's own windows (components/AppWindow.qml), open beside the panels: a panel opening
     // doesn't close them. The tab each opens at next ("" = the one it had)
-    property var windows: ({}) // "today" | "system" | "settings" -> true while it's open
+    property var windows: ({}) // "today" | "system" | "settings" | "style" -> true while it's open
     property string todayTab: ""
     property string systemTab: ""
+    property string styleTab: ""
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
     property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
     property bool locked: false // modules/lock: the session lock screen
@@ -100,6 +101,8 @@ Singleton {
             systemTab = tab;
         else if (name === "settings")
             settingsPage = tab;
+        else if (name === "style")
+            styleTab = tab;
         current = ""; // the menu it was opened from
         if (isWindowOpen(name))
             windowAsked(name);
@@ -111,7 +114,7 @@ Singleton {
     function windowIcon(cls: string, title: string): string {
         if (cls !== "org.quickshell")
             return "";
-        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : title.startsWith(Strings.t("settingsTitle")) ? "gear" : "logo";
+        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : title.startsWith(Strings.t("settingsTitle")) ? "gear" : title.startsWith(Strings.t("styleTitle")) ? "wallpaper" : "logo";
     }
 
     function closeWindow(name: string): void {
@@ -183,7 +186,7 @@ Singleton {
                 root.toggleWindow("today", "");
                 return;
             }
-            if (name === "system" || name === "settings") {
+            if (name === "system" || name === "settings" || name === "style") {
                 root.toggleWindow(name, "");
                 return;
             }
@@ -202,7 +205,7 @@ Singleton {
 
         // one of kawt's windows at a tab: window today todo · window system net
         function window(name: string, tab: string): void {
-            root.toggleWindow(name === "dashboard" || name === "profile" ? "today" : name, tab || (name === "system" ? "sys" : "today"));
+            root.toggleWindow(name === "dashboard" || name === "profile" ? "today" : name, tab || (name === "system" ? "sys" : name === "style" ? "wall" : "today"));
         }
 
         // win+r: the launcher straight in run mode, like the Windows "Run" box

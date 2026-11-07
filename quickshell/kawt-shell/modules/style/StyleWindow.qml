@@ -1,235 +1,544 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
 
-// Themes (with color swatches) and the wallpapers in two panes (WallpaperPicker.qml). Picking a theme also recolors
-// terminals and writes configs for other apps (services/ThemeExport.qml). [+ new] and [edit] open
-// the theme editor over it (ThemeEditor.qml): your own colors, the bar's among them.
-PanelWindow {
+// Wallpaper and theme (super + w), like an old system's display properties: a real window
+// (components/AppWindow.qml) in three tabs.
+//   Wallpaper  a monitor drawn on top shows the picked one with a little bar in the theme over
+//              it; the folder's pictures in a grid under it; Browse…, Random, how it's shown
+//   Theme      the themes, a small picture of each in its own colors; dark or light; your own
+//              (New… / Edit…: ThemeEditor.qml over the window); the terminals' colors, fastfetch
+//   Change     a new one every 15 min … 3 h, in order or at random, how it changes
+// OK sets the picked one and closes, Apply sets it, Cancel puts back what was on when it opened
+// (the wallpaper, the theme, dark or light). Keys: arrows pick, enter sets, r random, t dark /
+// light, esc closes (as Cancel).
+AppWindow {
     id: root
 
-    required property ShellScreen forScreen
-    readonly property bool open: Panels.isOpen("style", forScreen)
+    property int current: 0 // the wallpaper picked in the grid
+    readonly property string picked: Wallpapers.files[current] ?? ""
+    property var before: ({}) // what was on when it opened: Cancel goes back to it
+    property bool browsing: false // the folder line is open
 
-    screen: forScreen
-    // off the screen while a color is picked off it
-    visible: open && !editor.picking
-    color: "transparent"
+    name: "style"
+    icon: "wallpaper"
+    title: Strings.t("styleTitle")
+    bodyWidth: Math.round(640 * Metrics.scale)
+    bodyHeight: Math.round(590 * Metrics.scale)
+    // off the screen while a color is picked off it (the theme editor)
+    visible: !editor.picking
 
-    WlrLayershell.namespace: "kawt-style"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    function name_(path: string): string {
+        return path.split("/").pop().replace(/\.[^.]+$/, "");
+    }
 
-    anchors.top: true
-    anchors.left: true
-    anchors.right: true
-    anchors.bottom: true
+    function move(by: int): void {
+        if (Wallpapers.files.length === 0)
+            return;
+        current = Math.max(0, Math.min(Wallpapers.files.length - 1, current + by));
+        grid.positionViewAtIndex(current, GridView.Contain);
+    }
 
-    OpenWatch {
-        open: root.open
-        onOpened: {
-            picker.reset();
-            Wallpapers.refresh();
-            box.forceActiveFocus();
-            fadeIn.restart();
-            // [edit] / [+ new] in profile -> cfg: straight into the editor
+    function apply(): void {
+        if (picked && picked !== Settings.wallpaper)
+            Wallpapers.set(picked);
+    }
+
+    function cancel(): void {
+        if (before.wallpaper !== undefined) {
+            if (Settings.theme !== before.theme)
+                Settings.theme = before.theme;
+            if (Settings.light !== before.light)
+                Settings.light = before.light;
+            if (Settings.wallDither !== before.dither)
+                Settings.wallDither = before.dither;
+            if (Settings.wallpaper !== before.wallpaper)
+                Wallpapers.set(before.wallpaper);
+        }
+        close();
+    }
+
+    function random(): void {
+        Wallpapers.pick("random");
+        current = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
+        grid.positionViewAtIndex(current, GridView.Contain);
+    }
+
+    // a moment after the pick stops moving: the preview made for it
+    onPickedChanged: previewSoon.restart()
+
+    Timer {
+        id: previewSoon
+
+        interval: 180
+        onTriggered: Wallpapers.makePreview(root.picked)
+    }
+
+    // a tab by name ("wall", "theme", "change"), asked for from outside
+    function showTab(name: string): void {
+        const i = ["wall", "theme", "change"].indexOf(name);
+        if (i >= 0)
+            tabs.current = i;
+        Panels.styleTab = "";
+    }
+
+    Component.onCompleted: {
+        showTab(Panels.styleTab);
+        before = { wallpaper: Settings.wallpaper, theme: Settings.theme, light: Settings.light, dither: Settings.wallDither };
+        Wallpapers.refresh();
+        current = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
+        previewSoon.restart();
+        keys.forceActiveFocus();
+        // "Own theme…" in the settings: straight into the editor, on the theme tab
+        if (Panels.styleEdit !== "") {
+            tabs.current = 1;
             if (Panels.styleEdit === "new")
                 editor.openNew();
-            else if (Panels.styleEdit === "edit")
+            else
+                editor.openEdit();
+            Panels.styleEdit = "";
+        }
+    }
+    Component.onDestruction: Wallpapers.makePreview("")
+
+    // "Own theme…" while it's open already
+    Connections {
+        target: Panels
+
+        function onStyleTabChanged(): void {
+            root.showTab(Panels.styleTab);
+        }
+
+        function onStyleEditChanged(): void {
+            if (Panels.styleEdit === "")
+                return;
+            tabs.current = 1;
+            if (Panels.styleEdit === "new")
+                editor.openNew();
+            else
                 editor.openEdit();
             Panels.styleEdit = "";
         }
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.35)
+    Connections {
+        target: Wallpapers
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Panels.close()
+        // the folder read again: the one on screen picked
+        function onFilesChanged(): void {
+            root.current = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
         }
     }
 
-    TitledBox {
-        id: box
+    // keeps the "wallpaper" theme in step with the chosen wallpaper
+    WallpaperSampler {
+        x: 0
+        y: 0
+    }
 
-        x: Math.round((root.width - width) / 2)
-        y: Math.round(root.height * 0.1)
-        width: Math.min(860, root.width - Metrics.padding * 2)
-        height: body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: "style"
-        window: true
-        hint: "esc"
+    Item {
+        id: keys
 
-        // ↑↓ (j k) pick a wallpaper, enter sets it, r a random one; [ and ] walk the themes,
-        // t flips dark/light
-        Keys.onEscapePressed: Panels.close()
+        focus: true
+        Keys.onEscapePressed: root.cancel()
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Up || event.key === Qt.Key_K || event.key === Qt.Key_Left)
-                picker.move(-1);
-            else if (event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_Right)
-                picker.move(1);
-            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)
-                picker.setPicked();
+            const across = 3;
+            if (event.key === Qt.Key_Left)
+                root.move(-1);
+            else if (event.key === Qt.Key_Right)
+                root.move(1);
+            else if (event.key === Qt.Key_Up)
+                root.move(-across);
+            else if (event.key === Qt.Key_Down)
+                root.move(across);
+            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                root.apply();
             else if (event.key === Qt.Key_R)
-                picker.random();
-            else if (event.key === Qt.Key_BracketLeft || event.key === Qt.Key_BracketRight)
-                Colors.step(event.key === Qt.Key_BracketRight ? 1 : -1);
+                root.random();
             else if (event.key === Qt.Key_T)
                 Settings.light = !Settings.light;
-            else if (event.key === Qt.Key_E)
-                editor.openEdit();
-            else if (event.key === Qt.Key_N)
-                editor.openNew();
             else
                 return;
             event.accepted = true;
         }
+    }
 
-        NumberAnimation {
-            id: fadeIn
+    MouseArea {
+        anchors.fill: parent
+        onClicked: keys.forceActiveFocus()
+    }
 
-            target: box
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 120
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: Metrics.spacing
+
+        Tabs {
+            id: tabs
+
+            tabs: [Strings.t("tab_wall"), Strings.t("tab_theme"), Strings.t("tab_change")]
         }
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: box.forceActiveFocus()
-        }
-
-        // keeps the "wallpaper" theme in step with the chosen wallpaper
-        WallpaperSampler {
-            x: 0
-            y: 0
-        }
-
+        // ---------------------------------------------------------------- wallpaper
         ColumnLayout {
-            id: body
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding
-            anchors.topMargin: Metrics.padding + box.contentTop
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: tabs.current === 0
             spacing: Metrics.spacing
 
-            // ------------------------------------------------------------ themes
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
+            // the monitor: the picked one as it would look, a little bar in the theme over it
+            Item {
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: Math.round(300 * Metrics.scale)
+                implicitHeight: monitor.height + 14
 
-                Label {
-                    Layout.fillWidth: true
-                    text: "-- theme --"
-                    color: Colors.dim
-                }
+                Rectangle {
+                    id: monitor
 
-                // the one you're in, in the editor (the wallpaper's: a copy of it, as a new one)
-                BracketButton {
-                    label: Colors.mode === "wallpaper" ? "edit a copy" : "edit"
-                    bordered: false
-                    onClicked: editor.openEdit()
-                }
+                    width: parent.width
+                    height: Math.round(width * 9 / 16) + 22
+                    color: Colors.face
 
-                // wallpaper theme strength: [calm] strong full
-                Repeater {
-                    model: Colors.mode === "wallpaper" ? ["calm", "strong", "full"] : []
+                    Bevel {
+                        style: "raised"
+                    }
 
-                    BracketButton {
-                        required property string modelData
+                    Rectangle {
+                        id: screen
 
-                        label: modelData
-                        active: Settings.wallStrength === modelData
-                        textColor: Settings.wallStrength === modelData ? Colors.accent : Colors.dim
-                        bordered: false
-                        onClicked: Settings.wallStrength = modelData
+                        x: 10
+                        y: 10
+                        width: parent.width - 20
+                        height: parent.height - 22
+                        color: Colors.bg
+
+                        Bevel {
+                            style: "sunk"
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            source: Wallpapers.preview ? `file://${Wallpapers.preview}` : ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            smooth: !Settings.wallDither
+                        }
+
+                        // the bar, in small
+                        Rectangle {
+                            x: 2
+                            y: Metrics.barBottom ? parent.height - 2 - height : 2
+                            width: parent.width - 4
+                            height: 7
+                            color: Colors.face
+
+                            Rectangle {
+                                x: 1
+                                y: 1
+                                width: 14
+                                height: 5
+                                color: Colors.accent
+                            }
+
+                            Repeater {
+                                model: 3
+
+                                Rectangle {
+                                    required property int index
+
+                                    x: 20 + index * 22
+                                    y: 1
+                                    width: 20
+                                    height: 5
+                                    color: Colors.hi
+                                }
+                            }
+                        }
+                    }
+
+                    // the power light
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        width: 4
+                        height: 3
+                        color: Colors.accent
                     }
                 }
 
-                // [dark] light   (super+shift+w): black and white are that already
-                Repeater {
-                    model: Colors.mode !== "thinkpad" ? ["dark", "light"] : []
+                // its foot
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: monitor.height
+                    width: Math.round(parent.width * 0.4)
+                    height: 10
+                    color: Colors.face
 
-                    BracketButton {
-                        required property string modelData
-
-                        label: modelData
-                        active: Colors.variant === modelData
-                        textColor: Colors.variant === modelData ? Colors.accent : Colors.dim
-                        onClicked: Settings.light = modelData === "light"
+                    Bevel {
+                        style: "raised"
                     }
                 }
             }
 
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                text: `${Settings.wallpaperDir.replace(Quickshell.env("HOME"), "~")} · ${Wallpapers.files.length}`
+                color: Colors.dim
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: Metrics.padding
+
+                // the pictures, sunk in a field: three in a row, the picked one red
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: Colors.well
+
+                    Bevel {
+                        style: "sunk"
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        width: parent.width - 20
+                        visible: !Wallpapers.loading && Wallpapers.files.length === 0
+                        wrapMode: Text.Wrap
+                        horizontalAlignment: Text.AlignHCenter
+                        text: Strings.t("noPictures")
+                        color: Colors.dim
+                    }
+
+                    GridView {
+                        id: grid
+
+                        x: 3
+                        y: 3
+                        width: parent.width - 6
+                        height: parent.height - 6
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        cellWidth: Math.floor(width / 3)
+                        cellHeight: Math.round(cellWidth * 9 / 16) + Metrics.fontSize + 12
+                        model: ScriptModel {
+                            values: Wallpapers.files
+                        }
+
+                        delegate: Rectangle {
+                            id: cell
+
+                            required property string modelData
+                            required property int index
+                            readonly property bool isPicked: index === root.current
+                            property bool thumbMissing: false
+
+                            width: grid.cellWidth
+                            height: grid.cellHeight
+                            color: isPicked ? Colors.accent : "transparent"
+
+                            Image {
+                                x: 4
+                                y: 4
+                                width: parent.width - 8
+                                height: Math.round(width * 9 / 16)
+                                source: cell.thumbMissing ? `file://${cell.modelData}` : `file://${Wallpapers.thumb(cell.modelData)}?v=${Wallpapers.thumbsVersion}`
+                                sourceSize.width: 200
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                onStatusChanged: if (status === Image.Error && !cell.thumbMissing)
+                                    cell.thumbMissing = true
+                            }
+
+                            Label {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 3
+                                width: parent.width - 8
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                text: root.name_(cell.modelData)
+                                color: cell.isPicked ? Colors.onAccent : Settings.wallpaper === cell.modelData ? Colors.accent : Colors.fg
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.current = cell.index;
+                                    keys.forceActiveFocus();
+                                }
+                                onDoubleClicked: root.apply()
+                            }
+                        }
+                    }
+                }
+
+                // what to do with them
+                ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
+                    Layout.fillWidth: false // its buttons fill it, it doesn't fill the row
+                    Layout.preferredWidth: Math.round(170 * Metrics.scale)
+                    spacing: 6
+
+                    PushButton {
+                        Layout.fillWidth: true
+                        text: Strings.t("browse")
+                        active: root.browsing
+                        onClicked: {
+                            root.browsing = !root.browsing;
+                            if (root.browsing)
+                                folder.input.forceActiveFocus();
+                        }
+                    }
+
+                    PushButton {
+                        Layout.fillWidth: true
+                        text: Strings.t("randomWall")
+                        onClicked: root.random()
+                    }
+
+                    PushButton {
+                        Layout.fillWidth: true
+                        text: Strings.t("noWallpaper")
+                        active: Settings.wallpaper === ""
+                        onClicked: Wallpapers.set("")
+                    }
+
+                    Label {
+                        Layout.topMargin: 6
+                        text: Strings.t("wallShown")
+                        color: Colors.dim
+                    }
+
+                    Check {
+                        radio: true
+                        text: Strings.t("wallDithered")
+                        checked: Settings.wallDither
+                        onToggled: Settings.wallDither = true
+                    }
+
+                    Check {
+                        radio: true
+                        text: Strings.t("wallAsIs")
+                        checked: !Settings.wallDither
+                        onToggled: Settings.wallDither = false
+                    }
+                }
+            }
+
+            // Browse…: the folder they come from
+            TermInput {
+                id: folder
+
+                Layout.fillWidth: true
+                visible: root.browsing
+                prompt: Strings.t("folderPrompt")
+                text: Settings.wallpaperDir
+                onAccepted: t => {
+                    Settings.wallpaperDir = t.trim() || Settings.wallpaperDir;
+                    Wallpapers.refresh();
+                    root.browsing = false;
+                    keys.forceActiveFocus();
+                }
+                Keys.onEscapePressed: {
+                    root.browsing = false;
+                    keys.forceActiveFocus();
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------- theme
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: tabs.current === 1
+            spacing: Metrics.spacing
+
             Flow {
                 Layout.fillWidth: true
-                spacing: Metrics.spacing
+                spacing: 8
 
                 Repeater {
                     model: Colors.choices
 
-                    // a tiny preview drawn in the theme's own colors, its bar on top
+                    // a small picture drawn in the theme's own colors: its bar, its words, its light
                     Rectangle {
                         id: tile
 
                         required property var modelData
                         readonly property var t: Colors.themes[modelData.theme][modelData.light === null ? Colors.variant : modelData.light ? "light" : "dark"]
-                        readonly property bool current: Colors.isCurrent(modelData)
+                        readonly property bool isCurrent: Colors.isCurrent(modelData)
 
-                        width: Math.round(132 * Metrics.scale)
-                        height: tileCol.implicitHeight + 12
-                        color: t.bg
-                        border.width: current ? 2 : 1
-                        border.color: current ? Colors.accent : tileArea.containsMouse ? Colors.dim : Colors.border
+                        width: Math.round(140 * Metrics.scale)
+                        height: tileCol.implicitHeight + 10
+                        color: isCurrent ? Colors.accent : tileArea.containsMouse ? Colors.hoverFill : "transparent"
 
                         Column {
                             id: tileCol
 
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.margins: 6
+                            x: 5
+                            y: 5
+                            width: parent.width - 10
                             spacing: 4
 
-                            Label {
-                                text: (tile.current ? "> " : "") + tile.modelData.name
-                                color: tile.t.fg
-                            }
+                            Rectangle {
+                                width: parent.width
+                                height: Math.round(width * 0.45)
+                                color: tile.t.bg
+                                border.width: 1
+                                border.color: Colors.deep
 
-                            Row {
-                                spacing: 2
-
-                                Repeater {
-                                    model: [tile.t.fg, tile.t.dim, tile.t.border, tile.t.accent, tile.t.warn]
+                                Rectangle {
+                                    x: 1
+                                    y: 1
+                                    width: parent.width - 2
+                                    height: 6
+                                    color: tile.t.bar ?? tile.t.bg
 
                                     Rectangle {
-                                        required property string modelData
+                                        x: 1
+                                        y: 1
+                                        width: 12
+                                        height: 4
+                                        color: tile.t.accent
+                                    }
+                                }
 
-                                        width: 14
-                                        height: 8
-                                        color: modelData
+                                Row {
+                                    x: 6
+                                    y: 14
+                                    spacing: 2
+
+                                    Repeater {
+                                        model: [tile.t.fg, tile.t.dim, tile.t.border, tile.t.accent, tile.t.warn]
+
+                                        Rectangle {
+                                            required property string modelData
+
+                                            width: 12
+                                            height: 8
+                                            color: modelData
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // its bar, when it has one of its own
-                        Rectangle {
-                            visible: !!tile.t.bar
-                            width: parent.width - 2
-                            height: 3
-                            x: 1
-                            y: 1
-                            color: tile.t.bar ?? "transparent"
+                            Label {
+                                width: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                // kawt's own by their names in the window (black: Graphite), yours as you named them
+                                text: ({ black: Strings.t("graphite"), white: Strings.t("silver"), wallpaper: Strings.t("fromWallpaper") })[tile.modelData.name] ?? tile.modelData.name
+                                color: tile.isCurrent ? Colors.onAccent : Colors.fg
+                            }
                         }
 
                         // a click picks it; a right click opens it in the editor too
@@ -248,308 +557,280 @@ PanelWindow {
                         }
                     }
                 }
+            }
 
-                // [+ new]: a theme of your own, from the one you're in
-                Rectangle {
-                    width: Math.round(132 * Metrics.scale)
-                    height: newCol.implicitHeight + 12
-                    color: newArea.containsMouse ? Colors.hoverFill : "transparent"
-                    border.width: 1
-                    border.color: newArea.containsMouse ? Colors.dim : Colors.border
+            // dark or light (black and white are that already); the wallpaper theme's strength
+            Group {
+                title: Strings.t("themeShade")
 
-                    Column {
-                        id: newCol
+                RowLayout {
+                    spacing: 16
 
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.margins: 6
-                        spacing: 4
+                    Repeater {
+                        model: Colors.mode !== "thinkpad" ? [[false, "darkWord"], [true, "lightWord"]] : []
 
-                        Label {
-                            text: "+ new"
-                        }
+                        Check {
+                            required property var modelData
 
-                        Label {
-                            text: "your colors"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
+                            radio: true
+                            text: Strings.t(modelData[1])
+                            checked: Colors.light === modelData[0]
+                            onToggled: Settings.light = modelData[0]
                         }
                     }
 
-                    MouseArea {
-                        id: newArea
+                    Label {
+                        visible: Colors.mode === "thinkpad"
+                        text: Strings.t("thinkpadShade")
+                        color: Colors.dim
+                    }
 
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: editor.openNew()
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Repeater {
+                        model: Colors.mode === "wallpaper" ? [["calm", "wallCalm"], ["strong", "wallStrong"], ["full", "wallFull"]] : []
+
+                        Check {
+                            required property var modelData
+
+                            radio: true
+                            text: Strings.t(modelData[1])
+                            checked: Settings.wallStrength === modelData[0]
+                            onToggled: Settings.wallStrength = modelData[0]
+                        }
                     }
                 }
             }
 
-            // your own themes (config/Colors.qml says how), or what's wrong with the file
-            Label {
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: Colors.userError || "[+ new] makes one, [edit] (or a right click) changes it · ~/.config/kawt/themes.json"
-                color: Colors.userError ? Colors.warn : Colors.dim
-                font.pixelSize: Metrics.size(-2)
-            }
-
+            // your own: config/Colors.qml says how; or what's wrong with the file
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Metrics.spacing
-
-                // calm to bright: crt (monochrome ink), soft (the theme's hues), vivid (colorful)
-                Label {
-                    text: "terminal:"
-                    color: Colors.dim
-                }
-
-                Repeater {
-                    model: ["crt", "soft", "vivid"]
-
-                    BracketButton {
-                        required property string modelData
-
-                        label: modelData
-                        active: Settings.termColors === modelData
-                        textColor: Settings.termColors === modelData ? Colors.accent : Colors.dim
-                        onClicked: Settings.termColors = modelData
-                    }
-                }
-
-                BracketButton {
-                    label: Settings.themeTerminals ? "x" : " "
-                    bordered: false
-                    onClicked: Settings.themeTerminals = !Settings.themeTerminals
-                }
-
-                Label {
-                    text: "recolor open terminals"
-                }
+                spacing: 6
 
                 Label {
                     Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideLeft
-                    text: "configs for kitty/foot/alacritty/hyprland: ~/.local/state/kawt/theme/"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
+                    wrapMode: Text.Wrap
+                    text: Colors.userError || Strings.t("ownThemesNote")
+                    color: Colors.userError ? Colors.warn : Colors.dim
+                }
+
+                PushButton {
+                    minWidth: 0
+                    text: Strings.t("themeNew")
+                    onClicked: editor.openNew()
+                }
+
+                PushButton {
+                    minWidth: 0
+                    text: Colors.mode === "wallpaper" ? Strings.t("themeEditCopy") : Strings.t("themeEdit")
+                    onClicked: editor.openEdit()
                 }
             }
 
-            // fastfetch's logo: your system's in the theme's colors, or one of kawt's own
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
+            // the terminals: calm to bright
+            Group {
+                title: Strings.t("terminalsWord")
 
-                Label {
-                    text: "fastfetch:"
-                    color: Colors.dim
-                }
+                RowLayout {
+                    spacing: 16
 
-                Repeater {
-                    model: [["distro", "distro"], ["distro-tinted", "distro, tinted"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
+                    Repeater {
+                        model: [["crt", "termCrt"], ["soft", "termSoft"], ["vivid", "termVivid"]]
 
-                    BracketButton {
-                        required property var modelData
+                        Check {
+                            required property var modelData
 
-                        label: modelData[1]
-                        textColor: Settings.fetchLogo === modelData[0] ? Colors.accent : Colors.dim
-                        onClicked: Settings.fetchLogo = modelData[0]
+                            radio: true
+                            text: Strings.t(modelData[1])
+                            checked: Settings.termColors === modelData[0]
+                            onToggled: Settings.termColors = modelData[0]
+                        }
                     }
                 }
 
-                Label {
+                Check {
+                    text: Strings.t("recolorTerms")
+                    note: "kitty · foot · alacritty · hyprland: ~/.local/state/kawt/theme/"
+                    checked: Settings.themeTerminals
+                    onToggled: Settings.themeTerminals = !Settings.themeTerminals
+                }
+            }
+
+            // fastfetch's logo: your system's (in its own colors or the theme's), or kawt's
+            Group {
+                title: "fastfetch"
+
+                Flow {
                     Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: Settings.fetchLogo === "distro" ? "your system's logo, in its own colors" : Settings.fetchLogo === "distro-tinted" ? "your system's logo, in the theme's colors" : Settings.fetchLogo === "stripes" ? "kawt in stripes, above the info" : Settings.fetchLogo === "trackpoint" ? "g h b and the red nub" : "kawt in half blocks"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
+                    spacing: 14
+
+                    Repeater {
+                        model: [["distro", "fetchDistro"], ["distro-tinted", "fetchTinted"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
+
+                        Check {
+                            required property var modelData
+
+                            radio: true
+                            text: modelData[1] === modelData[0] ? modelData[0] : Strings.t(modelData[1])
+                            checked: Settings.fetchLogo === modelData[0]
+                            onToggled: Settings.fetchLogo = modelData[0]
+                        }
+                    }
                 }
             }
 
-            // --------------------------------------------------------- wallpaper
-            //  -- wallpaper --                          drawn by: [awww] kawt
-            RowLayout {
-                Layout.topMargin: Metrics.spacing
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
+            Item {
+                Layout.fillHeight: true
+            }
+        }
 
-                Label {
+        // ---------------------------------------------------------------- change
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: tabs.current === 2
+            spacing: Metrics.spacing
+
+            Group {
+                title: Strings.t("changeEvery")
+
+                Flow {
                     Layout.fillWidth: true
-                    text: `-- wallpaper${Wallpapers.backend && Wallpapers.backend !== "kawt" ? ` (via ${Wallpapers.backend})` : ""} --`
-                    color: Colors.dim
-                }
+                    spacing: 14
 
-                // only when awww (swww) is there: without it kawt draws it anyway
-                Label {
-                    visible: Wallpapers.found === "awww" || Wallpapers.found === "swww"
-                    text: "drawn by:"
-                    color: Colors.dim
-                }
+                    Repeater {
+                        model: [[0, Strings.t("never")], [15, Strings.t("inMin").arg(15)], [30, Strings.t("inMin").arg(30)], [60, Strings.t("inHours").arg(1)], [180, Strings.t("inHours").arg(3)]]
 
-                Repeater {
-                    model: Wallpapers.found === "awww" || Wallpapers.found === "swww" ? [["", Wallpapers.found], ["kawt", "kawt"]] : []
+                        Check {
+                            required property var modelData
 
-                    BracketButton {
-                        required property var modelData
-
-                        label: modelData[1]
-                        active: Settings.wallpaperBy === modelData[0]
-                        textColor: Settings.wallpaperBy === modelData[0] ? Colors.accent : Colors.dim
-                        bordered: false
-                        onClicked: Settings.wallpaperBy = modelData[0]
+                            radio: true
+                            text: modelData[1]
+                            checked: Settings.wallpaperEvery === modelData[0]
+                            onToggled: Settings.wallpaperEvery = modelData[0]
+                        }
                     }
                 }
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
+            Group {
+                visible: Settings.wallpaperEvery > 0
+                title: Strings.t("changeOrder")
 
-                TermInput {
+                RowLayout {
+                    spacing: 16
+
+                    Repeater {
+                        model: [["next", "inOrder"], ["random", "atRandom"]]
+
+                        Check {
+                            required property var modelData
+
+                            radio: true
+                            text: Strings.t(modelData[1])
+                            checked: Settings.wallpaperOrder === modelData[0]
+                            onToggled: Settings.wallpaperOrder = modelData[0]
+                        }
+                    }
+                }
+            }
+
+            // only with awww (swww): without it kawt draws the wallpaper itself, at once
+            Group {
+                visible: Wallpapers.found === "awww" || Wallpapers.found === "swww"
+                title: Strings.t("drawnBy")
+
+                RowLayout {
+                    spacing: 16
+
+                    Repeater {
+                        model: [["", Wallpapers.found], ["kawt", "kawt"]]
+
+                        Check {
+                            required property var modelData
+
+                            radio: true
+                            text: modelData[1]
+                            checked: Settings.wallpaperBy === modelData[0]
+                            onToggled: Settings.wallpaperBy = modelData[0]
+                        }
+                    }
+                }
+
+                Flow {
                     Layout.fillWidth: true
-                    prompt: "dir>"
-                    text: Settings.wallpaperDir
-                    onAccepted: t => Settings.wallpaperDir = t.trim() || Settings.wallpaperDir
-                }
-
-                BracketButton {
-                    label: Wallpapers.loading ? "..." : "reload"
-                    onClicked: Wallpapers.refresh()
-                }
-
-                BracketButton {
-                    label: "none"
-                    active: Settings.wallpaper === ""
-                    onClicked: Wallpapers.set("")
-                }
-            }
-
-            //  [dithered] as it is   the picture in the theme's tones, dots like an old screen
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
-
-                Label {
-                    text: "shown:"
-                    color: Colors.dim
-                }
-
-                Repeater {
-                    model: [[true, "dithered"], [false, "as it is"]]
-
-                    BracketButton {
-                        required property var modelData
-
-                        label: modelData[1]
-                        textColor: Settings.wallDither === modelData[0] ? Colors.accent : Colors.dim
-                        onClicked: Settings.wallDither = modelData[0]
-                    }
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: Settings.wallDither ? "in the theme's tones, its reds as red dots; made again for every theme" : "the picture as it is"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
-                }
-            }
-
-            //  every [off] 15m 30m 1h 3h   [next] random   ·   crt  fade  grow  random  none
-            Flow {
-                Layout.fillWidth: true
-                spacing: Metrics.spacing
-
-                Label {
-                    text: "new one every:"
-                    color: Colors.dim
-                }
-
-                Repeater {
-                    model: [[0, "off"], [15, "15m"], [30, "30m"], [60, "1h"], [180, "3h"]]
-
-                    BracketButton {
-                        required property var modelData
-
-                        label: modelData[1]
-                        active: Settings.wallpaperEvery === modelData[0]
-                        textColor: Settings.wallpaperEvery === modelData[0] ? Colors.accent : Colors.dim
-                        bordered: false
-                        onClicked: Settings.wallpaperEvery = modelData[0]
-                    }
-                }
-
-                Repeater {
-                    model: Settings.wallpaperEvery > 0 ? ["next", "random"] : []
-
-                    BracketButton {
-                        required property string modelData
-
-                        label: modelData
-                        active: Settings.wallpaperOrder === modelData
-                        textColor: Settings.wallpaperOrder === modelData ? Colors.accent : Colors.dim
-                        bordered: false
-                        onClicked: Settings.wallpaperOrder = modelData
-                    }
-                }
-
-                Label {
                     visible: Wallpapers.backend === "awww" || Wallpapers.backend === "swww"
-                    leftPadding: Metrics.spacing
-                    text: "· transition:"
-                    color: Colors.dim
-                }
+                    spacing: 14
 
-                Repeater {
-                    model: Wallpapers.backend === "awww" || Wallpapers.backend === "swww" ? ["crt", "fade", "grow", "random", "none"] : []
+                    Label {
+                        text: Strings.t("transitionWord")
+                        color: Colors.dim
+                    }
 
-                    BracketButton {
-                        required property string modelData
+                    Repeater {
+                        model: ["crt", "fade", "grow", "random", "none"]
 
-                        label: modelData
-                        active: Settings.wallpaperTransition === modelData
-                        textColor: Settings.wallpaperTransition === modelData ? Colors.accent : Colors.dim
-                        bordered: false
-                        onClicked: Settings.wallpaperTransition = modelData
+                        Check {
+                            required property string modelData
+
+                            radio: true
+                            text: modelData
+                            checked: Settings.wallpaperTransition === modelData
+                            onToggled: Settings.wallpaperTransition = modelData
+                        }
                     }
                 }
             }
 
             Label {
-                visible: !Wallpapers.loading && Wallpapers.files.length === 0
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
-                text: `-- no images in ${Settings.wallpaperDir} --\nput some .jpg/.png there, or type another folder above and press enter`
+                text: Strings.t("styleKeys")
                 color: Colors.dim
             }
 
-            Label {
-                Layout.alignment: Qt.AlignRight
-                visible: Wallpapers.files.length > 0
-                text: "[ ] theme · t dark/light · e edit · n new"
-                color: Colors.dim
-                font.pixelSize: Metrics.size(-3)
+            Item {
+                Layout.fillHeight: true
             }
+        }
 
-            WallpaperPicker {
-                id: picker
+        // OK · Cancel · Apply
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 4
 
+            Item {
                 Layout.fillWidth: true
-                active: root.open
-                visible: Wallpapers.files.length > 0
+            }
+
+            PushButton {
+                text: Strings.t("ok")
+                onClicked: {
+                    root.apply();
+                    root.close();
+                }
+            }
+
+            PushButton {
+                text: Strings.t("cancel")
+                onClicked: root.cancel()
+            }
+
+            PushButton {
+                text: Strings.t("applyWord")
+                enabled: root.picked !== "" && root.picked !== Settings.wallpaper
+                onClicked: root.apply()
             }
         }
     }
 
-    // over the style box: a theme of your own; esc comes back here
+    // over the window: a theme of your own; esc comes back here
     ThemeEditor {
         id: editor
 
         anchors.fill: parent
-        onClosed: box.forceActiveFocus()
+        onClosed: keys.forceActiveFocus()
     }
 }

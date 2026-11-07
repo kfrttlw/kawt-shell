@@ -504,14 +504,6 @@ Variants {
         }
 
         Lazy {
-            when: Panels.isOpen("style", root.modelData)
-
-            StyleWindow {
-                forScreen: root.modelData
-            }
-        }
-
-        Lazy {
             when: Panels.isOpen("power", root.modelData)
 
             PowerMenu {
