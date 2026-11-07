@@ -6,7 +6,7 @@ import qs.config
 // round. Etched: a groove, for a box of things inside a panel. Laid over its parent's area, it
 // draws only the edges: the face under it is the parent's own.
 // Inset: one dark line on the top and the left, one light on the bottom and the right (the
-// bar's tray). With Settings.frames "flat" there's one thin line instead (or none: `flatLine` false).
+// bar's tray).
 //
 //   raised   hi  hi2 | lo  deep        sunk     lo  deep | hi2 hi
 //   pressed  deep lo | hi2 hi          etched   lo  hi (each side: a dark line, a light one in it)
@@ -22,19 +22,10 @@ Item {
     // [outer top-left, outer bottom-right, inner top-left, inner bottom-right]
     readonly property var edges: style === "sunk" ? [Colors.lo, Colors.hi, Colors.deep, Colors.hi2] : style === "pressed" ? [Colors.deep, Colors.hi, Colors.lo, Colors.hi2] : style === "inset" || style === "well" ? [Colors.lo, Colors.hi, "transparent", "transparent"] : style === "bump" ? [Colors.hi, Colors.lo, "transparent", "transparent"] : [Colors.hi, Colors.deep, Colors.hi2, Colors.lo]
 
-    // flat: the one line
-    Rectangle {
-        anchors.fill: parent
-        visible: !Colors.bevel && root.flatLine
-        color: "transparent"
-        border.color: Colors.border
-        border.width: Metrics.borderWidth
-    }
-
     // etched: a dark frame, and a light one a pixel in and to the right
     Item {
         anchors.fill: parent
-        visible: Colors.bevel && root.style === "etched"
+        visible: root.style === "etched"
 
         Rectangle {
             x: 1
@@ -57,7 +48,7 @@ Item {
 
     Item {
         anchors.fill: parent
-        visible: Colors.bevel && root.style !== "etched"
+        visible: root.style !== "etched"
 
         // the outer lines: top and left, then bottom and right over their corners
         Rectangle {

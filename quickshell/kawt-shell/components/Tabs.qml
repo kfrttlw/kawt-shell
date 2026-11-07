@@ -1,16 +1,16 @@
 import QtQuick
 import qs.config
 
-// [Commits] Settings  — lazygit-style tab strip: the open one in red brackets
-// With raised frames (Settings.frames "bevel"), tabs the old way: raised, open at the bottom,
-// the open one a little taller and in bold
+// Tabs the old way: raised, open at the bottom, the open one a little taller and in the text
+// color, the others dim.
+//   Tabs { tabs: ["Today", "Tasks"]; current: 0 }
 Row {
     id: root
 
     property list<string> tabs: []
     property int current: 0
 
-    spacing: Colors.bevel ? 0 : Metrics.spacing
+    spacing: 0
 
     Repeater {
         model: root.tabs
@@ -22,29 +22,11 @@ Row {
             required property int index
             readonly property bool selected: index === root.current
 
-            implicitWidth: Colors.bevel ? word.implicitWidth + Metrics.padding * 2 : text.implicitWidth + 6
-            implicitHeight: text.implicitHeight + (Colors.bevel ? 6 : 2)
+            implicitWidth: word.implicitWidth + Metrics.padding * 2
+            implicitHeight: word.implicitHeight + 6
 
+            // light on the top and the left, dark on the right, nothing below
             Rectangle {
-                anchors.fill: parent
-                visible: !Colors.bevel && area.containsMouse
-                color: Colors.hoverFill
-            }
-
-            // the open one in red brackets, the others plain and dim (the same room: no jumping)
-            Brackets {
-                id: text
-
-                visible: !Colors.bevel
-                anchors.centerIn: parent
-                text: tab.modelData
-                look: tab.selected ? "on" : "off"
-                shown: tab.selected
-            }
-
-            // bevel: light on the top and the left, dark on the right, nothing below
-            Rectangle {
-                visible: Colors.bevel
                 y: tab.selected ? 0 : 2
                 width: parent.width
                 height: parent.height - y
@@ -83,7 +65,7 @@ Row {
                     anchors.centerIn: parent
                     text: tab.modelData
                     color: tab.selected ? Colors.fg : Colors.dim
-                    font.bold: !Metrics.pixel && (tab.selected)
+                    font.bold: !Metrics.pixel && tab.selected
                 }
             }
 

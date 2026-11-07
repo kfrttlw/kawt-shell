@@ -53,7 +53,7 @@ try("binds", function()
     bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(kawt .. "toggleLight")) -- dark <-> light
     bind(mod .. " + N", hl.dsp.exec_cmd(kawt .. "toggle notifs")) -- notification log
     bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd(kawt .. "dnd")) -- do not disturb
-    bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle dashboard")) -- the profile, full screen
+    bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle today")) -- today: tasks, notes, the focus timer
     bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
     bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
     bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)

@@ -5,7 +5,6 @@ import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
-import "../profile"
 
 // ┌─run─────────────────────────────────────esc┐
 // │ [apps] run  term  calc  ai                  │
@@ -24,12 +23,9 @@ PanelWindow {
     id: root
 
     required property ShellScreen forScreen
-    // the start menu (the bar's kawt button with raised frames): the same search at the bar's
-    // left end, its sections beside it (MenuSections.qml); "launcher" is the plain one in the middle
-    readonly property bool asMenu: false // the start menu is StartMenu.qml now
-    readonly property bool open: Panels.isOpen("launcher", forScreen) || asMenu
-    property string section: "apps"
-    readonly property int maxRows: asMenu ? 8 : 9
+    // the plain search in the middle of the screen (the start menu is StartMenu.qml)
+    readonly property bool open: Panels.isOpen("launcher", forScreen)
+    readonly property int maxRows: 9
     readonly property int rowHeight: Metrics.fontSize + 16
 
     readonly property var modes: [
@@ -55,7 +51,7 @@ PanelWindow {
     // $: the ai's command is there, for what's typed now (Ai is only named in this mode)
     readonly property bool cmdReady: mode === "$" && Ai.cmdFor === arg && Ai.cmdText !== "" && !Ai.cmdBusy
     // the menu with nothing typed: your pinned apps first, as a start menu has them
-    readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : asMenu && !query.trim() ? [...Apps.pinned, ...Apps.search("").filter(a => !Apps.isPinned(a))].slice(0, 60) : Apps.search(query).slice(0, 60)
+    readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : Apps.search(query).slice(0, 60)
     readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
     readonly property var emojis: open && mode === "." ? Emoji.search(arg) : []
     // open windows whose title or class has the typed text
@@ -86,7 +82,6 @@ PanelWindow {
     OpenWatch {
         open: root.open
         onOpened: {
-            root.section = "apps";
             input.text = Panels.launcherPrefix;
             Panels.launcherPrefix = "";
             root.current = 0;
@@ -97,20 +92,6 @@ PanelWindow {
     onQueryChanged: {
         current = 0;
         expanded = null;
-        // typing in the menu searches, whatever section is open (as old start menus did)
-        if (query !== "")
-            section = "apps";
-    }
-    // with a section open the search is hidden, and a hidden field gets no keys: the box takes
-    // them then (below)
-    onSectionChanged: {
-        if (section === "apps")
-            input.input.forceActiveFocus();
-        else
-            box.forceActiveFocus();
-        // profile and settings are one pane (the profile's own tabs): settings opens its cfg
-        if (section === "profile" || section === "settings")
-            pane.item?.show(section === "settings" ? "cfg" : "today");
     }
     onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : mode === "." ? emojiList : list).positionViewAtIndex(current, ListView.Contain)
     onModeChanged: {
@@ -176,10 +157,10 @@ PanelWindow {
         Panels.close();
     }
 
-    // dim the screen like a terminal taking over (the menu doesn't: it's part of the bar)
+    // dim the screen like a terminal taking over
     Rectangle {
         anchors.fill: parent
-        color: root.asMenu ? "transparent" : Qt.rgba(0, 0, 0, 0.35)
+        color: Qt.rgba(0, 0, 0, 0.35)
 
         MouseArea {
             anchors.fill: parent
@@ -190,31 +171,15 @@ PanelWindow {
     TitledBox {
         id: box
 
-        readonly property int sectionsWidth: Math.round(140 * Metrics.scale)
-        // the profile's tabs want the room they have under the bar's [●] (700 px)
-        readonly property bool wideSection: root.section === "profile" || root.section === "settings"
-        readonly property int inner: Math.max(Math.round(30 * Metrics.fontSize), wideSection ? (pane.item?.implicitHeight ?? 0) : 0)
-
-        // the menu hangs from the bar's left end (or stands on it, with the bar at the bottom),
-        // as big whichever section is open
-        x: root.asMenu ? Metrics.padding : Math.round((root.width - width) / 2)
-        y: !root.asMenu ? Math.round(root.height * 0.18) : Metrics.barBottom ? root.height - height - Metrics.bottomGap - Metrics.spacing : Metrics.topGap + Metrics.spacing
-        width: root.asMenu ? Math.min(Math.round((wideSection ? 700 : 480) * Metrics.scale) + sectionsWidth + Metrics.spacing + Metrics.padding * 2, root.width - Metrics.padding * 2) : Math.min(640, root.width - Metrics.padding * 2)
-        height: root.asMenu ? Math.min(root.height - Metrics.topGap - Metrics.bottomGap - Metrics.spacing * 2, contentTop + Metrics.padding * 2 + inner + Metrics.spacing + footer.implicitHeight) : body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: !root.asMenu ? "run" : root.section === "apps" ? root.modes[Math.max(0, root.modeIndex)].name : root.section
+        x: Math.round((root.width - width) / 2)
+        y: Math.round(root.height * 0.18)
+        width: Math.min(640, root.width - Metrics.padding * 2)
+        height: body.implicitHeight + Metrics.padding * 2 + contentTop
+        title: "run"
         hint: "esc"
         window: true
 
-        // a section open: esc closes, a letter goes back to the search with it
         Keys.onEscapePressed: Panels.close()
-        Keys.onPressed: event => {
-            if (event.text.length === 1 && event.text >= " " && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
-                root.section = "apps";
-                input.text += event.text;
-                input.input.cursorPosition = input.text.length;
-                event.accepted = true;
-            }
-        }
 
         NumberAnimation {
             id: fadeIn
@@ -233,12 +198,10 @@ PanelWindow {
         ColumnLayout {
             id: body
 
-            visible: !root.asMenu || root.section === "apps"
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Metrics.padding
-            anchors.leftMargin: Metrics.padding + (root.asMenu ? box.sectionsWidth + Metrics.spacing : 0)
             anchors.topMargin: Metrics.padding + box.contentTop
             spacing: Metrics.spacing
 
@@ -809,78 +772,6 @@ PanelWindow {
                     : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+o no net · ctrl+tab mode"
                 color: Colors.dim
                 font.pixelSize: Metrics.size(-3)
-            }
-        }
-
-        // ---- the start menu: its sections on the left, the open one on the right ("apps" is
-        // the search above; only the open one exists), the power buttons along the bottom
-        MenuSections {
-            id: sections
-
-            visible: root.asMenu
-            x: Metrics.padding
-            y: box.contentTop + Metrics.padding
-            width: box.sectionsWidth
-            height: footer.y - Metrics.spacing - y
-            current: root.section
-            onPicked: name => root.section = name
-        }
-
-        Loader {
-            id: pane
-
-            x: sections.x + sections.width + Metrics.spacing
-            y: sections.y
-            width: box.width - x - Metrics.padding
-            height: sections.height
-            active: root.asMenu && root.section !== "apps"
-            visible: active
-            sourceComponent: root.section === "today" ? todayPane : root.section === "notes" ? notesPane : root.section === "system" ? systemPane : root.section === "desks" ? desksPane : profilePane
-        }
-
-        MenuFooter {
-            id: footer
-
-            visible: root.asMenu
-            x: Metrics.padding
-            y: box.height - Metrics.padding - height
-            width: box.width - Metrics.padding * 2
-        }
-
-        Component {
-            id: todayPane
-
-            MenuToday {}
-        }
-
-        Component {
-            id: notesPane
-
-            MenuNotes {}
-        }
-
-        Component {
-            id: systemPane
-
-            MenuSystem {}
-        }
-
-        Component {
-            id: desksPane
-
-            MenuDesks {
-                screen: root.forScreen
-            }
-        }
-
-        // the bar's [●] profile, whole: the quick switches, then its tabs (cfg: the settings)
-        Component {
-            id: profilePane
-
-            ProfileContent {
-                open: root.open
-                forScreen: root.forScreen
-                Component.onCompleted: show(root.section === "settings" ? "cfg" : "today")
             }
         }
     }
