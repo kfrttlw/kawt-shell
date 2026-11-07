@@ -38,6 +38,31 @@ FloatingWindow {
     // closed by hyprland (super + q, the taskbar's menu): kawt lets it go too
     onClosed: close()
 
+    // up from behind the others, or back from the taskbar (Hypr.focusWindow does both)
+    function raise(): void {
+        const t = Hyprland.toplevels.values.find(w => w.title === root.title);
+        if (t)
+            Hypr.focusWindow(t);
+    }
+
+    Connections {
+        target: Panels
+
+        function onWindowAsked(name: string): void {
+            if (name === root.name)
+                root.raise();
+        }
+
+        function onWindowToggled(name: string): void {
+            if (name !== root.name)
+                return;
+            if (root.active)
+                root.close();
+            else
+                root.raise();
+        }
+    }
+
     KWindow {
         id: frame
 

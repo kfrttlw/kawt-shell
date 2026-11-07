@@ -1,19 +1,19 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
 
 // kawt's settings, one window, the one place they live (super + comma, start -> Settings): its
-// pages on the left (look, screen, media, device, windows, kawt), the page on the right. Esc or
-// × closes it; what's changed is saved at once (~/.local/state/kawt/settings.json).
-PanelWindow {
+// pages on the left (look, bar, screen, media, device, windows, kawt), the page on the right. A
+// real window, as today and system are (components/AppWindow.qml): esc, × or Close closes it;
+// what's changed is saved at once (~/.local/state/kawt/settings.json).
+AppWindow {
     id: root
 
-    required property ShellScreen forScreen
-    readonly property bool open: Panels.isOpen("settings", forScreen)
+    // the screen it opened on, for what its pages open in turn (the style window, stripes...)
+    property ShellScreen forScreen: null
     property int page: 0
     // the pages, in the list's order (each its own file here)
     readonly property var pages: [
@@ -27,44 +27,42 @@ PanelWindow {
     ]
     readonly property int rowHeight: Metrics.fontSize + 13
 
-    screen: forScreen
-    visible: open
-    color: "transparent"
+    name: "settings"
+    icon: "gear"
+    title: `${Strings.t("settingsTitle")} — kawt`
+    bodyWidth: Math.round(940 * Metrics.scale)
+    bodyHeight: Math.min(Math.round(620 * Metrics.scale), (forScreen?.height ?? 768) - Metrics.barHeight - 120)
 
-    WlrLayershell.namespace: "kawt-dashboard"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    anchors.top: true
-    anchors.left: true
-    anchors.right: true
-    anchors.bottom: true
+    // the page asked for (Panels.settingsPage: "bar", "screen"...), now or while it's open
+    function openAt(name: string): void {
+        const i = pages.findIndex(p => p.page === name);
+        if (i >= 0)
+            page = i;
+        Panels.settingsPage = "";
+    }
 
-    OpenWatch {
-        open: root.open
-        onOpened: {
-            const i = root.pages.findIndex(p => p.page === Panels.settingsPage);
-            if (i >= 0)
-                root.page = i;
-            Panels.settingsPage = "";
-            keys.forceActiveFocus();
+    Component.onCompleted: {
+        forScreen = Quickshell.screens.find(s => s.name === Panels.focusedScreen) ?? Quickshell.screens[0] ?? null;
+        openAt(Panels.settingsPage);
+        keys.forceActiveFocus();
+    }
+
+    Connections {
+        target: Panels
+
+        function onSettingsPageChanged(): void {
+            if (Panels.settingsPage !== "")
+                root.openAt(Panels.settingsPage);
         }
     }
 
-    // a click outside closes it
-    MouseArea {
-        anchors.fill: parent
-        onClicked: Panels.close()
-    }
-
+    // ↑ ↓ (and page up / down): the next page; esc goes on to the window, which closes
     Item {
         id: keys
 
         focus: true
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Escape)
-                Panels.close();
-            else if (event.key === Qt.Key_Down || event.key === Qt.Key_PageDown)
+            if (event.key === Qt.Key_Down || event.key === Qt.Key_PageDown)
                 root.page = (root.page + 1) % root.pages.length;
             else if (event.key === Qt.Key_Up || event.key === Qt.Key_PageUp)
                 root.page = (root.page + root.pages.length - 1) % root.pages.length;
@@ -74,190 +72,178 @@ PanelWindow {
         }
     }
 
-    KWindow {
-        id: win
+    MouseArea {
+        anchors.fill: parent
+        onClicked: keys.forceActiveFocus()
+    }
 
-        x: Math.round((root.width - width) / 2)
-        y: Math.round((root.height - height) / 2)
-        width: Math.min(root.width - 60, Math.round(1000 * Metrics.scale))
-        height: Math.min(root.height - Metrics.barHeight - 60, Math.round(700 * Metrics.scale))
-        title: `${Strings.t("settingsTitle")} — kawt`
-        icon: "gear"
-        onCloseClicked: Panels.close()
+    // the pages: a sunk list, the open one in the accent
+    Rectangle {
+        id: list
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: keys.forceActiveFocus()
+        width: Math.round(200 * Metrics.scale)
+        height: parent.height - foot.height - 8
+        color: Colors.well
+
+        Bevel {
+            style: "sunk"
         }
 
-        // the pages: a sunk list, the open one in the accent
-        Rectangle {
-            id: list
+        Column {
+            x: 3
+            y: 3
+            width: parent.width - 6
 
-            width: Math.round(200 * Metrics.scale)
-            height: parent.height - foot.height - 8
-            color: Colors.well
+            Repeater {
+                model: root.pages
 
-            Bevel {
-                style: "sunk"
-            }
+                Item {
+                    id: entry
 
-            Column {
-                x: 3
-                y: 3
-                width: parent.width - 6
+                    required property var modelData
+                    required property int index
+                    readonly property bool picked: index === root.page
 
-                Repeater {
-                    model: root.pages
+                    width: parent.width
+                    height: root.rowHeight
 
-                    Item {
-                        id: entry
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: entry.picked
+                        color: Colors.accent
+                    }
 
-                        required property var modelData
-                        required property int index
-                        readonly property bool picked: index === root.page
+                    PixIcon {
+                        x: 5
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: entry.modelData.icon
+                    }
 
-                        width: parent.width
-                        height: root.rowHeight
+                    Label {
+                        x: 27
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Strings.t(entry.modelData.key)
+                        color: entry.picked ? Colors.onAccent : Colors.fg
+                    }
 
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: entry.picked
-                            color: Colors.accent
-                        }
-
-                        PixIcon {
-                            x: 5
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: entry.modelData.icon
-                        }
-
-                        Label {
-                            x: 27
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: Strings.t(entry.modelData.key)
-                            color: entry.picked ? Colors.onAccent : Colors.fg
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.page = entry.index;
-                                keys.forceActiveFocus();
-                            }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.page = entry.index;
+                            keys.forceActiveFocus();
                         }
                     }
                 }
             }
         }
+    }
 
-        // the page, scrolled when it's long
-        Flickable {
-            id: pane
+    // the page, scrolled when it's long
+    Flickable {
+        id: pane
 
-            anchors.left: list.right
-            anchors.leftMargin: 12
-            anchors.right: parent.right
-            anchors.rightMargin: 6
-            height: parent.height - foot.height - 8
-            contentHeight: shown.implicitHeight + 8
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
+        anchors.left: list.right
+        anchors.leftMargin: 12
+        anchors.right: parent.right
+        anchors.rightMargin: 6
+        height: parent.height - foot.height - 8
+        contentHeight: shown.implicitHeight + 8
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-            Loader {
-                id: shown
+        Loader {
+            id: shown
 
-                readonly property var entry: root.pages[root.page]
+            readonly property var entry: root.pages[root.page]
 
-                width: pane.width - 6
-                sourceComponent: ({ look: lookPage, bar: barPage, screen: screenPage, media: mediaPage, device: devicePage, windows: windowsPage, kawt: kawtPage })[entry.page]
-            }
+            width: pane.width - 6
+            sourceComponent: ({ look: lookPage, bar: barPage, screen: screenPage, media: mediaPage, device: devicePage, windows: windowsPage, kawt: kawtPage })[entry.page]
         }
+    }
 
-        Component {
-            id: lookPage
+    Component {
+        id: lookPage
 
-            LookPage {
-                forScreen: root.forScreen
-            }
+        LookPage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: barPage
+    Component {
+        id: barPage
 
-            BarPage {
-                forScreen: root.forScreen
-            }
+        BarPage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: screenPage
+    Component {
+        id: screenPage
 
-            ScreenPage {
-                forScreen: root.forScreen
-            }
+        ScreenPage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: mediaPage
+    Component {
+        id: mediaPage
 
-            MediaPage {
-                forScreen: root.forScreen
-            }
+        MediaPage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: devicePage
+    Component {
+        id: devicePage
 
-            DevicePage {
-                forScreen: root.forScreen
-            }
+        DevicePage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: windowsPage
+    Component {
+        id: windowsPage
 
-            WindowsPage {
-                forScreen: root.forScreen
-            }
+        WindowsPage {
+            forScreen: root.forScreen
         }
+    }
 
-        Component {
-            id: kawtPage
+    Component {
+        id: kawtPage
 
-            KawtPage {
-                forScreen: root.forScreen
-            }
+        KawtPage {
+            forScreen: root.forScreen
         }
+    }
 
-        // the key, and Close
-        RowLayout {
-            id: foot
+    // the key, and Close
+    RowLayout {
+        id: foot
 
-            anchors.bottom: parent.bottom
-            width: parent.width
+        anchors.bottom: parent.bottom
+        width: parent.width
 
-            Label {
-                Layout.fillWidth: true
-                text: Strings.t("settingsKey")
-                color: Colors.dim
-            }
-
-            PushButton {
-                text: Strings.t("close")
-                onClicked: Panels.close()
-            }
-        }
-
-        // where you are in a long page
-        Rectangle {
-            visible: pane.contentHeight > pane.height
-            anchors.right: parent.right
-            width: 3
-            y: pane.visibleArea.yPosition * pane.height
-            height: pane.visibleArea.heightRatio * pane.height
+        Label {
+            Layout.fillWidth: true
+            text: Strings.t("settingsKey")
             color: Colors.dim
         }
+
+        PushButton {
+            text: Strings.t("close")
+            onClicked: root.close()
+        }
+    }
+
+    // where you are in a long page
+    Rectangle {
+        visible: pane.contentHeight > pane.height
+        anchors.right: parent.right
+        width: 3
+        y: pane.visibleArea.yPosition * pane.height
+        height: pane.visibleArea.heightRatio * pane.height
+        color: Colors.dim
     }
 }
