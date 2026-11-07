@@ -34,7 +34,7 @@ Variants {
 
         WlrLayershell.namespace: "kawt-bar"
 
-        // tucked away (kawt bar, super+shift+b, or profile -> cfg): a 2 px edge that takes no
+        // tucked away (kawt bar, super+shift+b, or settings -> bar): a 2 px edge that takes no
         // room from the windows. The pointer at that edge brings the bar out over them; it goes
         // again half a second after the pointer leaves, unless one of its panels is open
         property bool peeking: false
@@ -79,7 +79,7 @@ Variants {
             }
         }
 
-        // the top edge, or the bottom one (profile -> cfg -> bar). Every button can be switched
+        // the top edge, or the bottom one (settings -> bar). Every button can be switched
         // off there too: Settings.barShows(name), with the names used below
         anchors.top: !Metrics.barBottom
         anchors.bottom: Metrics.barBottom

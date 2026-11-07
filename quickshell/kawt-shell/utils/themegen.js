@@ -383,7 +383,7 @@ function gtk(head, t, v, font) {
     ].join("\n");
 }
 
-// kawt's own fastfetch logos (profile -> cfg -> wallpaper & themes -> fastfetch), in fastfetch's
+// kawt's own fastfetch logos (super + w -> theme -> fastfetch), in fastfetch's
 // own markup: $1 the lines (dim), $2 the ink (the text color), $3 the red dot (the accent).
 //   kawt        kawt in half blocks, small enough to sit beside the info
 //   trackpoint  the keys g h b and the red nub between them

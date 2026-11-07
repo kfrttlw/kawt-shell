@@ -394,7 +394,7 @@ Singleton {
             minimize(t);
     }
 
-    // ---- windows that float at their own size (profile -> cfg -> windows)
+    // ---- windows that float at their own size (settings -> windows)
     // hypr/kawt.lua makes a rule for each class in windows.lua: floating from the start, in the
     // middle, at the size the app asks for instead of stretched by the layout. The file is
     // written again on every change and hyprland reads its config again. Lua configs only
@@ -439,7 +439,7 @@ Singleton {
             rulesAgain = true;
             return;
         }
-        const lines = ["-- written by kawt (profile -> cfg -> windows): these float at their own size, in the middle", "return {"];
+        const lines = ["-- written by kawt (settings -> windows): these float at their own size, in the middle", "return {"];
         // a class with a line break or a control sign can't be one: left out
         for (const c of floating)
             if (!/[\x00-\x1f]/.test(c))

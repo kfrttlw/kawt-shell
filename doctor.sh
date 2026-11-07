@@ -201,13 +201,13 @@ echo "-- locking"
 # kawt locks before sleep through logind (services/Session.qml): it needs gdbus and systemd-inhibit
 if command -v gdbus > /dev/null && command -v systemd-inhibit > /dev/null; then
     good "gdbus + systemd-inhibit: kawt locks before sleep and on loginctl lock-session"
-    [[ $(setting lockOnSleep) == false ]] && info "but 'before sleep' is off in profile -> cfg"
+    [[ $(setting lockOnSleep) == false ]] && info "but 'before sleep' is off in settings -> screen and lock"
 else
     fail "no gdbus or systemd-inhibit: kawt can't lock before sleep" "sudo pacman -S --needed glib2 systemd"
 fi
 # a second locker would fight kawt's over the screen
 for other in hypridle hyprlock swayidle swaylock; do
-    pgrep -x "$other" > /dev/null && info "$other is running too: let only one of them lock (kawt's switches are in profile -> cfg)"
+    pgrep -x "$other" > /dev/null && info "$other is running too: let only one of them lock (kawt's switches are in settings -> screen and lock)"
 done
 
 echo "-- network (what goes out by itself)"

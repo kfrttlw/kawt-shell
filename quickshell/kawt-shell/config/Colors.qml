@@ -258,7 +258,7 @@ Singleton {
 
     // ---- the themes to pick, in order: black and white (the thinkpad theme, dark and light),
     // the wallpaper's once one was looked at (in the variant you're in), then your own. The style
-    // window shows them all; [<] [>] in profile -> cfg and [ ] in the style window walk them
+    // window shows them all; the look page in settings and [ ] in the style window walk them
     readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...names.filter(n => n !== "thinkpad").map(n => ({ name: n, theme: n, light: null }))]
     readonly property int chosen: choices.findIndex(c => isCurrent(c))
     readonly property string chosenName: choices[chosen]?.name ?? mode

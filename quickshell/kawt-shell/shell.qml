@@ -61,6 +61,6 @@ ShellRoot {
         Night.on; // the night light, if it was on
         Hypr.lua; // keeps the special workspace in the bar up to date
         if (Settings.updateAuto)
-            Update.repo; // the weekly update check (one git fetch to github; off in profile -> cfg)
+            Update.repo; // the weekly update check (one git fetch to github; off in settings -> kawt)
     }
 }

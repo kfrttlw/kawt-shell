@@ -137,7 +137,7 @@ ColumnLayout {
 
     // Every tab is in a Loader: only the shown one exists. With all of them made at once (and
     // hidden), opening the profile built the todo list, the notes, the cfg and the process list
-    // every time, and the cfg tab alone pulled in the whole ai service.
+    // every time, and the old cfg tab alone pulled in the whole ai service.
     component Page: Loader {
         required property string name
 

@@ -210,7 +210,7 @@ Popover {
                 color: Colors.dim
             }
 
-            // spotify's covers are on its servers: fetched only once you say so (profile -> cfg)
+            // spotify's covers are on its servers: fetched only once you say so (settings -> sound and media)
             PushButton {
                 Layout.topMargin: 2
                 visible: root.artOnline && !Settings.playerNetCovers

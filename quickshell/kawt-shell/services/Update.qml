@@ -5,7 +5,7 @@ import Quickshell.Io
 import qs.config
 import qs.utils
 
-// kawt's own updates (profile -> cfg -> kawt). Knowing whether there's a new version means
+// kawt's own updates (settings -> kawt). Knowing whether there's a new version means
 // asking github: [check] does that once (git fetch), and Settings.updateAuto (on by default)
 // does it by itself once a week, saying so in a notification only when there's something new
 // (stripes hops out to say so). Off: nothing goes out unless [check] is pressed. [update]
