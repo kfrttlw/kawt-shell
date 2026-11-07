@@ -27,6 +27,9 @@ Item {
     }
 
     signal accepted(string text)
+    signal shiftAccepted(string text) // shift + enter, when `shiftEnter` is on (else it's enter)
+
+    property bool shiftEnter: false
 
     implicitHeight: input.implicitHeight + (framed ? 8 : 6)
 
@@ -73,6 +76,11 @@ Item {
 
         // → at the end of the line, or tab: take the gray suggestion
         Keys.onPressed: event => {
+            if (root.shiftEnter && (event.modifiers & Qt.ShiftModifier) && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+                root.shiftAccepted(text);
+                event.accepted = true;
+                return;
+            }
             if (root.suggestion && (event.key === Qt.Key_Tab || (event.key === Qt.Key_Right && cursorPosition === text.length))) {
                 text = root.suggestion;
                 cursorPosition = text.length;

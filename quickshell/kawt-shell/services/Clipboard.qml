@@ -41,6 +41,33 @@ Singleton {
         entries = entries.filter(e => e.line !== entry.line);
     }
 
+    // a copied picture's look, for the launcher: the picked one is written to a file
+    // (XDG_RUNTIME_DIR: gone at logout), the one before it is removed
+    property string shownLine: ""
+    property string shownPath: ""
+
+    function isImage(entry: var): bool {
+        return entry?.text?.startsWith("[[ binary data") ?? false;
+    }
+
+    function show(entry: var): void {
+        if (!isImage(entry) || entry.line === shownLine)
+            return;
+        shownLine = entry.line;
+        const path = `${Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"}/kawt-clip-${entry.id}`;
+        decoder.path = path;
+        decoder.command = ["sh", "-c", 'rm -f "$3"; printf "%s" "$1" | cliphist decode > "$2"', "sh", entry.line, path, shownPath];
+        decoder.running = true;
+    }
+
+    Process {
+        id: decoder
+
+        property string path: ""
+
+        onExited: root.shownPath = path
+    }
+
     function wipe(): void {
         Quickshell.execDetached(["cliphist", "wipe"]);
         entries = [];

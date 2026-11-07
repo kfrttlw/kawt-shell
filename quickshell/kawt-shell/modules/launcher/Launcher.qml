@@ -6,64 +6,104 @@ import qs.config
 import qs.components
 import qs.services
 
-// ┌─run─────────────────────────────────────esc┐
-// │ [apps] run  term  calc  ai                  │
-// │ $ fire█                                     │
-// │ > ▣ Firefox *                   web browser │
-// └─────────────────────────────────────────────┘
-// rofi-style launcher. Modes are just prefixes: !cmd shell, >cmd terminal, =expr calc, ?text ai,
-// $text a command from the ai (enter: it's written; enter again: into > to look at and run;
-// tab: copy; it never runs by itself), :text clipboard, ;text open windows, .text emoji, so they
-// can be typed directly or picked with
-// ctrl+tab / a click on the tab. → on an app with actions of its own (firefox: a private window)
-// lists them.
-// The lists are ScriptModels with reused rows: typing a letter re-sorts the rows that are
-// already there instead of making all of them (and their icons) again.
+// super + space: the run box, the old way, in the middle of the screen.
+//
+//   ┌ 🔍 kawt — run ─────────────────────────────── × ┐
+//   │ Open: [fire█                    ] [Programs  ▼] │
+//   │ ┌─────────────────────────────────────────────┐ │
+//   │ │ ◯ Firefox                       web browser │ │  the picked one red
+//   │ │ ▭ Files                              thunar │ │
+//   │ └─────────────────────────────────────────────┘ │
+//   │ ↑↓ pick · enter open    │ ctrl+s pin · tab mode │
+//   └─────────────────────────────────────────────────┘
+//
+// The modes are a list on the right of the field (a click on it or alt + ↓; tab: the next one), and
+// still prefixes, typed straight in: ! a command (shift + enter: in a terminal; > on its own
+// still starts it in one), = the calculator, ? a short answer from the ai (enter again: the whole
+// talk in the ai panel), $ a command from the ai (enter: it's written; enter again: into the
+// command line, to look at and run; tab: copy; it never runs by itself), : the clipboard, ; open
+// windows, . emoji. → on an app with actions of its own (firefox: a private window) lists them.
+// The calculator's and the ai's answers come big in the field instead of a list.
+// The list is a ScriptModel with reused rows: typing a letter re-sorts the rows that are already
+// there instead of making all of them (and their icons) again.
 PanelWindow {
     id: root
 
     required property ShellScreen forScreen
-    // the plain search in the middle of the screen (the start menu is StartMenu.qml)
     readonly property bool open: Panels.isOpen("launcher", forScreen)
-    readonly property int maxRows: 9
-    readonly property int rowHeight: Metrics.fontSize + 16
+    readonly property int maxRows: 8
+    readonly property int rowHeight: Metrics.fontSize + 11
 
     readonly property var modes: [
-        { prefix: "", name: "apps" },
-        { prefix: "!", name: "run" },
-        { prefix: ">", name: "term" },
-        { prefix: "=", name: "calc" },
-        { prefix: "?", name: "ai" },
-        { prefix: "$", name: "cmd" },
-        { prefix: ":", name: "clip" },
-        { prefix: ";", name: "win" },
-        { prefix: ".", name: "emoji" }
+        { prefix: "", name: "modeApps", icon: "apps" },
+        { prefix: "!", name: "modeCmd", icon: "run" },
+        { prefix: "=", name: "modeCalc", icon: "calc" },
+        { prefix: "?", name: "modeAi", icon: "ai" },
+        { prefix: "$", name: "modeAiCmd", icon: "terminal" },
+        { prefix: ":", name: "modeClip", icon: "clip" },
+        { prefix: ";", name: "modeWin", icon: "win" },
+        { prefix: ".", name: "modeEmoji", icon: "emoji" }
     ]
     readonly property string query: input.text
-    readonly property string mode: modes.some(m => m.prefix && query.startsWith(m.prefix)) ? query[0] : ""
+    // > (in a terminal) is the command mode, its first line the terminal's
+    readonly property string typed: /^[!>=?$:;.]/.test(query) ? query[0] : ""
+    readonly property string mode: typed === ">" ? "!" : typed
     readonly property int modeIndex: modes.findIndex(m => m.prefix === mode)
-    readonly property string arg: mode ? query.slice(1).trim() : query
+    readonly property string arg: typed ? query.slice(1).trim() : query
     // the plain calculator at once; with qalc, what it can't do a moment later (services/Apps.qml)
     readonly property string calcPlain: mode === "=" ? Apps.calc(arg) : ""
     readonly property string calcResult: mode !== "=" ? "" : calcPlain || (Apps.qalcFor === arg ? Apps.qalcOut : "")
     // the app whose own actions are listed (→ on it); typing goes back to the search
     property var expanded: null
-    // $: the ai's command is there, for what's typed now (Ai is only named in this mode)
+    // $ and ?: the ai's answer is there, for what's typed now (Ai is only named in these modes:
+    // naming it at all loads the whole ai service, and all saved chats)
     readonly property bool cmdReady: mode === "$" && Ai.cmdFor === arg && Ai.cmdText !== "" && !Ai.cmdBusy
-    // the menu with nothing typed: your pinned apps first, as a start menu has them
-    readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : Apps.search(query).slice(0, 60)
-    readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
-    readonly property var emojis: open && mode === "." ? Emoji.search(arg) : []
-    // open windows whose title or class has the typed text
-    // (typed in the wrong layout: found too, services/Apps.qml)
-    readonly property string argAlt: Apps.otherLayout(arg.toLowerCase())
-    readonly property var wins: open && mode === ";" ? Hypr.windows.filter(w => {
-        const t = `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase();
-        return t.includes(arg.toLowerCase()) || (argAlt !== "" && t.includes(argAlt));
-    }) : []
-    // how many rows the current mode lists (apps, clipboard entries or windows)
-    readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : mode === "." ? emojis.length : results.length
+    readonly property bool shortReady: mode === "?" && Ai.shortFor === arg && !Ai.shortBusy && (Ai.shortText !== "" || Ai.shortError !== "")
+    readonly property bool answers: mode === "=" || mode === "?" || mode === "$"
+    property bool modesOpen: false
+
+    // what the list shows, one line each: { kind, text, note, icon | app | glyph, ... }
+    readonly property var lines: {
+        if (!open || answers)
+            return [];
+        if (mode === "!") {
+            const hist = Apps.runs.filter(c => c !== arg && c.toLowerCase().includes(arg.toLowerCase()));
+            return [
+                ...(arg ? [
+                    { kind: "run", icon: "run", text: Strings.t("runLine").arg(arg), cmd: arg, note: "enter" },
+                    { kind: "term", icon: "terminal", text: Strings.t("termLine").arg(arg), cmd: arg, note: "shift+enter" }
+                ] : []),
+                ...hist.slice(0, 20).map(c => ({ kind: "run", icon: "run", text: c, cmd: c, note: Strings.t("historyWord"), old: true }))
+            ];
+        }
+        if (mode === ":")
+            return Clipboard.search(arg).map(e => {
+                const img = Clipboard.isImage(e);
+                // "[[ binary data 23 KiB png 1920x1080 ]]"
+                const m = img ? /binary data (.+?) (\w+) (\d+)x(\d+)/.exec(e.text) : null;
+                return { kind: "clip", icon: img ? "picture" : "clip", entry: e, image: img, text: img ? Strings.t("clipPicture").arg(m ? `${m[3]}×${m[4]}` : "") : e.text.replace(/\s+/g, " "), note: m ? `${m[2]} · ${m[1]}` : "" };
+            });
+        if (mode === ";") {
+            const alt = Apps.otherLayout(arg.toLowerCase());
+            return Hypr.windows.filter(w => {
+                const t = `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase();
+                return t.includes(arg.toLowerCase()) || (alt !== "" && t.includes(alt));
+            }).map(w => {
+                const cls = w.lastIpcObject?.class ?? "";
+                return { kind: "win", win: w, appIcon: DesktopEntries.heuristicLookup(cls)?.icon ?? "", appName: cls || w.title || "?", text: w.title || cls, note: [w.workspace ? `${Strings.t("desk").toLowerCase()} ${w.workspace.id}` : "", cls.toLowerCase()].filter(s => s).join(" · ") };
+            });
+        }
+        if (mode === ".") {
+            // the russian names next to the english ones on a russian (ukrainian...) system, or
+            // when that's what's typed; the other english names otherwise
+            const cyr = Strings.ru || /^(ru|uk|be)/.test(Qt.locale().name) || /[а-яёіїєґ]/i.test(arg);
+            return Emoji.search(arg).map(e => ({ kind: "emoji", item: e, glyph: e.e, text: e.en, note: cyr ? e.ru : e.other }));
+        }
+        const apps = expanded ? [expanded, ...Apps.actionsOf(expanded)] : Apps.search(query).slice(0, 60);
+        return apps.map(a => ({ kind: "app", app: a, appIcon: a.icon, appName: a.name, text: a.name, note: a.isAction ? Strings.t("actionWord") : (a.genericName || a.comment || "").toLowerCase() }));
+    }
     property int current: 0
+    readonly property var line: lines[current] ?? null
 
     screen: forScreen
     visible: open
@@ -84,16 +124,22 @@ PanelWindow {
         onOpened: {
             input.text = Panels.launcherPrefix;
             Panels.launcherPrefix = "";
-            root.current = 0;
+            root.current = root.typed === ">" ? 1 : 0;
+            root.modesOpen = false;
             input.input.forceActiveFocus();
-            fadeIn.restart();
         }
     }
     onQueryChanged: {
-        current = 0;
+        current = typed === ">" && arg ? 1 : 0;
         expanded = null;
     }
-    onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : mode === "." ? emojiList : list).positionViewAtIndex(current, ListView.Contain)
+    onCurrentChanged: {
+        list.positionViewAtIndex(current, ListView.Contain);
+        if (line?.image)
+            Clipboard.show(line.entry);
+    }
+    onLinesChanged: if (line?.image)
+        Clipboard.show(line.entry)
     onModeChanged: {
         if (mode === ":")
             Clipboard.refresh();
@@ -106,8 +152,12 @@ PanelWindow {
         Apps.qalc(arg)
 
     function move(delta: int): void {
-        if (rows > 0)
-            current = (current + delta + rows) % rows;
+        if (modesOpen) {
+            setMode(modeIndex + delta);
+            return;
+        }
+        if (lines.length > 0)
+            current = (current + delta + lines.length) % lines.length;
     }
 
     function setMode(i: int): void {
@@ -117,31 +167,40 @@ PanelWindow {
         input.input.forceActiveFocus();
     }
 
-    function accept(): void {
-        if (mode === "!" && arg) {
-            Apps.run(arg);
-        } else if (mode === ">" && arg) {
-            Apps.runInTerminal(arg);
+    function copy(text: string): void {
+        try {
+            Quickshell.clipboardText = text;
+        } catch (e) {
+            Quickshell.execDetached(["wl-copy", "--", text]); // older quickshell
+        }
+    }
+
+    // enter (shift + enter: `inTerminal`)
+    function accept(inTerminal: bool): void {
+        const l = line;
+        if (modesOpen) {
+            modesOpen = false;
+            return;
+        }
+        if (mode === "!" && l) {
+            Apps.remember(l.cmd);
+            if (inTerminal || l.kind === "term")
+                Apps.runInTerminal(l.cmd);
+            else
+                Apps.run(l.cmd);
         } else if (mode === "=" && calcResult) {
-            // qalc's "≈ 0.33": the number
-            const value = calcResult.replace(/^[≈=]\s*/, "");
-            try {
-                Quickshell.clipboardText = value;
-            } catch (e) {
-                Quickshell.execDetached(["wl-copy", "--", value]); // older quickshell
-            }
-        } else if (mode === ":" && clips[current]) {
-            Clipboard.copy(clips[current]);
-        } else if (mode === ";" && wins[current]) {
-            Hypr.focusWindow(wins[current]);
-        } else if (mode === "." && emojis[current]) {
-            Emoji.pick(emojis[current]);
+            copy(calcResult.replace(/^[≈=]\s*/, "")); // qalc's "≈ 0.33": the number
         } else if (mode === "?" && arg) {
+            // the short answer first; enter again (or shift + enter at once): the ai panel
+            if (!inTerminal && !shortReady) {
+                Ai.shortAnswer(arg);
+                return;
+            }
             Panels.sidebarScreen = forScreen.name;
             Panels.sidebarOpen = true;
             Ai.send(arg);
         } else if (mode === "$" && arg) {
-            // the command written: into terminal mode, to read (and change) before it runs
+            // the command written: into the command line, to read (and change) before it runs
             if (cmdReady) {
                 input.text = `>${Ai.cmdText}`;
                 input.input.cursorPosition = input.text.length;
@@ -149,629 +208,569 @@ PanelWindow {
                 Ai.suggestCommand(arg);
             }
             return;
-        } else if (!mode && results[current]) {
-            Apps.launch(results[current]);
+        } else if (mode === ":" && l) {
+            Clipboard.copy(l.entry);
+        } else if (mode === ";" && l) {
+            Hypr.focusWindow(l.win);
+        } else if (mode === "." && l) {
+            Emoji.pick(l.item);
+        } else if (!mode && l) {
+            Apps.launch(l.app);
         } else {
             return;
         }
         Panels.close();
     }
 
-    // dim the screen like a terminal taking over
-    Rectangle {
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.35)
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Panels.close()
-        }
+    // the two cells of the status bar: what the keys do here
+    readonly property var hints: {
+        const k = s => Strings.t(s);
+        if (modesOpen)
+            return [k("hintPickTake"), k("hintNextMode")];
+        if (mode === "!")
+            return [k("hintRun"), Apps.runs.length ? k("hintForget") : k("hintMode")];
+        if (mode === "=")
+            return [k("hintCopy"), k("hintMode")];
+        if (mode === "?")
+            return [shortReady ? k("hintAiPanel") : k("hintAsk"), k("hintMode")];
+        if (mode === "$")
+            return [cmdReady ? k("hintIntoCmd") : k("hintWrite"), cmdReady ? k("hintCopyCmd") : k("hintMode")];
+        if (mode === ":")
+            return [k("hintPickCopy"), k("hintForget")];
+        if (mode === ";")
+            return [k("hintPickGo"), k("hintMode")];
+        if (mode === ".")
+            return [Emoji.canType ? k("hintPickType") : k("hintPickCopy"), k("hintMode")];
+        if (expanded)
+            return [k("hintPickRun"), k("hintBack")];
+        const actions = (line?.app?.actions?.length ?? 0) > 0 && !line?.app?.isAction;
+        return [(actions ? k("hintActions") + " · " : "") + k("hintPickOpen"), k("hintPin")];
     }
 
-    TitledBox {
+    // a click outside closes it
+    MouseArea {
+        anchors.fill: parent
+        onClicked: Panels.close()
+    }
+
+    KWindow {
         id: box
 
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.height * 0.18)
-        width: Math.min(640, root.width - Metrics.padding * 2)
-        height: body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: "run"
-        hint: "esc"
-        window: true
-
-        Keys.onEscapePressed: Panels.close()
-
-        NumberAnimation {
-            id: fadeIn
-
-            target: box
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 120
-        }
+        width: Math.min(Math.round(600 * Metrics.scale), root.width - Metrics.padding * 2)
+        height: chrome + body.implicitHeight
+        title: Strings.t("runTitle")
+        icon: "search"
+        pad: 6
+        status: root.hints
+        onCloseClicked: Panels.close()
 
         MouseArea {
-            anchors.fill: parent // swallow clicks so they don't close the launcher
+            anchors.fill: parent // swallow clicks so they don't close it
+            onClicked: root.modesOpen = false
         }
 
         ColumnLayout {
             id: body
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding
-            anchors.topMargin: Metrics.padding + box.contentTop
-            spacing: Metrics.spacing
+            width: parent.width
+            spacing: 6
 
-            // [apps] run term calc ai
-            Row {
-                spacing: Metrics.spacing
+            // Open: [what's typed] [mode ▼]
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
 
-                Repeater {
-                    model: root.modes
+                Label {
+                    text: Strings.t("runOpen")
+                }
 
-                    Item {
-                        id: tab
+                TermInput {
+                    id: input
+
+                    Layout.fillWidth: true
+                    prompt: ""
+                    placeholder: Strings.t("runPlaceholder")
+                    shiftEnter: true
+                    onAccepted: root.accept(false)
+                    onShiftAccepted: root.accept(true)
+
+                    // TextInput doesn't use these keys, so they bubble up to here
+                    Keys.onEscapePressed: {
+                        if (root.modesOpen)
+                            root.modesOpen = false;
+                        else if (root.expanded)
+                            root.expanded = null;
+                        else
+                            Panels.close();
+                    }
+                    Keys.onUpPressed: root.move(-1)
+                    // alt + ↓: the modes' list, as old drop-down lists opened
+                    Keys.onDownPressed: event => {
+                        if (event.modifiers & Qt.AltModifier)
+                            root.modesOpen = !root.modesOpen;
+                        else
+                            root.move(1);
+                    }
+                    // at the end of the line: the picked app's own actions
+                    Keys.onRightPressed: event => {
+                        const app = root.line?.app;
+                        if (!root.mode && !root.expanded && app && !app.isAction && (app.actions?.length ?? 0) > 0) {
+                            root.expanded = app;
+                            root.current = 0;
+                        } else {
+                            event.accepted = false;
+                        }
+                    }
+                    Keys.onLeftPressed: event => {
+                        if (root.expanded)
+                            root.expanded = null;
+                        else
+                            event.accepted = false;
+                    }
+                    Keys.onPressed: event => {
+                        const ctrl = event.modifiers & Qt.ControlModifier;
+                        const l = root.line;
+                        if (event.key === Qt.Key_Tab && !ctrl && root.cmdReady) {
+                            root.copy(Ai.cmdText);
+                            Panels.close();
+                        } else if (event.key === Qt.Key_Tab)
+                            root.setMode(root.modeIndex + 1);
+                        else if (event.key === Qt.Key_Backtab)
+                            root.setMode(root.modeIndex - 1);
+                        else if (ctrl && (event.key === Qt.Key_N || event.key === Qt.Key_J))
+                            root.move(1);
+                        else if (ctrl && (event.key === Qt.Key_P || event.key === Qt.Key_K))
+                            root.move(-1);
+                        else if (ctrl && event.key === Qt.Key_D && l?.kind === "clip")
+                            Clipboard.remove(l.entry);
+                        else if (ctrl && event.key === Qt.Key_D && l?.old)
+                            Apps.forget(l.cmd);
+                        else if (ctrl && event.key === Qt.Key_S && l?.kind === "app")
+                            Apps.togglePin(l.app);
+                        else if (ctrl && event.key === Qt.Key_O && l?.kind === "app")
+                            Apps.setOffline(l.app.isAction ? l.app.app.id : l.app.id, !Apps.isOffline(l.app));
+                        else
+                            return;
+                        event.accepted = true;
+                    }
+                }
+
+                // the mode: a box with ▼, the list opens under it
+                Rectangle {
+                    id: modeBox
+
+                    Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 17) + 22
+                    Layout.fillHeight: true
+                    color: Colors.well
+
+                    Bevel {
+                        style: "sunk"
+                    }
+
+                    Label {
+                        x: 5
+                        width: drop.x - x - 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
+                        text: Strings.t(root.modes[Math.max(0, root.modeIndex)].name)
+                    }
+
+                    ArrowButton {
+                        id: drop
+
+                        anchors.right: parent.right
+                        anchors.rightMargin: 2
+                        anchors.top: parent.top
+                        anchors.topMargin: 2
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 2
+                        width: 16
+                        dir: "down"
+                        down: root.modesOpen
+                        onClicked: root.modesOpen = !root.modesOpen
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.rightMargin: drop.width + 2
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.modesOpen = !root.modesOpen
+                    }
+                }
+            }
+
+            // the list, or the answer, sunk
+            Rectangle {
+                id: well
+
+                Layout.fillWidth: true
+                implicitHeight: root.maxRows * root.rowHeight + 6
+                color: Colors.well
+
+                Bevel {
+                    style: "sunk"
+                }
+
+                ListView {
+                    id: list
+
+                    x: 3
+                    y: 3
+                    width: (preview.visible ? preview.x - 3 : parent.width - 3) - x
+                    height: parent.height - 6
+                    visible: !root.answers
+                    clip: true
+                    reuseItems: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: ScriptModel {
+                        values: root.lines
+                    }
+
+                    delegate: Rectangle {
+                        id: row
 
                         required property var modelData
                         required property int index
-                        readonly property bool selected: index === root.modeIndex
+                        readonly property bool picked: index === root.current
+                        readonly property color ink: picked ? Colors.onAccent : Colors.fg
 
-                        implicitWidth: tabText.implicitWidth + 6
-                        implicitHeight: tabText.implicitHeight + 2
+                        width: list.width
+                        height: root.rowHeight
+                        color: picked ? Colors.accent : "transparent"
 
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: tabArea.containsMouse
-                            color: Colors.hoverFill
+                        AppIcon {
+                            id: appIcon
+
+                            visible: row.modelData.appName !== undefined
+                            x: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 16
+                            height: 16
+                            icon: row.modelData.appIcon ?? ""
+                            name: row.modelData.appName ?? ""
+                            colored: true
                         }
 
-                        Brackets {
-                            id: tabText
+                        PixIcon {
+                            visible: row.modelData.icon !== undefined
+                            x: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: row.modelData.icon ?? ""
+                        }
 
-                            anchors.centerIn: parent
-                            text: tab.modelData.name
-                            look: tab.selected ? "on" : "off"
-                            shown: tab.selected
+                        Label {
+                            visible: row.modelData.glyph !== undefined
+                            x: 2
+                            width: 20
+                            horizontalAlignment: Text.AlignHCenter
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: row.modelData.glyph ?? ""
+                        }
+
+                        // the typed letters stand out
+                        Label {
+                            id: words
+
+                            x: 28
+                            width: Math.min(implicitWidth, parent.width - x - (note.text ? note.implicitWidth + 16 : 6) - (marks.visible ? marks.implicitWidth + 6 : 0))
+                            anchors.verticalCenter: parent.verticalCenter
+                            elide: Text.ElideRight
+                            textFormat: row.modelData.kind === "app" ? Text.StyledText : Text.PlainText
+                            text: row.modelData.kind === "app" ? Apps.highlight(row.modelData.text, root.query, row.picked ? Colors.onAccent : Colors.accent) : row.modelData.text
+                            color: row.ink
+                        }
+
+                        // pinned (★), started without internet
+                        Label {
+                            id: marks
+
+                            readonly property bool pin: row.modelData.kind === "app" && Apps.isPinned(row.modelData.app)
+                            readonly property bool off: row.modelData.kind === "app" && Apps.isOffline(row.modelData.app)
+
+                            visible: pin || off
+                            x: words.x + words.width + 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: [pin ? "★" : "", off ? Strings.t("noNetWord") : ""].filter(s => s).join(" ")
+                            color: row.picked ? Colors.onAccent : Colors.accent
+                        }
+
+                        Label {
+                            id: note
+
+                            anchors.right: parent.right
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.min(implicitWidth, row.width * 0.4)
+                            elide: Text.ElideRight
+                            text: row.modelData.note ?? ""
+                            color: row.picked ? Colors.onAccent : Colors.dim
                         }
 
                         MouseArea {
-                            id: tabArea
-
                             anchors.fill: parent
                             hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.setMode(tab.index)
+                            // not onEntered: that also fires when the list scrolls under a resting mouse
+                            onPositionChanged: root.current = row.index
+                            onClicked: mouse => {
+                                root.current = row.index;
+                                if (mouse.button !== Qt.RightButton)
+                                    root.accept(false);
+                                else if (row.modelData.kind === "app")
+                                    Apps.togglePin(row.modelData.app);
+                                else if (row.modelData.kind === "clip")
+                                    Clipboard.remove(row.modelData.entry);
+                                else if (row.modelData.old)
+                                    Apps.forget(row.modelData.cmd);
+                            }
+                        }
+                    }
+                }
+
+                // a copied picture: how it looks, on the right
+                Rectangle {
+                    id: preview
+
+                    visible: root.mode === ":" && (root.line?.image ?? false) && Clipboard.shownPath !== ""
+                    x: Math.round(parent.width * 0.6)
+                    y: 6
+                    width: parent.width - x - 6
+                    height: parent.height - 12
+                    color: Colors.face
+
+                    Bevel {
+                        style: "well"
+                    }
+
+                    Image {
+                        anchors.fill: parent
+                        anchors.margins: 3
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        cache: false
+                        source: preview.visible ? `file://${Clipboard.shownPath}` : ""
+                    }
+                }
+
+                // nothing in the list: why
+                Label {
+                    visible: !root.answers && root.lines.length === 0
+                    anchors.centerIn: parent
+                    width: parent.width - 24
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    color: Colors.dim
+                    text: {
+                        if (root.mode === ":" && !Clipboard.available)
+                            return Strings.t("clipNeeds");
+                        if (root.mode === "." && Emoji.all.length === 0)
+                            return Strings.t("emojiReading");
+                        if (root.mode === "!")
+                            return Strings.t("cmdEmpty");
+                        if (root.arg)
+                            return `— ${Strings.t("noResults").toLowerCase()} —`;
+                        return root.mode === ":" ? `— ${Strings.t("clipEmpty")} —` : root.mode === ";" ? `— ${Strings.t("winEmpty")} —` : `— ${Strings.t("noResults").toLowerCase()} —`;
+                    }
+                }
+
+                // = ? $: the answer, big
+                ColumnLayout {
+                    visible: root.answers
+                    x: 10
+                    y: 8
+                    width: parent.width - 20
+                    spacing: 6
+
+                    Label {
+                        Layout.fillWidth: true
+                        visible: text !== ""
+                        wrapMode: Text.Wrap
+                        maximumLineCount: root.mode === "?" ? 5 : 3
+                        elide: Text.ElideRight
+                        font.pixelSize: root.mode === "?" && Ai.shortText.length > 60 ? Metrics.fontSize : Metrics.times(2)
+                                                text: {
+                            if (root.mode === "=")
+                                return root.calcResult ? `${/^[≈=]/.test(root.calcResult) ? "" : "= "}${root.calcResult}` : "";
+                            if (root.mode === "?")
+                                return root.shortReady ? Ai.shortText : "";
+                            if (root.mode === "$")
+                                return root.cmdReady ? Ai.cmdText : "";
+                            return "";
+                        }
+                    }
+
+                    // what the command does, what to look out for
+                    Label {
+                        Layout.fillWidth: true
+                        visible: root.cmdReady && text !== ""
+                        wrapMode: Text.Wrap
+                        text: root.cmdReady ? Ai.cmdAbout : ""
+                    }
+
+                    Label {
+                        readonly property var risks: root.cmdReady ? Ai.risks(Ai.cmdText) : []
+
+                        Layout.fillWidth: true
+                        visible: risks.length > 0
+                        wrapMode: Text.Wrap
+                        text: Strings.t("cmdCareful").arg(risks.join(", "))
+                        color: Colors.warn
+                    }
+
+                    // what happens on enter, or what to type
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: (root.mode === "?" && root.shortReady && Ai.shortError) || (root.mode === "$" && Ai.cmdFor === root.arg && Ai.cmdError) ? Colors.warn : Colors.dim
+                        text: {
+                            const model = root.mode === "?" || root.mode === "$" ? Ai.modelName : "";
+                            if (root.mode === "=")
+                                return root.calcResult ? Strings.t("calcCopy").arg(Apps.hasQalc ? "qalc" : Strings.t("calcPlainWord")) : root.arg ? "—" : Apps.hasQalc ? Strings.t("calcHelpQalc") : Strings.t("calcHelp");
+                            if (root.mode === "?") {
+                                if (!root.arg)
+                                    return Strings.t("aiShortHelp");
+                                if (Ai.shortBusy && Ai.shortFor === root.arg)
+                                    return Strings.t("aiThinking").arg(model);
+                                if (root.shortReady)
+                                    return Ai.shortError ? `!! ${Ai.shortError}` : Strings.t("aiShortDone").arg(model);
+                                return Strings.t("aiShortAsk").arg(model);
+                            }
+                            if (!root.arg)
+                                return Strings.t("aiCmdHelp");
+                            if (Ai.cmdBusy)
+                                return Strings.t("aiWriting").arg(model);
+                            if (Ai.cmdFor === root.arg && Ai.cmdError)
+                                return `!! ${Ai.cmdError}`;
+                            return root.cmdReady ? Strings.t("aiCmdDone") : Strings.t("aiCmdAsk").arg(model);
                         }
                     }
                 }
             }
 
-            TermInput {
-                id: input
-
-                Layout.fillWidth: true
-                prompt: "$"
-                placeholder: "search apps..."
-                onAccepted: root.accept()
-
-                // TextInput doesn't use these keys, so they bubble up to here
-                Keys.onEscapePressed: {
-                    if (root.expanded)
-                        root.expanded = null;
-                    else
-                        Panels.close();
-                }
-                Keys.onUpPressed: root.move(-1)
-                Keys.onDownPressed: root.move(1)
-                // at the end of the line: the selected app's own actions
-                Keys.onRightPressed: event => {
-                    const app = root.results[root.current];
-                    if (!root.mode && !root.expanded && !app?.isAction && (app?.actions?.length ?? 0) > 0) {
-                        root.expanded = app;
-                        root.current = 0;
-                    } else {
-                        event.accepted = false;
-                    }
-                }
-                Keys.onLeftPressed: event => {
-                    if (root.expanded)
-                        root.expanded = null;
-                    else
-                        event.accepted = false;
-                }
-                Keys.onPressed: event => {
-                    const ctrl = event.modifiers & Qt.ControlModifier;
-                    if (ctrl && event.key === Qt.Key_Tab)
-                        root.setMode(root.modeIndex + 1);
-                    else if (ctrl && event.key === Qt.Key_Backtab)
-                        root.setMode(root.modeIndex - 1);
-                    else if (event.key === Qt.Key_Tab && root.cmdReady) {
-                        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy', "sh", Ai.cmdText]);
-                        Panels.close();
-                    } else if (event.key === Qt.Key_Tab)
-                        root.move(1);
-                    else if (event.key === Qt.Key_Backtab)
-                        root.move(-1);
-                    else if (ctrl && (event.key === Qt.Key_N || event.key === Qt.Key_J))
-                        root.move(1);
-                    else if (ctrl && (event.key === Qt.Key_P || event.key === Qt.Key_K))
-                        root.move(-1);
-                    else if (ctrl && event.key === Qt.Key_D && root.mode === ":" && root.clips[root.current])
-                        Clipboard.remove(root.clips[root.current]);
-                    else if (ctrl && event.key === Qt.Key_S && root.results[root.current])
-                        Apps.togglePin(root.results[root.current]);
-                    else if (ctrl && event.key === Qt.Key_O && root.results[root.current]) {
-                        const app = root.results[root.current];
-                        Apps.setOffline(app.isAction ? app.app.id : app.id, !Apps.isOffline(app));
-                    } else
-                        return;
-                    event.accepted = true;
-                }
-            }
-
-            Rule {
-                Layout.fillWidth: true
-            }
-
-            // what a prefixed command will do
-            Label {
-                visible: root.mode !== ""
-                Layout.fillWidth: true
-                Layout.topMargin: 2
-                Layout.bottomMargin: 2
-                elide: Text.ElideRight
-                text: {
-                    if (root.mode === "!")
-                        return root.arg ? `sh -c '${root.arg}'` : "run a shell command in the background";
-                    if (root.mode === ">")
-                        return root.arg ? `${Settings.terminal} ${root.arg}` : "run a command in a terminal";
-                    if (root.mode === "=")
-                        return root.calcResult ? `${/^[≈=]/.test(root.calcResult) ? "" : "= "}${root.calcResult}   (enter: copy)`
-                            : Apps.hasQalc ? "calculator: 2*(3+4) · 10 km to mi · 100 usd to eur · today + 3 weeks" : "calculator: 2*(3+4), 2^10, 15%4";
-                    if (root.mode === ":")
-                        return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
-                            : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
-                    if (root.mode === ";")
-                        return `${root.wins.length} window${root.wins.length === 1 ? "" : "s"} · enter: go there`;
-                    if (root.mode === ".")
-                        return Emoji.all.length === 0 ? "reading the emoji list..." : root.arg ? `${root.emojis.length} found · enter: copy${Emoji.canType ? " and type in" : ""}` : `yours first · english or russian: .heart .сердце · enter: copy${Emoji.canType ? " and type in" : ""}`;
-                    // only in "?" mode: just naming Ai here would load the whole ai service (and
-                    // all saved chats) on the first letter typed into the launcher
-                    if (root.mode === "?")
-                        return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
-                    if (root.mode === "$") {
-                        if (!root.arg)
-                            return "say what you want done, the ai writes one command: $ the biggest files in my home";
-                        if (Ai.cmdBusy)
-                            return `~ ${Ai.modelName} is writing it...`;
-                        if (Ai.cmdFor === root.arg && Ai.cmdError)
-                            return `!! ${Ai.cmdError}`;
-                        return root.cmdReady ? `$ ${Ai.cmdText}` : `enter: ask ${Ai.modelName} for a command (it never runs by itself)`;
-                    }
-                    return "";
-                }
-                color: (root.mode === "=" && root.calcResult) || root.cmdReady ? Colors.accent : root.mode === "$" && root.arg && Ai.cmdError && Ai.cmdFor === root.arg ? Colors.warn : root.arg ? Colors.fg : Colors.dim
-            }
-
-            // $: what the command does, what to look out for, and what the keys do now
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.cmdReady
-                spacing: 2
-
-                Label {
-                    Layout.fillWidth: true
-                    visible: text !== ""
-                    wrapMode: Text.Wrap
-                    text: root.cmdReady ? Ai.cmdAbout : ""
-                    color: Colors.dim
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    readonly property var risks: root.cmdReady ? Ai.risks(Ai.cmdText) : []
-                    visible: risks.length > 0
-                    wrapMode: Text.Wrap
-                    text: `[!] careful: ${risks.join(", ")}. read it before you run it`
-                    color: Colors.warn
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: "enter: into > (the terminal) to look at and run · tab: copy · keep typing: ask again"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
-                }
-            }
-
-            Label {
-                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0) || (root.mode === ";" && root.wins.length === 0) || (root.mode === "." && Emoji.all.length > 0 && root.emojis.length === 0)
-                text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : root.mode === ";" && !root.arg ? "-- no windows --" : "-- no match --"
-                color: Colors.dim
-            }
-
-            // clipboard: [clear history] (second click: sure?)
+            // the clipboard: clear it all (a second click: sure?)
             RowLayout {
                 Layout.fillWidth: true
-                visible: root.mode === ":" && root.clips.length > 0
+                visible: root.mode === ":" && Clipboard.entries.length > 0
 
-                Item {
+                Label {
                     Layout.fillWidth: true
+                    text: Strings.count(root.lines.length, "copied")
+                    color: Colors.dim
                 }
 
-                BracketButton {
-                    id: wipeButton
+                PushButton {
+                    id: wipe
 
                     property bool armed: false
 
-                    label: armed ? "sure? click again" : "clear history"
-                    textColor: Colors.warn
-                    bordered: false
+                    text: armed ? Strings.t("sureAgain") : Strings.t("clipWipe")
                     onClicked: {
                         if (armed) {
                             armed = false;
                             Clipboard.wipe();
                         } else {
                             armed = true;
-                            wipeDisarm.restart();
+                            disarm.restart();
                         }
                     }
 
                     Timer {
-                        id: wipeDisarm
+                        id: disarm
 
                         interval: 3000
-                        onTriggered: wipeButton.armed = false
+                        onTriggered: wipe.armed = false
                     }
                 }
             }
+        }
+    }
 
-            // clipboard history: newest first
-            ListView {
-                id: clipList
+    // the modes, under their box: an icon, the name, the prefix grey on the right
+    Item {
+        id: modeList
 
-                Layout.fillWidth: true
-                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
-                visible: root.mode === ":" && count > 0
-                clip: true
-                reuseItems: true
-                model: ScriptModel {
-                    values: root.clips
-                }
-                boundsBehavior: Flickable.StopAtBounds
+        visible: root.modesOpen
+        readonly property point at: root.modesOpen ? modeBox.mapToItem(null, 0, modeBox.height) : Qt.point(0, 0)
 
-                delegate: Item {
-                    id: clipRow
+        x: at.x + modeBox.width - width
+        y: at.y + 1
+        width: Math.round(Metrics.fontSize * 0.6 * 22) + 40
+        height: modeColumn.implicitHeight + 6
 
-                    required property var modelData
-                    required property int index
-                    readonly property bool selected: index === root.current
-                    readonly property bool image: modelData.text.startsWith("[[ binary data")
+        Rectangle {
+            x: 4
+            y: 4
+            width: parent.width
+            height: parent.height
+            color: Qt.rgba(0, 0, 0, 0.45)
+        }
 
-                    width: clipList.width
-                    height: root.rowHeight
+        Rectangle {
+            anchors.fill: parent
+            color: Colors.face
 
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: clipRow.selected
-                        color: Colors.hoverFill
-                    }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 2
-                        anchors.rightMargin: 4
-                        spacing: Metrics.spacing
-
-                        Label {
-                            text: clipRow.selected ? ">" : " "
-                            color: Colors.accent
-                        }
-
-                        Label {
-                            text: clipRow.image ? "img" : "txt"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            textFormat: Text.PlainText
-                            // one line: newlines and tabs shown as spaces
-                            text: clipRow.modelData.text.replace(/\s+/g, " ")
-                            color: clipRow.selected ? Colors.accent : Colors.fg
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        onPositionChanged: root.current = clipRow.index
-                        onClicked: mouse => {
-                            root.current = clipRow.index;
-                            if (mouse.button === Qt.RightButton)
-                                Clipboard.remove(clipRow.modelData);
-                            else
-                                root.accept();
-                        }
-                    }
-                }
+            Bevel {
+                style: "raised"
             }
+        }
 
-            ListView {
-                id: list
+        Column {
+            id: modeColumn
 
-                Layout.fillWidth: true
-                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
-                visible: count > 0
-                clip: true
-                reuseItems: true
-                model: ScriptModel {
-                    values: root.results
-                }
-                boundsBehavior: Flickable.StopAtBounds
+            x: 3
+            y: 3
+            width: parent.width - 6
 
-                delegate: Item {
-                    id: entry
+            Repeater {
+                model: root.modes
+
+                Rectangle {
+                    id: modeRow
 
                     required property var modelData
                     required property int index
-                    readonly property bool selected: index === root.current
-                    readonly property bool pinned: Apps.isPinned(modelData)
+                    readonly property bool picked: index === Math.max(0, root.modeIndex)
 
-                    width: list.width
+                    width: modeColumn.width
                     height: root.rowHeight
+                    color: picked || modeArea.containsMouse ? Colors.accent : "transparent"
 
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: entry.selected
-                        color: Colors.hoverFill
+                    PixIcon {
+                        x: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: modeRow.modelData.icon
                     }
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 2
-                        anchors.rightMargin: 4
-                        spacing: Metrics.spacing
+                    Label {
+                        x: 26
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Strings.t(modeRow.modelData.name)
+                        color: modeRow.color === Colors.accent ? Colors.onAccent : Colors.fg
+                    }
 
-                        Label {
-                            text: entry.selected ? ">" : " "
-                            color: Colors.accent
-                        }
-
-                        AppIcon {
-                            Layout.preferredWidth: 20
-                            Layout.preferredHeight: 20
-                            icon: entry.modelData.icon
-                            name: entry.modelData.name
-                            colored: entry.selected
-                        }
-
-                        // the typed letters stand out
-                        Label {
-                            textFormat: Text.StyledText
-                            text: Apps.highlight(entry.modelData.name, root.query, entry.selected ? Colors.fg : Colors.accent)
-                            color: entry.selected ? Colors.accent : Colors.fg
-                        }
-
-                        Label {
-                            visible: entry.pinned
-                            text: "*"
-                            color: Colors.accent
-                        }
-
-                        // started without internet (ctrl+o)
-                        Label {
-                            visible: Apps.isOffline(entry.modelData)
-                            text: "no net"
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            horizontalAlignment: Text.AlignRight
-                            elide: Text.ElideRight
-                            text: (entry.modelData.genericName || entry.modelData.comment || "").toLowerCase()
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
-                        }
+                    Label {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 6
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modeRow.modelData.prefix || "–"
+                        color: modeRow.color === Colors.accent ? Colors.onAccent : Colors.dim
                     }
 
                     MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        // not onEntered: that also fires when the list scrolls under a resting mouse
-                        onPositionChanged: root.current = entry.index
-                        onClicked: mouse => {
-                            root.current = entry.index;
-                            if (mouse.button === Qt.RightButton)
-                                Apps.togglePin(entry.modelData);
-                            else
-                                root.accept();
-                        }
-                    }
-                }
-            }
+                        id: modeArea
 
-            // open windows: > icon title                      ws 2 · firefox
-            ListView {
-                id: winList
-
-                Layout.fillWidth: true
-                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
-                visible: root.mode === ";" && count > 0
-                clip: true
-                reuseItems: true
-                model: ScriptModel {
-                    values: root.wins
-                }
-                boundsBehavior: Flickable.StopAtBounds
-
-                delegate: Item {
-                    id: win
-
-                    required property var modelData
-                    required property int index
-                    readonly property bool selected: index === root.current
-                    readonly property string cls: modelData.lastIpcObject?.class ?? ""
-
-                    width: winList.width
-                    height: root.rowHeight
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: win.selected
-                        color: Colors.hoverFill
-                    }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 2
-                        anchors.rightMargin: 4
-                        spacing: Metrics.spacing
-
-                        Label {
-                            text: win.selected ? ">" : " "
-                            color: Colors.accent
-                        }
-
-                        AppIcon {
-                            Layout.preferredWidth: 20
-                            Layout.preferredHeight: 20
-                            icon: DesktopEntries.heuristicLookup(win.cls)?.icon ?? ""
-                            name: win.cls || win.modelData.title || "?"
-                            colored: win.selected
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            textFormat: Text.PlainText
-                            text: win.modelData.title || win.cls
-                            color: win.selected ? Colors.accent : Colors.fg
-                        }
-
-                        Label {
-                            text: [win.modelData.workspace ? `ws ${win.modelData.workspace.id}` : "", win.cls.toLowerCase()].filter(s => s).join(" · ")
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
-                        }
-                    }
-
-                    MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPositionChanged: root.current = win.index
                         onClicked: {
-                            root.current = win.index;
-                            root.accept();
+                            root.setMode(modeRow.index);
+                            root.modesOpen = false;
                         }
                     }
                 }
-            }
-
-            // emoji: > 😀  grinning face                      широко улыбается
-            ListView {
-                id: emojiList
-
-                // the russian names next to the english ones on a russian (ukrainian...) system,
-                // or when that's what was typed; otherwise the other english names
-                readonly property bool cyrillic: /^(ru|uk|be)/.test(Qt.locale().name) || /[а-яёіїєґ]/i.test(root.arg)
-
-                Layout.fillWidth: true
-                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
-                visible: root.mode === "." && count > 0
-                clip: true
-                reuseItems: true
-                model: ScriptModel {
-                    values: root.emojis
-                }
-                boundsBehavior: Flickable.StopAtBounds
-
-                delegate: Item {
-                    id: emo
-
-                    required property var modelData
-                    required property int index
-                    readonly property bool selected: index === root.current
-
-                    width: emojiList.width
-                    height: root.rowHeight
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: emo.selected
-                        color: Colors.hoverFill
-                    }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 2
-                        anchors.rightMargin: 4
-                        spacing: Metrics.spacing
-
-                        Label {
-                            text: emo.selected ? ">" : " "
-                            color: Colors.accent
-                        }
-
-                        Label {
-                            Layout.preferredWidth: Metrics.fontSize * 2
-                            horizontalAlignment: Text.AlignHCenter
-                            text: emo.modelData.e
-                            font.pixelSize: Metrics.size(4)
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: emo.modelData.en
-                            color: emo.selected ? Colors.accent : Colors.fg
-                        }
-
-                        Label {
-                            Layout.maximumWidth: emojiList.width * 0.45
-                            elide: Text.ElideRight
-                            text: emojiList.cyrillic ? emo.modelData.ru : emo.modelData.other
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-2)
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onPositionChanged: root.current = emo.index
-                        onClicked: {
-                            root.current = emo.index;
-                            root.accept();
-                        }
-                    }
-                }
-            }
-
-            Label {
-                Layout.alignment: Qt.AlignRight
-                text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
-                    : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
-                    : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
-                    : root.mode === "$" ? "enter: write it · enter again: into the terminal · tab: copy · ctrl+tab mode"
-                    : root.expanded ? "↑↓ select · enter run · esc back"
-                    : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+o no net · ctrl+tab mode"
-                color: Colors.dim
-                font.pixelSize: Metrics.size(-3)
             }
         }
     }

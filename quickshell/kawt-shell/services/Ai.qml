@@ -684,6 +684,33 @@ Singleton {
         cmdReq = req;
     }
 
+    // ---- the launcher's ?: a short answer at once; the whole talk goes on in the ai panel
+    property string shortFor: ""
+    property string shortText: ""
+    property string shortError: ""
+    property var shortReq: null
+    readonly property bool shortBusy: shortReq !== null
+
+    function shortAnswer(what: string): void {
+        what = what.trim();
+        if (!what)
+            return;
+        if (shortReq)
+            shortReq.abort();
+        shortFor = what;
+        shortText = "";
+        shortError = "";
+        const system = "Answer in one to three short sentences, in the language of the question. If the answer is a command, give the command alone on the first line. No markdown.";
+        const req = oneShot(system, what, 200, (text, error) => {
+            if (root.shortReq !== req)
+                return;
+            root.shortReq = null;
+            root.shortError = error;
+            root.shortText = text.replace(/```\w*/g, "").replace(/\*\*/g, "").trim();
+        });
+        shortReq = req;
+    }
+
     // what makes a command worth a second look
     function risks(c: string): var {
         const rules = [
