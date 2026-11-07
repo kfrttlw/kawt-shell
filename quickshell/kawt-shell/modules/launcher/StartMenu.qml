@@ -27,8 +27,8 @@ PanelWindow {
     readonly property var pinnedApps: (Apps.pinned.length ? Apps.pinned : Apps.search("")).slice(0, 6)
     readonly property var homes: [
         { kind: "all", icon: "apps", text: Strings.t("allApps"), sub: true },
-        { kind: "panel", icon: "check", text: Strings.t("today"), key: "super+i", panel: "dashboard", tab: "today" },
-        { kind: "panel", icon: "chart", text: Strings.t("system"), panel: "dashboard", tab: "sys" },
+        { kind: "window", icon: "check", text: Strings.t("today"), key: "super+i", window: "today", tab: "today" },
+        { kind: "window", icon: "chart", text: Strings.t("system"), window: "system", tab: "sys" },
         { kind: "panel", icon: "gear", text: Strings.t("settings"), key: "super+,", panel: "settings" },
         { kind: "panel", icon: "help", text: Strings.t("help"), key: "super+/", panel: "keys" },
         { kind: "ai", icon: "ai", text: Strings.t("ai"), key: "super+a" },
@@ -89,8 +89,10 @@ PanelWindow {
             allOpen = true;
             break;
         case "panel":
-            Panels.dashboardTab = l.tab ?? "";
             Panels.current = l.panel;
+            break;
+        case "window":
+            Panels.toggleWindow(l.window, l.tab ?? "");
             break;
         case "ai":
             Panels.close();

@@ -125,18 +125,16 @@ works, the desks stay tiled.
 
 ## Your day
 
-The profile (the start menu's, `super + i` full screen, or `[●]` with flat frames) is where
-your day is:
+**Today** (the start menu's, or `super + i`) is a window of its own: a button on the taskbar,
+moved by its title, `_ □ ×` as on any window. Your day, in four tabs:
 
 <p align="center">
 <img src="assets/menu-today.png" alt="today: quick switches, today's tasks, the focus timer, the week" width="62%">
 </p>
 
-- **switches** on top, a click each: wifi, bluetooth, do not disturb, night light, caffeine,
-  the mic; the battery on the right
 - **today**: the day in one look. Tasks due today or before, then the ones without a time, the
   ones ticked off today struck through (`2 of 5 done`); the focus timer beside them; the week's
-  rounds; the machine in one line
+  rounds and the streak. Keys: `↑ ↓`, `x` done, `enter` open, `n` new
 - **todo**: folders, importance, reminders, notes inside a task, **steps** with a `▮▮▯ 2/3`
   progress, tasks that **come again** (every day, weekdays, week, month: type `every day`),
   done today and the streak; a ticked one is struck through and slides down. Keys: `j k` move,
@@ -147,11 +145,12 @@ your day is:
 - **notes**: in folders, with search; a note is read first (`# headings`, `- [ ]` boxes that
   tick with a click), a click writes in it; pinned ones on top; a note from the clipboard, or a
   task from a note
-- **sys**: the machine like a ThinkPad's bios setup, and its **power** page: where the battery
-  stops charging (full / 80% / 60%), the power profile, the keyboard light; each only where the
-  machine has it
-- **top**: cpu and memory over the last minute and the busiest processes
-- **cfg**: the settings, in pages: look, screen, media, device, windows, kawt
+
+**System** (the start menu's) is the same kind of window, for the machine: **machine** like a
+ThinkPad's bios setup; **processes**, cpu and memory over the last minute and the busiest ones;
+**network**, who goes out to the internet right now; **power**, where the battery stops charging
+(full / 80% / 60%), the power profile, the keyboard light, each only where the machine has it.
+`qs -c kawt-shell ipc call kawt window system net` opens it at a tab.
 
 <p align="center">
 <img src="assets/menu-tabs.png" alt="todo with steps, the focus timer, a note with boxes, sys like a bios" width="100%">
@@ -451,7 +450,8 @@ without it, only while `super + w` is open.
 | `super + alt + v` | speak to the ai (again: stop); whisper.cpp writes it into the panel, on this machine |
 | `super + w` / `super + shift + w` | wallpaper & themes / dark ↔ light |
 | `super + n` / `super + shift + n` | notifications / do not disturb |
-| `super + i` | the profile and the settings, full screen |
+| `super + i` | today: tasks, notes, the focus timer |
+| `super + ,` | settings |
 | `super + ctrl + v` | this desk: floating like KDE ↔ tiled |
 | `super + h` | call stripes out of the corner (again: let her go) |
 | `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in settings → screen) |

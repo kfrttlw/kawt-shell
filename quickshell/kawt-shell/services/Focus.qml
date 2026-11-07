@@ -42,7 +42,7 @@ Singleton {
     readonly property string today: Qt.formatDate(new Date(now), "yyyy-MM-dd")
     readonly property int todayRounds: (days[today] ?? [0, 0])[0]
     readonly property real todayMs: (days[today] ?? [0, 0])[1]
-    // this week, monday first: [{ day: "mon", rounds, isToday }]
+    // this week, monday first: [{ day: "mon", date, rounds, isToday }]
     readonly property var week: {
         const d = new Date(now);
         const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (d.getDay() + 6) % 7);
@@ -50,7 +50,7 @@ Singleton {
         for (let i = 0; i < 7; i++) {
             const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
             const key = Qt.formatDate(day, "yyyy-MM-dd");
-            out.push({ day: Qt.formatDate(day, "ddd").toLowerCase(), rounds: (days[key] ?? [0])[0], isToday: key === today });
+            out.push({ day: Qt.formatDate(day, "ddd").toLowerCase(), date: day, rounds: (days[key] ?? [0])[0], isToday: key === today });
         }
         return out;
     }

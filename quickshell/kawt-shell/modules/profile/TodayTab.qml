@@ -4,25 +4,24 @@ import Quickshell
 import qs.config
 import qs.components
 import qs.services
-import qs.utils
 
-// What the profile opens with: the day in one look.
+// What the today window opens with: the day in one look, the old way.
 //
-//   tue 28.10  14:32 · up 3h 12m                                  > stay curious
-//
-//   today                       2 of 5 done      ┌ focus ─────────────┐
-//   [x] 09:00  standup                           │ 18:42   of 25:00   │
-//   [ ] 14:30  call mom   !!  in 58m             │ ▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯   │
-//   [ ]        buy milk                          │ kawt readme        │
-//   + 2pm call mom #family !!                    │ [||] [stop]        │
-//                                                └────────────────────┘
-//   week  mon ▮▮▮▯  tue ▮▮▯▯ ...                             3 focus · 1h 15m today
-//   ────────────────────────────────────────────────────────────────────
-//   cpu ▁▂▅▇▆▃▂ 12%   mem 61%   disk 61%   net ↓1.2M ↑34K   54°C
+//   tasks for today                 2 of 5    ┌ Focus ──────────────┐
+//   ┌───────────────────────────────────────┐ │ 18:04 / 25:00        │
+//   │■ 15:30 call mom              !! 37m   │ │ ▮▮▮▮▮▮▮              │
+//   │□ 19:00 gym                      ! 4h  │ │ kawt readme          │
+//   │□       write the readme               │ │ [ ❚❚ ] [ Stop ]      │
+//   │☑ 09:00 standup (struck through)       │ └──────────────────────┘
+//   └───────────────────────────────────────┘
+//   [+ new: "14:30 call mom !!"          ]
+//   ▯▯▯▯▯▯▯
+//   week  mon tue wed thu fri sat sun                       streak: 4 days
 //
 // The list: open tasks due today or before (by time), then open ones without a time
-// (important first), then the ones ticked off today, struck through. A click on the box ticks
-// it, on the text opens it in todo
+// (important first), then the ones ticked off today, struck through. The one under the pointer
+// or picked with ↑ ↓ is red; x or space ticks it, enter opens it in the tasks tab, n writes a
+// new one. A click on the box ticks it, on the words opens it
 ColumnLayout {
     id: tab
 
@@ -30,66 +29,55 @@ ColumnLayout {
     readonly property var dated: Todo.dueToday
     readonly property var undated: Todo.sorted.filter(t => !t.done && !t.due).slice(0, Math.max(2, 6 - dated.length))
     readonly property var done: Todo.doneToday.slice(-3)
-    readonly property var rows: [...dated, ...undated, ...done]
+    readonly property var rows: [...dated, ...undated, ...done].slice(0, 6) // the rest: the tasks tab
+    property int current: 0
+    readonly property var picked: rows[Math.min(current, rows.length - 1)] ?? null
+    readonly property int rowHeight: Metrics.fontSize + 9
+    readonly property var locale: Qt.locale(Strings.ru ? "ru_RU" : "en_US")
 
     spacing: Metrics.spacing
+    focus: true
+    Component.onCompleted: forceActiveFocus()
 
-    // the date, the motto
-    RowLayout {
-        Layout.topMargin: Metrics.spacing
-        Layout.fillWidth: true
-        spacing: Metrics.spacing
-        opacity: tab.profile.boot > 0 ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 140
-            }
+    Keys.onUpPressed: current = Math.max(0, current - 1)
+    Keys.onDownPressed: current = Math.min(rows.length - 1, current + 1)
+    Keys.onSpacePressed: tick()
+    Keys.onReturnPressed: {
+        if (picked)
+            profile.openTask(picked);
+    }
+    Keys.onPressed: event => {
+        if (event.text === "x") {
+            tick();
+            event.accepted = true;
+        } else if (event.text === "n") {
+            add.input.forceActiveFocus();
+            event.accepted = true;
         }
+    }
 
-        Label {
-            text: Qt.formatDate(Time.now, "ddd dd.MM").toLowerCase()
-            font.bold: !Metrics.pixel
-        }
-
-        Label {
-            text: `${Time.fmt(Time.now)} · up ${Fmt.uptime(SysInfo.uptime)}`
-            color: Colors.dim
-        }
-
-        Label {
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            text: Settings.motto === "" ? "" : `> ${Settings.motto === "fortune" ? tab.profile.fortune : Settings.motto}`
-            color: Colors.dim
-        }
+    function tick(): void {
+        if (picked)
+            Todo.toggle(picked.id);
     }
 
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        spacing: Metrics.padding * 2
-        opacity: tab.profile.boot > 1 ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 140
-            }
-        }
+        spacing: Metrics.padding
 
         // ---- the day's tasks
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignTop
-            spacing: 0
+            spacing: 4
 
             RowLayout {
                 Layout.fillWidth: true
 
                 Label {
                     Layout.fillWidth: true
-                    text: "today"
+                    text: Strings.t("todayList")
                     color: Colors.dim
                 }
 
@@ -97,89 +85,105 @@ ColumnLayout {
                     readonly property int all: Todo.doneToday.length + Todo.dueToday.length
 
                     visible: all > 0
-                    text: `${Todo.doneToday.length} of ${all} done`
+                    text: Strings.t("nOfM").arg(Todo.doneToday.length).arg(all)
                     color: Todo.dueToday.length === 0 ? Colors.accent : Colors.dim
                 }
             }
 
-            Label {
-                Layout.topMargin: 4
-                visible: tab.rows.length === 0
-                text: "-- a free day --"
-                color: Colors.dim
-            }
+            // the list, sunk in a field
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Math.max(5, tab.rows.length) * tab.rowHeight + 6
+                color: Colors.well
 
-            Repeater {
-                model: ScriptModel {
-                    values: tab.rows
+                Bevel {
+                    style: "sunk"
                 }
 
-                Item {
-                    id: task
+                Label {
+                    anchors.centerIn: parent
+                    visible: tab.rows.length === 0
+                    text: `— ${Strings.t("freeDay")} —`
+                    color: Colors.dim
+                }
 
-                    required property var modelData
-                    readonly property bool overdue: !modelData.done && modelData.due > 0 && modelData.due < Time.now.getTime()
+                Column {
+                    x: 3
+                    y: 3
+                    width: parent.width - 6
 
-                    Layout.fillWidth: true
-                    implicitHeight: taskRow.implicitHeight + 4
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: taskArea.containsMouse
-                        color: Colors.hoverFill
-                    }
-
-                    RowLayout {
-                        id: taskRow
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: Metrics.spacing
-
-                        Brackets {
-                            text: task.modelData.done ? "x" : " "
-                            look: task.modelData.done ? "off" : task.modelData.prio >= 2 ? "on" : ""
+                    Repeater {
+                        model: ScriptModel {
+                            values: tab.rows
                         }
 
-                        Label {
-                            Layout.preferredWidth: Metrics.fontSize * 0.6 * 5
-                            text: task.modelData.due ? Time.fmt(new Date(task.modelData.due)) : ""
-                            color: task.overdue ? Colors.warn : Colors.dim
-                        }
+                        Rectangle {
+                            id: task
 
-                        Label {
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: task.modelData.text
-                            color: task.modelData.done ? Colors.dim : Colors.fg
-                            font.strikeout: task.modelData.done
-                        }
+                            required property var modelData
+                            required property int index
+                            readonly property bool picked: index === tab.current
+                            readonly property bool overdue: !modelData.done && modelData.due > 0 && modelData.due < Time.now.getTime()
+                            readonly property color ink: picked ? Colors.onAccent : modelData.done ? Colors.dim : Colors.fg
 
-                        Label {
-                            visible: !task.modelData.done && task.modelData.prio > 0
-                            text: "!".repeat(task.modelData.prio)
-                            color: Colors.accent
-                        }
+                            width: parent.width
+                            height: tab.rowHeight
+                            color: picked ? Colors.accent : "transparent"
 
-                        Label {
-                            visible: !task.modelData.done && task.modelData.due > Time.now.getTime()
-                            text: visible ? `in ${tab.profile.until(task.modelData.due)}` : ""
-                            color: Colors.dim
-                        }
-                    }
+                            PixIcon {
+                                id: box
 
-                    MouseArea {
-                        id: taskArea
+                                x: 3
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: task.modelData.done ? "boxOn" : "boxOff"
+                            }
 
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: mouse => {
-                            if (mouse.x < Metrics.fontSize * 2.4)
-                                Todo.toggle(task.modelData.id);
-                            else
-                                tab.profile.openTask(task.modelData);
+                            Label {
+                                id: time
+
+                                x: box.x + box.width + 6
+                                width: Metrics.fontSize * 0.6 * 6
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: task.modelData.due ? Time.fmt(new Date(task.modelData.due)) : ""
+                                color: task.picked ? Colors.onAccent : task.overdue ? Colors.warn : Colors.dim
+                            }
+
+                            Label {
+                                x: time.x + time.width
+                                width: when.x - x - 6
+                                anchors.verticalCenter: parent.verticalCenter
+                                elide: Text.ElideRight
+                                text: task.modelData.text
+                                color: task.ink
+                                font.strikeout: task.modelData.done
+                            }
+
+                            // !! in 37m: how important, how soon
+                            Label {
+                                id: when
+
+                                anchors.right: parent.right
+                                anchors.rightMargin: 4
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: task.modelData.done ? "" : [
+                                    task.modelData.prio > 0 ? "!".repeat(task.modelData.prio) : "",
+                                    task.modelData.due > Time.now.getTime() ? tab.profile.until(task.modelData.due) : ""
+                                ].filter(s => s).join(" ")
+                                color: task.picked ? Colors.onAccent : Colors.accent
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: tab.current = task.index
+                                onClicked: mouse => {
+                                    if (mouse.x < box.x + box.width + 3)
+                                        Todo.toggle(task.modelData.id);
+                                    else
+                                        tab.profile.openTask(task.modelData);
+                                }
+                            }
                         }
                     }
                 }
@@ -191,14 +195,23 @@ ColumnLayout {
                 property string feedback: ""
 
                 Layout.fillWidth: true
-                Layout.topMargin: Metrics.spacing
-                framed: false
+                Layout.topMargin: 2
                 prompt: "+"
-                placeholder: "14:30 call mom !!"
+                placeholder: Strings.t("newTask")
                 onAccepted: t => {
                     add.feedback = Todo.add(t, "inbox");
                     add.text = "";
                     addFeedback.restart();
+                    tab.forceActiveFocus();
+                }
+                Keys.onEscapePressed: event => {
+                    // the first esc leaves the field, the next one closes the window
+                    if (add.text !== "" || add.input.activeFocus) {
+                        add.text = "";
+                        tab.forceActiveFocus();
+                    } else {
+                        event.accepted = false;
+                    }
                 }
 
                 Timer {
@@ -213,124 +226,132 @@ ColumnLayout {
                 visible: add.feedback !== ""
                 text: add.feedback
                 color: Colors.accent
-                font.pixelSize: Metrics.size(-2)
             }
         }
 
         // ---- the focus timer, small
-        TitledBox {
+        Group {
+            Layout.fillWidth: false
             Layout.alignment: Qt.AlignTop
-            Layout.topMargin: titleOverhang
-            implicitWidth: Math.round(Metrics.fontSize * 15)
-            implicitHeight: focusCol.implicitHeight + Metrics.padding * 2 + titleOverhang
-            title: Focus.phase === "break" ? "break" : "focus"
+            Layout.preferredWidth: Math.round(Metrics.fontSize * 17)
+            title: Focus.phase === "break" ? Strings.t("breakTime") : Strings.t("tab_focus")
 
-            ColumnLayout {
-                id: focusCol
+            RowLayout {
+                spacing: Metrics.spacing
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: Metrics.padding
-                anchors.topMargin: Metrics.padding + parent.titleOverhang
-                spacing: 4
-
-                RowLayout {
-                    spacing: Metrics.spacing
-
-                    Label {
-                        text: Focus.running ? Focus.clock : `${Focus.workMin}:00`
-                        font.bold: !Metrics.pixel
-                    }
-
-                    Label {
-                        text: Focus.paused ? "paused" : Focus.running ? `of ${Focus.phase === "break" ? Focus.breakMin : Focus.workMin}:00` : `+ ${Focus.breakMin} break`
-                        color: Colors.dim
-                    }
-                }
-
-                LevelSlider {
-                    Layout.fillWidth: true
-                    enabled: false
-                    playhead: Focus.running
-                    value: Focus.progress
+                Label {
+                    text: Focus.running ? Focus.clock : `${Focus.workMin}:00`
+                    font.pixelSize: Metrics.fontSize * 2
                 }
 
                 Label {
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: Focus.running ? (Focus.taskText || "nothing in particular") : `today ${Focus.todayRounds} of ${Focus.goal}`
-                    color: Focus.running ? Colors.fg : Colors.dim
+                    Layout.alignment: Qt.AlignBottom
+                    text: Focus.paused ? Strings.t("focusPaused") : `/ ${Focus.phase === "break" ? Focus.breakMin : Focus.workMin}:00`
+                    color: Colors.dim
+                }
+            }
+
+            Segments {
+                Layout.fillWidth: true
+                value: Focus.progress
+            }
+
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: Focus.running ? (Focus.taskText || Strings.t("focusNothing")) : Strings.t("focusGoal").arg(Focus.todayRounds).arg(Focus.goal)
+                color: Focus.running ? Colors.fg : Colors.dim
+            }
+
+            RowLayout {
+                spacing: Metrics.spacing
+
+                PushButton {
+                    visible: !Focus.running
+                    minWidth: 0
+                    text: Strings.t("focusStart")
+                    onClicked: Focus.start(tab.picked && !tab.picked.done ? tab.picked.id : 0)
                 }
 
-                Row {
-                    spacing: Metrics.spacing
+                PushButton {
+                    visible: !Focus.running
+                    minWidth: 0
+                    text: Strings.t("focusOnTask")
+                    onClicked: tab.profile.show("focus")
+                }
 
-                    BracketButton {
-                        visible: !Focus.running
-                        label: "start"
-                        textColor: Colors.accent
-                        onClicked: Focus.start(0)
-                    }
+                PushButton {
+                    visible: Focus.running
+                    minWidth: 30
+                    text: Focus.paused ? "▶" : "❚❚"
+                    active: Focus.paused
+                    onClicked: Focus.paused ? Focus.resume() : Focus.pause()
+                }
 
-                    BracketButton {
-                        visible: !Focus.running
-                        label: "on a task"
-                        onClicked: tab.profile.show("focus")
-                    }
-
-                    BracketButton {
-                        visible: Focus.running
-                        label: Focus.paused ? ">" : "||"
-                        active: Focus.paused
-                        onClicked: Focus.paused ? Focus.resume() : Focus.pause()
-                    }
-
-                    BracketButton {
-                        visible: Focus.running
-                        label: "stop"
-                        onClicked: Focus.stop()
-                    }
+                PushButton {
+                    visible: Focus.running
+                    minWidth: 0
+                    text: Strings.t("focusStop")
+                    onClicked: Focus.stop()
                 }
             }
         }
     }
 
-    // ---- the week's focus
+    // ---- the week's focus: a column a day, a block a round
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        spacing: Metrics.padding
-        opacity: tab.profile.boot > 2 ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 140
-            }
-        }
+        spacing: 8
 
         Label {
-            text: "week"
+            Layout.alignment: Qt.AlignBottom
+            Layout.rightMargin: 8
+            text: Strings.t("weekWord")
             color: Colors.dim
         }
 
         Repeater {
             model: Focus.week
 
-            Row {
+            ColumnLayout {
+                id: day
+
                 required property var modelData
+                readonly property int most: Math.max(Focus.goal, modelData.rounds, 1)
 
-                spacing: 4
+                spacing: 2
 
-                Label {
-                    text: modelData.day
-                    color: modelData.isToday ? Colors.accent : Colors.dim
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    implicitWidth: 14
+                    implicitHeight: 36
+                    color: Colors.well
+
+                    Bevel {
+                        style: "sunk"
+                    }
+
+                    Repeater {
+                        model: Math.min(day.modelData.rounds, day.most)
+
+                        Rectangle {
+                            required property int index
+                            readonly property real step: (36 - 6) / day.most
+
+                            x: 3
+                            y: Math.round(36 - 3 - (index + 1) * step) + 1
+                            width: 8
+                            height: Math.max(1, Math.round(step) - 1)
+                            color: day.modelData.isToday ? Colors.accent : Colors.dim
+                        }
+                    }
                 }
 
-                Meter {
-                    anchors.verticalCenter: parent.verticalCenter
-                    count: Math.max(Focus.goal, modelData.rounds)
-                    value: modelData.rounds / Math.max(Focus.goal, modelData.rounds)
+                Label {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: tab.locale.toString(day.modelData.date, "ddd").toLowerCase()
+                    color: day.modelData.isToday ? Colors.accent : Colors.dim
                 }
             }
         }
@@ -338,31 +359,12 @@ ColumnLayout {
         Item {
             Layout.fillWidth: true
         }
-    }
 
-    Rule {
-        Layout.fillWidth: true
-        Layout.topMargin: Metrics.spacing
-    }
-
-    // ---- the machine, in one line
-    Label {
-        Layout.fillWidth: true
-        elide: Text.ElideRight
-        opacity: tab.profile.boot > 3 ? 1 : 0
-        text: [
-            `cpu ${Fmt.spark(SysInfo.cpuHistory.slice(-8))} ${Math.round(SysInfo.cpu * 100)}%`,
-            `mem ${Math.round(SysInfo.mem * 100)}%`,
-            `disk ${Math.round(SysInfo.disk * 100)}%`,
-            `net ↓${Fmt.rate(NetStats.rx).trim()} ↑${Fmt.rate(NetStats.tx).trim()}`,
-            SysInfo.cpuTemp >= 0 ? `${Math.round(SysInfo.cpuTemp)}°C` : ""
-        ].filter(s => s).join("   ")
-        color: Colors.dim
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 140
-            }
+        Label {
+            Layout.alignment: Qt.AlignBottom
+            visible: Todo.streak > 0
+            text: Strings.t("streakIs").arg(Strings.count(Todo.streak, "day"))
+            color: Colors.dim
         }
     }
 }

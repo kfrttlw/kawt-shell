@@ -27,6 +27,10 @@ ColumnLayout {
     id: tab
 
     required property var profile
+    // one page only, without the tabs and the way out (the system window's machine and power tabs:
+    // the power buttons live in the shut down dialog): "main" | "power"; "": the old way, all
+    property string part: ""
+    readonly property int shown: part === "power" ? 1 : part === "main" ? 0 : page.current
     readonly property var bat: UPower.displayDevice
     readonly property bool plugged: bat.state === UPowerDeviceState.Charging || bat.state === UPowerDeviceState.FullyCharged
     readonly property int keyWidth: 21 // "bios version ........ "
@@ -101,6 +105,7 @@ ColumnLayout {
     Tabs {
         id: page
 
+        visible: tab.part === ""
         Layout.topMargin: Metrics.spacing
         tabs: ["main", "power"]
     }
@@ -108,7 +113,7 @@ ColumnLayout {
     // ---------------------------------------------------------------- main
     ColumnLayout {
         Layout.fillWidth: true
-        visible: page.current === 0
+        visible: tab.shown === 0
         spacing: 2
 
         RowLayout {
@@ -236,7 +241,7 @@ ColumnLayout {
     ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        visible: page.current === 1
+        visible: tab.shown === 1
         spacing: Metrics.spacing
 
         Fact {
@@ -290,12 +295,14 @@ ColumnLayout {
     }
 
     Rule {
+        visible: tab.part === ""
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
     }
 
     // the way out, like a bios's exit page: a second click for the ones that end the session
     RowLayout {
+        visible: tab.part === ""
         spacing: Metrics.spacing
         opacity: tab.profile.boot > 2 ? 1 : 0
 

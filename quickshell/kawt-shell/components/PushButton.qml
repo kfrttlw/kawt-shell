@@ -6,9 +6,10 @@ BarBox {
     id: root
 
     property string text: ""
+    property int minWidth: Math.round(84 * Metrics.scale) // 0: as wide as its words
 
     plain: false
-    implicitWidth: Math.max(Math.round(84 * Metrics.scale), words.implicitWidth + 20)
+    implicitWidth: Math.max(minWidth, words.implicitWidth + 20)
     implicitHeight: Metrics.fontSize + 13
 
     Label {

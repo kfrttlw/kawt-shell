@@ -12,6 +12,8 @@ import qs.services
 import "modules/bar"
 import "modules/lock"
 import "modules/boot"
+import "modules/profile"
+import qs.components
 
 ShellRoot {
     Bar {}
@@ -19,6 +21,19 @@ ShellRoot {
     Lock {}
 
     Boot {}
+
+    // kawt's own windows, one each, on the screen hyprland opens them on
+    Lazy {
+        when: Panels.isWindowOpen("today")
+
+        TodayWindow {}
+    }
+
+    Lazy {
+        when: Panels.isWindowOpen("system")
+
+        SystemWindow {}
+    }
 
     // singletons start lazily; these have to run without anything on screen using them
     // (theme files for other apps, todo reminders, the wallpaper theme, locking)
