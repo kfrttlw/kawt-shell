@@ -442,7 +442,7 @@ Singleton {
         update: "Обновить",
         autoUpdate: "Проверять обновления раз в неделю",
         autoUpdateNote: "один маленький git fetch; выключено — ничего не уходит, пока не нажмёшь «Проверить»",
-        companionOn: "Companion",
+        companionOn: "Компаньон",
         companionNote: "гуляет по пустому столу и немного говорит",
         herWindow: "Её окно…",
         aiSettings: "Настройки ИИ…",
