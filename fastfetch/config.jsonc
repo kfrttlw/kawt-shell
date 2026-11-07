@@ -1,7 +1,7 @@
-// kawt / fastfetch: the starting point (mono-dark). install.sh copies it to
+// kawt / fastfetch: the starting point (black). install.sh copies it to
 // ~/.local/state/kawt/theme/fastfetch.jsonc and links ~/.config/fastfetch/config.jsonc there;
 // once kawt runs it rewrites that copy in the current theme colors (utils/themegen.js).
-// Short and safe to screenshot: the system's own logo, no user@host, laptop model or addresses.
+// Safe to screenshot: the system's own logo, no user@host, laptop model or addresses.
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
@@ -14,76 +14,101 @@
   "display": {
     "separator": " ",
     "key": {
-      "width": 7
+      "width": 9
     },
     "color": {
-      "keys": "38;2;114;114;112",
-      "title": "38;2;230;230;226",
-      "output": "38;2;230;230;226",
-      "separator": "38;2;114;114;112"
+      "keys": "38;2;142;139;132",
+      "title": "38;2;226;35;26",
+      "output": "38;2;222;220;214",
+      "separator": "38;2;142;139;132"
     },
     "percent": {
-      "type": 3,
+      "type": 2,
       "color": {
-        "green": "38;2;230;230;226",
-        "yellow": "38;2;230;230;226",
-        "red": "38;2;201;86;74"
+        "green": "38;2;222;220;214",
+        "yellow": "38;2;226;35;26",
+        "red": "38;2;226;35;26"
       }
     },
     "bar": {
       "width": 12,
       "char": {
-        "elapsed": "#",
-        "total": "-"
+        "elapsed": "■",
+        "total": "·"
       },
       "border": {
         "left": "[",
         "right": "]"
       },
       "color": {
-        "elapsed": "38;2;230;230;226",
-        "total": "38;2;114;114;112",
-        "border": "38;2;114;114;112"
+        "elapsed": "38;2;226;35;26",
+        "total": "38;2;142;139;132",
+        "border": "38;2;142;139;132"
       }
     }
   },
   "modules": [
     {
       "type": "os",
+      "key": "kawt",
+      "format": "· {name}",
+      "keyWidth": 5,
+      "keyColor": "38;2;226;35;26",
+      "outputColor": "38;2;142;139;132"
+    },
+    {
+      "type": "custom",
+      "format": "──────────────────────────────────",
+      "outputColor": "38;2;142;139;132"
+    },
+    {
+      "type": "os",
       "key": "os"
     },
     {
       "type": "kernel",
-      "key": "kern"
+      "key": "kernel"
     },
     {
       "type": "uptime",
-      "key": "up"
+      "key": "uptime"
     },
     {
       "type": "packages",
-      "key": "pkgs"
+      "key": "packages"
     },
     {
       "type": "wm",
       "key": "wm"
     },
     {
-      "type": "terminal",
-      "key": "term"
-    },
-    {
       "type": "shell",
       "key": "shell"
     },
     {
-      "type": "memory",
-      "key": "mem"
+      "type": "terminal",
+      "key": "terminal"
     },
     {
-      "type": "custom",
-      "key": "kawt",
-      "format": "mono-dark · soft terminal colors"
+      "type": "cpu",
+      "key": "cpu"
+    },
+    {
+      "type": "gpu",
+      "key": "gpu"
+    },
+    {
+      "type": "memory",
+      "key": "memory"
+    },
+    {
+      "type": "disk",
+      "key": "disk /",
+      "folders": "/"
+    },
+    {
+      "type": "terminalfont",
+      "key": "font"
     },
     "break",
     {

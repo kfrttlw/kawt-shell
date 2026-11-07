@@ -83,6 +83,7 @@ Singleton {
     property alias wallDither: adapter.wallDither
     property alias themeTerminals: adapter.themeTerminals
     property alias fetchLogo: adapter.fetchLogo
+    property alias fetchPicture: adapter.fetchPicture
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
     property alias language: adapter.language
@@ -249,7 +250,8 @@ Singleton {
             property string wallpaperBy: "" // who draws it: "" awww (or swww) if it's there, kawt if not | "kawt" kawt even with awww there
             property bool wallDither: true // the wallpaper in the theme's few tones, dithered like an old screen (scripts/dither.sh); off: the picture as it is
             property bool themeTerminals: true // recolor open terminals on theme change
-            property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" (utils/themegen.js)
+            property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" | "picture" (utils/themegen.js)
+            property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
             property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22

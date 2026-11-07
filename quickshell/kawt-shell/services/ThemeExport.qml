@@ -23,7 +23,7 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, Colors.bevel);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, Colors.bevel, root.fetchPng);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         for (const name in f)
             args.push(name, f[name]);
@@ -40,7 +40,37 @@ Singleton {
         proc.running = true;
     }
 
-    Component.onCompleted: apply(false, false)
+    Component.onCompleted: {
+        apply(false, false);
+        fetchPicture();
+    }
+
+    // ---- fastfetch's picture logo (Settings.fetchLogo "picture"): stripes, ~/.face or a file of
+    // yours, in the theme's tones and dots as the wallpapers are, made again on each theme switch
+    readonly property string fetchPng: `${dir}/fetch.png`
+    readonly property string fetchSource: {
+        const p = Settings.fetchPicture, home = Quickshell.env("HOME");
+        return p === "" ? `${Quickshell.shellDir}/data/stripes.png` : p === "face" ? `${home}/.face` : p.replace(/^~(?=\/|$)/, home);
+    }
+
+    function fetchPicture(): void {
+        if (Settings.fetchLogo !== "picture")
+            return;
+        const tones = Wallpapers.tones;
+        // 170 x 170 dots, each two pixels: kitty fits it into the logo's 34 x 17 cells
+        dither.command = ["sh", "-c", 'mkdir -p "${2%/*}" && exec sh "$0" "$@"', `${Quickshell.shellDir}/scripts/dither.sh`, fetchSource, fetchPng, "170", "170", String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma)];
+        dither.running = false;
+        dither.running = true;
+    }
+
+    Process {
+        id: dither
+
+        onExited: code => {
+            if (code !== 0)
+                console.warn(`fastfetch picture: couldn't make it from ${root.fetchSource} (ffmpeg, and the file there?)`);
+        }
+    }
 
     Connections {
         target: Settings
@@ -52,6 +82,11 @@ Singleton {
         // only fastfetch's file changes: nothing to recolor live
         function onFetchLogoChanged(): void {
             root.apply(false, false);
+            root.fetchPicture();
+        }
+
+        function onFetchPictureChanged(): void {
+            root.fetchPicture();
         }
 
         // gtk's font: apps started from now on
@@ -75,6 +110,7 @@ Singleton {
 
         function onPaletteChanged(): void {
             root.apply(true, false);
+            root.fetchPicture();
         }
     }
 
