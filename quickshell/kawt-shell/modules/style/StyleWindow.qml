@@ -695,7 +695,7 @@ AppWindow {
                     spacing: 14
 
                     Repeater {
-                        model: [["distro", "fetchDistro"], ["distro-tinted", "fetchTinted"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
+                        model: [["distro", "fetchDistro"], ["distro-tinted", "fetchTinted"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"], ["picture", "fetchPictureWord"]]
 
                         Check {
                             required property var modelData
@@ -706,6 +706,46 @@ AppWindow {
                             onToggled: Settings.fetchLogo = modelData[0]
                         }
                     }
+                }
+
+                // the picture: stripes, ~/.face, or a file of yours, in the theme's tones
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: Settings.fetchLogo === "picture"
+                    spacing: 14
+
+                    Repeater {
+                        model: [["", "stripes"], ["face", "~/.face"], ["own", "fetchOwnFile"]]
+
+                        Check {
+                            required property var modelData
+                            readonly property string now: Settings.fetchPicture === "" || Settings.fetchPicture === "face" ? Settings.fetchPicture : "own"
+
+                            radio: true
+                            text: modelData[1].startsWith("fetch") ? Strings.t(modelData[1]) : modelData[1]
+                            checked: now === modelData[0]
+                            onToggled: Settings.fetchPicture = modelData[0] === "own" ? (ownPicture.text.trim() || "~/Pictures/") : modelData[0]
+                        }
+                    }
+
+                    TermInput {
+                        id: ownPicture
+
+                        Layout.fillWidth: true
+                        visible: Settings.fetchPicture !== "" && Settings.fetchPicture !== "face"
+                        prompt: ""
+                        placeholder: "~/Pictures/me.png"
+                        Component.onCompleted: text = visible ? Settings.fetchPicture : ""
+                        onAccepted: t => Settings.fetchPicture = t.trim() || ""
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: Settings.fetchLogo === "picture"
+                    wrapMode: Text.Wrap
+                    text: Strings.t("fetchPictureNote")
+                    color: Colors.dim
                 }
             }
 

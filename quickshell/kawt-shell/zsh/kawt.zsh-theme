@@ -14,6 +14,9 @@
 #   out of screenshots)
 #   >  where you type, red like the cursor in kawt's menus (# as root)
 #
+# fastfetch in a narrow window, or with a picture logo where it can't be drawn: the system's own
+# logo instead (the function at the end).
+#
 # Plus two helpers when they're installed (install.sh does that on Arch), in the theme's colors:
 #   zsh-autosuggestions      while typing, the rest of a command from history in dim; → takes it
 #   zsh-syntax-highlighting  the command in accent if it exists, in warn if not (a typo)
@@ -134,6 +137,22 @@ if [[ ${KAWT_ZSH_PLUGINS:-1} != 0 ]]; then
     (( $+functions[_zsh_autosuggest_start] )) || { kawt_plugin zsh-autosuggestions && source $REPLY; }
     (( $+functions[_zsh_highlight] )) || { kawt_plugin zsh-syntax-highlighting && source $REPLY; }
 fi
+
+# fastfetch, fitted to the window: under 90 columns the system's small logo, so the info still
+# fits beside it; and where kawt's picture logo can't be drawn (only terminals with kitty's
+# graphics: kitty, ghostty, wezterm) the system's own one. Anything you give it goes along
+fastfetch() {
+    local -a logo
+    local id=linux
+    [[ -r /etc/os-release ]] && id=$(. /etc/os-release && print -r -- ${ID:-linux})
+    if (( COLUMNS < 90 )); then
+        logo=(--logo-type small --logo $id)
+    elif [[ -z $KITTY_WINDOW_ID && $TERM != xterm-kitty && $TERM != xterm-ghostty && $TERM_PROGRAM != WezTerm ]] &&
+        grep -qs '"kitty-direct"' ${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch/config.jsonc; then
+        logo=(--logo-type builtin --logo $id)
+    fi
+    command fastfetch $logo "$@"
+}
 
 # last, so the prompt above is set even if reading the colors ever fails. It must end well
 # (status 0): the first prompt shows how the last thing .zshrc ran ended, and that's this
