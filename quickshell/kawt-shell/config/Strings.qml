@@ -382,7 +382,16 @@ Singleton {
         loopOne: "one",
         loopAll: "all",
         loopOff: "off",
-        coverFromNet: "Cover from the net"
+        coverFromNet: "Cover from the net",
+        lockTitle: "Log on to kawt",
+        lockAsk: "The computer is locked. Type your password.",
+        lockUser: "User:",
+        lockPassword: "Password:",
+        capsOn: "Caps Lock is on",
+        lockTest: "test mode: unlocks by itself in %1 s",
+        lockLook: "Looks like:",
+        lockLookWindow: "a log-on window",
+        lockLookConsole: "a console"
     })
 
     readonly property var ruWords: ({
@@ -743,6 +752,15 @@ Singleton {
         loopOne: "один",
         loopAll: "все",
         loopOff: "нет",
-        coverFromNet: "Обложка из сети"
+        coverFromNet: "Обложка из сети",
+        lockTitle: "Вход в kawt",
+        lockAsk: "Компьютер заблокирован. Введите пароль.",
+        lockUser: "Пользователь:",
+        lockPassword: "Пароль:",
+        capsOn: "Caps Lock включён",
+        lockTest: "тестовый режим: откроется сам через %1 с",
+        lockLook: "Вид:",
+        lockLookWindow: "окно входа",
+        lockLookConsole: "консоль"
     })
 }

@@ -66,6 +66,7 @@ Singleton {
     property alias device: adapter.device
     property alias dnd: adapter.dnd
     property alias lockDetails: adapter.lockDetails
+    property alias lockLook: adapter.lockLook
     property alias lockOnSleep: adapter.lockOnSleep
     property alias idleLock: adapter.idleLock
     property alias screenOff: adapter.screenOff
@@ -230,6 +231,7 @@ Singleton {
             property string ollamaModel: "llama3.2"
             property string device: "auto" // auto | laptop | desktop
             property bool dnd: false // do not disturb: no notification toasts
+            property string lockLook: "window" // "window": an old system's log-on window · "console": a text login, like a tty's
             property bool lockDetails: true // the lock screen shows the next task, what's playing, the wifi name, messages and user@host (anyone at the screen sees them)
             property bool lockOnSleep: true // lock before the machine sleeps and on `loginctl lock-session` (services/Session.qml)
             property int idleLock: 10 // lock after this many minutes without input, 0 = never (services/Idle.qml)

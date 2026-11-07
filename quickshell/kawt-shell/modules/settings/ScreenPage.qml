@@ -22,6 +22,29 @@ ColumnLayout {
     Group {
         title: Strings.t("lockGroup")
 
+        // how it looks: A, the log-on window, or B, the console
+        RowLayout {
+            spacing: 16
+
+            Label {
+                text: Strings.t("lockLook")
+            }
+
+            Check {
+                radio: true
+                text: Strings.t("lockLookWindow")
+                checked: Settings.lockLook !== "console"
+                onToggled: Settings.lockLook = "window"
+            }
+
+            Check {
+                radio: true
+                text: Strings.t("lockLookConsole")
+                checked: Settings.lockLook === "console"
+                onToggled: Settings.lockLook = "console"
+            }
+        }
+
         Check {
             Layout.fillWidth: true
             text: Strings.t("lockDetails")
