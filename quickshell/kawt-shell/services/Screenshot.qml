@@ -7,9 +7,9 @@ import qs.utils
 
 // Screenshots through scripts/screenshot.sh (grim + slurp).
 // Settings.screenshotAsk (the default): the shot waits in ~/.cache/kawt/shots, already on the
-// clipboard, and a preview in the bottom-right corner offers [copy] [save] [open]
+// clipboard, and a preview in the bottom-right corner offers Copy, Save, Open
 // (modules/shot/ShotPreview.qml). Left alone, or followed by the next shot, it's saved; only
-// [x] throws it away (the cache is cleaned after an hour).
+// × throws it away (the cache is cleaned after an hour).
 // Otherwise it's saved to Settings.screenshotDir at once, copied, and announced.
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen
 // With the tools installed (each optional, its button only shows with it):
@@ -25,7 +25,8 @@ Singleton {
     property string ocrLangs: "" // "eng+rus": what tesseract has of the useful ones; "" = no [text]
     property bool editing: editJob.running // the preview waits meanwhile
     property bool reading: textJob.running
-    property string textStatus: "" // "text copied", "no text found"
+    property string textStatus: "" // "text copied (3 lines)", "no text found"
+    property bool textOk: false // it was copied
     property int version: 0 // goes up when the shot's file changed (edited): the preview loads it again
 
     Process {
@@ -59,11 +60,12 @@ Singleton {
         }
     }
 
-    // [text]: what tesseract reads in the shot, onto the clipboard
+    // Text: what tesseract reads in the shot, onto the clipboard
     function readText(): void {
         if (!shot || !ocrLangs || textJob.running)
             return;
-        textStatus = "reading...";
+        textStatus = Strings.t("shotReading");
+        textOk = false;
         textJob.command = ["tesseract", shot, "-", "-l", ocrLangs];
         textJob.running = true;
     }
@@ -74,7 +76,7 @@ Singleton {
         onDone: (code, out) => {
             const t = out.replace(/\f/g, "").trim();
             if (code !== 0 || !t) {
-                root.textStatus = code !== 0 ? "tesseract failed" : "no text found";
+                root.textStatus = Strings.t(code !== 0 ? "shotOcrFailed" : "shotNoText");
                 return;
             }
             // through wl-copy, on stdin: the preview never has the keyboard, and wayland only
@@ -83,7 +85,8 @@ Singleton {
             copyText.stdinEnabled = true;
             copyText.running = true;
             const lines = t.split("\n").length;
-            root.textStatus = `text copied (${lines} line${lines === 1 ? "" : "s"})`;
+            root.textStatus = Strings.t("shotTextCopied").arg(Strings.count(lines, "line"));
+            root.textOk = true;
         }
     }
 

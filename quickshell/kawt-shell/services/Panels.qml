@@ -10,6 +10,7 @@ import qs.config
 //
 //   qs -c kawt-shell ipc call kawt toggle launcher|menu|style|tray|today|system|settings|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
 //   qs -c kawt-shell ipc call kawt window today|system|style <tab>   (today todo notes focus · sys top net power · wall theme change)
+//   qs -c kawt-shell ipc call kawt theme new|edit                    (the theme editor)
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest | suspend   (suspend: locks first, then sleeps)
@@ -327,6 +328,12 @@ Singleton {
         // speak to the ai panel (services/Voice.qml): starts listening, again: stops and writes it
         function voice(): void {
             Voice.toggle();
+        }
+
+        // a theme of your own: theme new (from the one you're in) · theme edit (the one you're in)
+        function theme(what: string): void {
+            root.styleEdit = what === "edit" ? "edit" : "new";
+            root.openWindow("style", "theme");
         }
 
         // the first start's hello and tour again (modules/companion/WelcomePopover.qml)

@@ -16,11 +16,14 @@ Item {
 
     property string style: "raised" // "raised" | "sunk" | "pressed" | "etched" | "inset" (= "well") | "bump"
     property bool flatLine: true
+    // other edge colors than kawt's now ({ hi, hi2, lo, deep }: the theme editor's little desktop)
+    property var colors: null
+    readonly property var c: colors ?? Colors
 
     anchors.fill: parent
 
     // [outer top-left, outer bottom-right, inner top-left, inner bottom-right]
-    readonly property var edges: style === "sunk" ? [Colors.lo, Colors.hi, Colors.deep, Colors.hi2] : style === "pressed" ? [Colors.deep, Colors.hi, Colors.lo, Colors.hi2] : style === "inset" || style === "well" ? [Colors.lo, Colors.hi, "transparent", "transparent"] : style === "bump" ? [Colors.hi, Colors.lo, "transparent", "transparent"] : [Colors.hi, Colors.deep, Colors.hi2, Colors.lo]
+    readonly property var edges: style === "sunk" ? [c.lo, c.hi, c.deep, c.hi2] : style === "pressed" ? [c.deep, c.hi, c.lo, c.hi2] : style === "inset" || style === "well" ? [c.lo, c.hi, "transparent", "transparent"] : style === "bump" ? [c.hi, c.lo, "transparent", "transparent"] : [c.hi, c.deep, c.hi2, c.lo]
 
     // etched: a dark frame, and a light one a pixel in and to the right
     Item {
@@ -33,7 +36,7 @@ Item {
             width: parent.width - 1
             height: parent.height - 1
             color: "transparent"
-            border.color: Colors.hi
+            border.color: root.c.hi
             border.width: 1
         }
 
@@ -41,7 +44,7 @@ Item {
             width: parent.width - 1
             height: parent.height - 1
             color: "transparent"
-            border.color: Colors.lo
+            border.color: root.c.lo
             border.width: 1
         }
     }

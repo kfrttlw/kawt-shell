@@ -9,9 +9,10 @@ import qs.services
 // each variant (dark and light) as #rrggbb, one picked off the screen (hyprpicker), and a little
 // bar and panel drawn in them as you type. Saved to ~/.config/kawt/themes.json (config/Colors.qml)
 // and chosen at once.
-//   [+ new]  starts from the theme you're in (the wallpaper's too: its colors, kept as they are)
-//   [edit]   the theme you're in. Black and white keep only what you change: [reset] drops it
-// esc: back to the style window, nothing saved. ctrl+s: save.
+//   New…   starts from the theme you're in (the wallpaper's too: its colors, kept as they are)
+//   Edit…  the theme you're in. Black and white keep only what you change: Reset drops it
+// The frames' colors (face, edges, fields, the title bar) come from these, as config/Colors.qml
+// makes them; the little desktop on top shows them. esc: back, nothing saved. ctrl+s: save.
 Item {
     id: root
 
@@ -26,13 +27,37 @@ Item {
 
     readonly property var cur: work[side] ?? ({})
     readonly property bool kawts: !isNew && !!Colors.fixed[name]
-    readonly property string nameError: !isNew ? "" : !/^[a-z0-9-]{1,24}$/.test(name) ? "a-z, 0-9 and - only" : ["thinkpad", "wallpaper", "black", "white"].includes(name) ? "that one is kawt's" : Colors.themes[name] ? "taken: another name" : ""
+    readonly property string nameError: !isNew ? "" : !/^[a-z0-9-]{1,24}$/.test(name) ? Strings.t("teNameChars") : ["thinkpad", "wallpaper", "black", "white"].includes(name) ? Strings.t("teNameKawts") : Colors.themes[name] ? Strings.t("teNameTaken") : ""
     // what each color is for, in the order they're asked
-    readonly property var rows: [["bg", "background"], ["bar", "the bar"], ["fg", "text"], ["dim", "quiet text"], ["border", "lines"], ["accent", "the light"], ["warn", "alerts"], ["hoverFill", "under the pointer"]]
+    readonly property var rows: [["bg", "teBg"], ["bar", "teBar"], ["fg", "teFg"], ["dim", "teDim"], ["border", "teBorder"], ["accent", "teAccent"], ["warn", "teWarn"], ["hoverFill", "teHover"]]
+    // the frames from these colors, as config/Colors.qml makes them
+    readonly property var look: {
+        const c = cur, bg = c.bg ?? Colors.bg, fg = c.fg ?? Colors.fg, accent = c.accent ?? Colors.accent;
+        const dark = Colors.luminance(bg) < 0.25, mix = Colors.mix;
+        const title = c.title ?? (dark ? mix(bg, "black", 0.3) : fg);
+        return {
+            bg, fg, accent,
+            dim: c.dim ?? Colors.dim,
+            warn: c.warn ?? Colors.warn,
+            bar: c.bar || bg,
+            face: c.face ?? (dark ? mix(bg, fg, 0.07) : bg),
+            hi: c.hi ?? (dark ? mix(bg, fg, 0.34) : mix(bg, "white", 0.85)),
+            hi2: c.hi2 ?? (dark ? mix(bg, fg, 0.16) : mix(bg, "white", 0.4)),
+            lo: c.lo ?? (dark ? mix(bg, "black", 0.6) : mix(bg, fg, 0.42)),
+            deep: c.deep ?? (dark ? "black" : fg),
+            well: c.field ?? (dark ? mix(bg, "black", 0.35) : mix(bg, "white", 0.7)),
+            title,
+            titleInk: c.titleInk ?? (Colors.luminance(title) < 0.3 ? mix(fg, "white", 0.6) : "#141414"),
+            onAccent: Colors.contrast(accent, "white") >= Colors.contrast(accent, "#141414") * 0.8 ? "white" : "#141414"
+        };
+    }
     // the light in a few colors, a click away
     readonly property var lights: ["#e2231a", "#ff7a1a", "#f2c12e", "#5ec269", "#2ec4b6", "#4c9be8", "#9b6cf0", "#e55aa0", "#d8d6d0"]
 
     signal closed
+
+    // opened at a variant: its tab
+    onSideChanged: sides.current = side === "light" ? 1 : 0
 
     visible: shown && !picking
 
@@ -159,16 +184,17 @@ Item {
         onClicked: root.close()
     }
 
-    TitledBox {
+    KWindow {
         id: card
 
         x: Math.round((root.width - width) / 2)
-        y: Math.round(root.height * 0.1)
+        y: Math.round(root.height * 0.08)
         width: Math.min(Math.round(620 * Metrics.scale), root.width - Metrics.padding * 2)
-        height: body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: root.isNew ? "new theme" : root.kawts ? "kawt's black and white" : `theme: ${root.name}`
-        window: true
-        hint: "esc"
+        height: chrome + body.implicitHeight
+        title: root.isNew ? Strings.t("teNew") : root.kawts ? Strings.t("teKawts") : Strings.t("teTheme").arg(root.name)
+        icon: "edit"
+        status: [Strings.t("teKeys"), root.kawts ? Strings.t("teKawtsNote") : "~/.config/kawt/themes.json"]
+        onCloseClicked: root.close()
 
         Keys.onEscapePressed: root.close()
         Keys.onPressed: event => {
@@ -186,172 +212,247 @@ Item {
         ColumnLayout {
             id: body
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding
-            anchors.topMargin: Metrics.padding + card.contentTop
+            width: parent.width
             spacing: Metrics.spacing
 
-            //  name> mine                       [dark] [light]
+            //  Name: [mine          ]
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Metrics.spacing
+                visible: root.isNew
+                spacing: 6
+
+                Label {
+                    text: Strings.t("herName")
+                }
 
                 TermInput {
                     id: nameInput
 
                     Layout.fillWidth: true
-                    visible: root.isNew
-                    prompt: "name>"
+                    prompt: ""
                     text: root.name
-                    placeholder: "a-z, 0-9 and -"
+                    placeholder: Strings.t("teNameChars")
                     onTextChanged: if (input.activeFocus)
                         root.name = text.trim().toLowerCase()
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    visible: !root.isNew
-                    text: root.kawts ? "only what you change is kept; [reset] gives kawt's back" : `in ~/.config/kawt/themes.json`
-                    color: Colors.dim
-                    elide: Text.ElideRight
-                }
-
-                Repeater {
-                    model: [["dark", root.kawts ? "black" : "dark"], ["light", root.kawts ? "white" : "light"]]
-
-                    BracketButton {
-                        required property var modelData
-
-                        label: modelData[1]
-                        active: root.side === modelData[0]
-                        textColor: root.side === modelData[0] ? Colors.accent : Colors.dim
-                        onClicked: root.side = modelData[0]
-                    }
                 }
             }
 
             Label {
                 visible: root.nameError !== "" || Colors.userError !== ""
-                text: Colors.userError ? `${Colors.userError} (fix the file first)` : root.nameError
+                text: Colors.userError ? Strings.t("teFixFile").arg(Colors.userError) : root.nameError
                 color: Colors.warn
-                font.pixelSize: Metrics.size(-2)
             }
 
-            // ---- how it looks: the bar, and a panel under it
+            // the variant being edited
+            Tabs {
+                id: sides
+
+                tabs: root.kawts ? [Strings.t("teBlack"), Strings.t("teWhite")] : [Strings.t("teDark"), Strings.t("teLight")]
+                current: root.side === "light" ? 1 : 0
+                onCurrentChanged: root.side = current === 1 ? "light" : "dark"
+            }
+
+            // ---- how it looks: a little desktop in its colors
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: previewCol.implicitHeight
-                color: root.cur.bg ?? Colors.bg
-                border.width: Metrics.borderWidth
-                border.color: root.cur.border ?? Colors.border
+                Layout.topMargin: -Metrics.spacing
+                implicitHeight: Math.round(150 * Metrics.scale)
+                color: root.look.bg
+                clip: true
 
-                Column {
-                    id: previewCol
+                Bevel {
+                    style: "sunk"
+                }
 
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: Metrics.borderWidth
+                // the bar: the start button, a window button, the clock
+                Rectangle {
+                    id: miniBar
+
+                    x: 1
+                    y: 1
+                    width: parent.width - 2
+                    height: Metrics.fontSize + 9
+                    color: root.look.bar === root.look.bg ? root.look.face : root.look.bar
+
+                    Bevel {
+                        style: "raised"
+                        colors: root.look
+                        }
 
                     Rectangle {
-                        width: parent.width
-                        height: Math.round(Metrics.fontSize * 2)
-                        color: root.cur.bar || root.cur.bg || Colors.bg
+                        x: 3
+                        y: 3
+                        width: startWord.implicitWidth + 22
+                        height: parent.height - 6
+                        color: root.look.face
+
+                        Bevel {
+                            style: "raised"
+                            colors: root.look
+                            }
 
                         Rectangle {
-                            width: parent.width
-                            height: Metrics.borderWidth
-                            anchors.bottom: parent.bottom
-                            color: root.cur.border ?? Colors.border
-                        }
-
-                        Row {
-                            anchors.left: parent.left
-                            anchors.leftMargin: Metrics.spacing
+                            x: 4
                             anchors.verticalCenter: parent.verticalCenter
-
-                            Repeater {
-                                model: [["[", "dim"], ["●", "accent"], ["]  1  ", "dim"], ["[2]", "accent"], ["  3  │  ", "dim"], ["kitty — ~/notes", "dim"]]
-
-                                Label {
-                                    required property var modelData
-
-                                    text: modelData[0]
-                                    color: root.cur[modelData[1]] ?? Colors.fg
-                                }
-                            }
+                            width: 8
+                            height: 10
+                            color: root.look.accent
                         }
 
                         Label {
-                            anchors.centerIn: parent
-                            text: "2:13 am"
-                            color: root.cur.fg ?? Colors.fg
-                        }
+                            id: startWord
 
-                        Label {
-                            anchors.right: parent.right
-                            anchors.rightMargin: Metrics.spacing
+                            x: 16
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "[72%]  [3]  [>_]"
-                            color: root.cur.fg ?? Colors.fg
+                            text: "kawt"
+                            color: root.look.fg
                         }
                     }
 
-                    // a panel: words, quiet words, the one under the pointer, the chosen, an alert
-                    Column {
+                    Rectangle {
+                        x: 70
+                        y: 3
+                        width: Math.min(160, parent.width * 0.35)
+                        height: parent.height - 6
+                        color: root.look.face
+
+                        Bevel {
+                            style: "pressed"
+                            colors: root.look
+                            }
+
+                        Label {
+                            x: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "kitty — ~/notes"
+                            color: root.look.fg
+                        }
+                    }
+
+                    Label {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "21:04"
+                        color: root.look.fg
+                    }
+                }
+
+                // a window: the title in focus, a list with the picked line, a button
+                Rectangle {
+                    x: Math.round(parent.width * 0.12)
+                    y: miniBar.height + 12
+                    width: Math.round(parent.width * 0.62)
+                    height: parent.height - y - 10
+                    color: root.look.face
+
+                    Rectangle {
+                        x: 4
+                        y: 4
+                        z: -1
                         width: parent.width
-                        topPadding: Metrics.spacing
-                        bottomPadding: Metrics.spacing
-                        spacing: 2
+                        height: parent.height
+                        color: Qt.rgba(0, 0, 0, 0.5)
+                    }
 
-                        Label {
-                            x: Metrics.spacing
-                            text: "text, as it reads"
-                            color: root.cur.fg ?? Colors.fg
+                    Bevel {
+                        style: "raised"
+                        colors: root.look
                         }
 
-                        Label {
-                            x: Metrics.spacing
-                            text: "quiet text: dates, hints, what's off"
-                            color: root.cur.dim ?? Colors.dim
-                        }
+                    Rectangle {
+                        id: miniTitle
 
-                        Rectangle {
-                            width: parent.width - Metrics.spacing * 2
-                            x: Metrics.spacing
-                            height: hovered.implicitHeight + 4
-                            color: root.cur.hoverFill ?? Colors.hoverFill
+                        x: 3
+                        y: 3
+                        width: parent.width - 6
+                        height: Metrics.fontSize + 7
+                        color: root.look.title
+
+                        Label {
+                            x: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Strings.t("teSample")
+                            color: root.look.titleInk
+                        }
+                    }
+
+                    Rectangle {
+                        x: 8
+                        y: miniTitle.y + miniTitle.height + 6
+                        width: parent.width * 0.62
+                        height: parent.height - y - 8
+                        color: root.look.well
+
+                        Bevel {
+                            style: "sunk"
+                            colors: root.look
+                            }
+
+                        Column {
+                            x: 3
+                            y: 3
+                            width: parent.width - 6
 
                             Label {
-                                id: hovered
-
                                 x: 4
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "under the pointer"
-                                color: root.cur.fg ?? Colors.fg
+                                text: Strings.t("teText")
+                                color: root.look.fg
+                            }
+
+                            Rectangle {
+                                width: parent.width
+                                height: Metrics.fontSize + 5
+                                color: root.look.accent
+
+                                Label {
+                                    x: 4
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: Strings.t("tePicked")
+                                    color: root.look.onAccent
+                                }
+                            }
+
+                            Label {
+                                x: 4
+                                text: Strings.t("teQuiet")
+                                color: root.look.dim
+                            }
+
+                            Label {
+                                x: 4
+                                text: Strings.t("teAlert")
+                                color: root.look.warn
                             }
                         }
+                    }
 
-                        Row {
-                            x: Metrics.spacing
-                            spacing: Metrics.spacing * 2
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 8
+                        width: okWord.implicitWidth + 24
+                        height: Metrics.fontSize + 9
+                        color: root.look.face
 
-                            Label {
-                                text: "> chosen"
-                                color: root.cur.accent ?? Colors.accent
+                        Bevel {
+                            style: "raised"
+                            colors: root.look
                             }
 
-                            Label {
-                                text: "! battery 5%"
-                                color: root.cur.warn ?? Colors.warn
-                            }
+                        Label {
+                            id: okWord
+
+                            anchors.centerIn: parent
+                            text: "OK"
+                            color: root.look.fg
                         }
                     }
                 }
             }
 
-            // ---- the colors:  background  [##]  #0c0c0c  [pick]
+            // ---- the colors:  Background  [##]  # 0c0c0c  [Pick]
             Repeater {
                 model: root.rows
 
@@ -364,20 +465,21 @@ Item {
                     readonly property bool ok: /^#?[0-9a-fA-F]{6}$/.test(hex.text.trim()) || (key === "bar" && hex.text.trim() === "")
 
                     Layout.fillWidth: true
-                    spacing: Metrics.spacing
+                    spacing: 6
 
                     Label {
-                        Layout.preferredWidth: Math.round(150 * Metrics.scale)
-                        text: row.modelData[1]
-                        color: Colors.dim
+                        Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 20)
+                        text: Strings.t(row.modelData[1])
                     }
 
                     Rectangle {
                         implicitWidth: Math.round(Metrics.fontSize * 2.4)
-                        implicitHeight: Math.round(Metrics.fontSize * 1.2)
+                        implicitHeight: Metrics.fontSize + 6
                         color: row.value || root.cur.bg || Colors.bg
-                        border.width: Metrics.borderWidth
-                        border.color: Colors.border
+
+                        Bevel {
+                            style: "sunk"
+                        }
                     }
 
                     TermInput {
@@ -387,29 +489,27 @@ Item {
                         prompt: "#"
                         promptColor: row.ok ? Colors.dim : Colors.warn
                         text: row.value.replace(/^#/, "")
-                        placeholder: row.key === "bar" ? "the background's" : "rrggbb"
+                        placeholder: row.key === "bar" ? Strings.t("teBarSame") : "rrggbb"
                         onTextChanged: if (input.activeFocus)
                             root.setColor(row.key, text)
                     }
 
-                    BracketButton {
+                    PushButton {
                         visible: Screenshot.canFreeze // hyprpicker is there
-                        label: "pick"
-                        bordered: false
-                        textColor: Colors.dim
+                        small: true
+                        text: Strings.t("tePick")
                         onClicked: root.pick(row.key)
                     }
                 }
             }
 
-            //  the light:  ■ ■ ■ ■ ■ ■ ■ ■ ■
+            //  The light:  ■ ■ ■ ■ ■ ■ ■ ■ ■
             RowLayout {
-                spacing: Metrics.spacing
+                spacing: 4
 
                 Label {
-                    Layout.preferredWidth: Math.round(150 * Metrics.scale)
-                    text: "a light"
-                    color: Colors.dim
+                    Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 20) + 2
+                    text: Strings.t("teLights")
                 }
 
                 Repeater {
@@ -417,12 +517,21 @@ Item {
 
                     Rectangle {
                         required property string modelData
+                        readonly property bool on: root.cur.accent === modelData
 
-                        implicitWidth: Math.round(Metrics.fontSize * 1.4)
+                        implicitWidth: Metrics.fontSize + 6
                         implicitHeight: implicitWidth
-                        color: modelData
-                        border.width: root.cur.accent === modelData ? 2 : Metrics.borderWidth
-                        border.color: root.cur.accent === modelData ? Colors.fg : Colors.border
+                        color: Colors.face
+
+                        Bevel {
+                            style: parent.on ? "pressed" : "raised"
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 3
+                            color: parent.modelData
+                        }
 
                         MouseArea {
                             anchors.fill: parent
@@ -433,36 +542,32 @@ Item {
                 }
             }
 
-            //  [save] [cancel]                       [delete]
+            //  [Delete]                          [Save] [Cancel]
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: Metrics.spacing
-                spacing: Metrics.spacing
+                spacing: 6
 
-                BracketButton {
-                    label: "save"
-                    textColor: root.nameError || Colors.userError ? Colors.dim : Colors.accent
+                PushButton {
+                    visible: !root.isNew && (!root.kawts || !!Colors.user[root.name])
+                    text: root.sure ? Strings.t("sureAgain") : root.kawts ? Strings.t("teReset") : Strings.t("teDelete")
+                    onClicked: root.drop()
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                PushButton {
+                    isDefault: true
+                    enabled: !root.nameError && !Colors.userError
+                    text: Strings.t("teSave")
                     onClicked: root.save()
                 }
 
-                BracketButton {
-                    label: "cancel"
+                PushButton {
+                    text: Strings.t("cancel")
                     onClicked: root.close()
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    text: "ctrl+s saves · esc goes back"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
-                    elide: Text.ElideRight
-                }
-
-                BracketButton {
-                    visible: !root.isNew && (!root.kawts || !!Colors.user[root.name])
-                    label: root.sure ? `${root.sure}: sure?` : root.kawts ? "reset" : "delete"
-                    textColor: Colors.warn
-                    onClicked: root.drop()
                 }
             }
         }
