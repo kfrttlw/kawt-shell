@@ -5,6 +5,8 @@
   - JavaScript newer than Qt's engine            (matchAll, flatMap, ...)
   - a property named like one an Item already has, left / x / visible...
                                                  ("Cannot override FINAL property", Qt 6.10+)
+  - kawt's words (config/Strings.qml): a line without its comma, a key used
+    with Strings.t("...") that one of the two languages doesn't have
 Run from anywhere, best before every commit:
     python3 tools/check.py
 Exits 1 if something is wrong."""
@@ -125,6 +127,32 @@ for dirpath, _, files in os.walk("."):
             if m and not (root_type in not_items and len(m.group(1)) == 4):
                 print(f"{path}:{n}: a property named {m.group(2)}: every Item has one already (Cannot override FINAL property)")
                 problems += 1
+
+# kawt's words: both dictionaries whole, every line but the last with its comma
+words = open(os.path.join("config", "Strings.qml"), encoding="utf-8").read()
+langs = {}
+for name in ("enWords", "ruWords"):
+    m = re.search(name + r": \(\{\n(.*?)\n    \}\)", words, re.S)
+    if not m:
+        print(f"config/Strings.qml: no {name}")
+        problems += 1
+        continue
+    lines = [l for l in m.group(1).split("\n") if l.strip()]
+    for i, l in enumerate(lines):
+        if i < len(lines) - 1 and not l.rstrip().endswith(","):
+            print(f"config/Strings.qml: {name}: no comma after {l.strip()[:40]}")
+            problems += 1
+    langs[name] = set(re.findall(r"^\s+(\w+):", m.group(1), re.M))
+for dirpath, _, files in os.walk("."):
+    for f in files:
+        if not f.endswith(".qml") or f == "Strings.qml":
+            continue
+        path = os.path.join(dirpath, f)
+        for key in re.findall(r'Strings\.t\("(\w+)"\)', open(path, encoding="utf-8").read()):
+            for name, keys in langs.items():
+                if key not in keys:
+                    print(f"{path}: \"{key}\" is missing in {name}")
+                    problems += 1
 
 print(f"{problems} problem(s)" if problems else "all checks ok")
 sys.exit(1 if problems else 0)

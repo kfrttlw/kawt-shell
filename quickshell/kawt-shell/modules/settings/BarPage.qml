@@ -172,5 +172,40 @@ ColumnLayout {
                 onToggled: Settings.clockDate = !Settings.clockDate
             }
         }
+
+        // kawt's own time: the system clock is never touched
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            TermInput {
+                id: clockInput
+
+                property string error: ""
+
+                Layout.fillWidth: true
+                prompt: "time>"
+                placeholder: Strings.t("timePlaceholder")
+                onAccepted: t => {
+                    clockInput.error = Time.set(t);
+                    if (!clockInput.error)
+                        clockInput.text = "";
+                }
+            }
+
+            PushButton {
+                visible: Time.offset !== 0
+                text: Strings.t("realTime")
+                onClicked: Time.reset()
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            wrapMode: Text.WordWrap
+            text: clockInput.error !== "" ? clockInput.error : Time.offset !== 0 ? Strings.t("timeOffset").arg(Time.offsetText) : ""
+            color: clockInput.error !== "" ? Colors.warn : Colors.dim
+        }
     }
 }
