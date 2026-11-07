@@ -23,8 +23,10 @@ Popover {
     readonly property var handle: stack.length > 0 ? stack[stack.length - 1] : app?.menu ?? null
 
     name: "tray"
-    title: app ? (app.tooltipTitle || app.title || app.id || "tray").toLowerCase() : "tray"
+    title: app ? (app.tooltipTitle || app.title || app.id || Strings.t("hiddenIcons")) : Strings.t("hiddenIcons")
+    icon: "apps"
     cardWidth: 300
+    settingsPage: "bar"
 
     onPanelOpened: {
         app = null;
