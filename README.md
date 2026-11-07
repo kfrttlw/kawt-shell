@@ -1,11 +1,11 @@
 <div align="center">
 
-<img src="assets/banner.gif" alt="kawt: a hyprland desktop like a black thinkpad, one red light" width="100%">
+<img src="assets/desktop.png" alt="kawt: a taskbar with a start button, the Today window with its tasks and focus timer, the calendar under the clock, a red sun in dithered bars" width="100%">
 
 A [Quickshell](https://quickshell.org) shell for Hyprland that looks like an old system: a taskbar<br>
-with a start button, raised buttons, windows with a title bar and a dotted shadow. The configs<br>
-that go with it come along (kitty, zsh, fastfetch, thunar, GTK), and so does **stripes**, who lives in it.<br>
-<sub>black and one red light, like a ThinkPad · IBM Plex Mono · <code>[brackets]</code> around what you can press</sub>
+with a start button, raised buttons, real windows with a title bar and `_ □ ×`, message boxes.<br>
+The configs that go with it come along (kitty, zsh, fastfetch, thunar, GTK), and so does **stripes**, who lives in it.<br>
+<sub>graphite and one red light, like a ThinkPad · the pixel font Departure Mono · english, or russian in settings</sub>
 
 [![kawt 1.0](https://img.shields.io/badge/kawt-1.0-e2231a?style=flat-square&labelColor=0c0c0c)](#install)
 [![hyprland 0.55+](https://img.shields.io/badge/hyprland-0.55+-d8d6d0?style=flat-square&labelColor=0c0c0c)](https://hypr.land)
@@ -14,34 +14,32 @@ that go with it come along (kitty, zsh, fastfetch, thunar, GTK), and so does **s
 [![ai: on this machine](https://img.shields.io/badge/ai-on_this_machine-d8d6d0?style=flat-square&labelColor=0c0c0c)](https://ollama.com)
 [![license GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-d8d6d0?style=flat-square&labelColor=0c0c0c)](LICENSE)
 
-**[install](#install)** · [look](#look) · [the bar and the menu](#the-bar-and-the-menu) · [desks](#floating-desks) · [your day](#your-day) · [stripes](#stripes) · [ai](#ai) · [network](#network) · [lock](#lock-and-boot) · [the rest](#the-rest) · [keys](#keys)
+**[install](#install)** · [look](#look) · [the bar and the start menu](#the-bar-and-the-start-menu) · [desks](#floating-desks) · [your day](#your-day) · [panels](#the-panels) · [stripes](#stripes) · [ai](#ai) · [lock](#lock-and-boot) · [the rest](#the-rest) · [keys](#keys)
 
 </div>
 
 ## Look
 
-Two looks, picked in settings → look → frames:
+kawt is drawn like an old system: whatever you can press stands out and goes down while it's
+pressed, fields and lists are sunk, a group of things sits in a groove with its name in the
+frame, the one chosen in a list is red. kawt's own windows (today, system, settings,
+wallpaper) are real Hyprland windows with a black title bar and a hard shadow; the panels under
+the bar are raised boxes with their icon and name on top and `Settings…` at the bottom. Red is
+the only light, like the dot on a ThinkPad's lid: where you are, what's chosen, a warning.
 
-- **raised** (the standard one): buttons that stand out and go down while pressed, sunk fields
-  and lists, kawt's own windows with a title bar and a dotted shadow, notifications as message
-  boxes, the bar as a taskbar. The apps' windows get a hard shadow from Hyprland (not with
-  "old machine" on). The edges come from the theme's own colors, so every theme has them, yours
-  and the wallpaper's too
-- **flat**: kawt's first look, thin lines and brackets
+![the bar in graphite](assets/bar-dark.png)
+![the bar in silver](assets/bar-light.png)
 
-![the bar with flat frames, dark](assets/bar-dark.png)
-![the bar with flat frames, light: paper and ink](assets/bar-light.png)
+Two themes of its own, picked in `super + w`: **Graphite** (a black ThinkPad) and **Silver**
+(the old grey, paper-light), and **From the wallpaper** (the same greys, lit in your wallpaper's
+own color instead of red), each dark or light (`super + shift + w`), and your own
+([below](#your-own-look)). Everything follows: GTK apps and thunar, kitty and other terminals,
+Hyprland's borders, fastfetch, the prompt, the folder icons.
 
-One rule for everything: `[ ]` mean you can press it. The brackets are a step dimmer than the
-words, red around what's chosen or open, darker around what's off; plain words are something to
-read. Red is the only light, like the dot on a ThinkPad's lid: where you are, what's chosen, a
-warning. Without brackets (settings → look) the chosen ones turn red instead.
-
-Three themes, picked in `super + w`: **black** and **white** (kawt's own: a black ThinkPad, or
-paper and ink) and **wallpaper** (the same greys, lit in your wallpaper's own color instead of
-red), each dark or light (`super + shift + w`), and your own ([below](#your-own-look)).
-Everything follows: GTK apps and thunar, kitty and other terminals, Hyprland's borders,
-fastfetch, the prompt, the folder icons.
+The words are in [Departure Mono](https://departuremono.com), a pixel font drawn on an 11 px
+grid (SIL OFL, it comes with kawt in `fonts/`), sharp at 11 and 22. Long text (notes, the ai's
+answers) is in IBM Plex Mono when it's installed. Icons are kawt's own 16 px stickers, in the
+theme's colors.
 
 <p align="center">
 <img src="assets/folders.png" alt="kawt's folder icons in the black, white and wallpaper themes" width="88%"><br>
@@ -58,64 +56,51 @@ delete it and it stays gone) and asks which one to start with, or none if you ha
 </p>
 
 <div align="center">
-<img src="assets/wallpapers.png" alt="the wallpaper picker: the folder on the left, the picked one big on the right, dithered" width="88%"><br>
-<sub><code>super + w</code>: the folder on the left, the picked one big on the right, as it will look</sub><br><br>
+<img src="assets/style.png" alt="the wallpaper and theme window: the picked wallpaper big with a little bar over it, a grid of the folder's pictures; the themes as small pictures in their own colors" width="100%"><br>
+<sub><code>super + w</code>: wallpaper and theme, like an old system's display properties. OK, Cancel, Apply</sub><br><br>
 <img src="assets/wallpaper-dither.png" alt="a picture as it is, then dithered in the dark and the light theme, its sun as red dots" width="100%"><br>
 <sub>any wallpaper in the theme's few tones, dithered like an old screen; its reds stay as red dots</sub>
 </div>
 
-The screenshots of panels further down are still of the flat look.
+## The bar and the start menu
 
-## The bar and the menu
+The bar is a taskbar: the kawt button, the quick launch, the windows of the desk you're on (a
+click goes to one; on a floating desk a click on the one in focus puts it away), the desks as
+squares (underlined when something's on them; the wheel walks them, a right click: tile, free
+like KDE, cascade, move the window here), then one sunk tray: the apps' icons (the ones that
+don't fit behind `◄`), the network, sound, brightness, battery, messages, the keyboard layout,
+the clock. Some show only while they mean something: a recording, a shared screen, caffeine,
+a vpn, music, the mic while an app listens, bluetooth while something's connected (both can
+stay, settings → bar). A tip comes up under each after a moment. The bar goes at the top or
+the bottom, or tucks away (`super + shift + b`: a 2 px edge, the pointer there brings it out),
+and any part can be switched off (settings → bar; it still works on its key). With many
+windows the buttons give up their titles first, then the rest go into `+3 ▼`.
 
-With raised frames the bar is a taskbar:
+<p align="center">
+<img src="assets/start-menu.png" alt="the start menu: a search, the pinned apps, All programs, Today, System, Settings, Help, AI, stripes, Shut down" width="34%">
+</p>
 
-```
-[kawt ▮] [kitty] [firefox] [thunar]        [tile] [1] [2] [3] ┃ [≡] [wifi] [↓ ▁▃▅▇] [> ▂▅▃] [tray] [us] [bt] [mic] [vol 40] [br 60] [bat 72%] [log 2] [>_]  12:34 ┃
-```
+**The start menu** (the kawt button, `super + d`): a search on top, your pinned apps, then
+**All programs** (by kind, a cascade the old way), **Today**, **System**, **Settings**, **Help
+and keys**, **AI**, **stripes**, and **Shut down…** at the bottom. Typing searches at once;
+`enter` on something not found runs it, or asks the ai.
 
-the start button, the windows of the desk you're on (a click goes to one; on a floating desk a
-click on the one in focus puts it away), this desk's `[tile]` / `[float]`, the desks as squares
-(the wheel walks them; with several monitors each bar has its own), then everything else sunk in
-one tray with the clock at the end. `[eth]` instead of `[wifi]` on a cable, `[vpn]` while a
-tunnel is up, `[cast ● app]` while something captures the screen or the webcam, `[● rec 0:42]`
-while kawt records, `[caf on]` while caffeine is on. The bar goes at the top or the bottom, or
-tucks away (`super + shift + b`: a 2 px edge, the pointer there brings it out), and any button
-can be switched off (settings → look; it still works on its key).
-
-With flat frames the bar is kawt's first one:
-`[●] [$] 1 [2] 3 │ window title · [≡] [wifi] [↓ ▁▃▅▇] [12:34] [> ▂▅▃] · [tray 3 v] [us] │ [bt] [mic] [vol ▮▮▮▯▯ 40] [br ▮▮▮▮▯ 60] [bat 72%] │ [log 2] [>_]`
-(`[●]` your day and the settings, `[$]` the pinned apps).
-
-**The start menu** (the kawt button) is the launcher's search with sections beside it:
-
-- **apps**: your pinned apps first, then the search over all of them
-- **today**: what's due, a tick to finish one, a line to add one
-- **notes**: the latest notes, written in right there
-- **system**: cpu and memory over the last minute, the network, the busiest processes (a click
-  twice: kill)
-- **desks**: every desk in small, with its windows; drag a window onto another desk, a click
-  goes there; `[tiled]` `[floating]` `[cascade]` for the one you're on
-- **profile** and **settings**: [your day](#your-day) and everything else
-- along the bottom: `you@host · up 3h` and `[lock] [sleep] [log out] [reboot] [turn off]` (the
-  last three ask once more)
-
-Typing in any section goes back to the search. The launcher alone is `super + space`, with
-modes: apps · `!` run · `>` in terminal · `=` calculator · `?` ask the ai · `$` a command from the
-ai · `:` clipboard history · `;` open windows · `.` emoji. Typed in the wrong layout, it still
-finds it (`ашкуащч` → firefox). An app's own actions by name (`private` → Firefox: New Private
-Window); `ctrl + s` pins, `ctrl + o` starts an app without internet from then on. With `qalc` the
-calculator does units, currencies and dates (`=10 km to mi`, `=today + 3 weeks`; exchange rates
-only the ones qalc has: kawt never makes it go online).
+The launcher alone is `super + space`, with modes: apps · `!` run · `>` in terminal · `=`
+calculator · `?` ask the ai · `$` a command from the ai · `:` clipboard history · `;` open
+windows · `.` emoji. Typed in the wrong layout, it still finds it (`ашкуащч` → firefox). An
+app's own actions by name (`private` → Firefox: New Private Window); `ctrl + s` pins, `ctrl + o`
+starts an app without internet from then on. With `qalc` the calculator does units, currencies
+and dates (`=10 km to mi`, `=today + 3 weeks`; exchange rates only the ones qalc has: kawt
+never makes it go online).
 
 ## Floating desks
 
-A desk can be like KDE's: `[tile]` / `[float]` on the bar (or `super + ctrl + v`, or the menu's
-desks) and every window there floats, where you put it, at any size. New ones come out in the
-middle, one a little below another like old Windows did; windows moved in float on their way,
-and back on a tiled desk they tile again. `[cascade]` lines a messy desk up. A click on the bar's
-button of the window in focus puts it away (minimized): its button stays on the bar, dim, to
-bring it back; an app's own `_` button does that too.
+A desk can be like KDE's: a right click on its square → **Free, like KDE** (or
+`super + ctrl + v`) and every window there floats, where you put it, at any size. New ones come
+out in the middle, one a little below another like old Windows did; windows moved in float on
+their way, and back on a tiled desk they tile again. **Cascade** lines a messy desk up. A click
+on the bar's button of the window in focus puts it away (minimized): its button stays on the
+bar, dim, to bring it back; an app's own `_` button does that too.
 
 Apart from desks, settings → windows: pick an app and it floats at its own size in the middle
 from then on, on any desk.
@@ -129,36 +114,76 @@ works, the desks stay tiled.
 moved by its title, `_ □ ×` as on any window. Your day, in four tabs:
 
 <p align="center">
-<img src="assets/menu-today.png" alt="today: quick switches, today's tasks, the focus timer, the week" width="62%">
+<img src="assets/today.png" alt="today, in graphite and in silver: today's tasks with boxes, the focus timer in a group, a new task line, the week's rounds as columns" width="100%">
 </p>
 
 - **today**: the day in one look. Tasks due today or before, then the ones without a time, the
-  ones ticked off today struck through (`2 of 5 done`); the focus timer beside them; the week's
-  rounds and the streak. Keys: `↑ ↓`, `x` done, `enter` open, `n` new
-- **todo**: folders, importance, reminders, notes inside a task, **steps** with a `▮▮▯ 2/3`
+  ones ticked off today struck through; how soon each is and how important; the focus timer
+  beside them; the week's rounds and the streak. Keys: `↑ ↓`, `x` done, `enter` open, `n` new.
+  At the bottom: `2 of 5 done | focus: 3 rounds`
+- **tasks**: folders, importance, reminders, notes inside a task, **steps** with a `▮▮▯ 2/3`
   progress, tasks that **come again** (every day, weekdays, week, month: type `every day`),
   done today and the streak; a ticked one is struck through and slides down. Keys: `j k` move,
   `x` done, `enter` open, `n` new, `r` how often, `f` focus on it
-- **focus**: a pomodoro (25/5 or 50/10) on a task or on nothing in particular; do not disturb
-  while it works, stripes sits quietly, a notification at the end; rounds per day and a goal; it
-  carries on over a restart (`kawt focus` from a key or a script)
 - **notes**: in folders, with search; a note is read first (`# headings`, `- [ ]` boxes that
   tick with a click), a click writes in it; pinned ones on top; a note from the clipboard, or a
   task from a note
+- **focus**: a pomodoro (25/5 or 50/10) on a task or on nothing in particular; do not disturb
+  while it works, stripes sits quietly, a notification at the end; rounds per day and a goal; it
+  carries on over a restart (`kawt focus` from a key or a script)
+
+<p align="center">
+<img src="assets/today-tabs.png" alt="the tasks tab with folders and boxes, the notes tab, the focus tab with its segments, and the system window's machine tab" width="100%">
+</p>
 
 **System** (the start menu's) is the same kind of window, for the machine: **machine** like a
-ThinkPad's bios setup; **processes**, cpu and memory over the last minute and the busiest ones;
-**network**, who goes out to the internet right now; **power**, where the battery stops charging
-(full / 80% / 60%), the power profile, the keyboard light, each only where the machine has it.
-`qs -c kawt-shell ipc call kawt window system net` opens it at a tab.
+ThinkPad's bios setup; **processes**, cpu and memory over the last minute and the busiest ones
+(a click twice: kill); **network**, who goes out to the internet right now; **power**, where
+the battery stops charging (full / 80% / 60%), the power profile, the keyboard light, each only
+where the machine has it. `qs -c kawt-shell ipc call kawt window system net` opens it at a tab.
 
 <p align="center">
-<img src="assets/menu-tabs.png" alt="todo with steps, the focus timer, a note with boxes, sys like a bios" width="100%">
+<img src="assets/system.png" alt="system: the machine like a bios setup, and the processes with cpu and memory graphs" width="100%">
 </p>
 
+**Settings** (`super + ,`) is one window too, its pages in a list on the left: look, bar, screen
+and lock, sound and media, keyboard and device, windows and desks, updates and kawt. What's
+changed is saved at once; a dim line under each says what it does.
+
 <p align="center">
-<img src="assets/sys.png" alt="sys: the machine's facts, and power: battery health, charge thresholds, power profile, keyboard light" width="100%">
+<img src="assets/settings.png" alt="the settings window: the pages on the left, the bar page with its groups and check boxes" width="72%">
 </p>
+
+## The panels
+
+<p align="center">
+<img src="assets/panels.png" alt="the sound panel with its sliders, the calendar with today in red, the notifications with do not disturb, and two message boxes, one urgent with a red title" width="100%">
+</p>
+
+Each icon in the tray opens its own panel, under it: its icon and name on top (and its main
+switch on the right), `Settings…` at the bottom, to the page it belongs to.
+
+- **network**: Wi-Fi on or off; the networks nearby, the one in use red, a lock on the ones
+  with a password, `open` on the ones without; the last minute between `↓` and `↑`; ip,
+  gateway, the band. `Who's on the net…` opens the system window there: every program talking
+  to the internet right now, with its connections and speed; `[kill]`, or `[offline]`: started
+  from the launcher it gets no internet from then on (its own empty network, no root). `…`
+  joins a hidden network by name
+- **sound**: the whole of it standing on the left, each app that plays beside it, mute; the
+  output when there's a choice. The wheel on the icon: ±5%
+- **power** (a laptop): the battery big and how long it lasts, the mode (quiet / balanced /
+  fast), where the charging stops, the brightness and the night light
+- **calendar**: the time big, the month with `◄ ►`, today red, the days with a task underlined,
+  today's tasks under it
+- **notifications**: do not disturb, the messages with their app's icon and time, `Clear`
+- **microphone, bluetooth, the player, the hidden tray icons**: the same way
+
+Messages come as little message boxes on the right (over the tray when the bar is at the
+bottom): the app in the title (an urgent one's title red), its icon big, its own buttons and
+`OK`.
+
+kawt itself stays quiet on the net: one `git fetch` a week to know about updates (off in
+settings → kawt), nothing else unless you ask (the ai on an api you picked, `ollama pull`).
 
 ## stripes
 
@@ -170,7 +195,7 @@ ThinkPad's bios setup; **processes**, cpu and memory over the last minute and th
 she boils inside, her hair runs off in blurred strands every way; only the eyes are sharp, and
 they follow the pointer. Three looks: **stripes** (cut in kawt's bars), **red**, **ink**. By
 default she picks herself (stripes when calm, red when busy: music, the coder, a recording; ink
-at night and asleep) and changes through a glitch. On a white theme she's ink and red ink on
+at night and asleep) and changes through a glitch. On a light theme she's ink and red ink on
 paper. She's a small shader on a 72 x 108 grid, stretched soft, at 12 frames a second, and only
 while she's on the screen.
 
@@ -185,7 +210,7 @@ while she's on the screen.
 - she keeps the **focus timer** with you, and on the first start **shows you around** (english
   or russian)
 
-`[≡]` on the bar is her window: her look, whether an empty desktop is hers, a pomodoro, her
+Start → stripes is her window: her look, whether an empty desktop is hers, a pomodoro, her
 name, your own phrases for her (said when you click her), wise words now and then (`fortune-mod`
 gives her more, in english). Off in settings → kawt: then nothing runs for her.
 
@@ -195,13 +220,13 @@ gives her more, in english). Off in settings → kawt: then nothing runs for her
 <tr>
 <td width="34%" valign="top">
 <img src="assets/ai-panel.png" alt="the ai panel: a local model, chat in the terminal look"><br>
-<sub><code>[&gt;_]</code> a local model: nothing leaves the machine</sub>
+<sub>a local model: nothing leaves the machine</sub>
 </td>
 <td valign="top">
 
-`super + a`: chat with a local [ollama](https://ollama.com) model (or any OpenAI-compatible
-api), saved chats, markdown answers with code to copy, compare two models; models installed,
-pulled and unloaded from the panel, with limits so it doesn't eat the machine.
+`super + a` (or start → AI): chat with a local [ollama](https://ollama.com) model (or any
+OpenAI-compatible api), saved chats, markdown answers with code to copy, compare two models;
+models installed, pulled and unloaded from the panel, with limits so it doesn't eat the machine.
 
 - `?question` in the launcher, `$what you want` for one shell command (it never runs by
   itself), `super + alt + a` on the text you marked in any window
@@ -220,34 +245,26 @@ listed file by file (with `git`: kawt keeps its own copy in `~/.cache`, never to
 project's `.git`; what `.gitignore` hides isn't watched). `[changes]` shows every file it changed
 as a diff, each with its own `[undo]`; `[undo]` puts everything back.
 
-## Network
-
-<p align="center">
-<img src="assets/wifi.png" alt="the wifi panel with the last minute's traffic, ip, gateway, dns; and who's out: programs talking to the internet" width="100%">
-</p>
-
-The wifi panel shows the connection in use (band, channel, speed, security), the last minute
-big (what comes in up from the line, what goes out down), ip, gateway, dns. A network without a
-password says `open`; hidden networks can be joined by name. Its second page, **who's out**,
-lists every program talking to the internet right now, with its connections and speed; `[!]` on
-one: `[kill]`, or `[offline]`: started from the launcher it gets no internet from then on (its
-own empty network, no root; `ctrl + o` in the launcher does the same). It's looked at only
-while the page is open.
-
-kawt itself stays quiet: one `git fetch` a week to know about updates (off in settings → kawt),
-nothing else unless you ask (the ai on an api you picked, `ollama pull`).
-
 ## Lock and boot
 
 <p align="center">
-<img src="assets/lock-boot.png" alt="the lock: a text console at its login; the boot screen: a bios-like check list" width="100%">
+<img src="assets/lock.png" alt="the lock: an old log-on window over the dimmed wallpaper; or a text console at its login" width="100%">
 </p>
 
-The lock is a text console at its login, switched on like an old picture tube and off again
-into a line and a dot. It locks before the machine sleeps, on `loginctl lock-session` and after
-10 idle minutes (the backlight dims 30 s before); a minute later the picture goes off (only the
-picture: wifi, music and downloads go on). `[caps lock is on]` when it is; `kawt lockTest` tries
-it safely. No hypridle / hyprlock needed.
+The lock is an old system's log-on window over the wallpaper dimmed with dots: who you are, the
+password, `Caps Lock is on` when it is, `OK`, `Sleep`, `Shut down…`. Or a text console at its
+login, as kawt had it first (settings → screen and lock → looks like). Either switches on like
+an old picture tube and off again into a line. It locks before the machine sleeps, on
+`loginctl lock-session` and after 10 idle minutes (the backlight dims 30 s before); a minute
+later the picture goes off (only the picture: wifi, music and downloads go on).
+`kawt lockTest` tries it safely. No hypridle / hyprlock needed.
+
+**Shut down…** (start, or `super + escape`) is the old dialog: shut down, restart, sleep, log
+out, lock, a letter each, `OK` / `Cancel`; the ones that end the session count down 5 s first.
+
+<p align="center">
+<img src="assets/power.png" alt="the shut down dialog: what do you want the computer to do? shut down, restart, sleep, log out, lock" width="42%">
+</p>
 
 Once per login a bios-like check list runs (`kawt bios 1.0 ·` your machine: cpu mem disk (bat)
 `ok`), then the desktop opens from a bright line; any key skips. Both can be switched off
@@ -255,29 +272,21 @@ Once per login a bios-like check list runs (`kawt bios 1.0 ·` your machine: cpu
 
 ## The rest
 
-<p align="center">
-<img src="assets/player.png" alt="the player, dark and light: the cover in big pixels, the position as segments with a red one where it is now, a level-meter spectrum" width="88%"><br>
-<sub>the player, dark and light</sub>
-</p>
-
 | | |
 |---|---|
-| notifications | `[log]`: the daemon, a `dmesg`-style history, do not disturb; keeps what the app asks for (`notify-send -t`, `-e` transient, replace tags). With raised frames they come as message boxes, a red title for urgent ones |
-| player | `[> ▂▅▃▇▂]` (real sound with `cava`); click: the cover in big pixels, a level-meter spectrum, `[|<] [||] [>|]`, the position as segments, shuffle, loop, the player's own volume, tabs when several play, this session's tracks |
+| player | the tray's note while music plays (real sound with `cava`); click: the cover in big pixels, a level-meter spectrum, `|<` `||` `>|`, the position, shuffle, loop, the player's own volume, tabs when several play, this session's tracks |
 | screenshots | area / window / screen, the screen still while you pick; a preview asks `[copy]` `[save]` `[open]` `[edit]` (`satty`) `[text]` (`tesseract`) `[ask]` (the ai) |
-| recording | `[● rec 0:42]`; area or screen; sound: off, the mic, what you hear, or both |
+| recording | the tray's red dot and the time; area or screen; sound: off, the mic, what you hear, or both |
 | osd | volume / brightness pop up; the charger in or out shows the battery; low battery at 20 / 10 / 5% |
-| bluetooth | `[bt airpods 80%]`: on / off, scan, pair, connect, forget, headphone battery |
-| mic | `[mic ● discord]` while an app records you (red), click to mute |
-| style | `super + w`: the wallpapers in two panes, dithered into the theme's tones (or as they are), a new one by itself every 15 min … 3 h if you like, with a transition (`crt`: drawn in from the top like an old screen's beam); the themes, dark or light; your own with `[+ new]` and `[edit]` |
+| notifications | kawt is the daemon: a history, do not disturb, keeps what the app asks for (`notify-send -t`, `-e` transient, replace tags) |
 | theme export | a theme switch recolors open terminals and GTK apps live and rewrites colors for kitty, Hyprland's borders, GTK, foot, alacritty, shell scripts and kawt's folder icons; terminal colors as `crt`, `soft` or `vivid` |
-| fastfetch | your system's logo in the theme's colors, or kawt in blocks, the trackpoint, kawt in stripes; nothing that says who or where you are, safe to screenshot |
+| fastfetch | your system's logo in its own colors (or the theme's), or kawt in blocks, the trackpoint, kawt in stripes; full keys, memory and disk as bars; nothing that says who or where you are, safe to screenshot |
 | prompt | zsh: the folder inverted like a bios's chosen line, the git branch on grey, a failed command's code on red, `>` in red where you type; hints from history, typos marked |
 | old machine | settings → look: no blur, shadows or animations, graphs half as often, no visualizer (a T60, an X200); `scanlines` for faint tube lines |
-| also | night light (`hyprsunset`), volume per app, brightness (on a desktop the monitors' own, over DDC/CI), calendar, tray, keyboard layout (one per window if you like), the keys of the whole desktop on `super + /` |
+| also | night light (`hyprsunset`), volume per app, brightness (on a desktop the monitors' own, over DDC/CI), the keyboard layout (one per window if you like), the keys of the whole desktop on `super + /` |
 
 Works on a laptop and a desktop alike: what a machine doesn't have (a battery, a backlight,
-charge thresholds, a keyboard light) simply doesn't show.
+power profiles, charge thresholds, a keyboard light) simply doesn't show.
 
 ## Install
 
@@ -337,12 +346,14 @@ setup to a backup, every question again).
   Hyprland's own (`/usr/share/hypr/hyprland.lua`, what Hyprland would write itself) without
   the two binds kawt uses (`super + r`, `super + shift + s`)
 - keyboard layouts next to `us` (`alt + shift` switches; it offers the ones of your old config,
-  or guesses from your language, `ru_RU` → `ru`), and the monitors: auto (each at its own best
-  mode, side by side) or by hand, each one by its name: its mode and refresh rate from the ones
-  it has (or typed, `2560x1080@75`, `highrr`), or off; then its position (`0x0`,
-  `auto-right`...), scale and turning. From a console it knows the sizes only; inside Hyprland
-  the refresh rates too, and each monitor is checked: one that didn't get the mode asked for is
-  said. Again any time: `./install.sh --monitors`
+  or guesses from your language, `ru_RU` → `ru`), and the monitors: each at its best mode (the
+  biggest size, then its highest rate), side by side, drawn as a little map; or picked by hand,
+  each one by its name: its size, then its rate (or typed, `2560x1080@75`, `highrr`), or off,
+  its position, scale and turning; or left to Hyprland. They're written into `user.lua` as
+  `hl.monitor({ output, mode, position, scale })`, between two comment lines, easy to change by
+  hand. From a console it knows the sizes only; inside Hyprland the refresh rates too, and each
+  monitor is checked: one that didn't get the mode asked for is said. Again any time:
+  `./install.sh --monitors`
 - the first wallpaper, on a new install: kawt in stripes, the sunset, stripes herself, the bars,
   or none (picked first when hyprpaper, swaybg or the like still draws yours)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
@@ -444,7 +455,7 @@ without it, only while `super + w` is open.
 | `super + space` | launcher |
 | `super + r` | run a command |
 | `super + shift + v` | clipboard history |
-| `super + d` | pinned apps |
+| `super + d` | the start menu |
 | `super + a` | ai panel |
 | `super + alt + a` | the ai on the text you marked (any window, nothing copied): explain / translate / fix / summary, then copy, replace it, or go on in the chat |
 | `super + alt + v` | speak to the ai (again: stop); whisper.cpp writes it into the panel, on this machine |
@@ -457,16 +468,18 @@ without it, only while `super + w` is open.
 | `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in settings → screen) |
 | `super + /` | all keys (read from `hypr/kawt.lua`, then the binds of your config that end with a `-- comment`: `hyprland.lua`, or `user.lua` and the standard config) |
 | `super + shift + b` | tuck the bar away / back |
-| `super + escape` | power menu: shutdown / reboot / suspend / logout / lock, with a 5 s countdown |
+| `super + escape` | shut down…: shut down / restart / sleep / log out / lock, with a 5 s countdown |
 | `print` / `super + shift + s` | screenshot of an area (`shift + print` screen, `alt + print` window), then copy / save in the corner |
 | `super + shift + r` / `super + alt + r` | record an area / the screen (same key again: stop) |
 
 In the launcher: `↑↓` select, `ctrl + s` pin, `ctrl + o` no internet for that app, `ctrl + tab` switch mode.
 In the todo: `j k` move, `x` done, `enter` open, `n` new, `r` how often, `f` focus on it.
-In `super + w`: `↑↓` pick a wallpaper, `enter` set it, `r` a random one, `[ ]` the themes, `t` dark ↔ light.
+In `super + w`: arrows pick a wallpaper, `enter` sets it, `r` a random one, `t` dark ↔ light, `esc` puts back what was on.
+In today: `↑ ↓` pick, `x` done, `n` new, `enter` open it in tasks.
 
 Everything is also reachable over IPC, for your own binds or a timer:
-`qs -c kawt-shell ipc call kawt toggle <panel>`, `... kawt wallpaper next|prev|random|none|<path>`,
+`qs -c kawt-shell ipc call kawt toggle <panel>`, `... kawt window today|system|style <tab>`,
+`kawt settings look|bar|screen|media|device|windows|kawt`, `kawt wallpaper next|prev|random|none|<path>`,
 `kawt suspend` (locks, then sleeps), `kawt caffeine`, `kawt idle <minutes>` (0 = never), `kawt night`,
 `kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`,
 `kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar [show|hide]`,
@@ -480,15 +493,15 @@ kawt, the osd shows at once.
 
 Nothing in the repo has to be edited, so updates never fight with your changes:
 
-- **font, bar, frames**: settings → look. Font size (the panels grow with it) and family (a
-  monospace one; `[plex]` is kawt's own, IBM Plex Mono), raised or flat frames, brackets on or
-  off, the tube effects, the boot screen, scanlines, old machine; the bar at the top or the
-  bottom, its height, and which buttons it shows (one switched off still works on its key;
-  `[● rec]`, `[cast]` and `[caf]` always show while they're on)
-- **colors**: `[+ new]` and `[edit]` in the style window (`super + w`) make and change themes
-  without typing: a name, the colors of dark and light as hex (or `[pick]`ed off the screen with
-  hyprpicker), the bar's own color if it should differ. Black and white keep only what you
-  change, `[reset]` gives kawt's back. It all goes to `~/.config/kawt/themes.json`, read again
+- **font, look, bar**: settings → look and bar. The font (Departure Mono at 11 or 22, or any
+  monospace one at any size: the panels grow with it), the language, the tube effects, the
+  boot screen, scanlines, old machine; the bar at the top or the bottom, its height, and which
+  parts it shows (one switched off still works on its key; a recording, a shared screen and
+  caffeine always show while they're on)
+- **colors**: `New…` and `Edit…` on the theme tab of `super + w` make and change themes
+  without typing: a name, the colors of dark and light as hex (or picked off the screen with
+  hyprpicker), the bar's own color if it should differ. Graphite and Silver keep only what you
+  change, reset gives kawt's back. It all goes to `~/.config/kawt/themes.json`, read again
   whenever it's saved, so it can be written by hand too. A new name is a new theme; `thinkpad`
   changes only the colors you give:
 
@@ -533,8 +546,10 @@ only by you, never in the repo.
 quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   config/                settings, themes, sizes
   services/              what kawt knows and does (wifi, sound, todo, the ai, stripes...)
-  modules/               what you see: the bar, the menu, panels, the lock, stripes
-  components/            the parts they're made of (buttons, frames, fields)
+  modules/               what you see: the bar, the start menu, the panels, kawt's windows
+                         (today, system, settings, wallpaper and theme), the lock, stripes
+  components/            the parts they're made of (buttons, frames, fields, windows, icons)
+  fonts/                 Departure Mono (SIL OFL), kawt's pixel font
   shaders/               stripes (stripes.frag, built into stripes.frag.qsb)
   scripts/               the shell scripts kawt runs
   hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua; kawt.conf for an old hyprland.conf)
@@ -564,3 +579,5 @@ tools/qsb.sh             # builds the shaders again after a change (qt6-shaderto
 
 [GPL-3.0](LICENSE): use it, change it, share it; what you build on it and share stays open
 too, under the same license.
+Departure Mono (`quickshell/kawt-shell/fonts/`) is Helena Zhang's, under the
+[SIL Open Font License](quickshell/kawt-shell/fonts/OFL.txt).
