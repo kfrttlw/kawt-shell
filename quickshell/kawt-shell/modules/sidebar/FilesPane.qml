@@ -26,7 +26,7 @@ ColumnLayout {
     Label {
         text: "-- files --"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     TermInput {
@@ -64,7 +64,7 @@ ColumnLayout {
         elide: Text.ElideRight
         text: Ai.fileStatus
         color: Colors.warn
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     Flickable {
@@ -133,7 +133,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: `${Ai.files.length} files · click: attach`
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
 
         BracketButton {

@@ -135,7 +135,7 @@ Item {
         y: root.height * 0.12 - (Companion.step % 12) * root.height * 0.01
         text: ["z", "z z", "z z Z"][Math.floor(Companion.step / 6) % 3]
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     // she's on the screen: her clock runs

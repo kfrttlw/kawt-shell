@@ -64,7 +64,7 @@ Well {
                     anchors.verticalCenter: parent.verticalCenter
                     text: row.modelData
                     color: row.selected ? (Colors.bevel ? Colors.onAccent : Colors.accent) : Colors.fg
-                    font.bold: row.selected
+                    font.bold: !Metrics.pixel && (row.selected)
                 }
 
                 Label {

@@ -64,6 +64,7 @@ Item {
         clip: true
         color: Colors.fg
         font.family: Metrics.fontFamily
+        renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
         font.pixelSize: Metrics.fontSize
         selectByMouse: true
         selectionColor: Colors.accent

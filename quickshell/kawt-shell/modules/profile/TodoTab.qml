@@ -119,7 +119,7 @@ RowLayout {
         Label {
             text: "folders"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -214,7 +214,7 @@ RowLayout {
             Label {
                 text: Todo.doneTodayCount
                 color: Todo.doneTodayCount > 0 ? Colors.fg : Colors.dim
-                font.bold: Todo.doneTodayCount > 0
+                font.bold: !Metrics.pixel && (Todo.doneTodayCount > 0)
             }
         }
 
@@ -230,7 +230,7 @@ RowLayout {
 
             Label {
                 text: `${Todo.streak}d`
-                font.bold: true
+                font.bold: !Metrics.pixel
             }
         }
     }
@@ -275,7 +275,7 @@ RowLayout {
             elide: Text.ElideRight
             text: todoInput.feedback || "time first: 14:30 · 9am · +30m · 05.10 10:00   #folder  ! !! !!!  every day"
             color: todoInput.feedback ? Colors.accent : Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
 
         Label {
@@ -380,7 +380,7 @@ RowLayout {
                                     Layout.preferredWidth: Metrics.fontSize * 0.6 * 3
                                     text: "!".repeat(task.modelData.prio)
                                     color: task.struck ? Colors.dim : Colors.accent
-                                    font.bold: true
+                                    font.bold: !Metrics.pixel
                                 }
 
                                 Label {
@@ -427,7 +427,7 @@ RowLayout {
                                     visible: tab.profile.todoFolder === "all"
                                     text: task.modelData.folder
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
                             }
 
@@ -556,7 +556,8 @@ RowLayout {
                                             text: task.modelData.note
                                             color: Colors.fg
                                             font.family: Metrics.fontFamily
-                                            font.pixelSize: Metrics.fontSize - 1
+                                            renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
+                                            font.pixelSize: Metrics.size(-1)
                                             wrapMode: TextEdit.Wrap
                                             selectByMouse: true
                                             selectionColor: Colors.accent
@@ -577,7 +578,7 @@ RowLayout {
                                                 visible: !note.text && !note.activeFocus
                                                 text: "note..."
                                                 color: Colors.dim
-                                                font.pixelSize: Metrics.fontSize - 1
+                                                font.pixelSize: Metrics.size(-1)
                                             }
                                         }
                                     }
@@ -708,7 +709,7 @@ RowLayout {
                 elide: Text.ElideRight
                 text: "j k move · x done · enter open · n new · r again · f focus"
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 3
+                font.pixelSize: Metrics.size(-3)
             }
 
             BracketButton {

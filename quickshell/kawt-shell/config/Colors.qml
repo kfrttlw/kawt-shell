@@ -36,29 +36,51 @@ Singleton {
         thinkpad: {
             dark: {
                 bg: "#0c0c0c",
-                fg: "#d8d6d0",
-                dim: "#74726c",
+                fg: "#dedcd6",
+                dim: "#8e8b84",
                 border: "#2b2b2b",
                 accent: "#e2231a",
                 warn: "#e2231a",
-                hoverFill: "#1c1c1c"
+                hoverFill: "#3a3936",
+                // graphite: the old system's grey, in the dark
+                face: "#2b2a28",
+                hi: "#5a5852",
+                hi2: "#3a3936",
+                lo: "#121211",
+                deep: "#000000",
+                field: "#0e0e0d",
+                title: "#0c0c0c",
+                titleInk: "#eceae4",
+                titleOff: "#3a3936",
+                tip: "#1c1c1b"
             },
             // paper and ink: a printed manual
             light: {
                 bg: "#e8e5dd",
                 fg: "#1d1c1a",
-                dim: "#6b675e",
+                dim: "#77736a",
                 border: "#bdb8ac",
                 accent: "#c41a12",
                 warn: "#c41a12",
-                hoverFill: "#d5d1c6"
+                hoverFill: "#e4e1da",
+                // silver: the old system's grey
+                face: "#cfccc4",
+                hi: "#fbfaf6",
+                hi2: "#e4e1da",
+                lo: "#8b887f",
+                deep: "#1d1c1a",
+                field: "#f7f5ef",
+                title: "#1d1c1a",
+                titleInk: "#f2f0ea",
+                titleOff: "#8b887f",
+                tip: "#fffbe6"
             }
         }
     })
 
     // ---- ~/.config/kawt/themes.json
     // (face, hi, lo: the frames' own, made from the others when not given: see "the frames" below)
-    readonly property list<string> keys: ["bg", "fg", "dim", "border", "accent", "warn", "hoverFill", "bar", "face", "hi", "lo"]
+    readonly property list<string> keys: ["bg", "fg", "dim", "border", "accent", "warn", "hoverFill", "bar", "face", "hi", "hi2", "lo", "deep", "field", "title", "titleInk", "titleOff", "tip"]
     property var user: ({}) // the file, parsed
     property string userError: "" // what's wrong with it, for the style window; "" = fine
 
@@ -196,11 +218,22 @@ Singleton {
     readonly property color nearBlack: "#141414"
     readonly property color face: palette.face ?? (darkBg ? mix(bg, fg, 0.07) : bg) // buttons and panels
     readonly property color hi: palette.hi ?? (darkBg ? mix(bg, fg, 0.34) : mix(bg, white, 0.85)) // the light edge
-    readonly property color hi2: darkBg ? mix(bg, fg, 0.16) : mix(bg, white, 0.4) // the light edge, inside
+    readonly property color hi2: palette.hi2 ?? (darkBg ? mix(bg, fg, 0.16) : mix(bg, white, 0.4)) // the light edge, inside
     readonly property color lo: palette.lo ?? (darkBg ? mix(bg, black, 0.6) : mix(bg, fg, 0.42)) // the dark edge, inside
-    readonly property color deep: darkBg ? black : fg // the dark edge outside, and the dotted shadow
-    readonly property color well: darkBg ? mix(bg, black, 0.35) : mix(bg, white, 0.7) // fields and lists
-    readonly property color titleOff: darkBg ? mix(bg, fg, 0.17) : mix(bg, fg, 0.4) // a title bar away from the focus
+    readonly property color deep: palette.deep ?? (darkBg ? black : fg) // the dark edge outside, and the hard shadow
+    readonly property color well: palette.field ?? (darkBg ? mix(bg, black, 0.35) : mix(bg, white, 0.7)) // fields and lists
+    readonly property color titleOff: palette.titleOff ?? (darkBg ? mix(bg, fg, 0.17) : mix(bg, fg, 0.4)) // a title bar away from the focus
+    // a title bar in focus: black in kawt's own themes, with the red striped block on it
+    readonly property color title: palette.title ?? (darkBg ? mix(bg, black, 0.3) : fg)
+    readonly property color titleInk: palette.titleInk ?? (luminance(title) < 0.3 ? mix(fg, white, 0.6) : nearBlack)
+    readonly property color tip: palette.tip ?? (darkBg ? mix(bg, fg, 0.08) : "#fffbe6") // a tooltip's paper
+    // the pixel stickers' colors (components/PixIcon.qml, utils/pixicons.js): paper from the
+    // words' color on dark themes (so a wallpaper theme tints them), a grey ramp down to the ink,
+    // the accent for "this is kawt" and "look here", and a halo round the ink on a dark bar
+    readonly property var icon: {
+        const k = darkBg ? black : fg, w = darkBg ? fg : hi;
+        return { k, w, l: mix(w, k, 0.2), g: mix(w, k, 0.42), d: mix(w, k, 0.68), r: accent, o: mix(accent, black, 0.4), y: w, h: darkBg ? mix(face, fg, 0.3) : Qt.rgba(0, 0, 0, 0) };
+    }
     readonly property color titleOffText: darkBg ? mix(bg, fg, 0.62) : mix(bg, white, 0.6)
     // words on the light (a title bar in focus, what's picked in a list): white, or nearly black
     // where white would hardly show (a yellow light)

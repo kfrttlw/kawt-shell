@@ -209,7 +209,7 @@ PanelWindow {
                 elide: Text.ElideRight
                 text: root.countdown > 0 ? `${root.actions[root.current].word} in ${root.countdown}...   enter: now · esc: cancel` : "↑↓ pick · enter run · esc close"
                 color: root.countdown > 0 ? Colors.warn : Colors.dim
-                font.pixelSize: root.countdown > 0 ? Metrics.fontSize : Metrics.fontSize - 2
+                font.pixelSize: root.countdown > 0 ? Metrics.fontSize : Metrics.size(-2)
             }
         }
     }

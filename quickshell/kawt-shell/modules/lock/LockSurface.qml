@@ -142,8 +142,8 @@ WlSessionLockSurface {
 
             Label {
                 text: "kawt"
-                font.pixelSize: Math.round(Metrics.fontSize * 1.5)
-                font.bold: true
+                font.pixelSize: Metrics.times(1.5)
+                font.bold: !Metrics.pixel
             }
 
             Rectangle {
@@ -248,7 +248,7 @@ WlSessionLockSurface {
             Label {
                 Layout.alignment: Qt.AlignRight
                 text: Time.fmt(Time.now)
-                font.pixelSize: Metrics.fontSize * 6
+                font.pixelSize: Metrics.times(6)
                 font.weight: Font.Light
             }
 

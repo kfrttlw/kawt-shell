@@ -84,8 +84,8 @@ Item {
                 anchors.centerIn: parent
                 text: root.critical ? "!" : "i"
                 color: root.critical ? Colors.onAccent : Colors.fg
-                font.bold: true
-                font.pixelSize: Math.round(Metrics.fontSize * 1.3)
+                font.bold: !Metrics.pixel
+                font.pixelSize: Metrics.times(1.3)
             }
         }
 

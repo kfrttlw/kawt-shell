@@ -262,7 +262,7 @@ PanelWindow {
                     return m ? `in memory: ${Ai.size(m.ram)}${m.vram > 0 ? ` (gpu ${Ai.size(m.vram)})` : ""} · ${root.until(m.until)}` : "model not loaded (loads on the first message)";
                 }
                 color: !Ai.useApi && !Ai.online ? Colors.warn : Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
             }
 
@@ -385,7 +385,7 @@ PanelWindow {
                 elide: Text.ElideRight
                 text: !root.coder ? "" : `~ ${Coder.thinking ? `thinking · step ${Coder.stepCount}${Coder.maxSteps ? "/" + Coder.maxSteps : ""}` : Coder.action}`
                 color: Colors.accent
-                font.pixelSize: Metrics.fontSize - 1
+                font.pixelSize: Metrics.size(-1)
             }
 
             Label {
@@ -394,7 +394,7 @@ PanelWindow {
                 elide: Text.ElideMiddle
                 text: Settings.aiFolder ? `project: ${Settings.aiFolder}` : "no project folder: open wide [<>] and set dir>"
                 color: Settings.aiFolder ? Colors.dim : Colors.warn
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             ListView {
@@ -524,7 +524,7 @@ PanelWindow {
                 Label {
                     text: "clip:"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
 
                 Repeater {
@@ -698,7 +698,7 @@ PanelWindow {
                                         Label {
                                             text: `${chatRow.modelData.messages.length} · ${Qt.formatDateTime(new Date(chatRow.modelData.updated), "dd.MM hh:mm")}`
                                             color: Colors.dim
-                                            font.pixelSize: Metrics.fontSize - 2
+                                            font.pixelSize: Metrics.size(-2)
                                         }
 
                                         Label {
@@ -796,7 +796,7 @@ PanelWindow {
                                     Layout.topMargin: Metrics.spacing
                                     text: "-- in memory now --"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 Label {
@@ -833,7 +833,7 @@ PanelWindow {
                                     Layout.topMargin: Metrics.spacing
                                     text: "-- installed (click: use, x: delete) --"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 Label {
@@ -880,7 +880,7 @@ PanelWindow {
                                             Label {
                                                 text: [modelRow.modelData.params, modelRow.modelData.quant.toLowerCase(), Ai.size(modelRow.modelData.size)].filter(s => s).join(" · ")
                                                 color: Colors.dim
-                                                font.pixelSize: Metrics.fontSize - 2
+                                                font.pixelSize: Metrics.size(-2)
                                             }
 
                                             Label {
@@ -934,7 +934,7 @@ PanelWindow {
                                     visible: root.catalogShown
                                     text: "  sizes are the download · small first"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 3
+                                    font.pixelSize: Metrics.size(-3)
                                 }
 
                                 Repeater {
@@ -960,7 +960,7 @@ PanelWindow {
                                             Layout.preferredWidth: Metrics.fontSize * 0.6 * 5
                                             text: catalogRow.modelData[1]
                                             color: Colors.dim
-                                            font.pixelSize: Metrics.fontSize - 2
+                                            font.pixelSize: Metrics.size(-2)
                                         }
 
                                         Label {
@@ -968,7 +968,7 @@ PanelWindow {
                                             elide: Text.ElideRight
                                             text: catalogRow.modelData[2]
                                             color: Colors.dim
-                                            font.pixelSize: Metrics.fontSize - 2
+                                            font.pixelSize: Metrics.size(-2)
                                         }
 
                                         BracketButton {
@@ -1000,7 +1000,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     text: Ai.pullStatus || "any other model by name: see ollama.com/library"
                                     color: Ai.pulling ? Colors.accent : Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
                             }
 
@@ -1016,7 +1016,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     text: "any OpenAI-compatible service: openai, openrouter, groq, lm studio..."
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 TermInput {
@@ -1034,7 +1034,7 @@ PanelWindow {
                                     wrapMode: Text.Wrap
                                     text: "http:// sends the key unencrypted. use https, or keep it on this machine (localhost)"
                                     color: Colors.warn
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 TermInput {
@@ -1062,7 +1062,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     text: Ai.apiKey ? `key saved (…${Ai.apiKey.slice(-4)}) · ~/.local/state/kawt/secrets.json, only you can read it` : "no key yet"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 BracketButton {
@@ -1175,7 +1175,7 @@ PanelWindow {
                                 elide: Text.ElideRight
                                 text: "a model that sees, for a screenshot's [ask]: gemma3:4b, qwen2.5vl:3b, moondream"
                                 color: Colors.dim
-                                font.pixelSize: Metrics.fontSize - 3
+                                font.pixelSize: Metrics.size(-3)
                             }
 
                             Choice {
@@ -1282,7 +1282,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     text: "your prompt  (saved when you click away)"
                                     color: Colors.dim
-                                    font.pixelSize: Metrics.fontSize - 2
+                                    font.pixelSize: Metrics.size(-2)
                                 }
 
                                 BracketButton {
@@ -1312,8 +1312,8 @@ PanelWindow {
                                     anchors.margins: 6
                                     text: Settings.aiSystem
                                     color: Colors.fg
-                                    font.family: Metrics.fontFamily
-                                    font.pixelSize: Metrics.fontSize - 1
+                                    font.family: Metrics.longFamily
+                                    font.pixelSize: Metrics.longSize - 1
                                     wrapMode: TextEdit.Wrap
                                     selectByMouse: true
                                     selectionColor: Colors.accent
@@ -1325,7 +1325,7 @@ PanelWindow {
                                         visible: !systemEdit.text && !systemEdit.activeFocus
                                         text: "e.g. answer briefly, in russian"
                                         color: Colors.dim
-                                        font.pixelSize: Metrics.fontSize - 1
+                                        font.pixelSize: Metrics.size(-1)
                                     }
                                 }
                             }
@@ -1440,7 +1440,7 @@ PanelWindow {
             elide: Text.ElideRight
             text: choice.hintText
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
     }
 }

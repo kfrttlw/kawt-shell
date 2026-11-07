@@ -80,7 +80,7 @@ Popover {
             y: parent.height - height - Metrics.spacing
             text: Companion.pomoPhase === "break" ? `[break ${Companion.pomoLeft}m]` : `[${Companion.pomoLeft}m]`
             color: Companion.pomoPhase === "break" ? Colors.accent : Colors.fg
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         // do not disturb: she won't peek out
@@ -90,7 +90,7 @@ Popover {
             y: parent.height - height - Metrics.spacing
             text: "[shh]"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -100,7 +100,7 @@ Popover {
         elide: Text.ElideRight
         text: `${Companion.sleeping ? "asleep" : Companion.night ? "up late" : Companion.busy ? "busy" : "calm"} · ${root.together()}`
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     //  look: [mood] [red] [ink] [stripes]
@@ -135,7 +135,7 @@ Popover {
         wrapMode: Text.Wrap
         text: "by her mood: stripes when calm, red when busy (music, the coder, a recording), ink at night and asleep"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     //  an empty desktop: [hers] [not hers]
@@ -188,7 +188,7 @@ Popover {
         wrapMode: Text.Wrap
         text: "on an empty desktop she walks about and falls asleep when nothing happens; a window opens and she goes. click her to talk, drag her along the edge, double click: away for an hour. super + h calls her, again: lets her go"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     TermInput {
@@ -232,7 +232,7 @@ Popover {
         visible: root.tab === 1
         text: `your phrases (${Companion.lang}), said when you click her:`
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     Label {
@@ -295,7 +295,7 @@ Popover {
         wrapMode: Text.Wrap
         text: Companion.lang === "ru" ? "her own (fortune speaks english only)" : Companion.hasFortune ? "her own and fortune's sayings" : "her own; with fortune-mod (sudo pacman -S fortune-mod) many more"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     // off: [≡] goes from the bar, she stops walking and peeking (back in profile -> cfg)
@@ -316,6 +316,6 @@ Popover {
         wrapMode: Text.Wrap
         text: "off: no [≡], no walks, nothing runs for her. on again in profile -> cfg -> kawt"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

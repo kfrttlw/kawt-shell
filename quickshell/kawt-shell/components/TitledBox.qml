@@ -59,7 +59,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             text: root.title
             color: root.focused ? Colors.onAccent : Colors.titleOffText
-            font.bold: true
+            font.bold: !Metrics.pixel
             elide: Text.ElideRight
         }
 
@@ -72,7 +72,7 @@ Rectangle {
             text: root.hint
             color: root.focused ? Colors.onAccent : Colors.titleOffText
             opacity: 0.8
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -109,7 +109,7 @@ Rectangle {
             anchors.centerIn: parent
             text: root.hint
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 }

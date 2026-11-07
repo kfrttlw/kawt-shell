@@ -59,7 +59,7 @@ ColumnLayout {
                 elide: Text.ElideRight
                 text: [SysInfo.cpuTemp >= 0 ? `${Math.round(SysInfo.cpuTemp)}°C` : "", SysInfo.fan > 0 ? `${SysInfo.fan} rpm` : SysInfo.fan === 0 ? "fan idle" : "", SysInfo.load ? `load ${SysInfo.load.split(" ")[0]}` : ""].filter(s => s).join(" · ")
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
         }
 
@@ -78,7 +78,7 @@ ColumnLayout {
                 elide: Text.ElideRight
                 text: `${SysInfo.memUsedGb.toFixed(1)}/${SysInfo.memTotalGb.toFixed(0)}G` + (SysInfo.swapTotalGb > 0 ? ` · swap ${(SysInfo.swap * SysInfo.swapTotalGb).toFixed(1)}G` : "")
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
         }
     }
@@ -148,6 +148,6 @@ ColumnLayout {
         Layout.alignment: Qt.AlignRight
         text: "click twice: kill (SIGTERM)"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 3
+        font.pixelSize: Metrics.size(-3)
     }
 }

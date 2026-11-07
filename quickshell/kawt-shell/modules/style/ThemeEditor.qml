@@ -236,7 +236,7 @@ Item {
                 visible: root.nameError !== "" || Colors.userError !== ""
                 text: Colors.userError ? `${Colors.userError} (fix the file first)` : root.nameError
                 color: Colors.warn
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             // ---- how it looks: the bar, and a panel under it
@@ -454,7 +454,7 @@ Item {
                     Layout.fillWidth: true
                     text: "ctrl+s saves · esc goes back"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                     elide: Text.ElideRight
                 }
 

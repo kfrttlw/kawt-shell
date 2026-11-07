@@ -243,7 +243,7 @@ RowLayout {
             elide: Text.ElideRight
             text: `${Wallpapers.files.length} in ${Settings.wallpaperDir} · ↑↓ pick · enter set · r random`
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
     }
 }

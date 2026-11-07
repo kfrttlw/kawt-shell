@@ -48,7 +48,7 @@ RowLayout {
             elide: Text.ElideRight
             text: root.mode === "idle" ? "idle" : root.label
             color: root.mode === "idle" ? Colors.dim : Colors.accent
-            font.pixelSize: Metrics.fontSize - 1
+            font.pixelSize: Metrics.size(-1)
         }
 
         // the last 40 steps, one mark each
@@ -76,7 +76,7 @@ RowLayout {
             text: `${root.trail.length} step${root.trail.length === 1 ? "" : "s"}${root.changedCount ? ` · ${root.changedCount} file${root.changedCount === 1 ? "" : "s"} changed` : ""}`
             visible: root.trail.length > 0
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
     }
 }

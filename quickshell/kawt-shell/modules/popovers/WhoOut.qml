@@ -167,7 +167,7 @@ ColumnLayout {
                     elide: Text.ElideRight
                     text: "close it · no internet from its next start"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
         }
@@ -207,7 +207,7 @@ ColumnLayout {
         wrapMode: Text.Wrap
         text: root.status
         color: root.armed ? Colors.warn : Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     Rule {
@@ -248,6 +248,6 @@ ColumnLayout {
             return `kawt itself: ${out.join(", ") || "nothing"}`;
         }
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

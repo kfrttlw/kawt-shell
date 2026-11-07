@@ -90,7 +90,7 @@ Popover {
                     visible: appRow.modelData.hasMenu
                     text: "menu >"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -124,7 +124,7 @@ Popover {
         Layout.alignment: Qt.AlignRight
         text: "lmb open · rmb menu · mmb alt"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 3
+        font.pixelSize: Metrics.size(-3)
     }
 
     // ------------------------------------------------------------ app menu

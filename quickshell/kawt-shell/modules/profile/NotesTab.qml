@@ -97,7 +97,7 @@ RowLayout {
         Label {
             text: "folders"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -276,13 +276,13 @@ RowLayout {
                                 visible: profile.notesFolder === "all"
                                 text: noteRow.modelData.folder
                                 color: Colors.dim
-                                font.pixelSize: Metrics.fontSize - 2
+                                font.pixelSize: Metrics.size(-2)
                             }
 
                             Label {
                                 text: Qt.formatDateTime(new Date(noteRow.modelData.updated), "dd.MM hh:mm")
                                 color: Colors.dim
-                                font.pixelSize: Metrics.fontSize - 2
+                                font.pixelSize: Metrics.size(-2)
                             }
 
                             Label {
@@ -381,8 +381,8 @@ RowLayout {
                                 text: line.box ? line.box[2] : line.heading ? line.heading[2] : line.point ? `· ${line.point[1]}` : line.modelData
                                 color: line.box && line.box[1] !== " " ? Colors.dim : Colors.fg
                                 font.strikeout: line.box !== null && line.box[1] !== " "
-                                font.bold: line.heading !== null || line.index === 0
-                                font.pixelSize: line.heading && line.heading[1] === "#" ? Metrics.fontSize + 1 : Metrics.fontSize
+                                font.bold: !Metrics.pixel && (line.heading !== null || line.index === 0)
+                                font.pixelSize: line.heading && line.heading[1] === "#" ? Metrics.size(1) : Metrics.fontSize
                             }
 
                             MouseArea {
@@ -412,8 +412,8 @@ RowLayout {
                     textFormat: TextEdit.PlainText // a saved ai answer is text, never html
                     width: noteFlick.width
                     color: Colors.fg
-                    font.family: Metrics.fontFamily
-                    font.pixelSize: Metrics.fontSize
+                    font.family: Metrics.longFamily
+                    font.pixelSize: Metrics.longSize
                     wrapMode: TextEdit.Wrap
                     selectByMouse: true
                     selectionColor: Colors.accent
@@ -511,14 +511,14 @@ RowLayout {
             visible: notesTab.said !== ""
             text: notesTab.said
             color: Colors.accent
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Label {
             Layout.alignment: Qt.AlignRight
             text: `-- ${Notes.count("all")} notes · ~/.local/state/kawt/notes.json --`
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
     }
 }
