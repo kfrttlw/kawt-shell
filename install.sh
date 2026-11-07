@@ -24,7 +24,7 @@
 #                                what that pull brought, the same way
 #                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
 #   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
-#   ./install.sh --monitors      your monitors: auto, or each one by hand (mode, position, scale)
+#   ./install.sh --monitors      your monitors: each at its best mode, or picked by hand
 #   ./install.sh --help
 
 set -uo pipefail
@@ -464,60 +464,170 @@ ask_valid() {
     done
 }
 
-# auto, or each monitor by hand: its mode from the ones it has (or typed), where it stands,
-# its scale, whether it's turned. Fills mon_auto and mon_rules
+# best_mode "<modes>": the most pixels, then the highest refresh rate at that size, written out
+# ("2560x1440@164.96"), among the modes that are at least 59 Hz (if it has any: some monitors
+# also offer 3840x2160@30, a size they only take in). Not "preferred" (what the monitor calls its
+# own: often 60 Hz on a 165 Hz one) and not "highrr" (that may drop the size for the rate)
+best_mode() {
+    local m best="" bp=0 br=0 p r floor
+    floor=$(for m in $1; do [[ $m == *@* ]] && printf '%s\n' "${m#*@}"; done | awk 'BEGIN { f = 0 } $1 >= 59 { f = 59 } END { print f }')
+    for m in $1; do
+        [[ $m =~ ^([0-9]+)x([0-9]+)(@([0-9.]+))?$ ]] || continue
+        p=$((BASH_REMATCH[1] * BASH_REMATCH[2])) r=${BASH_REMATCH[4]:-0}
+        [[ -n ${BASH_REMATCH[4]} ]] && awk -v r="$r" -v f="$floor" 'BEGIN { exit !(r < f) }' && continue
+        if ((p > bp)) || { ((p == bp)) && awk -v a="$r" -v b="$br" 'BEGIN { exit !(a > b) }'; }; then
+            best=$m bp=$p br=$r
+        fi
+    done
+    printf '%s' "$best"
+}
+
+# rates_of "<modes>" <WxH>: that size's refresh rates, highest first, each once ("164.96 143.97 60.00")
+rates_of() {
+    local m out=()
+    for m in $1; do
+        [[ $m == "$2@"* ]] && out+=("${m#*@}")
+    done
+    ((${#out[@]})) && printf '%s\n' "${out[@]}" | sort -rnu | tr '\n' ' '
+}
+
+# suggest_scale <name> <WxH>: by how dense the screen is, from its width in the EDID (byte 21, cm):
+# 2 from 190 ppi (a 14" 2880x1800), 1.5 from 140, 1 below (a 27" 2560x1440 is 109). 1 if unknown
+suggest_scale() {
+    local f cm w ppi
+    f=$(compgen -G "/sys/class/drm/card*-$1/edid" | head -n 1)
+    [[ -n $f && -r $f ]] && cm=$(od -An -tu1 -j21 -N1 "$f" 2> /dev/null | tr -d ' ')
+    w=${2%%x*}
+    if [[ ${cm:-} =~ ^[0-9]+$ ]] && ((cm > 0)) && [[ $w =~ ^[0-9]+$ ]]; then
+        ppi=$((w * 254 / (cm * 100)))
+        if ((ppi >= 190)); then printf 2; elif ((ppi >= 140)); then printf 1.5; else printf 1; fi
+    else
+        printf 1
+    fi
+}
+
+# rep <text> <n>: the text n times (for the frames: tr can't do ─)
+rep() {
+    local s="" i
+    for ((i = 0; i < $2; i++)); do s+=$1; done
+    printf '%s' "$s"
+}
+
+# the monitors as they'll stand, left to right: a frame each with its name, mode and scale (the
+# first one is the main one: desk 1), the positions under them
+monitors_draw() {
+    local r n mode pos scale turned top="" l1="" l2="" l3="" bot="" at="" w=24 k=0
+    for r in "${mon_rules[@]}"; do
+        IFS='|' read -r n mode pos scale turned <<< "$r"
+        [[ $mode == off ]] && continue
+        top+="┌$(rep ─ $((w - 2)))┐ "
+        l1+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "$n$( ((k == 0)) && printf ' (main)')")
+        l2+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "$mode")
+        l3+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "x$scale$( ((turned)) && printf ' · %s°' $((turned * 90)))")
+        bot+="└$(rep ─ $((w - 2)))┘ "
+        at+=$(printf '  %-*s' $((w - 1)) "$pos")
+        k=$((k + 1))
+    done
+    ((k)) || return 0
+    say "  $top"
+    say "  $l1"
+    say "  $l2"
+    say "  $l3"
+    say "  $bot"
+    say "  ${dim}$at${off}"
+}
+
+# where each one stands: side by side in the order they're listed, from 0x0, each as wide as
+# its size over its scale (on its side: as its height)
+monitors_place() {
+    local i r n mode pos scale turned x=0 w h
+    for i in "${!mon_rules[@]}"; do
+        IFS='|' read -r n mode pos scale turned <<< "${mon_rules[i]}"
+        [[ $mode == off ]] && continue
+        mon_rules[i]="$n|$mode|${x}x0|$scale|$turned"
+        if [[ $mode =~ ^([0-9]+)x([0-9]+) ]]; then
+            w=${BASH_REMATCH[1]} h=${BASH_REMATCH[2]}
+            ((turned == 1 || turned == 3)) && w=$h
+            x=$((x + $(awk -v w="$w" -v s="$scale" 'BEGIN { printf "%d", w / s + 0.5 }')))
+        fi
+    done
+}
+
+# the best mode for each monitor (the standard), each one picked from the ones it has, or as
+# hyprland decides (preferred). Fills mon_auto and mon_rules
 monitors_ask() {
-    local mons=() line n desc modes all=() m seen mon_c mon_m items on=0 mode pos scale turned
+    local mons=() line n desc modes best mon_c mon_m sizes=() items=() m size mode rates r rate scale turned
     mon_auto=1 mon_rules=()
     can_ask || return 0
     mapfile -t mons < <(list_monitors)
     section "monitors"
     for line in "${mons[@]}"; do
-        IFS='|' read -r n desc _ <<< "$line"
-        say "  $n ${dim}$desc${off}"
+        IFS='|' read -r n desc modes <<< "$line"
+        best=$(best_mode "$modes")
+        say "  $n ${dim}$desc${off}  ${best:+most: ${acc}$best${off}}"
     done
     say "${dim}  ↑↓ move · enter pick${off}"
     mon_c=0
-    choose mon_c "auto|each at its own best mode, side by side: hyprland decides (recommended)" \
-        "by hand|mode and refresh rate, position, scale, turning: for each one"
-    ((mon_c == 1)) || return 0
+    choose mon_c "best mode|each at its most pixels and highest refresh rate, written out (recommended)" \
+        "pick|the size and the refresh rate for each one, from the ones it has" \
+        "as hyprland says|preferred: what the monitor calls its own, often only 60 Hz"
+    ((mon_c == 2)) && return 0
     if ((${#mons[@]} == 0)); then
-        warn "no monitor found from here, so auto" "later, in hyprland: ./install.sh --monitors"
+        warn "no monitor found from here, so hyprland decides" "later, in hyprland: ./install.sh --monitors"
         return 0
     fi
     mon_auto=0
     for line in "${mons[@]}"; do
         IFS='|' read -r n desc modes <<< "$line"
-        say ""
-        say "  ${acc}$n${off} ${dim}$desc${off}"
-        # the modes it has, each once, its own first (the console knows no refresh rates)
-        items=() seen=" "
-        read -ra all <<< "$modes"
-        for m in "${all[@]}"; do
-            [[ $seen == *" $m "* ]] && continue
-            seen+="$m "
-            if ((${#items[@]} == 0)); then items+=("$m|its own"); else items+=("$m|"); fi
-            ((${#items[@]} < 10)) || break
-        done
-        items+=("highest rate|highrr: the highest refresh rate it has" "type it|like 1920x1080@144" "off|this one stays dark")
-        mon_m=0
-        choose mon_m "${items[@]}"
-        mode=${items[mon_m]%%|*}
-        case $mode in
-            "highest rate") mode=highrr ;;
-            "type it") mode=$(ask_valid "    mode? (1920x1080@144, preferred, highrr, highres)" preferred '^(preferred|highrr|highres|maxwidth|[0-9]+x[0-9]+(@[0-9]+(\.[0-9]+)?)?)$') ;;
-            off)
+        best=$(best_mode "$modes")
+        if ((mon_c == 0)); then
+            mode=${best:-preferred}
+        else
+            say ""
+            say "  ${acc}$n${off} ${dim}$desc${off}"
+            # each size once, the most pixels first, its rates on its line
+            mapfile -t sizes < <(for m in $modes; do printf '%s\n' "${m%%@*}"; done | awk -Fx '!seen[$0]++ { print $1 * $2, $0 }' | sort -rn | awk '{ print $2 }' | head -n 10)
+            items=()
+            for size in "${sizes[@]}"; do
+                rates=$(rates_of "$modes" "$size")
+                items+=("$size|$(for r in $rates; do printf '%.0f ' "$r"; done)${rates:+Hz}")
+            done
+            items+=("off|this one stays dark")
+            mon_m=0
+            choose mon_m "${items[@]}"
+            size=${items[mon_m]%%|*}
+            if [[ $size == off ]]; then
                 mon_rules+=("$n|off|||")
                 continue
-                ;;
-        esac
-        # the first one on at 0x0, the others to its right
-        pos=$(ask_valid "    position? (0x0, 1920x0, auto-right, auto-left, auto-up, auto-down)" "$( ((on)) && echo auto-right || echo 0x0)" '^(auto(-center)?(-(right|left|up|down))?|-?[0-9]+x-?[0-9]+)$')
-        scale=$(ask_valid "    scale? (1, 1.25, 1.5, 2, auto)" 1 '^(auto|[0-9]+(\.[0-9]+)?)$')
-        turned=$(ask_valid "    turned? (0 no, 1 90°, 2 180°, 3 270°)" 0 '^[0-3]$')
-        mon_rules+=("$n|$mode|$pos|$scale|$turned")
-        on=$((on + 1))
+            fi
+            mode=$size
+            rates=$(rates_of "$modes" "$size")
+            if [[ -n $rates ]]; then
+                items=()
+                for r in $rates; do
+                    rate="$r Hz"
+                    [[ ${#items[@]} -eq 0 ]] && rate+=" · the most"
+                    [[ $modes == "$size@$r"* ]] && rate+=" · preferred"
+                    items+=("$(printf '%.0f Hz' "$r")|$rate")
+                done
+                mon_m=0
+                choose mon_m "${items[@]}"
+                read -ra r <<< "$rates"
+                mode="$size@${r[mon_m]}"
+            fi
+        fi
+        scale=$(suggest_scale "$n" "$mode")
+        turned=0
+        if ((mon_c == 1)); then
+            scale=$(ask_valid "    scale? (1, 1.25, 1.5, 2, auto)" "$scale" '^(auto|[0-9]+(\.[0-9]+)?)$')
+            turned=$(ask_valid "    turned? (0 no, 1 90°, 2 180°, 3 270°)" 0 '^[0-3]$')
+            [[ $scale == auto ]] && scale=1
+        fi
+        mon_rules+=("$n|$mode|0x0|$scale|$turned")
     done
+    monitors_place
+    say ""
+    monitors_draw
 }
 
 # what was picked, in one line: "DP-1 2560x1440@164.96 at 0x0 x1, HDMI-A-1 off"
@@ -1473,7 +1583,7 @@ if want hypr && [[ ! -f $hypr_conf && -z $updated_from ]]; then
     fi
 fi
 
-# a new config: the monitors, auto or each one by hand (again any time: ./install.sh --monitors).
+# a new config: the monitors, each at its best mode or picked (again any time: ./install.sh --monitors).
 # One that's there already (kawt's standard from before, or yours): asked whether to set them
 # again, so running ./install.sh once more gets to them too
 mon_again=0
