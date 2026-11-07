@@ -1,7 +1,7 @@
 import QtQuick
 import qs.config
 
-// The shadow under kawt's own windows with Settings.frames "bevel": a checker of two-pixel dots
+// The shadow under kawt's own windows: a checker of two-pixel dots
 // in the dark edge's color, `depth` px to the right and below, like an old mac's. Only the strips
 // that stick out are drawn, and only when the size changes. Hyprland gives the apps' windows a
 // solid one (hypr/kawt.lua): this one says the window is kawt's.
@@ -13,7 +13,6 @@ Canvas {
 
     x: depth
     y: depth
-    visible: Colors.bevel
 
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()

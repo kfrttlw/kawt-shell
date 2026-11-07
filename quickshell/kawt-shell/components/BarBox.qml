@@ -1,13 +1,10 @@
 import QtQuick
 import qs.config
 
-// Clickable box; children are laid out in a Row.
-// Settings.frames "bevel": a raised button that goes down while it's pressed, and stays down while
-// it's `down` (chosen, or its panel open). A button on the bar itself is `plain` (any parent with
-// `plainButtons: true` makes its buttons so, modules/bar/Bar.qml does): no frame of its own,
-// filled while hovered, down while open.
-// "flat": no frame (the brackets say it's a button, red ones that it's open or chosen): filled
-// while hovered; framed where one asks (bordered)
+// Clickable box; children are laid out in a Row. A raised button that goes down while it's
+// pressed, and stays down while it's `down` (chosen, or its panel open). A button on the bar
+// itself is `plain` (any parent with `plainButtons: true` makes its buttons so,
+// modules/bar/Bar.qml does): no frame of its own, filled while hovered, down while open.
 Item {
     id: root
 
@@ -16,9 +13,9 @@ Item {
     property bool down: active
     property bool plain: inPlainRow
     property bool dotted: false // the dotted face (a window button in focus)
-    readonly property bool raised: Colors.bevel && !plain
+    readonly property bool raised: !plain
     readonly property bool hovered: area.containsMouse
-    readonly property bool pushed: area.pressed || down // drawn pressed in (bevel)
+    readonly property bool pushed: area.pressed || down // drawn pressed in
     property alias spacing: row.spacing
     default property alias content: row.data
 
@@ -33,24 +30,15 @@ Item {
     signal clicked
     signal scrolled(int steps) // +1 = wheel up, -1 = wheel down
 
-    // no frame: less room around it (the brackets already make the edge)
+    // no frame: less room around it
     implicitWidth: row.implicitWidth + (bordered || raised ? Metrics.padding * 2 : Metrics.padding)
     implicitHeight: Metrics.barHeight - Metrics.spacing
 
-    Rectangle {
-        anchors.fill: parent
-        visible: !Colors.bevel
-        radius: Metrics.radius
-        color: root.hovered || (root.active && root.bordered) ? Colors.hoverFill : root.bordered ? Colors.bg : "transparent"
-        border.color: Colors.border
-        border.width: root.bordered ? Metrics.borderWidth : 0
-    }
-
-    // bevel: the face, raised or pressed in; a plain one only shows it while hovered or down.
+    // the face, raised or pressed in; a plain one only shows it while hovered or down.
     // A hovered raised one lights up a little (old systems didn't; a mouse wants to know)
     Rectangle {
         anchors.fill: parent
-        visible: Colors.bevel && (root.raised || root.hovered || root.pushed)
+        visible: root.raised || root.hovered || root.pushed
         color: root.raised && root.hovered && !root.pushed ? Colors.mix(Colors.face, Colors.hi, 0.12) : root.raised || root.pushed ? Colors.face : Colors.hoverFill
 
         Dots {
@@ -70,8 +58,8 @@ Item {
         id: row
 
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: Colors.bevel && root.pushed ? 1 : 0
-        anchors.verticalCenterOffset: Colors.bevel && root.pushed ? 1 : 0
+        anchors.horizontalCenterOffset: root.pushed ? 1 : 0
+        anchors.verticalCenterOffset: root.pushed ? 1 : 0
     }
 
     MouseArea {

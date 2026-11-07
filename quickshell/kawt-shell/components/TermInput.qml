@@ -28,14 +28,14 @@ Item {
 
     signal accepted(string text)
 
-    implicitHeight: input.implicitHeight + (Colors.bevel && framed ? 8 : 6)
+    implicitHeight: input.implicitHeight + (framed ? 8 : 6)
 
     Rectangle {
         anchors.fill: parent
         visible: root.framed
-        color: Colors.bevel ? Colors.well : input.activeFocus ? Colors.hoverFill : Colors.bg
+        color: Colors.well
         border.color: input.activeFocus ? Colors.dim : Colors.border
-        border.width: Colors.bevel ? 0 : Metrics.borderWidth
+        border.width: 0
 
         Bevel {
             style: "sunk"
@@ -47,7 +47,7 @@ Item {
         id: promptText
 
         anchors.left: parent.left
-        anchors.leftMargin: root.framed ? (Colors.bevel ? 6 : 4) : 0
+        anchors.leftMargin: root.framed ? 6 : 0
         anchors.verticalCenter: parent.verticalCenter
         text: root.prompt
         color: root.promptColor

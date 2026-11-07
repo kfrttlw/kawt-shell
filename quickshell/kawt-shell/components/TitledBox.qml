@@ -14,17 +14,17 @@ Rectangle {
     property string hint: ""
     property bool window: false
     property bool focused: true
-    readonly property bool titleBar: window && Colors.bevel
+    readonly property bool titleBar: window
     readonly property real titleOverhang: !titleBar && title !== "" ? titleText.implicitHeight / 2 : 0
     readonly property int barHeight: Math.round(Metrics.fontSize * 1.7)
     readonly property real contentTop: titleBar ? barHeight + 3 : titleOverhang
     readonly property int shadowRoom: titleBar ? shadow.depth : 0
     // what's under the title on the line, to cut it out
-    readonly property color ground: Colors.bevel ? Colors.face : Colors.bg
+    readonly property color ground: Colors.face
 
     color: titleBar ? Colors.face : ground
     border.color: Colors.border
-    border.width: Colors.bevel ? 0 : Metrics.borderWidth
+    border.width: 0
     radius: Metrics.radius
 
     // under the window, behind it

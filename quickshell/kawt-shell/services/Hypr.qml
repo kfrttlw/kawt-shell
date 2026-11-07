@@ -386,12 +386,11 @@ Singleton {
         minimized = m;
     }
 
-    // "minimized>>ADDR,1": an app's own _ button. Only with the taskbar (raised frames), where
-    // its button brings it back; the flat bar has none, and it would be lost
+    // "minimized>>ADDR,1": an app's own _ button: put away, its taskbar button brings it back
     function minimizeAsked(data: string): void {
         const p = data.split(",");
         const t = byAddress(norm(p[0]));
-        if (p[1] === "1" && Colors.bevel && t)
+        if (p[1] === "1" && t)
             minimize(t);
     }
 

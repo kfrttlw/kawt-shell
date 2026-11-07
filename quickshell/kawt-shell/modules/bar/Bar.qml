@@ -317,15 +317,6 @@ Variants {
 
         // Panels are created when opened and destroyed when closed (components/Lazy.qml):
         // a hidden window would keep all its items in memory, on every screen.
-        Lazy {
-            when: Panels.isOpen("dock", root.modelData)
-
-            DockPopover {
-                forScreen: root.modelData
-                anchorItem: start
-                barWindow: root
-            }
-        }
 
         Lazy {
             when: Panels.isOpen("calendar", root.modelData)

@@ -5,7 +5,7 @@ import Quickshell
 // `linger` ms after it turns false (time for a closing animation). A hidden PanelWindow still
 // keeps its whole tree of items in memory, on every screen; this way a panel nobody opens
 // costs nothing, and the shell starts faster.
-//   Lazy { when: Panels.isOpen("dock", screen); DockPopover { ... } }
+//   Lazy { when: Panels.isOpen("wifi", screen); WifiPopover { ... } }
 // The window inside is created already open: use components/OpenWatch.qml for what has to
 // happen on open / close, not onOpenChanged (it doesn't fire for the first value).
 LazyLoader {
