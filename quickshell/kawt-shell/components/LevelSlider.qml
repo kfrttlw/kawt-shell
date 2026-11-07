@@ -1,58 +1,89 @@
 import QtQuick
 import qs.config
 
-// ▮▮▮▮▮▮▯▯▯▯ a level in segments, like the bar's (components/Meter.qml), that you can drag or
-// scroll: lit ones in the text color, the rest in the line color. playhead: the last lit one
-// red (the player's position). `released` comes when a drag ends and after each wheel step,
-// for what should only change once you let go (seeking)
+// A slider the old way: a sunk groove, red up to the thumb, a raised thumb you drag; the wheel
+// steps it. `vertical`: from the bottom up (the sound's master). `released` comes when a drag
+// ends and after each wheel step, for what should only change once you let go (seeking).
+// `playhead` (the player's position) only says what it is: it looks the same.
+//   LevelSlider { value: sink.volume; onMoved: v => sink.volume = v }
 Item {
     id: root
 
     property real value: 0
     property real wheelStep: 0.05
     property bool playhead: false
-    readonly property int segWidth: Math.max(3, Math.round(Metrics.fontSize * 0.3))
-    readonly property int segGap: Math.max(1, Math.round(Metrics.fontSize / 7))
-    readonly property int segCount: Math.max(1, Math.floor((width + segGap) / (segWidth + segGap)))
-    readonly property int lit: Math.round(Math.max(0, Math.min(1, value)) * segCount)
+    property bool vertical: false
+    readonly property real clamped: Math.max(0, Math.min(1, value))
+    readonly property int thumbLong: 18 // across the groove
+    readonly property int thumbShort: 9 // along it
+    readonly property real travel: (vertical ? height : width) - thumbShort
+    readonly property real at: Math.round(vertical ? (1 - clamped) * travel : clamped * travel)
 
     signal moved(real value)
     signal released
 
-    implicitHeight: Math.round(Metrics.fontSize * 0.8)
+    implicitWidth: vertical ? thumbLong + 2 : 120
+    implicitHeight: vertical ? 120 : thumbLong + 2
 
     // don't assign `value` here: that would break the caller's binding (e.g. to the sink volume)
     function set(v: real): void {
         moved(Math.max(0, Math.min(1, v)));
     }
 
-    Row {
-        anchors.fill: parent
-        spacing: root.segGap
+    function valueAt(x: real, y: real): real {
+        return vertical ? 1 - (y - thumbShort / 2) / travel : (x - thumbShort / 2) / travel;
+    }
 
-        Repeater {
-            model: root.segCount
+    // the groove: 4 px, sunk
+    Rectangle {
+        id: groove
 
-            Rectangle {
-                required property int index
+        x: root.vertical ? Math.round((root.width - 4) / 2) : Math.round(root.thumbShort / 2)
+        y: root.vertical ? Math.round(root.thumbShort / 2) : Math.round((root.height - 4) / 2)
+        width: root.vertical ? 4 : root.width - root.thumbShort
+        height: root.vertical ? root.height - root.thumbShort : 4
+        color: Colors.well
 
-                width: root.segWidth
-                height: parent.height
-                color: root.playhead && index === Math.max(0, root.lit - 1) ? Colors.accent : index < root.lit ? Colors.fg : Colors.border
-            }
+        Bevel {
+            style: "sunk"
+        }
+
+        // red up to the thumb (from the bottom, standing)
+        Rectangle {
+            x: root.vertical ? 1 : 1
+            y: root.vertical ? root.at + 1 : 1
+            width: root.vertical ? 2 : Math.max(0, root.at - 1)
+            height: root.vertical ? Math.max(0, groove.height - root.at - 2) : 2
+            color: root.enabled ? Colors.accent : Colors.dim
+        }
+    }
+
+    // the thumb
+    Rectangle {
+        x: root.vertical ? Math.round((root.width - root.thumbLong) / 2) : root.at
+        y: root.vertical ? root.at : Math.round((root.height - root.thumbLong) / 2)
+        width: root.vertical ? root.thumbLong : root.thumbShort
+        height: root.vertical ? root.thumbShort : root.thumbLong
+        color: Colors.face
+
+        Bevel {
+            style: area.pressed ? "pressed" : "raised"
         }
     }
 
     MouseArea {
+        id: area
+
         property real wheelAcc: 0
 
         anchors.fill: parent
+        enabled: root.enabled
         cursorShape: Qt.PointingHandCursor
 
-        onPressed: mouse => root.set(mouse.x / width)
+        onPressed: mouse => root.set(root.valueAt(mouse.x, mouse.y))
         onPositionChanged: mouse => {
             if (pressed)
-                root.set(mouse.x / width);
+                root.set(root.valueAt(mouse.x, mouse.y));
         }
         onReleased: root.released()
         // a step per notch (touchpads send many small deltas: they add up to one)

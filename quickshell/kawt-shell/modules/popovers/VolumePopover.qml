@@ -5,139 +5,149 @@ import Quickshell.Services.Pipewire
 import qs.config
 import qs.components
 
+// The sound, the old way: the master standing on the left with its % under it, the apps that
+// play beside it, a slider each; mute; the output (when there's more than one). The wheel on
+// the bar's icon: ±5%.
+//
+//   all  apps                                  output
+//   ┃    firefox   ──────■──        (•) speakers ( ) headphones
+//   ■    telegram  ───■─────
+//   ┃
+//   44%  [ ] mute
 Popover {
     id: root
-
-    property bool expanded: false
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property list<PwNode> sinks: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
     readonly property list<PwNode> streams: Pipewire.nodes.values.filter(n => n.isStream && n.audio)
 
     name: "volume"
-    title: "volume"
-    cardWidth: 280
+    title: Strings.t("soundTitle")
+    icon: "vol2"
+    cardWidth: 340
+    settingsPage: "media"
+    note: Strings.t("wheelNote")
 
     PwObjectTracker {
         objects: [root.sink, ...root.streams].filter(n => n)
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Metrics.spacing
-
-        Label {
-            text: root.sink?.audio?.muted ? "mute" : `${Math.round((root.sink?.audio?.volume ?? 0) * 100)}%`
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-
-        BracketButton {
-            label: root.sink?.audio?.muted ? "unmute" : "mute"
-            onClicked: if (root.sink?.audio)
-                root.sink.audio.muted = !root.sink.audio.muted
-        }
-
-        BracketButton {
-            label: root.streams.length > 0 ? (root.expanded ? "v" : ">") : "-"
-            onClicked: if (root.streams.length > 0)
-                root.expanded = !root.expanded
-        }
-    }
-
-    LevelSlider {
-        Layout.fillWidth: true
-        value: root.sink?.audio?.volume ?? 0
-        onMoved: v => {
-            if (root.sink?.audio) {
-                root.sink.audio.muted = false;
-                root.sink.audio.volume = v;
-            }
-        }
-    }
-
-    // output devices, only when there's something to choose from
+    // the output, when there's a choice
     ColumnLayout {
         Layout.fillWidth: true
         visible: root.sinks.length > 1
         spacing: 2
-
-        Label {
-            Layout.topMargin: Metrics.spacing
-            text: "-- output --"
-            color: Colors.dim
-            font.pixelSize: Metrics.size(-2)
-        }
 
         Repeater {
             model: ScriptModel {
                 values: root.sinks
             }
 
-            Label {
+            Check {
                 required property PwNode modelData
-                readonly property bool current: modelData === root.sink
 
                 Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: `${current ? ">" : " "} ${modelData.description || modelData.name}`
-                color: current ? Colors.accent : sinkArea.containsMouse ? Colors.fg : Colors.dim
-
-                MouseArea {
-                    id: sinkArea
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Pipewire.preferredDefaultAudioSink = parent.modelData
-                }
+                radio: true
+                text: modelData.description || modelData.name
+                checked: modelData === root.sink
+                onToggled: Pipewire.preferredDefaultAudioSink = modelData
             }
         }
     }
 
-    ColumnLayout {
+    RowLayout {
         Layout.fillWidth: true
-        visible: root.expanded
-        spacing: Metrics.spacing
+        spacing: Metrics.padding
 
-        Label {
-            Layout.topMargin: Metrics.spacing
-            text: "-- apps --"
-            color: Colors.dim
-            font.pixelSize: Metrics.size(-2)
-        }
+        // all of it, standing
+        ColumnLayout {
+            Layout.alignment: Qt.AlignTop
+            spacing: 4
 
-        Repeater {
-            model: ScriptModel {
-                values: root.streams
+            Label {
+                text: Strings.t("soundAll")
+                color: Colors.dim
             }
 
-            ColumnLayout {
-                required property PwNode modelData
+            LevelSlider {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredHeight: Math.max(96, apps.implicitHeight)
+                vertical: true
+                value: root.sink?.audio?.volume ?? 0
+                onMoved: v => {
+                    if (root.sink?.audio) {
+                        root.sink.audio.muted = false;
+                        root.sink.audio.volume = v;
+                    }
+                }
+            }
 
-                Layout.fillWidth: true
-                spacing: 2
+            Label {
+                text: root.sink?.audio?.muted ? "—" : `${Math.round((root.sink?.audio?.volume ?? 0) * 100)}%`
+                color: Colors.dim
+            }
+        }
 
-                Label {
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: modelData.properties["application.name"] || modelData.description || modelData.name || "?"
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
+        // the apps that play
+        ColumnLayout {
+            id: apps
+
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop
+            spacing: 4
+
+            Label {
+                text: Strings.t("soundApps")
+                color: Colors.dim
+            }
+
+            Label {
+                visible: root.streams.length === 0
+                text: Strings.t("soundNoApps")
+                color: Colors.dim
+            }
+
+            Repeater {
+                model: ScriptModel {
+                    values: root.streams
                 }
 
-                LevelSlider {
+                RowLayout {
+                    id: app
+
+                    required property PwNode modelData
+
                     Layout.fillWidth: true
-                    value: modelData.audio?.volume ?? 0
-                    onMoved: v => {
-                        if (modelData.audio) {
-                            modelData.audio.muted = false;
-                            modelData.audio.volume = v;
+                    spacing: Metrics.spacing
+
+                    Label {
+                        Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 11)
+                        elide: Text.ElideRight
+                        text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name || "?"
+                    }
+
+                    LevelSlider {
+                        Layout.fillWidth: true
+                        value: app.modelData.audio?.volume ?? 0
+                        onMoved: v => {
+                            if (app.modelData.audio) {
+                                app.modelData.audio.muted = false;
+                                app.modelData.audio.volume = v;
+                            }
                         }
                     }
                 }
+            }
+
+            Item {
+                Layout.fillHeight: true
+            }
+
+            Check {
+                text: Strings.t("soundMute")
+                checked: root.sink?.audio?.muted ?? false
+                onToggled: if (root.sink?.audio)
+                    root.sink.audio.muted = !root.sink.audio.muted
             }
         }
     }

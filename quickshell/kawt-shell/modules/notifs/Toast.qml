@@ -1,17 +1,21 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.config
 import qs.components
 import qs.services
 
-// ┌─telegram──────[  4521.031]┐
-// │ summary                   │
-// │ body                      │
-// └───────────────────────────┘
-// left click: default action, right click: dismiss. Critical ones (and -t 0) stay until handled;
-// the rest stay as long as the app asked (notify-send -t), or 6 s.
-// With raised frames it's an old system's message box: a grey title bar (a critical one's in the
-// light), an "i" or a "!" beside the words, its buttons raised at the bottom right.
+// A message the old way: a small window titled with the app (an urgent one's title red), its
+// icon big beside the words, the app's own buttons and OK at the bottom right.
+//
+//   ┌ ▣ telegram ─────────────────── × ┐
+//   │ [icon]  anna                      │
+//   │         see you at seven?         │
+//   │                  [ Reply ] [ OK ] │
+//   └───────────────────────────────────┘
+// A click on the words: its default action; right click, OK or ×: away. Urgent ones (and -t 0)
+// stay until handled; the rest stay as long as the app asked (notify-send -t), or 6 s, longer
+// while the pointer is over it.
 Item {
     id: root
 
@@ -19,8 +23,10 @@ Item {
     readonly property bool critical: Notifs.isCritical(modelData)
     readonly property int timeout: Notifs.timeoutOf(modelData)
     readonly property var buttons: modelData?.actions.filter(a => a.identifier !== "default" && a.text) ?? []
+    // the picture the app sent, its icon, or the one of its desktop entry
+    readonly property string picture: modelData?.image || modelData?.appIcon || (DesktopEntries.heuristicLookup(modelData?.appName ?? "")?.icon ?? "")
 
-    implicitHeight: box.height + box.titleOverhang + box.shadowRoom
+    implicitHeight: win.height + 5
 
     Timer {
         running: !root.critical && root.timeout > 0 && !hover.hovered
@@ -36,25 +42,23 @@ Item {
         }
     }
 
-    TitledBox {
-        id: box
+    KWindow {
+        id: win
 
-        y: titleOverhang
-        width: parent.width - shadowRoom
-        height: Math.max(body.implicitHeight, Colors.bevel ? sign.height : 0) + Metrics.padding * 2 + contentTop
-        title: (root.modelData?.appName || "notify").toLowerCase()
-        hint: Notifs.stamp(root.modelData)
-        window: true
-        focused: root.critical
-        border.color: root.critical ? Colors.warn : hover.hovered ? Colors.dim : Colors.border
+        width: parent.width - 5
+        height: chrome + Math.max(body.implicitHeight, 32)
+        title: root.modelData?.appName || "notify"
+        icon: root.critical ? "warn" : "chat"
+        urgent: root.critical
+        pad: 8
+        onCloseClicked: root.modelData.dismiss()
 
-        // a handler also sees the pointer over the action buttons, unlike MouseArea.containsMouse
+        // a handler also sees the pointer over the buttons, unlike MouseArea.containsMouse
         HoverHandler {
             id: hover
         }
 
         MouseArea {
-
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: Qt.PointingHandCursor
@@ -66,38 +70,29 @@ Item {
             }
         }
 
-        // the message box's sign: "i", or "!" in the warning color for a critical one
-        Rectangle {
-            id: sign
+        // the app's picture, or a pixel one
+        AppIcon {
+            id: pic
 
-            visible: Colors.bevel
-            x: Metrics.padding
-            y: box.contentTop + Metrics.padding
-            width: Math.round(Metrics.fontSize * 2.2)
-            height: width
-            radius: width / 2
-            color: root.critical ? Colors.warn : Colors.bg
-            border.width: 1
-            border.color: root.critical ? Colors.warn : Colors.dim
+            visible: root.picture !== ""
+            width: 32
+            height: 32
+            icon: root.picture
+            name: root.modelData?.appName ?? ""
+            colored: true
+        }
 
-            Label {
-                anchors.centerIn: parent
-                text: root.critical ? "!" : "i"
-                color: root.critical ? Colors.onAccent : Colors.fg
-                font.bold: !Metrics.pixel
-                font.pixelSize: Metrics.times(1.3)
-            }
+        PixIcon {
+            visible: root.picture === ""
+            size: 32
+            name: root.critical ? "warn" : "chat"
         }
 
         ColumnLayout {
             id: body
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding
-            anchors.leftMargin: Metrics.padding + (Colors.bevel ? sign.width + Metrics.padding : 0)
-            anchors.topMargin: Metrics.padding + box.contentTop
+            x: 32 + 10
+            width: parent.width - x
             spacing: 2
 
             Label {
@@ -107,7 +102,6 @@ Item {
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
                 text: root.modelData?.summary ?? ""
-                color: root.critical ? Colors.warn : Colors.fg
             }
 
             Label {
@@ -121,21 +115,28 @@ Item {
                 color: Colors.dim
             }
 
+            // the app's buttons, then OK
             Flow {
                 Layout.fillWidth: true
-                Layout.topMargin: Colors.bevel ? Metrics.spacing : 2
-                visible: root.buttons.length > 0
-                spacing: Metrics.spacing
-                layoutDirection: Colors.bevel ? Qt.RightToLeft : Qt.LeftToRight
+                Layout.topMargin: Metrics.spacing
+                spacing: 4
+                layoutDirection: Qt.RightToLeft
 
-                // right to left with raised frames, so the first one stays first
+                PushButton {
+                    minWidth: Math.round(60 * Metrics.scale)
+                    text: Strings.t("ok")
+                    onClicked: root.modelData.dismiss()
+                }
+
+                // right to left, so the first one stays first
                 Repeater {
-                    model: Colors.bevel ? root.buttons.slice().reverse() : root.buttons
+                    model: root.buttons.slice().reverse()
 
-                    BracketButton {
+                    PushButton {
                         required property var modelData
 
-                        label: modelData.text.toLowerCase()
+                        minWidth: 0
+                        text: modelData.text
                         onClicked: modelData.invoke()
                     }
                 }

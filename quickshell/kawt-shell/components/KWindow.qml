@@ -12,6 +12,7 @@ Item {
     property string title: ""
     property string icon: "logo"
     property bool focused: true
+    property bool urgent: false // a red title (an urgent message)
     property bool closable: true
     property bool minimizable: false
     property bool maximizable: false
@@ -166,7 +167,7 @@ Item {
         y: 3
         width: parent.width - 6
         height: root.titleHeight
-        color: root.focused ? Colors.title : Colors.titleOff
+        color: root.urgent ? Colors.accent : root.focused ? Colors.title : Colors.titleOff
 
         // pressed on the title: a real window moves with the pointer (AppWindow), twice: □
         MouseArea {
@@ -187,7 +188,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
             text: root.title
-            color: root.focused ? Colors.titleInk : Colors.titleOffText
+            color: root.urgent ? Colors.onAccent : root.focused ? Colors.titleInk : Colors.titleOffText
         }
 
         Row {
