@@ -497,7 +497,15 @@ Variants {
 
         // the launcher in the middle, or as the start menu under the kawt button
         Lazy {
-            when: Panels.isOpen("launcher", root.modelData) || Panels.isOpen("menu", root.modelData)
+            when: Panels.isOpen("menu", root.modelData)
+
+            StartMenu {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("launcher", root.modelData)
 
             Launcher {
                 forScreen: root.modelData
