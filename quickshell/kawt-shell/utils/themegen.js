@@ -428,35 +428,40 @@ function fastfetch(name, t, style, logo) {
     const config = {
         "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
         // "distro": no source, fastfetch picks the logo of the running system (arch on arch), in
-        // kawt's colors: its first color the accent, the second the text, the rest dim. Or one
-        // of kawt's own
-        logo: Object.assign(own ? { type: "data", source: own } : {}, {
-            color: own ? { "1": c(t.dim), "2": c(t.fg), "3": c(t.accent) }
-                : { "1": c(t.accent), "2": c(t.fg), "3": c(t.dim), "4": c(t.dim), "5": c(t.dim), "6": c(t.dim) },
+        // its own colors; "distro-tinted" the same in kawt's (its first color the accent, the
+        // second the text, the rest dim). Or one of kawt's own
+        logo: Object.assign(own ? { type: "data", source: own } : {}, own ? { color: { "1": c(t.dim), "2": c(t.fg), "3": c(t.accent) } } : logo === "distro-tinted" ? { color: { "1": c(t.accent), "2": c(t.fg), "3": c(t.dim), "4": c(t.dim), "5": c(t.dim), "6": c(t.dim) } } : {}, {
             padding: logo === "stripes" ? { top: 1, left: 2, right: 2 } : { top: 1, left: 2, right: 4 }
         }, logo === "stripes" ? { position: "top" } : {}),
         display: {
             separator: " ",
-            key: { width: 7 },
+            key: { width: 10 },
             color: { keys: c(t.dim), title: c(t.accent), output: c(t.fg), separator: c(t.dim) },
             percent: { type: 3, color: { green: c(t.fg), yellow: c(t.accent), red: c(t.warn) } },
             bar: {
                 width: 12,
-                char: { elapsed: "#", total: "-" },
+                char: { elapsed: "■", total: "·" },
                 border: { left: "[", right: "]" },
                 color: { elapsed: c(t.accent), total: c(t.dim), border: c(t.dim) }
             }
         },
+        // nothing that names you or the machine (no user@host, ip, model, serials): safe to
+        // show in a screenshot
         modules: [
-            mod("os", "os"),
-            mod("kernel", "kern"),
-            mod("uptime", "up"),
-            mod("packages", "pkgs"),
-            mod("wm", "wm"),
-            mod("terminal", "term"),
+            mod("custom", "kawt", { format: `${name} · ${style} terminal colors`, keyColor: c(t.accent) }),
+            { type: "custom", format: "─".repeat(34), outputColor: c(t.dim) },
+            mod("os", "system"),
+            mod("kernel", "kernel"),
+            mod("uptime", "uptime"),
+            mod("packages", "packages"),
+            mod("wm", "desktop"),
             mod("shell", "shell"),
-            mod("memory", "mem"),
-            mod("custom", "kawt", { format: `${name} · ${style} terminal colors` }),
+            mod("terminal", "terminal"),
+            mod("cpu", "cpu"),
+            mod("gpu", "gpu"),
+            mod("memory", "memory"),
+            mod("disk", "disk", { folders: "/" }),
+            mod("terminalfont", "font"),
             "break",
             { type: "colors", symbol: "block", paddingLeft: 0 }
         ]
