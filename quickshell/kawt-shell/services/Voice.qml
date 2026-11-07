@@ -68,7 +68,7 @@ Singleton {
             return;
         }
         if (!ready) {
-            status = !bin ? "voice needs whisper-cpp: sudo pacman -S whisper-cpp" : `no voice model yet: ai -> cfg -> voice -> [get ${size}]`;
+            status = !bin ? "voice needs whisper-cpp: sudo pacman -S whisper-cpp" : `no voice model yet: ai -> settings -> voice -> get ${size}`;
             Quickshell.execDetached(["notify-send", "-a", "kawt", "-e", "--", "voice", status]);
             return;
         }

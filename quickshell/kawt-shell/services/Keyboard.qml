@@ -8,7 +8,7 @@ import qs.config
 // Active keyboard layout of Hyprland's main keyboard, as an xkb code ("us", "ru").
 // Read from `hyprctl devices -j` at start and again on every `activelayout` event.
 //
-// Settings.layoutPerWindow (profile -> cfg): each window keeps its own layout. Leaving a
+// Settings.layoutPerWindow (settings -> keyboard): each window keeps its own layout. Leaving a
 // window remembers its layout, coming back puts it back; a window seen for the first time
 // starts with the first layout (us). Forgotten when the window closes, and with the shell.
 //

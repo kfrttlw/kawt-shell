@@ -24,7 +24,7 @@ Singleton {
         return Qt.formatDateTime(now, (Settings.clockDate ? "ddd dd.MM " : "") + time).toLowerCase();
     }
 
-    // "+3h 30m" / "-45m" / "" for the cfg tab
+    // "+3h 30m" / "-45m" / "" for the settings
     readonly property string offsetText: {
         if (offset === 0)
             return "";

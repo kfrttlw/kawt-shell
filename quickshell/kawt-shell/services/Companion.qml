@@ -309,7 +309,7 @@ Singleton {
     }
 
     // super + h: out of the corner, and she stays there until it's pressed again (or a double
-    // click). Already out on the desktop or in her window ([≡]), she answers from there
+    // click). Already out on the desktop or in her window (start -> stripes), she answers from there
     property bool called: false
 
     function call(): void {

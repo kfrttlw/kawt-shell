@@ -142,7 +142,7 @@ Singleton {
         return path.startsWith("~/") ? Quickshell.env("HOME") + path.slice(1) : path;
     }
 
-    // a bar button the user hasn't switched off (profile -> cfg -> bar); names: Bar.qml
+    // a bar button the user hasn't switched off (settings -> bar); names: Bar.qml
     function barShows(name: string): bool {
         return !(barHide ?? []).includes(name);
     }
@@ -263,10 +263,10 @@ Singleton {
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
             property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "title", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai", "desk"
-            property var floatClasses: [] // window classes that float at their own size (profile -> cfg -> windows)
+            property var floatClasses: [] // window classes that float at their own size (settings -> windows)
             property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's [tile] / [float], super + ctrl + v; services/Hypr.qml)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
-            // the companion, stripes (services/Companion.qml): [≡] in the bar is her window
+            // the companion, stripes (services/Companion.qml): the start menu's "stripes" (super + h on her) is her window
             property bool micAlways: false // the mic in the tray even while nothing listens (modules/bar/MicButton.qml)
             property bool btAlways: false // bluetooth in the tray even with nothing connected (modules/bar/BtButton.qml)
             property bool companion: true // off: no walks, no peeks, nothing runs for her

@@ -22,7 +22,7 @@
 #                                it still makes sure all its packages and their libraries are there.
 #                                Right after a git pull by hand (a version from before --update):
 #                                what that pull brought, the same way
-#                                (also: qs -c kawt-shell ipc call kawt update, or [update] in profile -> cfg)
+#                                (also: qs -c kawt-shell ipc call kawt update, or Update in settings -> kawt)
 #   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
 #   ./install.sh --monitors      your monitors: each at its best mode, or picked by hand
 #   ./install.sh --help
@@ -1066,7 +1066,7 @@ fi
 # never touched: settings, ~/.config/kawt/themes.json, ~/.config/hypr/user.lua all live outside
 # the repo. Changes made inside the repo stop it (a pull would mix them in): they're listed,
 # and git stash can put them aside first. The only time kawt asks the internet for its own
-# updates is this, and [check] in profile -> cfg, when you press it.
+# updates is this, and Check in settings -> kawt, when you press it.
 if [[ $mode == update ]]; then
     if ((EUID == 0)); then
         say "${red}run this as your own user, not as root${off} ${dim}(git would leave root's files in your clone)${off}"
@@ -1108,7 +1108,7 @@ if [[ $mode == update ]]; then
     if [[ -n $changed ]]; then
         say "files of the repo were changed here:"
         printf '%s\n' "$changed" | sed 's/^.../  /'
-        note "your own colors, look and keys go outside it: ~/.config/kawt/themes.json, profile -> cfg, ~/.config/hypr/user.lua"
+        note "your own colors, look and keys go outside it: ~/.config/kawt/themes.json, settings (super + ,), ~/.config/hypr/user.lua"
         if ((!dry && !yes)) && can_ask && ask "put them aside (git stash) and update? git stash pop brings them back" 1; then
             g stash push -q -m "kawt: before the update of $stamp" || { fail "git stash failed"; exit 1; }
             step "save" "your changes (back with: git -C $repo stash pop)"

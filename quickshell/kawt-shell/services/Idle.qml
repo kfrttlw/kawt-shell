@@ -10,7 +10,7 @@ import qs.config
 // on purpose: after a restart the machine locks itself again.
 //   qs -c kawt-shell ipc call kawt caffeine
 //
-// Around the lock (profile -> cfg -> lock):
+// Around the lock (settings -> screen and lock):
 //   dim         Settings.dimBeforeLock: 30 s before the idle lock the backlight goes down to a
 //               third; a key or the mouse brings it back (laptops: what brightnessctl can set)
 //   screen off  Settings.screenOff minutes after the lock (0 = never) the picture goes off

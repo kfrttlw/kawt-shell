@@ -117,7 +117,7 @@ ColumnLayout {
                 }
             }
 
-            // your ~/.face as ascii (profile -> cfg -> look -> picture), or kawt in half blocks
+            // your ~/.face as ascii (settings -> look -> picture), or kawt in half blocks
             // with its lit dot red, the same as fastfetch's
             AsciiAvatar {
                 id: avatar

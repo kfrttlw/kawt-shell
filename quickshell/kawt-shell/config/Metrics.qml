@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 
-// Sizes. The font and the bar come from the settings (profile -> cfg -> bar, or
+// Sizes. The font and the bar come from the settings (settings -> bar, or
 // ~/.local/state/kawt/settings.json), so they're yours without editing this file; the panels
 // grow with the font.
 QtObject {
