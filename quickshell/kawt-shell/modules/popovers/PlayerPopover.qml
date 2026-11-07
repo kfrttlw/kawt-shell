@@ -477,7 +477,7 @@ Popover {
         }
     }
 
-    // ---- the keys, like a bios's legend: [key] what it does
+    // ---- the keys: a little raised key cap, what it does
     Flow {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
@@ -485,22 +485,34 @@ Popover {
         spacing: Metrics.padding
 
         Repeater {
-            model: [["space", "play"], ["←→", "5 s"], ["↑↓", "vol"], ["n p", "next"], ["s", "shuffle"], ["r", "loop"], ...(root.players.length > 1 ? [["tab", "player"]] : [])]
+            model: [["space", "keyPlay"], ["←→", "keySeek"], ["↑↓", "keyVol"], ["n p", "keyNext"], ["s", "keyShuffle"], ["r", "keyLoop"], ...(root.players.length > 1 ? [["tab", "keyPlayer"]] : [])]
 
             Row {
                 required property var modelData
 
                 spacing: 4
 
-                Brackets {
-                    text: modelData[0]
-                    font.pixelSize: Metrics.size(-2)
+                Rectangle {
+                    width: cap.implicitWidth + 8
+                    height: cap.implicitHeight + 2
+                    color: Colors.face
+
+                    Bevel {
+                        style: "raised"
+                    }
+
+                    Label {
+                        id: cap
+
+                        anchors.centerIn: parent
+                        text: modelData[0]
+                    }
                 }
 
                 Label {
-                    text: modelData[1]
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Strings.t(modelData[1])
                     color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
                 }
             }
         }

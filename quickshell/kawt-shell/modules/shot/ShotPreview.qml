@@ -6,12 +6,12 @@ import qs.config
 import qs.components
 import qs.services
 
-// ┌─screenshot─────────────[area]┐
-// │ ░░░░░░░░ the picture ░░░░░░░ │
-// │ [copy] [save] [open]     [x] │
-// └──────────────────────────────┘
+// ┌ ▣ Screenshot · area ──────── × ┐
+// │ ░░░░░░░░ the picture ░░░░░░░░░ │
+// │ [Copy] [Save] [Open] [Ask]     │
+// └────────────────────────────────┘
 // bottom-right corner of the focused screen, after a screenshot (Settings.screenshotAsk). The
-// shot is on the clipboard already. Click the picture: open it. Right click or [x]: thrown away.
+// shot is on the clipboard already. Click the picture: open it. Right click or ×: thrown away.
 // Left alone it goes by itself after Screenshot.timeout (not while the pointer is on it), and
 // then it's saved: a shot is never lost just because nobody answered (services/Screenshot.qml).
 PanelWindow {
@@ -22,8 +22,8 @@ PanelWindow {
     screen: forScreen
     visible: true // made only while a shot waits (Bar.qml)
     color: "transparent"
-    implicitWidth: Metrics.toastWidth + box.shadowRoom
-    implicitHeight: box.height + box.titleOverhang + box.shadowRoom
+    implicitWidth: Metrics.toastWidth + 5
+    implicitHeight: box.height + 5
 
     WlrLayershell.namespace: "kawt-shot"
     WlrLayershell.layer: WlrLayer.Overlay
@@ -53,16 +53,16 @@ PanelWindow {
         }
     }
 
-    TitledBox {
+    KWindow {
         id: box
 
-        y: titleOverhang
-        width: parent.width - shadowRoom
-        height: body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: "screenshot"
-        window: true
-        hint: ({ region: "area", window: "window", screen: "screen" })[Screenshot.mode] ?? ""
-        border.color: hover.hovered ? Colors.dim : Colors.border
+        width: parent.width - 5
+        height: chrome + body.implicitHeight
+        title: [Strings.t("shotTitle"), Strings.t(({ region: "shotArea", window: "shotWindow", screen: "shotScreen" })[Screenshot.mode] ?? "")].filter(s => s && s !== "").join(" · ")
+        icon: "picture"
+        pad: 8
+        focused: hover.hovered
+        onCloseClicked: Screenshot.dismiss()
 
         // a handler also sees the pointer over the buttons, unlike MouseArea.containsMouse
         HoverHandler {
@@ -78,78 +78,87 @@ PanelWindow {
         ColumnLayout {
             id: body
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding
-            anchors.topMargin: Metrics.padding + box.contentTop
+            width: parent.width
             spacing: Metrics.spacing
 
-            Image {
-                id: pic
-
+            // the picture, sunk
+            Rectangle {
                 Layout.fillWidth: true
                 // as tall as the picture's shape asks, but a tall one doesn't fill the screen
-                Layout.preferredHeight: Math.min(200, Math.round(width * implicitHeight / Math.max(1, implicitWidth)))
-                source: Screenshot.shot ? "file://" + Screenshot.shot : ""
-                // decoded small (twice the box, still sharp on hidpi): a 4K shot isn't kept whole in memory
-                sourceSize.width: Metrics.toastWidth * 2
-                fillMode: Image.PreserveAspectFit
-                asynchronous: true
-                cache: false
+                Layout.preferredHeight: Math.min(200, Math.round((width - 6) * pic.implicitHeight / Math.max(1, pic.implicitWidth))) + 6
+                color: Colors.well
 
-                MouseArea {
+                Bevel {
+                    style: "sunk"
+                }
+
+                Image {
+                    id: pic
+
                     anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Screenshot.open()
+                    anchors.margins: 3
+                    source: Screenshot.shot ? "file://" + Screenshot.shot : ""
+                    // decoded small (twice the box, still sharp on hidpi): a 4K shot isn't kept whole in memory
+                    sourceSize.width: Metrics.toastWidth * 2
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    cache: false
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Screenshot.open()
+                    }
                 }
             }
 
-            // [copy] [save] [open] [edit] [text] [ask] [x]: edit and text only with satty / tesseract
+            // Copy Save Open Edit Text Ask: edit and text only with satty / tesseract
             Flow {
                 Layout.fillWidth: true
-                spacing: Metrics.spacing
+                spacing: 4
 
-                BracketButton {
-                    label: Screenshot.copied ? "copied" : "copy"
-                    textColor: Screenshot.copied ? Colors.accent : Colors.fg
+                PushButton {
+                    small: true
+                    text: Screenshot.copied ? Strings.t("copiedWord") : Strings.t("copyWord")
+                    active: Screenshot.copied
                     onClicked: Screenshot.copy()
                 }
 
-                BracketButton {
-                    label: "save"
+                PushButton {
+                    small: true
+                    isDefault: true
+                    text: Strings.t("shotSave")
                     onClicked: Screenshot.save()
                 }
 
-                BracketButton {
-                    label: "open"
+                PushButton {
+                    small: true
+                    text: Strings.t("shotOpen")
                     onClicked: Screenshot.open()
                 }
 
                 // arrows, boxes, text, blur: saved into this shot, then copy / save as usual
-                BracketButton {
+                PushButton {
                     visible: Screenshot.editor !== ""
-                    label: Screenshot.editing ? "editing..." : "edit"
+                    small: true
+                    text: Screenshot.editing ? Strings.t("shotEditing") : Strings.t("shotEdit")
+                    enabled: !Screenshot.editing
                     onClicked: Screenshot.edit()
                 }
 
                 // the text in the picture, onto the clipboard
-                BracketButton {
+                PushButton {
                     visible: Screenshot.ocrLangs !== ""
-                    label: "text"
+                    small: true
+                    text: Strings.t("shotText")
                     onClicked: Screenshot.readText()
                 }
 
-                // into the ai panel, to ask about it (a model that sees: ai -> cfg -> pictures)
-                BracketButton {
-                    label: "ask"
+                // into the ai panel, to ask about it (a model that sees: ai -> settings -> pictures)
+                PushButton {
+                    small: true
+                    text: Strings.t("shotAskAi")
                     onClicked: Ai.askAbout(Screenshot.shot)
-                }
-
-                BracketButton {
-                    label: "x"
-                    textColor: Colors.dim
-                    onClicked: Screenshot.dismiss()
                 }
             }
 
@@ -158,8 +167,7 @@ PanelWindow {
                 visible: text !== ""
                 elide: Text.ElideRight
                 text: Screenshot.textStatus
-                color: Screenshot.textStatus.startsWith("text copied") ? Colors.accent : Colors.dim
-                font.pixelSize: Metrics.size(-2)
+                color: Screenshot.textOk ? Colors.accent : Colors.dim
             }
         }
     }
