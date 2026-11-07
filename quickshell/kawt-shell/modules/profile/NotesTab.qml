@@ -95,68 +95,22 @@ RowLayout {
         spacing: 0
 
         Label {
-            text: "folders"
+            text: Strings.t("folders")
             color: Colors.dim
-            font.pixelSize: Metrics.size(-2)
         }
 
-        Repeater {
-            model: [...Notes.folders, "all"]
-
-            Item {
-                id: nfRow
-
-                required property string modelData
-                readonly property bool current: profile.notesFolder === modelData
-                readonly property bool removable: modelData !== "notes" && modelData !== "all"
-
-                Layout.fillWidth: true
-                implicitHeight: nfLabel.implicitHeight + 4
-
-                Rectangle {
-                    anchors.fill: parent
-                    visible: nfRow.current || nfArea.containsMouse
-                    color: Colors.hoverFill
-                }
-
-                Label {
-                    id: nfLabel
-
-                    anchors.left: parent.left
-                    anchors.right: nfCount.left
-                    anchors.leftMargin: 2
-                    anchors.verticalCenter: parent.verticalCenter
-                    elide: Text.ElideRight
-                    text: (nfRow.current ? "> " : "  ") + nfRow.modelData
-                    color: nfRow.current ? Colors.accent : Colors.fg
-                }
-
-                Label {
-                    id: nfCount
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: 4
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: nfArea.containsMouse && nfRow.removable ? "x" : String(Notes.count(nfRow.modelData) || "")
-                    color: text === "x" ? Colors.warn : Colors.dim
-                }
-
-                MouseArea {
-                    id: nfArea
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => {
-                        if (nfRow.removable && mouse.x > width - 20) {
-                            if (profile.notesFolder === nfRow.modelData)
-                                profile.notesFolder = "notes";
-                            Notes.removeFolder(nfRow.modelData);
-                        } else {
-                            profile.notesFolder = nfRow.modelData;
-                        }
-                    }
-                }
+        FolderList {
+            Layout.topMargin: 4
+            folders: [...Notes.folders, "all"]
+            current: profile.notesFolder
+            countOf: f => Notes.count(f)
+            removable: f => f !== "notes" && f !== "all"
+            nameOf: f => f === "all" ? Strings.t("allFolders") : f === "notes" ? Strings.t("tab_notes").toLowerCase() : f
+            onPicked: f => profile.notesFolder = f
+            onRemoved: f => {
+                if (profile.notesFolder === f)
+                    profile.notesFolder = "notes";
+                Notes.removeFolder(f);
             }
         }
 
@@ -164,7 +118,7 @@ RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: Metrics.spacing
             prompt: "+"
-            placeholder: "folder"
+            placeholder: Strings.t("folderWord")
             onAccepted: t => {
                 const name = Notes.addFolder(t);
                 if (name)
@@ -195,17 +149,18 @@ RowLayout {
 
                 Layout.fillWidth: true
                 prompt: "/"
-                placeholder: "search"
+                placeholder: Strings.t("searchWord")
             }
 
-            BracketButton {
-                label: "+ new"
-                textColor: Colors.accent
+            PushButton {
+                minWidth: 0
+                text: Strings.t("newNote")
                 onClicked: notesTab.openNote(Notes.create(profile.notesFolder))
             }
 
-            BracketButton {
-                label: "from clipboard"
+            PushButton {
+                minWidth: 0
+                text: Strings.t("fromClipboard")
                 onClicked: paste.running = true
             }
         }
@@ -213,99 +168,111 @@ RowLayout {
         Label {
             visible: notesTab.list.length === 0
             Layout.topMargin: Metrics.spacing
-            text: noteSearch.text ? "-- nothing found --" : "-- no notes here: [+ new] --"
+            text: noteSearch.text ? `— ${Strings.t("nothingFound")} —` : `— ${Strings.t("noNotes")} —`
             color: Colors.dim
         }
 
         // the list: title · date · x
-        Flickable {
-            id: notesFlick
-
+        Rectangle {
             Layout.fillWidth: true
             Layout.topMargin: Metrics.spacing
-            Layout.preferredHeight: Math.min(profile.wide ? 200 : 132, notesListCol.implicitHeight)
+            implicitHeight: notesFlick.height + 6
             visible: notesTab.list.length > 0
-            clip: true
-            contentHeight: notesListCol.implicitHeight
-            boundsBehavior: Flickable.StopAtBounds
+            color: Colors.well
 
-            Column {
-                id: notesListCol
+            Bevel {
+                style: "sunk"
+            }
 
-                width: notesFlick.width
+            Flickable {
+                id: notesFlick
 
-                Repeater {
-                    model: ScriptModel {
-                        values: notesTab.list
-                    }
+                x: 3
+                y: 3
+                width: parent.width - 6
+                height: Math.min(profile.wide ? 200 : 132, notesListCol.implicitHeight)
+                clip: true
+                contentHeight: notesListCol.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
 
-                    Item {
-                        id: noteRow
+                Column {
+                    id: notesListCol
 
-                        required property var modelData
-                        readonly property bool current: profile.noteOpen === modelData.id
+                    width: notesFlick.width
 
-                        width: notesListCol.width
-                        implicitHeight: noteTitle.implicitHeight + 6
-
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: noteRow.current || noteArea.containsMouse
-                            color: Colors.hoverFill
+                    Repeater {
+                        model: ScriptModel {
+                            values: notesTab.list
                         }
 
-                        RowLayout {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.leftMargin: 2
-                            anchors.rightMargin: 4
-                            spacing: Metrics.spacing
+                        Item {
+                            id: noteRow
 
-                            Label {
-                                id: noteTitle
+                            required property var modelData
+                            readonly property bool current: profile.noteOpen === modelData.id
 
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                textFormat: Text.StyledText
-                                text: `<font color="${Colors.accent}">${noteRow.modelData.pinned ? "*" : noteRow.current ? ">" : "&nbsp;"}</font>&nbsp;` + Notes.title(noteRow.modelData).replace(/&/g, "&amp;").replace(/</g, "&lt;")
-                                color: noteRow.current ? Colors.accent : Colors.fg
+                            width: notesListCol.width
+                            implicitHeight: noteTitle.implicitHeight + 6
+
+                            Rectangle {
+                                anchors.fill: parent
+                                visible: noteRow.current || noteArea.containsMouse
+                                color: noteRow.current ? Colors.accent : Colors.hoverFill
                             }
 
-                            Label {
-                                visible: profile.notesFolder === "all"
-                                text: noteRow.modelData.folder
-                                color: Colors.dim
-                                font.pixelSize: Metrics.size(-2)
+                            RowLayout {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.leftMargin: 2
+                                anchors.rightMargin: 4
+                                spacing: Metrics.spacing
+
+                                Label {
+                                    id: noteTitle
+
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    textFormat: Text.StyledText
+                                    text: `<font color="${noteRow.current ? Colors.onAccent : Colors.accent}">${noteRow.modelData.pinned ? "*" : "&nbsp;"}</font>&nbsp;` + Notes.title(noteRow.modelData).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                                    color: noteRow.current ? Colors.onAccent : Colors.fg
+                                }
+
+                                Label {
+                                    visible: profile.notesFolder === "all"
+                                    text: noteRow.modelData.folder
+                                    color: Colors.dim
+                                    font.pixelSize: Metrics.size(-2)
+                                }
+
+                                Label {
+                                    text: Qt.formatDateTime(new Date(noteRow.modelData.updated), "dd.MM hh:mm")
+                                    color: noteRow.current ? Colors.onAccent : Colors.dim
+                                    font.pixelSize: Metrics.size(-2)
+                                }
+
+                                Label {
+                                    text: "×"
+                                    opacity: noteArea.containsMouse ? 1 : 0
+                                    color: noteRow.current ? Colors.onAccent : Colors.warn
+                                }
                             }
 
-                            Label {
-                                text: Qt.formatDateTime(new Date(noteRow.modelData.updated), "dd.MM hh:mm")
-                                color: Colors.dim
-                                font.pixelSize: Metrics.size(-2)
-                            }
+                            // click: open · the x on the right: delete
+                            MouseArea {
+                                id: noteArea
 
-                            Label {
-                                text: "x"
-                                opacity: noteArea.containsMouse ? 1 : 0
-                                color: Colors.warn
-                            }
-                        }
-
-                        // click: open · the x on the right: delete
-                        MouseArea {
-                            id: noteArea
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                if (mouse.x > width - 20) {
-                                    if (profile.noteOpen === noteRow.modelData.id)
-                                        notesTab.openNote(0);
-                                    Notes.remove(noteRow.modelData.id);
-                                } else {
-                                    notesTab.openNote(noteRow.modelData.id);
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: mouse => {
+                                    if (mouse.x > width - 20) {
+                                        if (profile.noteOpen === noteRow.modelData.id)
+                                            notesTab.openNote(0);
+                                        Notes.remove(noteRow.modelData.id);
+                                    } else {
+                                        notesTab.openNote(noteRow.modelData.id);
+                                    }
                                 }
                             }
                         }
@@ -363,12 +330,11 @@ RowLayout {
                             width: readCol.width
                             implicitHeight: modelData.trim() === "" ? Metrics.fontSize * 0.6 : Math.max(lineText.implicitHeight, boxMark.implicitHeight)
 
-                            Brackets {
+                            PixIcon {
                                 id: boxMark
 
                                 visible: line.box !== null
-                                text: line.box && line.box[1] !== " " ? "x" : " "
-                                look: line.box && line.box[1] !== " " ? "off" : ""
+                                name: line.box && line.box[1] !== " " ? "boxOn" : "boxOff"
                             }
 
                             Label {
@@ -456,15 +422,17 @@ RowLayout {
             visible: profile.noteOpen !== 0
             spacing: Metrics.spacing
 
-            BracketButton {
-                label: notesTab.note?.pinned ? "unpin" : "pin"
+            PushButton {
+                minWidth: 0
+                text: notesTab.note?.pinned ? Strings.t("unpinNote") : Strings.t("pinNote")
                 active: !!notesTab.note?.pinned
                 onClicked: Notes.togglePin(profile.noteOpen)
             }
 
             // its title becomes a task, the rest of it the task's note
-            BracketButton {
-                label: "make a task"
+            PushButton {
+                minWidth: 0
+                text: Strings.t("makeTask")
                 onClicked: {
                     Notes.flush();
                     const body = Notes.bodyOf(profile.noteOpen);
@@ -483,22 +451,20 @@ RowLayout {
             Repeater {
                 model: Notes.folders
 
-                BracketButton {
+                PushButton {
                     required property string modelData
                     readonly property var note: Notes.notes.find(n => n.id === profile.noteOpen)
 
-                    label: modelData
-                    bordered: false
+                    minWidth: 0
+                    text: modelData
                     active: note?.folder === modelData
-                    textColor: note?.folder === modelData ? Colors.accent : Colors.dim
                     onClicked: Notes.update(profile.noteOpen, { folder: modelData })
                 }
             }
 
-            BracketButton {
-                label: "delete"
-                textColor: Colors.warn
-                bordered: false
+            PushButton {
+                minWidth: 0
+                text: Strings.t("deleteWord")
                 onClicked: {
                     const id = profile.noteOpen;
                     notesTab.openNote(0);
@@ -516,7 +482,7 @@ RowLayout {
 
         Label {
             Layout.alignment: Qt.AlignRight
-            text: `-- ${Notes.count("all")} notes · ~/.local/state/kawt/notes.json --`
+            text: `${Strings.count(Notes.count("all"), "note")} · ~/.local/state/kawt/notes.json`
             color: Colors.dim
             font.pixelSize: Metrics.size(-3)
         }

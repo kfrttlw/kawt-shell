@@ -33,7 +33,6 @@ ColumnLayout {
     property int current: 0
     readonly property var picked: rows[Math.min(current, rows.length - 1)] ?? null
     readonly property int rowHeight: Metrics.fontSize + 9
-    readonly property var locale: Qt.locale(Strings.ru ? "ru_RU" : "en_US")
 
     spacing: Metrics.spacing
     focus: true
@@ -299,72 +298,8 @@ ColumnLayout {
     }
 
     // ---- the week's focus: a column a day, a block a round
-    RowLayout {
+    WeekBars {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        spacing: 8
-
-        Label {
-            Layout.alignment: Qt.AlignBottom
-            Layout.rightMargin: 8
-            text: Strings.t("weekWord")
-            color: Colors.dim
-        }
-
-        Repeater {
-            model: Focus.week
-
-            ColumnLayout {
-                id: day
-
-                required property var modelData
-                readonly property int most: Math.max(Focus.goal, modelData.rounds, 1)
-
-                spacing: 2
-
-                Rectangle {
-                    Layout.alignment: Qt.AlignHCenter
-                    implicitWidth: 14
-                    implicitHeight: 36
-                    color: Colors.well
-
-                    Bevel {
-                        style: "sunk"
-                    }
-
-                    Repeater {
-                        model: Math.min(day.modelData.rounds, day.most)
-
-                        Rectangle {
-                            required property int index
-                            readonly property real step: (36 - 6) / day.most
-
-                            x: 3
-                            y: Math.round(36 - 3 - (index + 1) * step) + 1
-                            width: 8
-                            height: Math.max(1, Math.round(step) - 1)
-                            color: day.modelData.isToday ? Colors.accent : Colors.dim
-                        }
-                    }
-                }
-
-                Label {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: tab.locale.toString(day.modelData.date, "ddd").toLowerCase()
-                    color: day.modelData.isToday ? Colors.accent : Colors.dim
-                }
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-
-        Label {
-            Layout.alignment: Qt.AlignBottom
-            visible: Todo.streak > 0
-            text: Strings.t("streakIs").arg(Strings.count(Todo.streak, "day"))
-            color: Colors.dim
-        }
     }
 }
