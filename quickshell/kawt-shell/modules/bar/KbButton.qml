@@ -1,11 +1,13 @@
+import QtQuick
+import qs.config
 import qs.components
 import qs.services
-import qs.config
 
-// [us] / [ru] — click or scroll to switch
-BracketButton {
-    visible: Settings.barShows("kb") && (Keyboard.code !== "")
-    label: Keyboard.code
+// RU / EN, only with more than one layout: a click or the wheel switches
+BarIcon {
+    visible: Settings.barShows("kb") && Keyboard.code !== "" && Keyboard.count > 1
+    text: Keyboard.code.toUpperCase()
+    tip: `${Keyboard.name} · ${Strings.t("layout")}`
     onClicked: Keyboard.next()
     onScrolled: steps => steps > 0 ? Keyboard.prev() : Keyboard.next()
 }

@@ -7,22 +7,17 @@ import qs.components
 // [bt off] · [bt on] · [bt airpods 80%] (one connected) · [bt 2] (several)
 // [bt --]: the machine has bluetooth, but the bluetooth service (bluez) isn't running;
 // the panel says how to start it
-BracketButton {
+BarIcon {
     id: root
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var connected: Bluetooth.devices.values.filter(d => d.connected)
     property bool hardware: false
 
-    visible: Settings.barShows("bt") && (adapter !== null || hardware)
-    tag: "bt"
-    label: adapter === null ? "--"
-        : !adapter.enabled ? "off"
-        : connected.length === 0 ? "on"
-        : connected.length > 1 ? String(connected.length)
-        : (connected[0].name.length > 12 ? connected[0].name.slice(0, 11) + "~" : connected[0].name).toLowerCase()
-            + (connected[0].batteryAvailable ? ` ${Math.round(connected[0].battery * 100)}%` : "")
-    textColor: adapter?.enabled ? (connected.length > 0 ? Colors.accent : Colors.fg) : Colors.dim
+    visible: Settings.barShows("bt") && adapter !== null && connected.length > 0
+    // only with a device connected: the bluetooth panel is in the start menu's system otherwise
+    icon: "bt"
+    tip: connected.length === 0 ? Strings.t("bluetooth") : `${Strings.t("bluetooth")}: ${connected.map(d => d.name + (d.batteryAvailable ? ` ${Math.round(d.battery * 100)}%` : "")).join(", ")}`
 
     // is there a bluetooth chip at all? (then the button stays, even with the service off)
     Process {

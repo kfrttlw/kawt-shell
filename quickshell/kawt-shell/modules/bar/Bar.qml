@@ -85,33 +85,20 @@ Variants {
         anchors.left: true
         anchors.right: true
 
-        // one strip across the screen in the theme's bar color (its background, unless the theme
-        // gives the bar one of its own), a line along its inner edge (the buttons on it have no
-        // frames of their own: their brackets say what's pressable).
-        // Raised frames: the strip stands out like an old taskbar, the buttons' face color unless
-        // the theme gives the bar its own, a light line on top, a dark one below
+        // one strip across the screen, raised like an old taskbar: the buttons' face (unless the
+        // theme gives the bar its own color), a light line on top, a dark one below
         Rectangle {
             anchors.fill: parent
             visible: !root.tucked
-            color: Colors.bevel && !Colors.palette.bar ? Colors.face : Colors.bar
+            color: Colors.palette.bar ?? Colors.face
 
             Rectangle {
-                visible: !Colors.bevel
-                width: parent.width
-                height: Metrics.borderWidth
-                y: Metrics.barBottom ? 0 : parent.height - height
-                color: Colors.border
-            }
-
-            Rectangle {
-                visible: Colors.bevel
                 width: parent.width
                 height: 1
                 color: Colors.hi
             }
 
             Rectangle {
-                visible: Colors.bevel
                 y: parent.height - 2
                 width: parent.width
                 height: 1
@@ -119,7 +106,6 @@ Variants {
             }
 
             Rectangle {
-                visible: Colors.bevel
                 y: parent.height - 1
                 width: parent.width
                 height: 1
@@ -127,286 +113,185 @@ Variants {
             }
         }
 
-        // raised frames: the bar is a taskbar. kawt's start button on the left, the windows of
-        // this workspace after it, the workspaces as squares, then everything else sunk in one
-        // well with the clock at the end, as old systems had their tray
-        Item {
-            id: trayWell
-
-            visible: Colors.bevel && !root.tucked
-            x: netRow.x - Metrics.spacing
-            width: (clock.visible ? clock.x + clock.width : rightRow.x + rightRow.width) + Metrics.spacing - x
-            height: Metrics.barHeight - Metrics.spacing + 2
-            anchors.verticalCenter: parent.verticalCenter
-
-            Bevel {
-                style: "inset"
-            }
-        }
-
-        // left: profile, pinned apps, workspaces (raised frames: the start button first, the
-        // workspaces by the tray)
-        RowLayout {
+        // left: the start button (programs, Today, the settings, shutting down), the pinned apps.
+        // Every part can be switched off in the settings: Settings.barShows(name)
+        Row {
             id: leftRow
 
-            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
             opacity: root.tucked ? 0 : 1
             anchors.left: parent.left
-            anchors.leftMargin: Metrics.padding
+            anchors.leftMargin: 2
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Metrics.spacing
+            spacing: 4
 
-            // the start menu: the launcher with its sections (modules/launcher)
             StartButton {
                 id: start
-                visible: Colors.bevel
+
+                height: Metrics.barHeight - 6
                 active: Panels.isOpen("menu", root.modelData)
                 onClicked: Panels.toggle("menu", root.modelData)
             }
 
-            // [●] the lit dot on the lid: you, your settings (raised frames: in the start menu,
-            // its profile and settings)
-            BracketButton {
-                id: profile
-                visible: !Colors.bevel && Settings.barShows("profile")
-                label: "●"
-                ink: Colors.accent
-                active: Panels.isOpen("profile", root.modelData)
-                onClicked: Panels.toggle("profile", root.modelData)
-            }
-
-            // [$] the pinned apps (raised frames: first in the start menu's apps)
-            BracketButton {
-                id: dock
-                visible: !Colors.bevel && Settings.barShows("dock")
-                label: "$"
-                active: Panels.isOpen("dock", root.modelData)
-                onClicked: Panels.toggle("dock", root.modelData)
-            }
-
-            Workspaces {
-                visible: !Colors.bevel && Settings.barShows("workspaces")
-                screen: root.modelData
-            }
-
-            // [tile] / [float]: this desk's windows (raised frames: by the workspaces)
-            DeskButton {
-                visible: !Colors.bevel && wanted
-                screen: root.modelData
+            // a narrow screen gives up the pinned apps first
+            QuickLaunch {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: Settings.barShows("quick") && Apps.pinned.length > 0 && root.width >= 1200
             }
         }
 
-        // raised frames: the windows of this workspace, up to the workspaces
+        // the windows of this desk: only the room between the start button and the desks, so
+        // they never run over the tray (Tasks.qml steps down when they're many)
         Tasks {
-            visible: Colors.bevel
             opacity: root.tucked ? 0 : 1
             screen: root.modelData
             anchors.left: leftRow.right
-            anchors.leftMargin: Metrics.spacing
-            anchors.right: deskMode.visible ? deskMode.left : deskSquares.visible ? deskSquares.left : trayWell.left
-            anchors.rightMargin: Metrics.sectionGap
-            anchors.verticalCenter: parent.verticalCenter
-        }
-
-        DeskButton {
-            id: deskMode
-            visible: Colors.bevel && wanted
-            opacity: root.tucked ? 0 : 1
-            screen: root.modelData
+            anchors.leftMargin: 6
             anchors.right: deskSquares.visible ? deskSquares.left : trayWell.left
-            anchors.rightMargin: Metrics.spacing
+            anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
         }
 
         Workspaces {
             id: deskSquares
-            visible: Colors.bevel && Settings.barShows("workspaces")
+
+            visible: Settings.barShows("workspaces")
             opacity: root.tucked ? 0 : 1
             screen: root.modelData
             anchors.right: trayWell.left
-            anchors.rightMargin: Metrics.spacing
+            anchors.rightMargin: 4
             anchors.verticalCenter: parent.verticalCenter
         }
 
-        // the window you're in, dim: something to read, not to press (on the screen with the
-        // focus; "desktop" when its workspace is empty). It gets what's left up to the network
-        // (a long title ran over the wifi), a fifth of the bar at most, and goes when that's
-        // under a few letters
-        RowLayout {
-            id: titleRow
+        // the tray, sunk in one well as old systems had it: the apps' icons behind a ‹, what
+        // shows by itself while it's on (recording, the mic, a screen share, caffeine, vpn,
+        // music, headphones), then network, sound, battery, messages, the layout, the clock.
+        // Each says what it is under the pointer; a click opens its panel, pressed in while open
+        Item {
+            id: trayWell
 
-            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
-            readonly property real room: netRow.x - Metrics.sectionGap - x - titleSep.implicitWidth - spacing
-
-            visible: !Colors.bevel
-            opacity: root.tucked ? 0 : 1
-            anchors.left: leftRow.right
-            anchors.leftMargin: Metrics.spacing
+            visible: !root.tucked
+            anchors.right: parent.right
+            anchors.rightMargin: 2
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Metrics.spacing
+            width: trayRow.implicitWidth + 6
+            height: Metrics.barHeight - 6
 
-            BarSep {
-                id: titleSep
-                visible: title.visible
+            Bevel {
+                style: "well"
             }
 
-            Label {
-                id: title
+            Row {
+                id: trayRow
 
-                readonly property string shownTitle: root.emptyDesk ? "desktop" : (Hyprland.activeToplevel?.title ?? "")
+                anchors.centerIn: parent
+                spacing: 1
 
-                visible: Settings.barShows("title") && root.focusedHere && shownTitle !== "" && titleRow.room >= Metrics.fontSize * 3
-                Layout.maximumWidth: Math.floor(Math.min(root.width * 0.22, titleRow.room))
-                text: shownTitle
-                color: Colors.dim
-                elide: Text.ElideRight
-            }
-        }
+                Tray {
+                    id: tray
 
-        // stripes, then the network, up to the clock (raised frames: the start of
-        // the tray, before the player)
-        RowLayout {
-            id: netRow
+                    active: Panels.isOpen("tray", root.modelData)
+                    onClicked: Panels.toggle("tray", root.modelData)
+                }
 
-            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
-            opacity: root.tucked ? 0 : 1
-            anchors.right: Colors.bevel ? (player.visible ? player.left : rightRow.left) : clock.left
-            anchors.rightMargin: Colors.bevel ? Metrics.spacing : Metrics.sectionGap
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Metrics.spacing
+                // a groove after the apps' icons
+                Rectangle {
+                    visible: tray.visible
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 2
+                    height: parent.height - 4
+                    color: Colors.hi
 
-            // stripes (modules/companion)
-            HerButton {
-                id: home
-                active: Panels.isOpen("home", root.modelData)
-                onClicked: Panels.toggle("home", root.modelData)
-            }
+                    Rectangle {
+                        width: 1
+                        height: parent.height
+                        color: Colors.lo
+                    }
+                }
 
-            // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the wifi panel
-            BracketButton {
-                visible: NetLinks.vpn !== "" && Settings.barShows("vpn")
-                label: "vpn"
-                textColor: Colors.accent
-                active: Panels.isOpen("wifi", root.modelData)
-                onClicked: Panels.toggle("wifi", root.modelData)
-            }
+                RecButton {}
 
-            WifiButton {
-                id: wifi
-                active: Panels.isOpen("wifi", root.modelData)
-                onClicked: Panels.toggle("wifi", root.modelData)
-            }
+                VoiceButton {}
 
-            NetGraph {
-                id: netGraph
-                visible: Settings.barShows("net")
-                active: Panels.isOpen("wifi", root.modelData)
-                onClicked: Panels.toggle("wifi", root.modelData)
-            }
-        }
+                CastButton {}
 
-        // in the middle; with raised frames at the right end, in the tray
-        ClockButton {
-            id: clock
-            plain: true
-            visible: Settings.barShows("clock")
-            opacity: root.tucked ? 0 : 1
-            anchors.horizontalCenter: Colors.bevel ? undefined : parent.horizontalCenter
-            anchors.right: Colors.bevel ? parent.right : undefined
-            anchors.rightMargin: Metrics.padding
-            anchors.verticalCenter: parent.verticalCenter
-            active: Panels.isOpen("calendar", root.modelData)
-            onClicked: Panels.toggle("calendar", root.modelData)
-        }
+                CafButton {}
 
-        // media follows the clock (raised frames: in the tray, after the network)
-        PlayerButton {
-            id: player
-            plain: true
-            opacity: root.tucked ? 0 : 1
-            anchors.left: Colors.bevel ? undefined : clock.right
-            anchors.leftMargin: Metrics.sectionGap
-            anchors.right: Colors.bevel ? rightRow.left : undefined
-            anchors.rightMargin: Metrics.spacing
-            anchors.verticalCenter: parent.verticalCenter
-            active: Panels.isOpen("player", root.modelData)
-            onClicked: Panels.toggle("player", root.modelData)
-        }
+                // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the network panel
+                BarIcon {
+                    visible: NetLinks.vpn !== "" && Settings.barShows("vpn")
+                    icon: "shield"
+                    tip: `${Strings.t("vpn")}: ${NetLinks.vpn}`
+                    active: Panels.isOpen("wifi", root.modelData)
+                    onClicked: Panels.toggle("wifi", root.modelData)
+                }
 
-        // right: tray, input/output, power, messages, ai (raised frames: before the clock)
-        RowLayout {
-            id: rightRow
+                PlayerButton {
+                    id: player
 
-            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
-            opacity: root.tucked ? 0 : 1
-            anchors.right: Colors.bevel && clock.visible ? clock.left : parent.right
-            anchors.rightMargin: Colors.bevel && clock.visible ? Metrics.spacing : Metrics.padding
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Metrics.spacing
+                    active: Panels.isOpen("player", root.modelData)
+                    onClicked: Panels.toggle("player", root.modelData)
+                }
 
-            RecButton {}
+                BtButton {
+                    id: bluetooth
 
-            VoiceButton {}
+                    active: Panels.isOpen("bluetooth", root.modelData)
+                    onClicked: Panels.toggle("bluetooth", root.modelData)
+                }
 
-            CastButton {}
+                MicButton {
+                    id: mic
 
-            CafButton {}
+                    active: Panels.isOpen("mic", root.modelData)
+                    onClicked: Panels.toggle("mic", root.modelData)
+                }
 
-            Tray {
-                id: tray
-                active: Panels.isOpen("tray", root.modelData)
-                onClicked: Panels.toggle("tray", root.modelData)
-            }
+                WifiButton {
+                    id: wifi
 
-            KbButton {}
+                    active: Panels.isOpen("wifi", root.modelData)
+                    onClicked: Panels.toggle("wifi", root.modelData)
+                }
 
-            BarSep {}
+                VolumeButton {
+                    id: volume
 
-            BtButton {
-                id: bluetooth
-                active: Panels.isOpen("bluetooth", root.modelData)
-                onClicked: Panels.toggle("bluetooth", root.modelData)
-            }
+                    visible: Settings.barShows("vol")
+                    active: Panels.isOpen("volume", root.modelData)
+                    onClicked: Panels.toggle("volume", root.modelData)
+                }
 
-            MicButton {
-                id: mic
-                active: Panels.isOpen("mic", root.modelData)
-                onClicked: Panels.toggle("mic", root.modelData)
-            }
+                BrightnessButton {
+                    id: brightness
 
-            VolumeButton {
-                id: volume
-                visible: Settings.barShows("vol")
-                active: Panels.isOpen("volume", root.modelData)
-                onClicked: Panels.toggle("volume", root.modelData)
-            }
+                    active: Panels.isOpen("brightness", root.modelData)
+                    onClicked: Panels.toggle("brightness", root.modelData)
+                }
 
-            BrightnessButton {
-                id: brightness
-                active: Panels.isOpen("brightness", root.modelData)
-                onClicked: Panels.toggle("brightness", root.modelData)
-            }
+                BatteryButton {
+                    id: battery
 
-            BatteryButton {
-                id: battery
-                active: Panels.isOpen("battery", root.modelData)
-                onClicked: Panels.toggle("battery", root.modelData)
-            }
+                    active: Panels.isOpen("battery", root.modelData)
+                    onClicked: Panels.toggle("battery", root.modelData)
+                }
 
-            BarSep {}
+                NotifButton {
+                    id: notifs
 
-            NotifButton {
-                id: notifs
-                visible: Settings.barShows("log")
-                active: Panels.isOpen("notifs", root.modelData)
-                onClicked: Panels.toggle("notifs", root.modelData)
-            }
+                    visible: Settings.barShows("log")
+                    active: Panels.isOpen("notifs", root.modelData)
+                    onClicked: Panels.toggle("notifs", root.modelData)
+                }
 
-            BracketButton {
-                visible: Settings.barShows("ai")
-                label: ">_"
-                active: Panels.isSidebarOpen(root.modelData)
-                onClicked: Panels.toggleSidebar(root.modelData)
+                KbButton {}
+
+                ClockButton {
+                    id: clock
+
+                    visible: Settings.barShows("clock")
+                    active: Panels.isOpen("calendar", root.modelData)
+                    onClicked: Panels.toggle("calendar", root.modelData)
+                }
             }
         }
 
@@ -436,7 +321,7 @@ Variants {
 
             ProfilePopover {
                 forScreen: root.modelData
-                anchorItem: profile
+                anchorItem: start
                 barWindow: root
             }
         }
@@ -446,7 +331,7 @@ Variants {
 
             DockPopover {
                 forScreen: root.modelData
-                anchorItem: dock
+                anchorItem: start
                 barWindow: root
             }
         }
@@ -476,8 +361,8 @@ Variants {
 
             WifiPopover {
                 forScreen: root.modelData
-                // with the wifi button hidden, the panel opens under the net graph
-                anchorItem: wifi.visible ? wifi : netGraph
+                // with the network icon hidden, the panel opens under the clock
+                anchorItem: wifi.visible ? wifi : clock
                 barWindow: root
             }
         }
@@ -557,7 +442,7 @@ Variants {
 
             HerPopover {
                 forScreen: root.modelData
-                anchorItem: home
+                anchorItem: start
                 barWindow: root
             }
         }

@@ -1,13 +1,12 @@
+import QtQuick
 import qs.config
 import qs.components
 import qs.services
 
-// [caf on] while caffeine keeps the screen on (no idle lock, services/Idle.qml). Click: off.
-// Switched on from the profile ([caf]) or `qs -c kawt-shell ipc call kawt caffeine`
-BracketButton {
+// while caffeine keeps the screen on (no idle lock, services/Idle.qml). A click: off
+BarIcon {
     visible: Idle.caffeine
-    tag: "caf"
-    label: "on"
-    textColor: Colors.accent
+    icon: "coffee"
+    tip: Strings.t("caffeine")
     onClicked: Idle.caffeine = false
 }

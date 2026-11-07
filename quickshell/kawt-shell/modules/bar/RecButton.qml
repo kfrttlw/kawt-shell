@@ -4,16 +4,17 @@ import qs.components
 import qs.services
 import qs.utils
 
-// [● rec 0:42] while recording; the dot blinks. click: stop
-BracketButton {
+// ● 0:42 while recording, the dot blinks. A click: stop
+BarIcon {
     id: root
 
     property bool blink: true
 
     visible: Recorder.recording
-    tag: blink ? "●" : " "
-    label: `rec ${Fmt.mmss(Recorder.elapsed)}`
+    icon: blink ? "rec" : ""
+    text: Fmt.mmss(Recorder.elapsed)
     textColor: Colors.accent
+    tip: Strings.t("recording")
     onClicked: Recorder.stop()
 
     Timer {

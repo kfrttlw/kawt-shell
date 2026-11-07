@@ -10,16 +10,17 @@ import qs.config
 //
 //   raised   hi  hi2 | lo  deep        sunk     lo  deep | hi2 hi
 //   pressed  deep lo | hi2 hi          etched   lo  hi (each side: a dark line, a light one in it)
+//   well     lo | hi (1 px: the tray)  bump     hi | lo (1 px: a tray icon under the pointer)
 Item {
     id: root
 
-    property string style: "raised" // "raised" | "sunk" | "pressed" | "etched" | "inset"
+    property string style: "raised" // "raised" | "sunk" | "pressed" | "etched" | "inset" (= "well") | "bump"
     property bool flatLine: true
 
     anchors.fill: parent
 
     // [outer top-left, outer bottom-right, inner top-left, inner bottom-right]
-    readonly property var edges: style === "sunk" ? [Colors.lo, Colors.hi, Colors.deep, Colors.hi2] : style === "pressed" ? [Colors.deep, Colors.hi, Colors.lo, Colors.hi2] : style === "inset" ? [Colors.lo, Colors.hi, "transparent", "transparent"] : [Colors.hi, Colors.deep, Colors.hi2, Colors.lo]
+    readonly property var edges: style === "sunk" ? [Colors.lo, Colors.hi, Colors.deep, Colors.hi2] : style === "pressed" ? [Colors.deep, Colors.hi, Colors.lo, Colors.hi2] : style === "inset" || style === "well" ? [Colors.lo, Colors.hi, "transparent", "transparent"] : style === "bump" ? [Colors.hi, Colors.lo, "transparent", "transparent"] : [Colors.hi, Colors.deep, Colors.hi2, Colors.lo]
 
     // flat: the one line
     Rectangle {
