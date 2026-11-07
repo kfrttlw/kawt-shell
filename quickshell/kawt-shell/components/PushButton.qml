@@ -1,7 +1,8 @@
 import QtQuick
 import qs.config
 
-// A plain raised button with words: "Close", "Own theme…" (the dots: it opens another window)
+// A plain raised button with words: "Close", "Own theme…" (the dots: it opens another window);
+// greyed out while it can't be pressed (enabled: false)
 BarBox {
     id: root
 
@@ -16,5 +17,6 @@ BarBox {
         id: words
 
         text: root.text
+        color: root.enabled ? Colors.fg : Colors.dim // greyed out when it can't be pressed
     }
 }

@@ -33,7 +33,9 @@ Popover {
     readonly property real shownPos: dragTo >= 0 ? dragTo : (player?.position ?? 0)
 
     name: "player"
-    title: root.player ? Media.name(root.player) : "player"
+    title: root.player ? Media.name(root.player) : Strings.t("playerTitle")
+    icon: "note"
+    settingsPage: "media"
     cardWidth: 440
 
     // MPRIS doesn't push position updates; poll while visible
@@ -209,11 +211,11 @@ Popover {
             }
 
             // spotify's covers are on its servers: fetched only once you say so (profile -> cfg)
-            BracketButton {
+            PushButton {
                 Layout.topMargin: 2
                 visible: root.artOnline && !Settings.playerNetCovers
-                tag: "cover"
-                label: "load from the net"
+                minWidth: 0
+                text: Strings.t("coverFromNet")
                 onClicked: Settings.playerNetCovers = true
             }
 
@@ -262,22 +264,25 @@ Popover {
         Layout.fillWidth: true
         spacing: Metrics.spacing
 
-        BracketButton {
-            label: "|<"
-            textColor: root.player?.canGoPrevious ? Colors.fg : Colors.dim
+        PushButton {
+            minWidth: 0
+            text: "|<"
+            enabled: root.player?.canGoPrevious === true
             onClicked: Media.command("prev")
         }
 
         // red while it plays
-        BracketButton {
-            label: root.player?.isPlaying ? "||" : ">"
-            textColor: root.player?.isPlaying ? Colors.accent : Colors.fg
+        PushButton {
+            minWidth: 0
+            text: root.player?.isPlaying ? "||" : ">"
+            active: root.player?.isPlaying === true
             onClicked: Media.command("toggle")
         }
 
-        BracketButton {
-            label: ">|"
-            textColor: root.player?.canGoNext ? Colors.fg : Colors.dim
+        PushButton {
+            minWidth: 0
+            text: ">|"
+            enabled: root.player?.canGoNext === true
             onClicked: Media.command("next")
         }
 
@@ -286,17 +291,19 @@ Popover {
             height: 1
         }
 
-        BracketButton {
+        PushButton {
             visible: root.player?.shuffleSupported ?? false
-            label: "shuffle"
-            textColor: root.player?.shuffle ? Colors.accent : Colors.dim
+            minWidth: 0
+            text: Strings.t("shuffle")
+            active: root.player?.shuffle === true
             onClicked: root.toggleShuffle()
         }
 
-        BracketButton {
+        PushButton {
             visible: root.player?.loopSupported ?? false
-            label: "loop: " + (root.player?.loopState === MprisLoopState.Track ? "one" : root.player?.loopState === MprisLoopState.Playlist ? "all" : "off")
-            textColor: root.player?.loopState !== MprisLoopState.None ? Colors.accent : Colors.dim
+            minWidth: 0
+            text: Strings.t("loopIs").arg(root.player?.loopState === MprisLoopState.Track ? Strings.t("loopOne") : root.player?.loopState === MprisLoopState.Playlist ? Strings.t("loopAll") : Strings.t("loopOff"))
+            active: !!root.player && root.player.loopState !== MprisLoopState.None
             onClicked: root.cycleLoop()
         }
     }

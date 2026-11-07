@@ -5,15 +5,16 @@ import Quickshell.Services.Pipewire
 import qs.config
 import qs.components
 
-// ┌─microphone─────────────────────┐
-// │ [on] off              67%      │
-// │ [######################-------]│
-// │ -- listening now --            │
-// │ > discord              [on]    │  per-app: cut one app off, keep the others
-// │   firefox              [off]   │
-// │ -- input --                    │
-// │ > built-in mic                 │  (only if there is more than one)
-// └────────────────────────────────┘
+// The microphone, the old way: on / off switched on the right of the head; the input (when
+// there's a choice), how loud it takes you; who listens now, a box each: unticked, that app
+// hears silence and the others still hear you.
+//
+//   🎤 Microphone                          [x] On
+//   ( ) built-in   (•) headset
+//   ──────■──────── 67%
+//   listening now
+//   [x] discord
+//   [ ] firefox
 Popover {
     id: root
 
@@ -22,127 +23,89 @@ Popover {
     readonly property list<PwNode> apps: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio")
 
     name: "mic"
-    title: "microphone"
-    cardWidth: 300
+    title: Strings.t("micTitle")
+    icon: "mic"
+    cardWidth: 320
+    settingsPage: "media"
+    switchText: root.source?.audio ? Strings.t("micOn") : ""
+    switchOn: !(root.source?.audio?.muted ?? true)
+    onSwitchToggled: if (root.source?.audio)
+        root.source.audio.muted = !root.source.audio.muted
 
     PwObjectTracker {
         objects: [root.source, ...root.apps].filter(n => n)
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Metrics.spacing
+    Label {
+        visible: !root.source
+        text: Strings.t("noMic")
+        color: Colors.dim
+    }
 
-        BracketButton {
-            label: "on"
-            active: !(root.source?.audio?.muted ?? true)
-            textColor: !(root.source?.audio?.muted ?? true) ? Colors.accent : Colors.dim
-            onClicked: if (root.source?.audio)
-                root.source.audio.muted = false
+    // the input, only when there is a choice
+    Repeater {
+        model: ScriptModel {
+            values: root.sources.length > 1 ? root.sources : []
         }
 
-        BracketButton {
-            label: "off"
-            active: root.source?.audio?.muted ?? false
-            textColor: root.source?.audio?.muted ? Colors.accent : Colors.dim
-            onClicked: if (root.source?.audio)
-                root.source.audio.muted = true
-        }
+        Check {
+            required property PwNode modelData
 
-        Item {
             Layout.fillWidth: true
-        }
-
-        Label {
-            text: `${Math.round((root.source?.audio?.volume ?? 0) * 100)}%`
-            color: Colors.dim
+            radio: true
+            text: modelData.description || modelData.name
+            checked: modelData === root.source
+            onToggled: Pipewire.preferredDefaultAudioSource = modelData
         }
     }
 
-    LevelSlider {
+    RowLayout {
         Layout.fillWidth: true
-        value: root.source?.audio?.volume ?? 0
-        onMoved: v => {
-            if (root.source?.audio)
-                root.source.audio.volume = v;
+        visible: root.source !== null
+        spacing: Metrics.spacing
+
+        PixIcon {
+            name: "mic"
+        }
+
+        LevelSlider {
+            Layout.fillWidth: true
+            value: root.source?.audio?.volume ?? 0
+            onMoved: v => {
+                if (root.source?.audio)
+                    root.source.audio.volume = v;
+            }
+        }
+
+        Label {
+            Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 4)
+            horizontalAlignment: Text.AlignRight
+            text: `${Math.round((root.source?.audio?.volume ?? 0) * 100)}%`
         }
     }
 
     Label {
-        Layout.topMargin: Metrics.spacing
-        text: root.apps.length > 0 ? "-- listening now --" : "-- nobody is listening --"
+        visible: root.source !== null
+        text: root.apps.length > 0 ? Strings.t("listeningNow") : Strings.t("nobodyListens")
         color: Colors.dim
-        font.pixelSize: Metrics.size(-2)
     }
 
+    // mutes only this app's recording stream: it hears silence, others still hear you
     Repeater {
         model: ScriptModel {
             values: root.apps
         }
 
-        RowLayout {
+        Check {
             id: app
 
             required property PwNode modelData
-            readonly property bool appMuted: !!modelData.audio?.muted
 
             Layout.fillWidth: true
-            spacing: Metrics.spacing
-
-            Label {
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: (app.appMuted ? "  " : "> ") + (app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name || "?").toLowerCase()
-                color: app.appMuted ? Colors.dim : Colors.fg
-            }
-
-            // mutes only this app's recording stream: it hears silence, others still hear you
-            BracketButton {
-                label: app.appMuted ? "off" : "on"
-                textColor: app.appMuted ? Colors.dim : Colors.accent
-                bordered: false
-                onClicked: if (app.modelData.audio)
-                    app.modelData.audio.muted = !app.modelData.audio.muted
-            }
-        }
-    }
-
-    // choose the input, only when there is a choice
-    ColumnLayout {
-        Layout.fillWidth: true
-        visible: root.sources.length > 1
-        spacing: 2
-
-        Label {
-            Layout.topMargin: Metrics.spacing
-            text: "-- input --"
-            color: Colors.dim
-            font.pixelSize: Metrics.size(-2)
-        }
-
-        Repeater {
-            model: ScriptModel {
-                values: root.sources
-            }
-
-            Label {
-                required property PwNode modelData
-                readonly property bool current: modelData === root.source
-
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: `${current ? ">" : " "} ${(modelData.description || modelData.name).toLowerCase()}`
-                color: current ? Colors.accent : srcArea.containsMouse ? Colors.fg : Colors.dim
-
-                MouseArea {
-                    id: srcArea
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Pipewire.preferredDefaultAudioSource = parent.modelData
-                }
-            }
+            text: modelData.properties["application.name"] || modelData.description || modelData.name || "?"
+            checked: !modelData.audio?.muted
+            onToggled: if (modelData.audio)
+                modelData.audio.muted = !modelData.audio.muted
         }
     }
 }

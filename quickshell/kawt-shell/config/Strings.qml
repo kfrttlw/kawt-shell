@@ -362,7 +362,27 @@ Singleton {
         noMessages: "no messages",
         nNew: "%1 new",
         notifsHow: "click: open · right click: let go",
-        clearAll: "Clear"
+        clearAll: "Clear",
+        micTitle: "Microphone",
+        micOn: "On",
+        noMic: "no microphone here",
+        listeningNow: "listening now (unticked: hears silence)",
+        nobodyListens: "nobody is listening",
+        btSearch: "Search",
+        btSearching: "Searching…",
+        btNone: "no devices yet: Search finds them",
+        btOff: "Bluetooth is off",
+        btPaired: "paired",
+        btNew: "new",
+        btNoService: "the bluetooth service isn't running",
+        thenRestart: "then restart kawt",
+        playerTitle: "Music",
+        shuffle: "Shuffle",
+        loopIs: "Loop: %1",
+        loopOne: "one",
+        loopAll: "all",
+        loopOff: "off",
+        coverFromNet: "Cover from the net"
     })
 
     readonly property var ruWords: ({
@@ -703,6 +723,26 @@ Singleton {
         noMessages: "сообщений нет",
         nNew: "новых: %1",
         notifsHow: "клик — открыть · правый — убрать",
-        clearAll: "Очистить"
+        clearAll: "Очистить",
+        micTitle: "Микрофон",
+        micOn: "Включён",
+        noMic: "микрофона нет",
+        listeningNow: "слушают сейчас (без галочки — тишина)",
+        nobodyListens: "никто не слушает",
+        btSearch: "Найти",
+        btSearching: "Ищу…",
+        btNone: "устройств пока нет: их найдёт «Найти»",
+        btOff: "Bluetooth выключен",
+        btPaired: "сопряжено",
+        btNew: "новое",
+        btNoService: "служба bluetooth не запущена",
+        thenRestart: "потом перезапусти kawt",
+        playerTitle: "Музыка",
+        shuffle: "Вперемешку",
+        loopIs: "Повтор: %1",
+        loopOne: "один",
+        loopAll: "все",
+        loopOff: "нет",
+        coverFromNet: "Обложка из сети"
     })
 }
