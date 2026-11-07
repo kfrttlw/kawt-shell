@@ -391,7 +391,8 @@ Singleton {
         lockTest: "test mode: unlocks by itself in %1 s",
         lockLook: "Looks like:",
         lockLookWindow: "a log-on window",
-        lockLookConsole: "a console"
+        lockLookConsole: "a console",
+        noBattery: "no battery here: a desktop, plugged in"
     })
 
     readonly property var ruWords: ({
@@ -761,6 +762,7 @@ Singleton {
         lockTest: "тестовый режим: откроется сам через %1 с",
         lockLook: "Вид:",
         lockLookWindow: "окно входа",
-        lockLookConsole: "консоль"
+        lockLookConsole: "консоль",
+        noBattery: "батареи нет: компьютер от розетки"
     })
 }
