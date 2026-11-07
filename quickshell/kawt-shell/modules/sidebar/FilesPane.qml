@@ -24,14 +24,12 @@ ColumnLayout {
     Component.onCompleted: Ai.refreshFiles()
 
     Label {
-        text: "-- files --"
-        color: Colors.dim
-        font.pixelSize: Metrics.size(-2)
+        text: Strings.t("aiFolder")
     }
 
     TermInput {
         Layout.fillWidth: true
-        prompt: "dir>"
+        prompt: ""
         text: Settings.aiFolder
         placeholder: "~/some/folder"
         onAccepted: t => {
@@ -47,14 +45,14 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: Ai.files.length > 0
         prompt: "/"
-        placeholder: "filter"
+        placeholder: Strings.t("aiFilter")
     }
 
     Label {
         Layout.fillWidth: true
         visible: !Settings.aiFolder
         wrapMode: Text.Wrap
-        text: "pick a folder above. the ai can only see files you attach from it, nothing else."
+        text: Strings.t("aiFolderNote")
         color: Colors.dim
     }
 
@@ -67,11 +65,21 @@ ColumnLayout {
         font.pixelSize: Metrics.size(-2)
     }
 
+    // the files, sunk; the attached ones red
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: Colors.well
+
+        Bevel {
+            style: "sunk"
+        }
+
     Flickable {
         id: list
 
-        Layout.fillWidth: true
-        Layout.fillHeight: true
+        anchors.fill: parent
+        anchors.margins: 3
         clip: true
         contentHeight: col.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
@@ -96,7 +104,7 @@ ColumnLayout {
                     Rectangle {
                         anchors.fill: parent
                         visible: fileArea.containsMouse || file.on
-                        color: Colors.hoverFill
+                        color: file.on ? Colors.accent : Colors.hoverFill
                     }
 
                     Label {
@@ -107,8 +115,8 @@ ColumnLayout {
                         anchors.leftMargin: 2
                         anchors.verticalCenter: parent.verticalCenter
                         elide: Text.ElideMiddle
-                        text: (file.on ? "+ " : "  ") + file.modelData
-                        color: file.on ? Colors.accent : Colors.fg
+                        text: file.modelData
+                        color: file.on ? Colors.onAccent : Colors.fg
                     }
 
                     MouseArea {
@@ -123,6 +131,7 @@ ColumnLayout {
             }
         }
     }
+    }
 
     RowLayout {
         Layout.fillWidth: true
@@ -131,14 +140,13 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: `${Ai.files.length} files · click: attach`
+            text: Strings.t("aiFilesAttach").arg(Strings.count(Ai.files.length, "file"))
             color: Colors.dim
-            font.pixelSize: Metrics.size(-3)
         }
 
-        BracketButton {
-            label: "reload"
-            bordered: false
+        PushButton {
+            small: true
+            text: Strings.t("aiReload")
             onClicked: Ai.refreshFiles()
         }
     }

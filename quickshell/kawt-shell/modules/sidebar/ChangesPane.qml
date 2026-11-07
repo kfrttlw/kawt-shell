@@ -74,7 +74,7 @@ ListView {
     header: Label {
         width: root.width
         height: implicitHeight + Metrics.spacing
-        text: root.keys.length ? `-- ${root.keys.length} file${root.keys.length === 1 ? "" : "s"} changed, from before the agent to now --` : "-- nothing changed --"
+        text: root.keys.length ? Strings.t("aiFilesChanged").arg(Strings.count(root.keys.length, "file")) : `— ${Strings.t("aiNothingChanged")} —`
         color: Colors.dim
         font.pixelSize: root.size - 2
     }
@@ -112,15 +112,14 @@ ListView {
             }
 
             Label {
-                text: file.d === undefined ? "..." : file.d === null ? "can't be read" : file.how === "new" ? "new" : file.how === "gone" ? "gone" : file.d.lines.length === 0 ? "as it was" : file.d.lines[0] === "(binary)" ? "binary" : `+${file.d.plus} −${file.d.minus}`
+                text: file.d === undefined ? "..." : file.d === null ? Strings.t("aiUnreadable") : file.how === "new" ? Strings.t("aiNewWord") : file.how === "gone" ? Strings.t("aiGoneWord") : file.d.lines.length === 0 ? Strings.t("aiAsItWas") : file.d.lines[0] === "(binary)" ? Strings.t("aiBinary") : `+${file.d.plus} −${file.d.minus}`
                 color: Colors.dim
                 font.pixelSize: root.size - 2
             }
 
-            BracketButton {
-                label: "undo"
-                textColor: Colors.warn
-                bordered: false
+            PushButton {
+                small: true
+                text: Strings.t("aiUndoOne")
                 enabled: !Coder.running && !Coder.settling
                 onClicked: Coder.putBack(file.modelData)
             }

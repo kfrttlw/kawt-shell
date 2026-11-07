@@ -190,13 +190,13 @@ Item {
                                         font.pixelSize: root.size - 3
                                     }
 
-                                    BracketButton {
+                                    PushButton {
                                         id: copyCode
 
                                         property bool done: false
 
-                                        label: done ? "copied" : "copy"
-                                        bordered: false
+                                        small: true
+                                        text: done ? Strings.t("copiedWord") : Strings.t("copyWord")
                                         onClicked: {
                                             root.copy(part.piece.text);
                                             done = true;
@@ -245,25 +245,25 @@ Item {
                     font.pixelSize: root.size - 3
                 }
 
-                BracketButton {
+                PushButton {
+                    small: true
                     visible: root.kind === "assistant"
-                    label: "copy"
-                    bordered: false
+                    text: Strings.t("copyWord")
                     onClicked: root.copy(root.text)
                 }
 
-                BracketButton {
+                PushButton {
+                    small: true
                     visible: root.kind === "assistant"
-                    label: "note"
-                    bordered: false
+                    text: Strings.t("aiToNote")
                     onClicked: root.toNote()
                 }
 
-                BracketButton {
+                PushButton {
+                    small: true
+                    isDefault: true
                     visible: root.tasks.length > 0
-                    label: root.tasksAdded ? "added" : `add ${root.tasks.length} task${root.tasks.length === 1 ? "" : "s"}`
-                    textColor: Colors.accent
-                    bordered: false
+                    text: root.tasksAdded ? Strings.t("aiAdded") : Strings.t("aiAddTasks").arg(Strings.count(root.tasks.length, "task"))
                     onClicked: {
                         if (root.tasksAdded)
                             return;
@@ -273,17 +273,17 @@ Item {
                     }
                 }
 
-                BracketButton {
+                PushButton {
+                    small: true
                     visible: root.showRetry
-                    label: "retry"
-                    bordered: false
+                    text: Strings.t("aiRetry")
                     onClicked: root.retry()
                 }
 
-                BracketButton {
+                PushButton {
+                    small: true
                     visible: root.showEdit
-                    label: "edit"
-                    bordered: false
+                    text: Strings.t("aiEdit")
                     onClicked: root.edit()
                 }
             }

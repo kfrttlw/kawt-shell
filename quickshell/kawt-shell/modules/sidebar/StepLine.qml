@@ -90,15 +90,15 @@ Item {
             }
 
             Label {
-                text: ({ running: "...", applied: `${root.step.text} applied`, skipped: "skipped", waiting: root.step.text })[root.step.status] ?? root.step.text
+                text: ({ running: "...", applied: Strings.t("aiApplied").arg(root.step.text), skipped: Strings.t("aiSkipped"), waiting: root.step.text })[root.step.status] ?? root.step.text
                 color: ({ error: Colors.warn, applied: Colors.accent, waiting: Colors.accent })[root.step.status] ?? Colors.dim
                 font.pixelSize: root.size - 2
             }
 
-            BracketButton {
+            PushButton {
+                small: true
                 visible: (!!root.step.diff || !!root.step.out || (root.step.files ?? []).length > 0) && !root.waiting
-                label: root.showDiff ? "hide" : root.step.diff ? "diff" : "out"
-                bordered: false
+                text: root.showDiff ? Strings.t("aiHide") : root.step.diff ? Strings.t("aiDiff") : Strings.t("aiOut")
                 onClicked: root.showDiff = !root.showDiff
             }
         }
@@ -136,7 +136,7 @@ Item {
                     Layout.fillWidth: true
                     visible: root.waiting
                     wrapMode: Text.Wrap
-                    text: Coder.sandbox.startsWith("podman") ? `in podman (${Coder.sandbox.slice(7)}): no network, only the project writable, ${Settings.aiRunSecs}s at most` : `in a sandbox: no network, only the project writable, ${Settings.aiRunSecs}s at most`
+                    text: Coder.sandbox.startsWith("podman") ? Strings.t("aiInPodman").arg(Coder.sandbox.slice(7)).arg(Settings.aiRunSecs) : Strings.t("aiInSandbox").arg(Settings.aiRunSecs)
                     color: Colors.dim
                     font.pixelSize: root.size - 3
                 }
@@ -158,7 +158,7 @@ Item {
                     Layout.fillWidth: true
                     visible: !root.waiting && !!root.step.unwatched
                     wrapMode: Text.Wrap
-                    text: `the files it changed aren't known: ${root.step.unwatched ?? ""}. [undo] can't take them back`
+                    text: Strings.t("aiUnwatched").arg(root.step.unwatched ?? "")
                     color: Colors.dim
                     font.pixelSize: root.size - 3
                 }
@@ -167,14 +167,16 @@ Item {
                     Layout.topMargin: 4
                     visible: root.waiting
 
-                    BracketButton {
-                        label: "run"
-                        textColor: Colors.accent
+                    PushButton {
+                        small: true
+                        isDefault: true
+                        text: Strings.t("aiRun")
                         onClicked: Coder.apply()
                     }
 
-                    BracketButton {
-                        label: "skip"
+                    PushButton {
+                        small: true
+                        text: Strings.t("aiSkip")
                         onClicked: Coder.skip()
                     }
                 }
@@ -224,10 +226,10 @@ Item {
                         font.pixelSize: root.size - 2
                     }
 
-                    BracketButton {
+                    PushButton {
+                        small: true
                         visible: file.modelData.diff.length > 0
-                        label: file.open ? "hide" : "diff"
-                        bordered: false
+                        text: file.open ? Strings.t("aiHide") : Strings.t("aiDiff")
                         onClicked: file.open = !file.open
                     }
                 }
@@ -245,7 +247,7 @@ Item {
         Label {
             Layout.leftMargin: root.size * 2
             visible: root.showDiff && (root.step.files ?? []).length > 30
-            text: `... ${(root.step.files ?? []).length - 30} more: [changes] has them all`
+            text: Strings.t("aiMoreFiles").arg((root.step.files ?? []).length - 30)
             color: Colors.dim
             font.pixelSize: root.size - 3
         }
@@ -270,7 +272,7 @@ Item {
                 spacing: 0
 
                 Label {
-                    text: root.step.diff?.at ? `@ line ${root.step.diff.at}` : "@ new file"
+                    text: root.step.diff?.at ? Strings.t("aiAtLine").arg(root.step.diff.at) : Strings.t("aiNewFile")
                     color: Colors.dim
                     font.pixelSize: root.size - 3
                 }
@@ -288,14 +290,16 @@ Item {
                     Layout.topMargin: 4
                     visible: root.waiting
 
-                    BracketButton {
-                        label: "apply"
-                        textColor: Colors.accent
+                    PushButton {
+                        small: true
+                        isDefault: true
+                        text: Strings.t("aiApply")
                         onClicked: Coder.apply()
                     }
 
-                    BracketButton {
-                        label: "skip"
+                    PushButton {
+                        small: true
+                        text: Strings.t("aiSkip")
                         onClicked: Coder.skip()
                     }
                 }
