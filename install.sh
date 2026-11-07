@@ -40,6 +40,12 @@ backup=$state/backups/$stamp
 
 qs_dst=$config/quickshell/kawt-shell
 kitty_dst=$config/kitty/kitty.conf
+# kawt's pixel font (Departure Mono, in the repo) for gtk apps and kitty: the shell loads it on
+# its own, these find it through fontconfig. A link, like the configs: a git pull updates it
+fonts_dst=${XDG_DATA_HOME:-$HOME/.local/share}/fonts/kawt
+# kitty in kawt's font too, if you said so: kitty.conf reads kawt-*.conf at its end
+kitty_font=$config/kitty/kawt-font.conf
+kitty_font_on=0
 fastfetch_dst=$config/fastfetch/config.jsonc
 fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme switch
 # gtk apps (thunar, the "open file" windows) in kawt's colors, its folder icons: links into
@@ -221,6 +227,8 @@ key() {
         case $rest in
             '[A') echo up ;;
             '[B') echo down ;;
+            '[C') echo right ;;
+            '[D') echo left ;;
             *) echo esc ;;
         esac
     elif [[ -z $k ]]; then
@@ -426,6 +434,7 @@ mark_mon="kawt monitors ("
 mark_mon_end="kawt monitors end"
 mon_auto=1
 mon_rules=() # name|mode|position|scale|turned; mode "off": that one stays dark
+mon_main="" # the one desk 1 opens on (with two or more): written as a workspace rule
 
 # the monitors connected now, one a line: name|description|modes (its own first). In hyprland,
 # hyprctl knows the refresh rates too; from a console, the kernel's /sys/class/drm the sizes only
@@ -491,19 +500,31 @@ rates_of() {
     ((${#out[@]})) && printf '%s\n' "${out[@]}" | sort -rnu | tr '\n' ' '
 }
 
-# suggest_scale <name> <WxH>: by how dense the screen is, from its width in the EDID (byte 21, cm):
-# 2 from 190 ppi (a 14" 2880x1800), 1.5 from 140, 1 below (a 27" 2560x1440 is 109). 1 if unknown
+# suggest_scale <name> <WxH>: by how dense the screen is, from its size in the EDID (bytes 21
+# and 22: width and height in cm): 2 from 190 ppi (a 14" 2880x1800), 1.5 from 140, 1 below (a 27"
+# 2560x1440 is 109). "scale|why": 1|27", 109 ppi; 1 and no why if unknown
 suggest_scale() {
-    local f cm w ppi
+    local f cm="" hcm="" w ppi inch
     f=$(compgen -G "/sys/class/drm/card*-$1/edid" | head -n 1)
-    [[ -n $f && -r $f ]] && cm=$(od -An -tu1 -j21 -N1 "$f" 2> /dev/null | tr -d ' ')
+    if [[ -n $f && -r $f ]]; then
+        read -r cm hcm < <(od -An -tu1 -j21 -N2 "$f" 2> /dev/null)
+    fi
     w=${2%%x*}
     if [[ ${cm:-} =~ ^[0-9]+$ ]] && ((cm > 0)) && [[ $w =~ ^[0-9]+$ ]]; then
         ppi=$((w * 254 / (cm * 100)))
+        inch=$(awk -v a="$cm" -v b="${hcm:-0}" 'BEGIN { printf "%.0f", sqrt(a * a + b * b) / 2.54 }')
         if ((ppi >= 190)); then printf 2; elif ((ppi >= 140)); then printf 1.5; else printf 1; fi
+        printf '|%s", %s ppi' "$inch" "$ppi"
     else
         printf 1
     fi
+}
+
+# padr <text> <n>: the text cut or filled with spaces to n letters (printf counts bytes: ★ and °
+# would come out short)
+padr() {
+    local t=${1:0:$2}
+    printf '%s%*s' "$t" $(($2 - ${#t})) ''
 }
 
 # rep <text> <n>: the text n times (for the frames: tr can't do ─)
@@ -513,18 +534,21 @@ rep() {
     printf '%s' "$s"
 }
 
-# the monitors as they'll stand, left to right: a frame each with its name, mode and scale (the
-# first one is the main one: desk 1), the positions under them
+# the monitors as they'll stand, left to right: a frame each with its name, mode and scale
+# (★: the main one, desk 1), the positions under them. monitors_draw <n>: the n-th one that's on
+# in the light (the one ←→ moves)
 monitors_draw() {
-    local r n mode pos scale turned top="" l1="" l2="" l3="" bot="" at="" w=24 k=0
+    local r n mode pos scale turned top="" l1="" l2="" l3="" bot="" at="" w=24 k=0 a b
     for r in "${mon_rules[@]}"; do
         IFS='|' read -r n mode pos scale turned <<< "$r"
         [[ $mode == off ]] && continue
-        top+="┌$(rep ─ $((w - 2)))┐ "
-        l1+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "$n$( ((k == 0)) && printf ' (main)')")
-        l2+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "$mode")
-        l3+=$(printf '│ %-*.*s │ ' $((w - 4)) $((w - 4)) "x$scale$( ((turned)) && printf ' · %s°' $((turned * 90)))")
-        bot+="└$(rep ─ $((w - 2)))┘ "
+        a="" b=""
+        [[ ${1:-} == "$k" ]] && a=$acc b=$off
+        top+="$a┌$(rep ─ $((w - 2)))┐$b "
+        l1+="$a│ $(padr "$n$([[ $n == "$mon_main" ]] && printf ' ★')" $((w - 4))) │$b "
+        l2+="$a│ $(padr "$mode" $((w - 4))) │$b "
+        l3+="$a│ $(padr "x$scale$( ((turned)) && printf ' · %s°' $((turned * 90)))" $((w - 4))) │$b "
+        bot+="$a└$(rep ─ $((w - 2)))┘$b "
         at+=$(printf '  %-*s' $((w - 1)) "$pos")
         k=$((k + 1))
     done
@@ -553,18 +577,60 @@ monitors_place() {
     done
 }
 
+# two or more on: their order (←→ moves the one in the light, ↑↓ picks another) and the main one
+# (space: desk 1 opens there), the drawing again after each key; enter: done
+monitors_arrange() {
+    local on=() i r n mode k cur=0 lines=7 t
+    for i in "${!mon_rules[@]}"; do
+        IFS='|' read -r n mode _ <<< "${mon_rules[i]}"
+        [[ $mode == off ]] || on+=("$i")
+    done
+    [[ -z $mon_main && ${#on[@]} -gt 0 ]] && { IFS='|' read -r mon_main _ <<< "${mon_rules[on[0]]}"; }
+    ((${#on[@]} >= 2)) && can_ask || return 0
+    say ""
+    say "  ${dim}←→ move the lit one · ↑↓ another · space: the main one (★, desk 1) · enter: done${off}"
+    printf '\e[?25l\e[?7l' > /dev/tty
+    while :; do
+        monitors_place
+        monitors_draw "$cur" > /dev/tty
+        k=$(key) || quit
+        case $k in
+            left | right)
+                # the lit one changes places with its neighbour that's on
+                i=${on[cur]}
+                if [[ $k == left ]] && ((cur > 0)); then
+                    t=${mon_rules[i]} mon_rules[i]=${mon_rules[on[cur - 1]]} mon_rules[on[cur - 1]]=$t
+                    cur=$((cur - 1))
+                elif [[ $k == right ]] && ((cur < ${#on[@]} - 1)); then
+                    t=${mon_rules[i]} mon_rules[i]=${mon_rules[on[cur + 1]]} mon_rules[on[cur + 1]]=$t
+                    cur=$((cur + 1))
+                fi
+                ;;
+            up | k) cur=$(((cur + ${#on[@]} - 1) % ${#on[@]})) ;;
+            down | j | $'\t') cur=$(((cur + 1) % ${#on[@]})) ;;
+            space) IFS='|' read -r mon_main _ <<< "${mon_rules[on[cur]]}" ;;
+            enter) break ;;
+            q | esc) quit ;;
+        esac
+        printf '\e[%dA' "$((lines - 1))" > /dev/tty
+    done
+    cursor_back
+}
+
 # the best mode for each monitor (the standard), each one picked from the ones it has, or as
 # hyprland decides (preferred). Fills mon_auto and mon_rules
 monitors_ask() {
-    local mons=() line n desc modes best mon_c mon_m sizes=() items=() m size mode rates r rate scale turned
-    mon_auto=1 mon_rules=()
+    local mons=() line n desc modes best mon_c mon_m sizes=() items=() m size mode rates r rate scale turned why s
+    mon_auto=1 mon_rules=() mon_main=""
     can_ask || return 0
     mapfile -t mons < <(list_monitors)
     section "monitors"
     for line in "${mons[@]}"; do
         IFS='|' read -r n desc modes <<< "$line"
         best=$(best_mode "$modes")
-        say "  $n ${dim}$desc${off}  ${best:+most: ${acc}$best${off}}"
+        why=$(suggest_scale "$n" "${best:-0x0}")
+        [[ $why == *"|"* ]] && why=" · ${why#*|} → x${why%%|*}" || why=""
+        say "  $n ${dim}$desc${off}  ${best:+most: ${acc}$best${off}}${dim}$why${off}"
     done
     say "${dim}  ↑↓ move · enter pick${off}"
     mon_c=0
@@ -617,17 +683,37 @@ monitors_ask() {
             fi
         fi
         scale=$(suggest_scale "$n" "$mode")
+        why=${scale#*|} scale=${scale%%|*}
+        [[ $why == "$scale" ]] && why=""
         turned=0
         if ((mon_c == 1)); then
-            scale=$(ask_valid "    scale? (1, 1.25, 1.5, 2, auto)" "$scale" '^(auto|[0-9]+(\.[0-9]+)?)$')
-            turned=$(ask_valid "    turned? (0 no, 1 90°, 2 180°, 3 270°)" 0 '^[0-3]$')
-            [[ $scale == auto ]] && scale=1
+            # the suggested one first, with why; 1.25 and 1.5 blur the pixel font
+            items=("x$scale|${why:+$why: }the suggested one")
+            for s in 1 1.25 1.5 2; do
+                [[ $s == "$scale" ]] && continue
+                case $s in
+                    1.25 | 1.5) items+=("x$s|kawt's pixel font goes soft at this one: settings -> look -> Plex") ;;
+                    *) items+=("x$s|") ;;
+                esac
+            done
+            mon_m=0
+            choose mon_m "${items[@]}"
+            scale=${items[mon_m]%%|*} scale=${scale#x}
+            items=("straight|as it stands" "90°|on its side, turned right" "180°|upside down" "270°|on its side, turned left")
+            mon_m=0
+            choose mon_m "${items[@]}"
+            turned=$mon_m
         fi
         mon_rules+=("$n|$mode|0x0|$scale|$turned")
     done
     monitors_place
-    say ""
-    monitors_draw
+    if ((${#mons[@]} >= 2)); then
+        monitors_arrange
+    else
+        IFS='|' read -r mon_main _ <<< "${mon_rules[0]:-}"
+        say ""
+        monitors_draw
+    fi
 }
 
 # what was picked, in one line: "DP-1 2560x1440@164.96 at 0x0 x1, HDMI-A-1 off"
@@ -645,6 +731,7 @@ monitors_said() {
         else
             out+="$n $mode at $pos x$scale"
             ((turned)) && out+=" turned $((turned * 90))°"
+            [[ $n == "$mon_main" && ${#mon_rules[@]} -ge 2 ]] && out+=" ★"
         fi
     done
     printf '%s' "$out"
@@ -674,6 +761,14 @@ monitor_block() {
             printf 'monitor = %s, %s, %s, %s%s\n' "$n" "$mode" "$pos" "$scale" "$( ((turned)) && printf ', transform, %s' "$turned")"
         fi
     done
+    # the main one: desk 1 opens there (with one monitor there's nothing to say)
+    if [[ -n $mon_main ]] && (($(printf '%s\n' "${mon_rules[@]}" | grep -vc '|off|') >= 2)); then
+        if ((lua)); then
+            printf 'pcall(hl.workspace_rule, { workspace = "1", monitor = "%s", default = true })\n' "$mon_main"
+        else
+            printf 'workspace = 1, monitor:%s, default:true\n' "$mon_main"
+        fi
+    fi
     printf '%s %s\n' "$c" "$mark_mon_end"
 }
 
@@ -752,6 +847,39 @@ check_monitors() {
     errs=$(hyprctl configerrors 2> /dev/null | grep -v '^[[:space:]]*$' | head -n 3)
     [[ -n $errs ]] && warn "hyprland says its config has a problem:" "$errs"
     return 0
+}
+
+# monitors_keep <file> <copy of it from before, or "">: in hyprland, right after the monitors
+# changed, as old systems' screen settings asked: keep it like this? Nothing pressed in 15 s, or
+# n: back as it was (the file from before, or kawt's block taken out) and hyprland reads it again
+monitors_keep() {
+    local file=$1 before=$2 left=15 a
+    ((mon_auto || dry)) && return 0
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v hyprctl > /dev/null && can_ask || return 0
+    while ((left > 0)); do
+        printf '\r\e[2K  %skeep it like this?%s y / n  %s(back as it was in %d s)%s ' "$acc" "$off" "$dim" "$left" "$off" > /dev/tty
+        if IFS= read -rsn1 -t 1 a < /dev/tty; then
+            case $a in
+                y | Y)
+                    printf '\n' > /dev/tty
+                    pass "the monitors stay like this"
+                    return 0
+                    ;;
+                *) break ;;
+            esac
+        fi
+        left=$((left - 1))
+    done
+    printf '\n' > /dev/tty
+    if [[ -n $before && -f $before ]]; then
+        cat "$before" > "$file"
+    else
+        mon_auto=1
+        write_monitors "$file" > /dev/null
+    fi
+    hyprctl reload > /dev/null 2>&1
+    step "back" "the monitors as they were ($(short "$file"))"
+    note "again, another way: ./install.sh --monitors"
 }
 
 # Hyprland's own starting config: what it would write itself on the first start (there with an
@@ -1049,12 +1177,15 @@ if [[ $mode == monitors ]]; then
     fi
     monitors_ask
     section "write"
+    mon_before=$(mktemp) && cp -- "$mon_file" "$mon_before"
     write_monitors "$mon_file" || { fail "could not write $mon_file"; exit 1; }
     if ((mon_auto)); then
         ((!dry)) && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl reload > /dev/null 2>&1 && pass "hyprland read it again"
     else
         check_monitors
+        monitors_keep "$mon_file" "$mon_before"
     fi
+    rm -f -- "$mon_before"
     [[ -d $backup ]] && say "${dim}the file before: $(short "$backup")${off}"
     exit 0
 fi
@@ -1199,7 +1330,7 @@ if [[ $mode == uninstall ]]; then
         return 1
     }
 
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst" "$fonts_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -1213,6 +1344,8 @@ if [[ $mode == uninstall ]]; then
 
     # kawt's wallpapers come again with a new install
     [[ -f $walls_given ]] && run rm -f -- "$walls_given"
+    # kitty's font line kawt wrote
+    [[ -f $kitty_font ]] && grep -q '^# kawt:' "$kitty_font" && run rm -f -- "$kitty_font" && step "rm" "$kitty_font"
 
     # the gtk theme and icons kawt picked: gtk's own again
     if command -v gsettings > /dev/null && [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]]; then
@@ -1315,7 +1448,7 @@ if [[ $mode == fresh ]]; then
         run qs kill -c kawt-shell > /dev/null 2>&1
         step "stop" "kawt (started again at the end)"
     fi
-    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst"; do
+    for dst in "$qs_dst" "$kitty_dst" "$fastfetch_dst" "$gtk3_dst" "$gtk4_dst" "$icons_dst" "$walls_dst" "$fonts_dst"; do
         if [[ -L $dst ]]; then
             run rm -- "$dst" && step "rm" "$dst (link)"
         elif [[ -e $dst ]]; then
@@ -1490,6 +1623,15 @@ want() { # want <part id>: is it picked?
     done
     return 1
 }
+
+# kitty in kawt's pixel font too? Not by default: it's small (11 px, 8.25 pt), as old terminals
+# were. Asked once: the answer is the file being there or not
+if want kitty && [[ -z $preset && ! -f $kitty_font ]] && [[ $mode != update ]] && can_ask; then
+    section "kitty"
+    printf '%s %s[y/N]%s ' "kawt's pixel font in kitty too? (Departure Mono, small: 8.25 pt)" "$dim" "$off" > /dev/tty
+    IFS= read -r answer < /dev/tty
+    [[ $answer == [yYдД]* ]] && kitty_font_on=1
+fi
 
 if ((packages)) && [[ -z $preset ]] && can_ask; then
     section "packages"
@@ -2031,6 +2173,7 @@ case $hypr_from in
     hypr) printf '  %-9s %s\n' "hyprland" "hyprland's own starting config" ;;
 esac
 ((mon_auto && !mon_again)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
+((kitty_font_on)) && printf '  %-9s %s\n' "kitty" "kawt's pixel font, 8.25 pt  ${dim}($(short "$kitty_font"))${off}"
 if ((nv_cfg || nv_driver)); then
     printf '  %-9s %s\n' "nvidia" "$( ((nv_cfg)) && printf 'hyprland env')$( ((nv_cfg && nv_driver)) && printf ' + ')$( ((nv_driver)) && printf 'the driver %s(a reboot after)%s' "$dim" "$off")"
 fi
@@ -2196,6 +2339,13 @@ fi
 section "configs"
 if want shell; then
     link "$repo/quickshell/kawt-shell" "$qs_dst" || { fail "could not link $qs_dst"; failed=1; }
+    # the font for gtk apps and kitty (kawt itself loads it from its folder)
+    if [[ -L $fonts_dst && $(resolve "$fonts_dst") == "$(resolve "$repo/quickshell/kawt-shell/fonts")" ]]; then
+        step " ok " "$fonts_dst"
+    elif [[ ! -e $fonts_dst ]] || [[ -L $fonts_dst ]]; then
+        run mkdir -p "$(dirname "$fonts_dst")" && run ln -sfn -- "$repo/quickshell/kawt-shell/fonts" "$fonts_dst" && step "link" "$fonts_dst (kawt's font, for gtk apps and kitty)"
+        ((dry)) || { command -v fc-cache > /dev/null && fc-cache -f "$fonts_dst" > /dev/null 2>&1; }
+    fi
 fi
 # where the style window (super + w) looks for wallpapers
 if want shell && [[ ! -d $HOME/Pictures/wallpapers ]]; then
@@ -2215,6 +2365,14 @@ if want shell; then
 fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
+    # 11 px is 8.25 pt at 96 dpi: the font's own size, sharp
+    if ((kitty_font_on)); then
+        if ((dry)); then
+            note "would write $kitty_font (Departure Mono, 8.25 pt)"
+        else
+            printf '# kawt: its pixel font in kitty (./install.sh wrote it; delete this file for the usual one)\nfont_family      Departure Mono\nfont_size        8.25\nmodify_font      cell_height 100%%\n' > "$kitty_font" && step "make" "$kitty_font (kawt's font in kitty)"
+        fi
+    fi
 fi
 if want fastfetch; then
     # fastfetch reads kawt's generated config (the theme's colors); until kawt has run once,
@@ -2248,6 +2406,7 @@ if want hypr; then
     fi
     # the monitors set again over a config that was there (auto takes kawt's block out)
     if ((mon_again)); then
+        mon_before=$(mktemp) && cp -- "$mon_file" "$mon_before"
         write_monitors "$mon_file" || { fail "could not write the monitors into $mon_file"; failed=1; }
     fi
 fi
@@ -2426,7 +2585,11 @@ if ((!dry)); then
             if loads_kawt "$hypr_conf" "$marker_conf"; then pass "hyprland loads kawt"; else fail "hyprland.conf doesn't load kawt"; failed=1; fi
         fi
         verify_hypr
-        ((mon_auto)) || check_monitors
+        if ! ((mon_auto)); then
+            check_monitors
+            monitors_keep "$(monitors_file)" "${mon_before:-}"
+        fi
+        [[ -n ${mon_before:-} ]] && rm -f -- "$mon_before"
     fi
     if want files && command -v gsettings > /dev/null; then
         [[ $(gsettings get org.gnome.desktop.interface icon-theme 2> /dev/null) == "'kawt'" ]] && pass "gtk apps use kawt's colors and folders"
