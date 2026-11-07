@@ -42,7 +42,7 @@ ColumnLayout {
 
         Label {
             text: parent.value
-            font.bold: true
+            font.bold: !Metrics.pixel
         }
 
         Label {
@@ -51,7 +51,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: parent.more
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -61,8 +61,8 @@ ColumnLayout {
 
         Label {
             text: SysInfo.host || "kawt"
-            font.bold: true
-            font.pixelSize: Metrics.fontSize + 2
+            font.bold: !Metrics.pixel
+            font.pixelSize: Metrics.size(2)
         }
 
         Label {
@@ -197,6 +197,6 @@ ColumnLayout {
         elide: Text.ElideRight
         text: "cpu  mem · a click twice: kill (SIGTERM) · more: the profile's top"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

@@ -71,7 +71,7 @@ Item {
                     elide: Text.ElideRight
                     text: task.modelData.title || task.cls
                     color: task.isAway ? Colors.dim : Colors.fg
-                    font.bold: task.focused && !task.isAway
+                    font.bold: !Metrics.pixel && (task.focused && !task.isAway)
                 }
             }
         }

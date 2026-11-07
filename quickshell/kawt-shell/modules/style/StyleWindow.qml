@@ -272,7 +272,7 @@ PanelWindow {
                         Label {
                             text: "your colors"
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
                     }
 
@@ -293,7 +293,7 @@ PanelWindow {
                 elide: Text.ElideRight
                 text: Colors.userError || "[+ new] makes one, [edit] (or a right click) changes it · ~/.config/kawt/themes.json"
                 color: Colors.userError ? Colors.warn : Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             RowLayout {
@@ -335,7 +335,7 @@ PanelWindow {
                     elide: Text.ElideLeft
                     text: "configs for kitty/foot/alacritty/hyprland: ~/.local/state/kawt/theme/"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -366,7 +366,7 @@ PanelWindow {
                     elide: Text.ElideRight
                     text: Settings.fetchLogo === "distro" ? "your system's logo, in the theme's colors" : Settings.fetchLogo === "stripes" ? "kawt in stripes, above the info" : Settings.fetchLogo === "trackpoint" ? "g h b and the red nub" : "kawt in half blocks"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -455,7 +455,7 @@ PanelWindow {
                     elide: Text.ElideRight
                     text: Settings.wallDither ? "in the theme's tones, its reds as red dots; made again for every theme" : "the picture as it is"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -532,7 +532,7 @@ PanelWindow {
                 visible: Wallpapers.files.length > 0
                 text: "[ ] theme · t dark/light · e edit · n new"
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 3
+                font.pixelSize: Metrics.size(-3)
             }
 
             WallpaperPicker {

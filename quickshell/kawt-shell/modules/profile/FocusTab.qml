@@ -121,7 +121,7 @@ ColumnLayout {
         Layout.topMargin: Metrics.spacing
         text: Focus.running ? Focus.clock : `${Focus.workMin}:00`
         color: Focus.phase === "break" ? Colors.dim : Colors.fg
-        font.pixelSize: Math.round(Metrics.fontSize * 4)
+        font.pixelSize: Metrics.times(4)
         font.weight: Font.Light
     }
 

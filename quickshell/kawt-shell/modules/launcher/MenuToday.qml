@@ -22,8 +22,8 @@ ColumnLayout {
 
         Label {
             text: Qt.formatDate(Time.now, "ddd dd.MM").toLowerCase()
-            font.bold: true
-            font.pixelSize: Metrics.fontSize + 2
+            font.bold: !Metrics.pixel
+            font.pixelSize: Metrics.size(2)
         }
 
         Label {
@@ -82,8 +82,8 @@ ColumnLayout {
                             anchors.centerIn: parent
                             visible: task.modelData.done
                             text: "x"
-                            font.bold: true
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.bold: !Metrics.pixel
+                            font.pixelSize: Metrics.size(-2)
                         }
                     }
 
@@ -109,7 +109,7 @@ ColumnLayout {
                         visible: !task.modelData.done && task.modelData.due > 0
                         text: !visible ? "" : Qt.formatDate(new Date(task.modelData.due), "yyyy-MM-dd") === Time.day ? Time.fmt(new Date(task.modelData.due)) : Qt.formatDate(new Date(task.modelData.due), "dd.MM")
                         color: task.late ? Colors.warn : Colors.dim
-                        font.pixelSize: Metrics.fontSize - 2
+                        font.pixelSize: Metrics.size(-2)
                     }
 
                     MouseArea {
@@ -150,6 +150,6 @@ ColumnLayout {
         elide: Text.ElideRight
         text: root.said || "a click ticks a task off · folders, steps and repeats: the profile's todo"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

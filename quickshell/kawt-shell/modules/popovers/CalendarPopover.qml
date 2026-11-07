@@ -83,7 +83,7 @@ Popover {
                 horizontalAlignment: Text.AlignHCenter
                 text: modelData
                 color: index >= 5 ? Colors.accent : Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
         }
 
@@ -119,7 +119,7 @@ Popover {
         Label {
             text: "-- today --"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -142,7 +142,7 @@ Popover {
         Layout.alignment: Qt.AlignHCenter
         text: `week ${root.weekNumber()} · ${Settings.clock24 ? Qt.formatTime(Time.now, "hh:mm:ss") : Qt.formatTime(Time.now, "h:mm:ss AP").toLowerCase()}`
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     // ISO-8601 week number

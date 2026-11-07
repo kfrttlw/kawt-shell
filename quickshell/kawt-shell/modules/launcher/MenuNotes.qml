@@ -33,7 +33,7 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             text: `notes · ${Notes.notes.length}`
-            font.bold: true
+            font.bold: !Metrics.pixel
         }
 
         BracketButton {
@@ -90,7 +90,7 @@ ColumnLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Qt.formatDate(new Date(note.modelData.updated), "dd.MM")
                         color: note.current && Colors.bevel ? Colors.onAccent : Colors.dim
-                        font.pixelSize: Metrics.fontSize - 2
+                        font.pixelSize: Metrics.size(-2)
                     }
 
                     MouseArea {
@@ -131,6 +131,7 @@ ColumnLayout {
             selectionColor: Colors.accent
             selectedTextColor: Colors.onAccent
             font.family: Metrics.fontFamily
+            renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
             font.pixelSize: Metrics.fontSize
             onTextChanged: if (!root.loading && root.noteId !== 0)
                 Notes.edit(root.noteId, text)
@@ -143,6 +144,6 @@ ColumnLayout {
         elide: Text.ElideRight
         text: "kept as you type · folders and search: the profile's notes"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

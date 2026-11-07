@@ -335,7 +335,7 @@ ColumnLayout {
             wrapMode: Text.Wrap
             text: "switched off, a button still works on its key (super + i: this panel). [● rec], [cast] and [caf] always show while they're on"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         // ------------------------------------------------------------ profile header
@@ -462,7 +462,7 @@ ColumnLayout {
                 : Settings.idleLock === 0 ? "the screen never locks by itself (only before sleep, if that's on)"
                 : `locks after ${Settings.idleLock} min without input · a video or call holds it off`
             color: Idle.caffeine ? Colors.accent : Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         //  screen off  off  [1m]  2m  5m   (after the lock)   [x] dim before
@@ -505,7 +505,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: Settings.screenOff > 0 ? `the picture goes ${Settings.screenOff} min after the lock; wifi, music, downloads keep going · a key brings it back` : "the screen stays on while locked"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         //  night light  [x] on   4500K  [-] [+]   (hyprsunset)
@@ -619,7 +619,7 @@ ColumnLayout {
             text: clockInput.error !== "" ? clockInput.error
                 : Time.offset !== 0 ? `kawt runs ${Time.offsetText} from the system clock (todo reminders too)` : ""
             color: clockInput.error !== "" ? Colors.warn : Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -760,7 +760,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: Settings.layoutPerWindow ? "each window keeps its own layout; a new one starts with the first" : "one layout for all windows"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Label {
@@ -804,7 +804,7 @@ ColumnLayout {
             wrapMode: Text.Wrap
             text: "windows at their own size: a picked app floats from the start, in the middle, at the size it asks for instead of stretched by the layout. open ones change now; from then on, every time it opens"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Label {
@@ -941,7 +941,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: Update.status + (Update.news ? `: ${Update.news}` : "")
             color: Update.status.startsWith("couldn't") ? Colors.warn : Update.behind > 0 ? Colors.accent : Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         // one small request to github a week; off: nothing goes out unless [check] is pressed
@@ -1007,7 +1007,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: "[?] all keys: super + /"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Label {
@@ -1015,7 +1015,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: "[?] in the ai panel: /model <name>, /models"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 }

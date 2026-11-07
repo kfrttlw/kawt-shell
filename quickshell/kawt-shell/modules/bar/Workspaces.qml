@@ -103,7 +103,7 @@ Item {
                     text: String(ws.wsId)
                     look: ws.urgent ? "warn" : ws.current ? "on" : ws.used ? "" : "off"
                     shown: ws.current
-                    font.bold: ws.current
+                    font.bold: !Metrics.pixel && (ws.current)
                 }
 
                 MouseArea {

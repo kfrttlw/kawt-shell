@@ -68,7 +68,7 @@ Popover {
             Layout.topMargin: Metrics.spacing
             text: "-- output --"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -106,7 +106,7 @@ Popover {
             Layout.topMargin: Metrics.spacing
             text: "-- apps --"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -125,7 +125,7 @@ Popover {
                     elide: Text.ElideRight
                     text: modelData.properties["application.name"] || modelData.description || modelData.name || "?"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
 
                 LevelSlider {

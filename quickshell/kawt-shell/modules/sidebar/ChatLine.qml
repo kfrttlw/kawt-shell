@@ -32,7 +32,7 @@ Item {
     property bool showRetry: false
     property bool showEdit: false
 
-    readonly property int size: Math.max(8, Metrics.fontSize + Settings.aiZoom)
+    readonly property int size: Math.max(8, Metrics.longSize + Settings.aiZoom)
     readonly property string meta: time ? [Time.fmt(new Date(time)), Settings.aiCompare && model ? model.replace(/:latest$/, "") : "", took ? `${(took / 1000).toFixed(1)}s` : "", tps ? `${Math.round(tps)} tok/s` : "", ...files.map(f => `@${f}`)].filter(s => s).join(" · ") : ""
     // text and ``` code ``` pieces, in order. An unclosed fence (still streaming) counts as code.
     readonly property var parts: {
@@ -135,7 +135,7 @@ Item {
                             color: root.kind === "error" ? Colors.dim : Colors.fg
                             selectionColor: Colors.accent
                             selectedTextColor: Colors.bg
-                            font.family: Metrics.fontFamily
+                            font.family: Metrics.longFamily
                             font.pixelSize: root.size
                             // the joiners safeMarkdown put in stay here: pasted into code they'd break it
                             Keys.onPressed: event => {
@@ -222,7 +222,7 @@ Item {
                                     color: Colors.fg
                                     selectionColor: Colors.accent
                                     selectedTextColor: Colors.bg
-                                    font.family: Metrics.fontFamily
+                                    font.family: Metrics.longFamily
                                     font.pixelSize: root.size - 1
                                 }
                             }

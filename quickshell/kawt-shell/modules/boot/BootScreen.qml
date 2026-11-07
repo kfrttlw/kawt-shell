@@ -195,7 +195,7 @@ PanelWindow {
             Label {
                 visible: root.lit > 0
                 text: `kawt bios ${Kawt.version} · ${SysInfo.model || SysInfo.host || "this machine"}`
-                font.bold: true
+                font.bold: !Metrics.pixel
             }
 
             Item {

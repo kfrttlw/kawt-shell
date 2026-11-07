@@ -179,7 +179,7 @@ Popover {
             Label {
                 text: !root.player ? "no media" : root.player.isPlaying ? "now playing" : "paused"
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             Label {
@@ -189,7 +189,7 @@ Popover {
                 elide: Text.ElideRight
                 visible: root.player !== null
                 text: root.player?.trackTitle || "nothing playing"
-                font.pixelSize: Math.round(Metrics.fontSize * 1.35)
+                font.pixelSize: Metrics.times(1.35)
                 font.weight: Font.Medium
             }
 
@@ -399,7 +399,7 @@ Popover {
         Label {
             text: "-- earlier · click copies --"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {
@@ -443,7 +443,7 @@ Popover {
 
                         text: track.modelData.player
                         color: Colors.dim
-                        font.pixelSize: Metrics.fontSize - 2
+                        font.pixelSize: Metrics.size(-2)
                     }
                 }
 
@@ -487,13 +487,13 @@ Popover {
 
                 Brackets {
                     text: modelData[0]
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
 
                 Label {
                     text: modelData[1]
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
         }

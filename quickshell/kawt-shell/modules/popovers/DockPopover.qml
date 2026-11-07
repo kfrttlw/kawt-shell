@@ -123,7 +123,7 @@ Popover {
             horizontalAlignment: Text.AlignRight
             text: "rmb: unpin"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 3
+            font.pixelSize: Metrics.size(-3)
         }
     }
 }

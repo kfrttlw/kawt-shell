@@ -421,7 +421,7 @@ PanelWindow {
                     elide: Text.ElideRight
                     text: "enter: into > (the terminal) to look at and run · tab: copy · keep typing: ask again"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -512,7 +512,7 @@ PanelWindow {
                         Label {
                             text: clipRow.image ? "img" : "txt"
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
 
                         Label {
@@ -609,7 +609,7 @@ PanelWindow {
                             visible: Apps.isOffline(entry.modelData)
                             text: "no net"
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
 
                         Label {
@@ -618,7 +618,7 @@ PanelWindow {
                             elide: Text.ElideRight
                             text: (entry.modelData.genericName || entry.modelData.comment || "").toLowerCase()
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
                     }
 
@@ -701,7 +701,7 @@ PanelWindow {
                         Label {
                             text: [win.modelData.workspace ? `ws ${win.modelData.workspace.id}` : "", win.cls.toLowerCase()].filter(s => s).join(" · ")
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
                     }
 
@@ -767,7 +767,7 @@ PanelWindow {
                             Layout.preferredWidth: Metrics.fontSize * 2
                             horizontalAlignment: Text.AlignHCenter
                             text: emo.modelData.e
-                            font.pixelSize: Metrics.fontSize + 4
+                            font.pixelSize: Metrics.size(4)
                         }
 
                         Label {
@@ -782,7 +782,7 @@ PanelWindow {
                             elide: Text.ElideRight
                             text: emojiList.cyrillic ? emo.modelData.ru : emo.modelData.other
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 2
+                            font.pixelSize: Metrics.size(-2)
                         }
                     }
 
@@ -808,7 +808,7 @@ PanelWindow {
                     : root.expanded ? "↑↓ select · enter run · esc back"
                     : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+o no net · ctrl+tab mode"
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 3
+                font.pixelSize: Metrics.size(-3)
             }
         }
 

@@ -159,7 +159,7 @@ PanelWindow {
                 elide: Text.ElideRight
                 text: Screenshot.textStatus
                 color: Screenshot.textStatus.startsWith("text copied") ? Colors.accent : Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
         }
     }

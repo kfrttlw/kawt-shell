@@ -72,7 +72,7 @@ Popover {
         Layout.topMargin: Metrics.spacing
         text: root.apps.length > 0 ? "-- listening now --" : "-- nobody is listening --"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 
     Repeater {
@@ -117,7 +117,7 @@ Popover {
             Layout.topMargin: Metrics.spacing
             text: "-- input --"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         Repeater {

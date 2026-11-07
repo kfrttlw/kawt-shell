@@ -100,7 +100,7 @@ Popover {
             elide: Text.ElideRight
             text: "then restart kawt"
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -161,7 +161,7 @@ Popover {
                 Label {
                     text: dev.busy ? "..." : dev.modelData.connected ? "connected" : dev.modelData.bonded ? "paired" : "new"
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
 
                 Label {

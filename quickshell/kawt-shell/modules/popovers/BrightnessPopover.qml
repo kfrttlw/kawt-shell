@@ -22,7 +22,7 @@ Popover {
             elide: Text.ElideRight
             text: Brightness.device
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
 
         BracketButton {

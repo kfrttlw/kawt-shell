@@ -101,7 +101,7 @@ Popover {
             visible: Ai.selText.length > 300
             text: `${Ai.selText.length} characters`
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -147,6 +147,7 @@ Popover {
             selectionColor: Colors.accent
             selectedTextColor: Colors.bg
             font.family: Metrics.fontFamily
+            renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
             font.pixelSize: Metrics.fontSize
         }
     }
@@ -186,7 +187,7 @@ Popover {
             visible: Ai.selAnswer !== ""
             text: `${Ai.modelName} · ${(Ai.selTook / 1000).toFixed(1)}s`
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 }

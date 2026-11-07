@@ -94,7 +94,7 @@ ColumnLayout {
             elide: Text.ElideRight
             text: choice.hint
             color: Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 
@@ -154,7 +154,7 @@ ColumnLayout {
 
                 Label {
                     text: SysInfo.model || SysInfo.host || "this machine"
-                    font.bold: true
+                    font.bold: !Metrics.pixel
                 }
 
                 Label {

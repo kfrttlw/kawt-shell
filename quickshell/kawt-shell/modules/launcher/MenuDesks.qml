@@ -121,7 +121,7 @@ ColumnLayout {
                     visible: Hypr.floatDesks.includes(desk.modelData)
                     text: "float"
                     color: Colors.fg
-                    font.pixelSize: Metrics.fontSize - 3
+                    font.pixelSize: Metrics.size(-3)
                     style: Text.Outline
                     styleColor: Colors.bg
                 }
@@ -132,8 +132,8 @@ ColumnLayout {
                     anchors.margins: 3
                     text: desk.modelData
                     color: desk.current ? Colors.accent : Colors.fg
-                    font.bold: true
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.bold: !Metrics.pixel
+                    font.pixelSize: Metrics.size(-2)
                     style: Text.Outline
                     styleColor: Colors.bg
                 }
@@ -338,6 +338,6 @@ ColumnLayout {
         elide: Text.ElideRight
         text: "a click goes to a desk or a window · drag a window onto a desk: it moves there"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 2
+        font.pixelSize: Metrics.size(-2)
     }
 }

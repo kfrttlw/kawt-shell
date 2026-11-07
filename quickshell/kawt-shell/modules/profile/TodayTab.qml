@@ -49,7 +49,7 @@ ColumnLayout {
 
         Label {
             text: Qt.formatDate(Time.now, "ddd dd.MM").toLowerCase()
-            font.bold: true
+            font.bold: !Metrics.pixel
         }
 
         Label {
@@ -213,7 +213,7 @@ ColumnLayout {
                 visible: add.feedback !== ""
                 text: add.feedback
                 color: Colors.accent
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
         }
 
@@ -240,7 +240,7 @@ ColumnLayout {
 
                     Label {
                         text: Focus.running ? Focus.clock : `${Focus.workMin}:00`
-                        font.bold: true
+                        font.bold: !Metrics.pixel
                     }
 
                     Label {

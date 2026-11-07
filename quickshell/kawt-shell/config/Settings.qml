@@ -84,6 +84,7 @@ Singleton {
     property alias fetchLogo: adapter.fetchLogo
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
+    property alias language: adapter.language
     property alias brackets: adapter.brackets
     property alias frames: adapter.frames
     property alias crt: adapter.crt
@@ -117,7 +118,7 @@ Singleton {
     // the wallpaper theme is the thinkpad's with the wallpaper's color as its light ("calm", the
     // new standard)
     function newLook(): void {
-        if (lookVersion >= 3)
+        if (lookVersion >= 4)
             return;
         if (lookVersion < 2 && theme === "mono")
             theme = "thinkpad";
@@ -125,7 +126,12 @@ Singleton {
             fontFamily = "BlexMono Nerd Font Mono";
         if (wallStrength === "strong")
             wallStrength = "calm";
-        lookVersion = 3;
+        // kawt 98: the pixel font, unless you picked another font or size yourself
+        if (lookVersion < 4 && fontFamily === "BlexMono Nerd Font Mono" && fontSize === 13) {
+            fontFamily = "Departure Mono";
+            fontSize = 11;
+        }
+        lookVersion = 4;
     }
 
     // "~/x" -> "/home/user/x"
@@ -240,8 +246,9 @@ Singleton {
             property bool themeTerminals: true // recolor open terminals on theme change
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in the theme's colors) | "kawt" | "trackpoint" | "stripes" (utils/themegen.js)
             // the look, yours without editing the repo (config/Metrics.qml reads these)
-            property string fontFamily: "BlexMono Nerd Font Mono" // a monospace one: kawt lines text up in columns (BlexMono = ibm plex mono)
-            property int fontSize: 13 // px; panels grow with it
+            property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
+            property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22
+            property string language: "" // kawt's words: "ru" | "en" | "" the system's (config/Strings.qml)
             property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
             property string frames: "bevel" // "bevel": the old system look, raised buttons and panels, sunk fields and lists, kawt's windows with a title bar | "flat": thin lines (config/Colors.qml, components/Bevel.qml)
             property bool crt: true // the lock (and the boot screen) switch on and off like an old picture tube (components/CrtTube.qml)

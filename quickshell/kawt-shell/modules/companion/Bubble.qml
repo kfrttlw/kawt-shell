@@ -34,7 +34,7 @@ Item {
             wrapMode: Text.Wrap
             text: root.text
             color: Colors.fg
-            font.pixelSize: Metrics.fontSize - 1
+            font.pixelSize: Metrics.size(-1)
         }
     }
 

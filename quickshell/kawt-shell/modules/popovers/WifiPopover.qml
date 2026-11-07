@@ -113,7 +113,7 @@ Popover {
                 Label {
                     text: `> ${Wifi.active?.name ?? ""}`
                     color: Colors.accent
-                    font.bold: true
+                    font.bold: !Metrics.pixel
                 }
 
                 Label {
@@ -127,7 +127,7 @@ Popover {
                     elide: Text.ElideRight
                     text: NetInfo.wifiLine
                     color: Colors.dim
-                    font.pixelSize: Metrics.fontSize - 2
+                    font.pixelSize: Metrics.size(-2)
                 }
             }
 
@@ -244,7 +244,7 @@ Popover {
                     Label {
                         text: row.modelData.stateChanging ? "..." : [row.modelData.known ? "saved" : "", Wifi.isSecure(row.modelData) ? "" : "open"].filter(s => s).join(" ")
                         color: !row.modelData.stateChanging && !Wifi.isSecure(row.modelData) ? Colors.warn : Colors.dim
-                        font.pixelSize: Metrics.fontSize - 2
+                        font.pixelSize: Metrics.size(-2)
                     }
 
                     Label {
@@ -275,7 +275,7 @@ Popover {
                 elide: Text.ElideRight
                 text: `password for ${root.pskTarget?.name ?? ""}:`
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             TermInput {
@@ -323,7 +323,7 @@ Popover {
                 elide: Text.ElideRight
                 text: root.hiddenSsid ? `password for ${root.hiddenSsid} (empty: open network):` : "name of the hidden network:"
                 color: Colors.dim
-                font.pixelSize: Metrics.fontSize - 2
+                font.pixelSize: Metrics.size(-2)
             }
 
             TermInput {
@@ -367,7 +367,7 @@ Popover {
             elide: Text.ElideRight
             text: shown
             color: shown.startsWith("failed") ? Colors.warn : Colors.dim
-            font.pixelSize: Metrics.fontSize - 2
+            font.pixelSize: Metrics.size(-2)
         }
     }
 

@@ -18,6 +18,6 @@ BarBox {
     Label {
         anchors.verticalCenter: parent.verticalCenter
         text: "kawt"
-        font.bold: true
+        font.bold: !Metrics.pixel
     }
 }

@@ -83,7 +83,7 @@ Row {
                     anchors.centerIn: parent
                     text: tab.modelData
                     color: tab.selected ? Colors.fg : Colors.dim
-                    font.bold: tab.selected
+                    font.bold: !Metrics.pixel && (tab.selected)
                 }
             }
 

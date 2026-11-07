@@ -123,7 +123,7 @@ Popover {
                             textFormat: Text.PlainText
                             text: entry.modelData.body
                             color: Colors.dim
-                            font.pixelSize: Metrics.fontSize - 1
+                            font.pixelSize: Metrics.size(-1)
                         }
                     }
 
@@ -153,6 +153,6 @@ Popover {
         visible: Notifs.count > 0
         text: "click: open · right click: dismiss"
         color: Colors.dim
-        font.pixelSize: Metrics.fontSize - 3
+        font.pixelSize: Metrics.size(-3)
     }
 }

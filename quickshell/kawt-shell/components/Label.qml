@@ -10,4 +10,8 @@ Text {
     color: Colors.fg
     font.family: Metrics.fontFamily
     font.pixelSize: Metrics.fontSize
+    // the pixel font: whole pixels, no smoothing, no made-up bold (qt smears it)
+    renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
+    antialiasing: !Metrics.pixel
+    font.hintingPreference: Metrics.pixel ? Font.PreferFullHinting : Font.PreferDefaultHinting
 }
