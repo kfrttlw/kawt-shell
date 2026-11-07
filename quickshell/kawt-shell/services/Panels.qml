@@ -39,7 +39,7 @@ Singleton {
     property string settingsPage: "" // the settings window opens at this page ("bar", "screen"...; modules/settings)
     // kawt's own windows (components/AppWindow.qml), open beside the panels: a panel opening
     // doesn't close them. The tab each opens at next ("" = the one it had)
-    property var windows: ({}) // "today" | "system" -> true while it's open
+    property var windows: ({}) // "today" | "system" | "settings" -> true while it's open
     property string todayTab: ""
     property string systemTab: ""
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
@@ -77,25 +77,41 @@ Singleton {
         return windows[name] === true;
     }
 
-    // opened (at `tab`, if one's given), or closed if it's open and no tab was asked for
+    // asked for again while it's open (components/AppWindow.qml answers): up from behind the
+    // others or back from the taskbar; toggled, the one in focus closes instead
+    signal windowAsked(string name)
+    signal windowToggled(string name)
+
+    // the key (super + i...): opened, or, open already, closed if it's in focus and brought up if
+    // it isn't. With a tab: opened at it
     function toggleWindow(name: string, tab: string): void {
         if (isWindowOpen(name) && !tab) {
-            closeWindow(name);
+            windowToggled(name);
             return;
         }
+        openWindow(name, tab);
+    }
+
+    // the start menu's: opened, or brought up if it's open ("" tab: the one it has)
+    function openWindow(name: string, tab: string): void {
         if (name === "today")
             todayTab = tab;
         else if (name === "system")
             systemTab = tab;
+        else if (name === "settings")
+            settingsPage = tab;
         current = ""; // the menu it was opened from
-        windows = Object.assign({}, windows, { [name]: true });
+        if (isWindowOpen(name))
+            windowAsked(name);
+        else
+            windows = Object.assign({}, windows, { [name]: true });
     }
 
     // the taskbar's icon for one of them, by its title ("" for any other app's window)
     function windowIcon(cls: string, title: string): string {
         if (cls !== "org.quickshell")
             return "";
-        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : "logo";
+        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : title.startsWith(Strings.t("settingsTitle")) ? "gear" : "logo";
     }
 
     function closeWindow(name: string): void {
@@ -167,8 +183,8 @@ Singleton {
                 root.toggleWindow("today", "");
                 return;
             }
-            if (name === "system") {
-                root.toggleWindow("system", "");
+            if (name === "system" || name === "settings") {
+                root.toggleWindow(name, "");
                 return;
             }
             if (root.current === name && root.screen === root.focusedScreen) {
@@ -267,9 +283,7 @@ Singleton {
 
         // the settings window at a page: look, bar, screen, media, device, windows, kawt
         function settings(page: string): void {
-            root.settingsPage = page;
-            root.screen = root.focusedScreen;
-            root.current = "settings";
+            root.toggleWindow("settings", page || "look");
         }
 
         function toggleLight(): void {

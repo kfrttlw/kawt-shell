@@ -29,7 +29,7 @@ PanelWindow {
         { kind: "all", icon: "apps", text: Strings.t("allApps"), sub: true },
         { kind: "window", icon: "check", text: Strings.t("today"), key: "super+i", window: "today", tab: "today" },
         { kind: "window", icon: "chart", text: Strings.t("system"), window: "system", tab: "sys" },
-        { kind: "panel", icon: "gear", text: Strings.t("settings"), key: "super+,", panel: "settings" },
+        { kind: "window", icon: "gear", text: Strings.t("settings"), key: "super+,", window: "settings", tab: "" },
         { kind: "panel", icon: "help", text: Strings.t("help"), key: "super+/", panel: "keys" },
         { kind: "ai", icon: "ai", text: Strings.t("ai"), key: "super+a" },
         { kind: "panel", icon: "stripes", text: "stripes", key: "super+h", panel: "home" }
@@ -92,7 +92,7 @@ PanelWindow {
             Panels.current = l.panel;
             break;
         case "window":
-            Panels.toggleWindow(l.window, l.tab ?? "");
+            Panels.openWindow(l.window, l.tab ?? "");
             break;
         case "ai":
             Panels.close();
