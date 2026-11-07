@@ -63,9 +63,10 @@ ColumnLayout {
             color: NetWho.missing ? Colors.warn : Colors.dim
         }
 
-        BracketButton {
-            label: "lan"
-            textColor: NetWho.lan ? Colors.accent : Colors.dim
+        PushButton {
+            minWidth: 0
+            text: "lan"
+            active: NetWho.lan
             onClicked: NetWho.lan = !NetWho.lan
         }
     }
@@ -124,9 +125,10 @@ ColumnLayout {
                     color: row.app && row.app.down + row.app.up > 100 * 1024 ? Colors.fg : Colors.dim
                 }
 
-                BracketButton {
+                PushButton {
                     visible: !row.app?.self
-                    label: "!"
+                    minWidth: 0
+                    text: "!"
                     active: row.isOpen
                     onClicked: root.toggle(row.modelData)
                 }
@@ -138,9 +140,10 @@ ColumnLayout {
                 visible: row.isOpen
                 spacing: Metrics.spacing
 
-                BracketButton {
-                    label: root.armed ? "sure? kill" : "kill"
-                    textColor: root.armed ? Colors.warn : Colors.fg
+                PushButton {
+                    minWidth: 0
+                    text: root.armed ? "sure? kill" : "kill"
+                    active: root.armed
                     onClicked: {
                         if (!root.armed) {
                             root.armed = true;
@@ -154,11 +157,13 @@ ColumnLayout {
                     }
                 }
 
-                BracketButton {
+                PushButton {
                     readonly property string entry: NetWho.entries[row.modelData] ?? ""
 
-                    label: "offline"
-                    textColor: entry && Apps.offline.includes(entry) ? Colors.accent : Colors.fg
+                    minWidth: 0
+
+                    text: "offline"
+                    active: entry && Apps.offline.includes(entry)
                     onClicked: root.offline(row.app)
                 }
 
@@ -230,10 +235,12 @@ ColumnLayout {
         Repeater {
             model: Apps.offline
 
-            BracketButton {
+            PushButton {
                 required property string modelData
 
-                label: `${Apps.nameOf(modelData).toLowerCase()} x`
+                minWidth: 0
+
+                text: `${Apps.nameOf(modelData).toLowerCase()} x`
                 onClicked: Apps.setOffline(modelData, false)
             }
         }

@@ -8,8 +8,6 @@ import qs.utils
 
 // The machine, like a thinkpad's bios setup:
 //
-//   [main]  power
-//
 //   ██ ▄█▀  ▀▀▀█▄ ██    ██ ▀██▀▀         ThinkPad T14s Gen 1
 //   ██▀█▄  ▄█▀▀██ ██▄██▄██  ██    ▄▄     20T0S0... · kawt bios 1.0
 //
@@ -18,19 +16,17 @@ import qs.utils
 //   memory .............. 16 GB · 9.8 used
 //   battery ............. 72% · health 87% · 312 cycles
 //   ...
-//   ──────────────────────────────────────────────
-//   [lock] [sleep] [logout] [reboot] [off]
 //
 // power: the battery, where it stops charging, the power profile, the keyboard light; each only
-// where the machine has it (a pc: the profile and the buttons)
+// where the machine has it (a pc: the profile)
 ColumnLayout {
     id: tab
 
     required property var profile
-    // one page only, without the tabs and the way out (the system window's machine and power tabs:
-    // the power buttons live in the shut down dialog): "main" | "power"; "": the old way, all
-    property string part: ""
-    readonly property int shown: part === "power" ? 1 : part === "main" ? 0 : page.current
+    // which page: the system window's machine tab or its power tab (the power buttons live in
+    // the shut down dialog only): "main" | "power"
+    property string part: "main"
+    readonly property int shown: part === "power" ? 1 : 0
     readonly property var bat: UPower.displayDevice
     readonly property bool plugged: bat.state === UPowerDeviceState.Charging || bat.state === UPowerDeviceState.FullyCharged
     readonly property int keyWidth: 21 // "bios version ........ "
@@ -63,7 +59,7 @@ ColumnLayout {
         }
     }
 
-    // the same with buttons on the right: name ...... [a] [b] [c]   hint
+    // the same with one of a few on the right: name ...... (•) a  ( ) b  ( ) c   hint
     component Choice: RowLayout {
         id: choice
 
@@ -84,12 +80,13 @@ ColumnLayout {
         Repeater {
             model: choice.options
 
-            BracketButton {
+            Check {
                 required property var modelData
 
-                label: modelData[1]
-                textColor: choice.current === modelData[0] ? Colors.accent : Colors.dim
-                onClicked: choice.picked(modelData[0])
+                radio: true
+                text: modelData[1]
+                checked: choice.current === modelData[0]
+                onToggled: choice.picked(modelData[0])
             }
         }
 
@@ -100,14 +97,6 @@ ColumnLayout {
             color: Colors.dim
             font.pixelSize: Metrics.size(-2)
         }
-    }
-
-    Tabs {
-        id: page
-
-        visible: tab.part === ""
-        Layout.topMargin: Metrics.spacing
-        tabs: ["main", "power"]
     }
 
     // ---------------------------------------------------------------- main
@@ -291,47 +280,6 @@ ColumnLayout {
             visible: !tab.bat.isLaptopBattery && Hardware.profile === ""
             text: "-- no battery and no power profiles here --"
             color: Colors.dim
-        }
-    }
-
-    Rule {
-        visible: tab.part === ""
-        Layout.fillWidth: true
-        Layout.topMargin: Metrics.spacing
-    }
-
-    // the way out, like a bios's exit page: a second click for the ones that end the session
-    RowLayout {
-        visible: tab.part === ""
-        spacing: Metrics.spacing
-        opacity: tab.profile.boot > 2 ? 1 : 0
-
-        BracketButton {
-            label: "lock"
-            onClicked: tab.profile.power("lock", [])
-        }
-
-        BracketButton {
-            label: "sleep"
-            onClicked: tab.profile.power("sleep", [])
-        }
-
-        BracketButton {
-            label: tab.profile.armed === "logout" ? "sure?" : "logout"
-            textColor: tab.profile.armed === "logout" ? Colors.warn : Colors.fg
-            onClicked: tab.profile.power("logout", [])
-        }
-
-        BracketButton {
-            label: tab.profile.armed === "reboot" ? "sure?" : "reboot"
-            textColor: tab.profile.armed === "reboot" ? Colors.warn : Colors.fg
-            onClicked: tab.profile.power("reboot", ["systemctl", "reboot"])
-        }
-
-        BracketButton {
-            label: tab.profile.armed === "off" ? "sure?" : "off"
-            textColor: tab.profile.armed === "off" ? Colors.warn : Colors.fg
-            onClicked: tab.profile.power("off", ["systemctl", "poweroff"])
         }
     }
 }
