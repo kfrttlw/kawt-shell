@@ -14,7 +14,7 @@ BarIcon {
     readonly property int recording: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio").length
 
     // only while some app listens, red; or while it's muted
-    visible: Settings.barShows("mic") && source !== null && (recording > 0 || muted)
+    visible: Settings.barShows("mic") && source !== null && (recording > 0 || muted || Settings.micAlways)
     icon: "mic"
     ink: recording > 0 && !muted ? Colors.accent : "transparent"
     text: muted ? "off" : ""
