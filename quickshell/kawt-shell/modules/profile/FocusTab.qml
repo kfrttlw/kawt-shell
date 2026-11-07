@@ -7,16 +7,16 @@ import qs.utils
 
 // The focus timer (services/Focus.qml), big:
 //
-//   on: kawt readme  [change]                               [25/5] 50/10
+//   on: kawt readme                         [ A task… ]  (•) 25/5  ( ) 50/10
 //
 //   18:42
-//   ▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯▯▯▯▯     the red one is now
+//   [▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮                    ]
 //   of 25:00 · then 5 min break
 //
-//   [||] [skip] [stop]                                  [x] dnd while it works
-//
-//   this week  mon ▮▮▮▯  tue ▮▮▯▯  wed ▯▯▯▯ ...          a segment a round, the goal's many
-//   today 3 of 4 · 1h 15m                               [-] goal 4 [+]
+//   [ ❚❚ ] [ Skip ] [ Stop ]                      [x] Do not disturb while it works
+//   ───────────────────────────────────────────────────────────────────────
+//   week  ▯ ▯ ▯ ▯ ▯ ▯ ▯  (a column a day, a block a round)
+//   today 3 of 4 · 1h 15m                                       goal [−] 4 [+]
 ColumnLayout {
     id: tab
 
@@ -34,34 +34,36 @@ ColumnLayout {
         spacing: Metrics.spacing
 
         Label {
-            text: "on:"
+            text: Strings.t("focusOn")
             color: Colors.dim
         }
 
         Label {
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: Focus.running ? (Focus.taskText || "nothing in particular") : tab.pickedText || "nothing in particular"
+            text: Focus.running ? (Focus.taskText || Strings.t("focusNothing")) : tab.pickedText || Strings.t("focusNothing")
         }
 
-        BracketButton {
+        PushButton {
             visible: !Focus.running
-            label: tab.picking ? "close" : "a task"
+            minWidth: 0
+            text: tab.picking ? Strings.t("close") : Strings.t("focusTask")
             active: tab.picking
             onClicked: tab.picking = !tab.picking
         }
 
-        // work / break lengths
+        // work / break lengths: one of two
         Repeater {
             model: [[25, 5], [50, 10]]
 
-            BracketButton {
+            Check {
                 required property var modelData
-                readonly property bool chosen: Focus.workMin === modelData[0] && Focus.breakMin === modelData[1]
 
-                label: `${modelData[0]}/${modelData[1]}`
-                textColor: chosen ? Colors.accent : Colors.dim
-                onClicked: Focus.setLengths(modelData[0], modelData[1])
+                Layout.leftMargin: 6
+                radio: true
+                text: `${modelData[0]}/${modelData[1]}`
+                checked: Focus.workMin === modelData[0] && Focus.breakMin === modelData[1]
+                onToggled: Focus.setLengths(modelData[0], modelData[1])
             }
         }
     }
@@ -73,7 +75,7 @@ ColumnLayout {
         spacing: 0
 
         Repeater {
-            model: tab.picking ? [{ id: 0, text: "nothing in particular" }, ...Todo.sorted.filter(t => !t.done).slice(0, 8)] : []
+            model: tab.picking ? [{ id: 0, text: Strings.t("focusNothing") }, ...Todo.sorted.filter(t => !t.done).slice(0, 8)] : []
 
             Item {
                 id: pick
@@ -125,20 +127,18 @@ ColumnLayout {
         font.weight: Font.Light
     }
 
-    // how far: the red segment is now
-    LevelSlider {
+    // how far, in red blocks
+    Segments {
         Layout.fillWidth: true
-        enabled: false
-        playhead: Focus.running
         value: Focus.progress
     }
 
     Label {
         Layout.fillWidth: true
         elide: Text.ElideRight
-        text: Focus.phase === "break" ? `break · then the next round waits for you`
-            : Focus.paused ? `paused · ${Focus.clock} left`
-            : `of ${Focus.workMin}:00 · then ${Focus.breakMin} min break`
+        text: Focus.phase === "break" ? Strings.t("focusBreakLine")
+            : Focus.paused ? Strings.t("focusPausedLine").arg(Focus.clock)
+            : Strings.t("focusOfLine").arg(Focus.workMin).arg(Focus.breakMin)
         color: Colors.dim
     }
 
@@ -147,32 +147,34 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Metrics.spacing
 
-        BracketButton {
+        PushButton {
             visible: !Focus.running
-            label: "start"
-            textColor: Colors.accent
+            text: Strings.t("focusStart")
             onClicked: {
                 tab.picking = false;
                 Focus.start(tab.picked);
             }
         }
 
-        BracketButton {
+        PushButton {
             visible: Focus.running
-            label: Focus.paused ? ">" : "||"
+            minWidth: 30
+            text: Focus.paused ? "▶" : "❚❚"
             active: Focus.paused
             onClicked: Focus.paused ? Focus.resume() : Focus.pause()
         }
 
-        BracketButton {
+        PushButton {
             visible: Focus.running
-            label: "skip"
+            minWidth: 0
+            text: Strings.t("focusSkip")
             onClicked: Focus.skip()
         }
 
-        BracketButton {
+        PushButton {
             visible: Focus.running
-            label: "stop"
+            minWidth: 0
+            text: Strings.t("focusStop")
             onClicked: Focus.stop()
         }
 
@@ -180,14 +182,10 @@ ColumnLayout {
             Layout.fillWidth: true
         }
 
-        BracketButton {
-            label: Focus.quiet ? "x" : " "
-            onClicked: Focus.setQuiet(!Focus.quiet)
-        }
-
-        Label {
-            text: "dnd while it works"
-            color: Colors.dim
+        Check {
+            text: Strings.t("focusQuiet")
+            checked: Focus.quiet
+            onToggled: Focus.setQuiet(!Focus.quiet)
         }
     }
 
@@ -196,66 +194,51 @@ ColumnLayout {
         Layout.topMargin: Metrics.spacing
     }
 
-    // the week: a segment a round, as many as the goal
-    Flow {
+    // the week, and today's rounds with the goal (as many blocks a day) beside it
+    RowLayout {
         Layout.fillWidth: true
         spacing: Metrics.padding
 
-        Label {
-            text: "this week"
-            color: Colors.dim
+        WeekBars {
+            Layout.fillWidth: true
+            streak: false
         }
 
-        Repeater {
-            model: Focus.week
+        ColumnLayout {
+            Layout.alignment: Qt.AlignBottom
+            spacing: 4
 
-            Row {
-                required property var modelData
+            Label {
+                Layout.alignment: Qt.AlignRight
+                text: Strings.t("focusGoal").arg(Focus.todayRounds).arg(Focus.goal) + (Focus.todayMs > 0 ? ` · ${Fmt.uptime(Focus.todayMs / 1000)}` : "")
+                color: Focus.todayRounds >= Focus.goal ? Colors.accent : Colors.dim
+            }
 
-                spacing: 4
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: Metrics.spacing
 
                 Label {
-                    text: modelData.day
-                    color: modelData.isToday ? Colors.accent : Colors.dim
+                    text: Strings.t("goalWord")
+                    color: Colors.dim
                 }
 
-                Meter {
-                    anchors.verticalCenter: parent.verticalCenter
-                    count: Math.max(Focus.goal, modelData.rounds)
-                    value: modelData.rounds / Math.max(Focus.goal, modelData.rounds)
+                PushButton {
+                    minWidth: 24
+                    text: "−"
+                    onClicked: Focus.setGoal(Focus.goal - 1)
+                }
+
+                Label {
+                    text: Focus.goal
+                }
+
+                PushButton {
+                    minWidth: 24
+                    text: "+"
+                    onClicked: Focus.setGoal(Focus.goal + 1)
                 }
             }
-        }
-    }
-
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Metrics.spacing
-
-        Label {
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            text: `today ${Focus.todayRounds} of ${Focus.goal}` + (Focus.todayMs > 0 ? ` · ${Fmt.uptime(Focus.todayMs / 1000)}` : "")
-            color: Focus.todayRounds >= Focus.goal ? Colors.accent : Colors.dim
-        }
-
-        Label {
-            text: "goal"
-            color: Colors.dim
-        }
-
-        BracketButton {
-            label: "-"
-            onClicked: Focus.setGoal(Focus.goal - 1)
-        }
-
-        Label {
-            text: Focus.goal
-        }
-
-        BracketButton {
-            label: "+"
-            onClicked: Focus.setGoal(Focus.goal + 1)
         }
     }
 }
