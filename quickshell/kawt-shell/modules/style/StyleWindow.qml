@@ -7,8 +7,8 @@ import qs.services
 
 // Wallpaper and theme (super + w), like an old system's display properties: a real window
 // (components/AppWindow.qml) in three tabs.
-//   Wallpaper  a monitor drawn on top shows the picked one with a little bar in the theme over
-//              it; the folder's pictures in a grid under it; Browse…, Random, how it's shown
+//   Wallpaper  the picked one big across the top, with a little bar in the theme over it; the
+//              folder's pictures in a grid under it; Browse…, Random, how it's shown
 //   Theme      the themes, a small picture of each in its own colors; dark or light; your own
 //              (New… / Edit…: ThemeEditor.qml over the window); the terminals' colors, fastfetch
 //   Change     a new one every 15 min … 3 h, in order or at random, how it changes
@@ -22,12 +22,14 @@ AppWindow {
     readonly property string picked: Wallpapers.files[current] ?? ""
     property var before: ({}) // what was on when it opened: Cancel goes back to it
     property bool browsing: false // the folder line is open
+    property int roomHeight: 1080 // the screen it opened on: looked at once, so it doesn't jump
 
     name: "style"
     icon: "wallpaper"
     title: Strings.t("styleTitle")
     bodyWidth: Math.round(640 * Metrics.scale)
-    bodyHeight: Math.round(590 * Metrics.scale)
+    // room for the picture across the tab and two rows of the grid; less on a small screen
+    bodyHeight: Math.min(Math.round(690 * Metrics.scale), roomHeight - Metrics.barHeight - 140)
     // off the screen while a color is picked off it (the theme editor)
     visible: !editor.picking
 
@@ -86,6 +88,7 @@ AppWindow {
     }
 
     Component.onCompleted: {
+        roomHeight = Quickshell.screens.find(s => s.name === Panels.focusedScreen)?.height ?? 1080;
         showTab(Panels.styleTab);
         before = { wallpaper: Settings.wallpaper, theme: Settings.theme, light: Settings.light, dither: Settings.wallDither };
         Wallpapers.refresh();
@@ -188,101 +191,126 @@ AppWindow {
             visible: tabs.current === 0
             spacing: Metrics.spacing
 
-            // the monitor: the picked one as it would look, a little bar in the theme over it
-            Item {
-                Layout.alignment: Qt.AlignHCenter
-                implicitWidth: Math.round(300 * Metrics.scale)
-                implicitHeight: monitor.height + 14
+            // the picked one big, across the tab, sunk in a frame, a little bar in the theme over it
+            Rectangle {
+                id: preview
 
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.round(Math.min(width * 9 / 16, root.bodyHeight * 0.48))
+                color: Colors.bg
+
+                Bevel {
+                    style: "sunk"
+                }
+
+                Image {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    source: Wallpapers.preview ? `file://${Wallpapers.preview}` : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    smooth: !Settings.wallDither
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    visible: root.picked === ""
+                    text: Strings.t("noWallpaper")
+                    color: Colors.dim
+                }
+
+                // the bar, in small: kawt's button, two windows, the desks, the clock
                 Rectangle {
-                    id: monitor
+                    id: miniBar
 
-                    width: parent.width
-                    height: Math.round(width * 9 / 16) + 22
+                    x: 2
+                    y: Metrics.barBottom ? parent.height - 2 - height : 2
+                    width: parent.width - 4
+                    height: Metrics.fontSize + 7
                     color: Colors.face
 
                     Bevel {
                         style: "raised"
                     }
 
-                    Rectangle {
-                        id: screen
+                    Row {
+                        x: 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 3
 
-                        x: 10
-                        y: 10
-                        width: parent.width - 20
-                        height: parent.height - 22
-                        color: Colors.bg
-
-                        Bevel {
-                            style: "sunk"
-                        }
-
-                        Image {
-                            anchors.fill: parent
-                            anchors.margins: 2
-                            source: Wallpapers.preview ? `file://${Wallpapers.preview}` : ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            smooth: !Settings.wallDither
-                        }
-
-                        // the bar, in small
                         Rectangle {
-                            x: 2
-                            y: Metrics.barBottom ? parent.height - 2 - height : 2
-                            width: parent.width - 4
-                            height: 7
+                            width: 30
+                            height: miniBar.height - 6
                             color: Colors.face
 
-                            Rectangle {
-                                x: 1
-                                y: 1
-                                width: 14
-                                height: 5
-                                color: Colors.accent
+                            Bevel {
+                                style: "raised"
                             }
 
-                            Repeater {
-                                model: 3
+                            Rectangle {
+                                x: 4
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 4
+                                height: parent.height - 6
+                                color: Colors.accent
+                            }
+                        }
 
-                                Rectangle {
-                                    required property int index
+                        Repeater {
+                            model: [70, 54]
 
-                                    x: 20 + index * 22
-                                    y: 1
-                                    width: 20
-                                    height: 5
-                                    color: Colors.hi
+                            Rectangle {
+                                required property int modelData
+                                required property int index
+
+                                width: modelData
+                                height: miniBar.height - 6
+                                color: Colors.face
+
+                                Bevel {
+                                    style: parent.index === 0 ? "pressed" : "raised"
                                 }
                             }
                         }
                     }
 
-                    // the power light
-                    Rectangle {
+                    Row {
                         anchors.right: parent.right
-                        anchors.rightMargin: 10
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: 4
-                        width: 4
-                        height: 3
-                        color: Colors.accent
+                        anchors.rightMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 3
+
+                        Repeater {
+                            model: 4
+
+                            Rectangle {
+                                required property int index
+
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 9
+                                height: 9
+                                color: index === 1 ? Colors.accent : "transparent"
+                                border.width: 1
+                                border.color: index === 1 ? Colors.accent : Colors.dim
+                            }
+                        }
+
+                        Label {
+                            leftPadding: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Time.fmt(Time.now)
+                        }
                     }
                 }
+            }
 
-                // its foot
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: monitor.height
-                    width: Math.round(parent.width * 0.4)
-                    height: 10
-                    color: Colors.face
-
-                    Bevel {
-                        style: "raised"
-                    }
-                }
+            // its name, and whether it's on now
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                visible: root.picked !== ""
+                text: `${root.picked.split("/").pop()} · ${root.picked === Settings.wallpaper ? Strings.t("wallOnNow") : Strings.t("wallApplyToSet")}`
+                color: root.picked === Settings.wallpaper ? Colors.fg : Colors.dim
             }
 
             Label {
