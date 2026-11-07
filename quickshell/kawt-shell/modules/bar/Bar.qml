@@ -18,6 +18,7 @@ import "../power"
 import "../help"
 import "../shot"
 import "../companion"
+import "../settings"
 
 Variants {
     model: Quickshell.screens
@@ -516,6 +517,14 @@ Variants {
             when: Panels.isOpen("style", root.modelData)
 
             StyleWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("settings", root.modelData)
+
+            SettingsWindow {
                 forScreen: root.modelData
             }
         }

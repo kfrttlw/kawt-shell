@@ -248,7 +248,7 @@ Singleton {
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
             property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22
-            property string language: "" // kawt's words: "ru" | "en" | "" the system's (config/Strings.qml)
+            property string language: "en" // kawt's words: "en" | "ru" (config/Strings.qml)
             property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
             property string frames: "bevel" // "bevel": the old system look, raised buttons and panels, sunk fields and lists, kawt's windows with a title bar | "flat": thin lines (config/Colors.qml, components/Bevel.qml)
             property bool crt: true // the lock (and the boot screen) switch on and off like an old picture tube (components/CrtTube.qml)

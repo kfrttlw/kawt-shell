@@ -29,7 +29,7 @@ PanelWindow {
         { kind: "all", icon: "apps", text: Strings.t("allApps"), sub: true },
         { kind: "panel", icon: "check", text: Strings.t("today"), key: "super+i", panel: "dashboard", tab: "today" },
         { kind: "panel", icon: "chart", text: Strings.t("system"), panel: "dashboard", tab: "sys" },
-        { kind: "panel", icon: "gear", text: Strings.t("settings"), key: "super+,", panel: "dashboard", tab: "cfg" },
+        { kind: "panel", icon: "gear", text: Strings.t("settings"), key: "super+,", panel: "settings" },
         { kind: "panel", icon: "help", text: Strings.t("help"), key: "super+/", panel: "keys" },
         { kind: "ai", icon: "ai", text: Strings.t("ai"), key: "super+a" },
         { kind: "panel", icon: "stripes", text: "stripes", key: "super+h", panel: "home" }
