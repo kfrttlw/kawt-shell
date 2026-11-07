@@ -2,17 +2,14 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// kawt's words, in russian and english: Strings.t("key"). The language is Settings.language, or
-// the system's (LANG) when that's empty; anything not russian is english. A key missing in one
+// kawt's words, in english and russian: Strings.t("key"). English unless Settings.language is
+// "ru" (cfg -> look -> language); the system's language doesn't change it. A key missing in one
 // language shows the other's, a key missing in both shows itself.
 // New words go here, not into the panels, so both languages stay whole.
 Singleton {
     id: root
 
-    readonly property string lang: {
-        const l = Settings.language || (Quickshell.env("LC_ALL") || Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG") || "en");
-        return l.toLowerCase().startsWith("ru") ? "ru" : "en";
-    }
+    readonly property string lang: Settings.language === "ru" ? "ru" : "en"
     readonly property bool ru: lang === "ru"
 
     function t(key: string): string {
@@ -88,6 +85,13 @@ Singleton {
         logoutNote: "Closes your programs and leaves Hyprland.",
         lockNote: "Hides the screen until you type your password.",
         inSeconds: "in %1 s",
+        pageLook: "Look",
+        pageScreen: "Screen",
+        pageMedia: "Media",
+        pageDevice: "Device",
+        pageWindows: "Windows",
+        pageKawt: "kawt",
+        settingsTitle: "Settings",
         now: "Now",
         saveFiles: "save your open files",
         sleepNote: "the screen locks before it sleeps",
@@ -164,6 +168,13 @@ Singleton {
         logoutNote: "Закроет программы и выйдет из Hyprland.",
         lockNote: "Спрячет экран до ввода пароля.",
         inSeconds: "через %1 с",
+        pageLook: "Внешний вид",
+        pageScreen: "Экран",
+        pageMedia: "Медиа",
+        pageDevice: "Устройство",
+        pageWindows: "Окна",
+        pageKawt: "kawt",
+        settingsTitle: "Настройки",
         now: "Сейчас",
         saveFiles: "сохраните открытые файлы",
         sleepNote: "экран заблокируется до сна",

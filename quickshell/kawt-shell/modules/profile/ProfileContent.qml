@@ -108,7 +108,7 @@ ColumnLayout {
     }
 
     // the tabs, by name: show("focus"), and the task opened in todo
-    readonly property list<string> tabNames: ["today", "todo", "notes", "focus", "sys", "top", "cfg"]
+    readonly property list<string> tabNames: ["today", "todo", "notes", "focus", "sys", "top"]
 
     function show(name: string): void {
         tabs.current = Math.max(0, tabNames.indexOf(name));
@@ -211,16 +211,6 @@ ColumnLayout {
 
         sourceComponent: Component {
             TopTab {
-                profile: root
-            }
-        }
-    }
-
-    Page {
-        name: "cfg"
-
-        sourceComponent: Component {
-            CfgTab {
                 profile: root
             }
         }

@@ -7,7 +7,12 @@ import qs.services
 import "../popovers"
 
 ColumnLayout {
+    id: cfg
+
     required property var profile
+    // the page shown: picked from outside (the settings window's list), or by the tabs here
+    property int page: -1
+    readonly property int shown: page >= 0 ? page : cfgPages.current
 
     spacing: Metrics.spacing
     Component.onCompleted: Ai.refresh()
@@ -17,13 +22,14 @@ ColumnLayout {
         id: cfgPages
 
         Layout.topMargin: Metrics.spacing
+        visible: cfg.page < 0
         tabs: ["look", "screen", "media", "device", "windows", "kawt"]
     }
 
     // ------------------------------------------------------------ page: look (font, the bar, the profile's header)
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 0
+        visible: cfg.shown === 0
         spacing: Metrics.spacing
 
         //  theme: < black >  [edit] [+ new]  [wallpaper & themes]
@@ -138,7 +144,7 @@ ColumnLayout {
             }
         }
 
-        // kawt's words: the system's language, or russian / english (config/Strings.qml)
+        // kawt's words: english, or russian (config/Strings.qml)
         RowLayout {
             spacing: Metrics.spacing
 
@@ -148,13 +154,13 @@ ColumnLayout {
             }
 
             Repeater {
-                model: [["", Strings.ru ? "как в системе" : "system"], ["ru", "русский"], ["en", "english"]]
+                model: [["en", "english"], ["ru", "русский"]]
 
                 BracketButton {
                     required property var modelData
 
                     label: modelData[1]
-                    textColor: Settings.language === modelData[0] ? Colors.accent : Colors.dim
+                    textColor: Strings.lang === modelData[0] ? Colors.accent : Colors.dim
                     onClicked: Settings.language = modelData[0]
                 }
             }
@@ -343,7 +349,7 @@ ColumnLayout {
             spacing: Metrics.spacing
 
             Repeater {
-                model: [["profile", "●"], ["dock", "$"], ["workspaces", "1 2 3"], ["desk", "tile / float"], ["title", "window title"], ["wifi", "wifi"], ["net", "net"], ["vpn", "vpn"], ["clock", "clock"], ["player", "player"], ["tray", "tray"], ["kb", "kb"], ["bt", "bt"], ["mic", "mic"], ["vol", "vol"], ["br", "br"], ["bat", "bat"], ["log", "log"], ["home", "≡"], ["ai", ">_"]]
+                model: [["quick", "quick launch"], ["workspaces", "1 2 3"], ["tray", "tray"], ["vpn", "vpn"], ["player", "music"], ["bt", "bluetooth"], ["mic", "mic"], ["wifi", "network"], ["vol", "sound"], ["br", "brightness"], ["bat", "battery"], ["log", "messages"], ["kb", "layout"], ["clock", "clock"]]
 
                 BracketButton {
                     required property var modelData
@@ -406,7 +412,7 @@ ColumnLayout {
     // ------------------------------------------------------------ page: screen (the lock, the screen going off, night light, the clock)
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 1
+        visible: cfg.shown === 1
         spacing: Metrics.spacing
 
         // ------------------------------------------------------------- lock
@@ -652,7 +658,7 @@ ColumnLayout {
     // ------------------------------------------------------------ page: media (screenshots, recordings, the player)
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 2
+        visible: cfg.shown === 2
         spacing: Metrics.spacing
 
         Label {
@@ -756,7 +762,7 @@ ColumnLayout {
     // ------------------------------------------------------------ page: device (keyboard, laptop or desktop)
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 3
+        visible: cfg.shown === 3
         spacing: Metrics.spacing
 
         // ------------------------------------------------------------ keyboard
@@ -816,7 +822,7 @@ ColumnLayout {
     // ------------------------------------------------------------ page: windows
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 4
+        visible: cfg.shown === 4
         spacing: Metrics.spacing
 
         //  find> fire
@@ -918,7 +924,7 @@ ColumnLayout {
     // ------------------------------------------------------------ page: kawt (updates, the companion, help)
     ColumnLayout {
         Layout.fillWidth: true
-        visible: cfgPages.current === 5
+        visible: cfg.shown === 5
         spacing: Metrics.spacing
 
         // ------------------------------------------------------------ kawt
