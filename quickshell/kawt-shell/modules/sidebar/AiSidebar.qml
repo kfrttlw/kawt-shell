@@ -1177,7 +1177,7 @@ PanelWindow {
 
                                 Choice {
                                     title: Strings.t("aiPersona")
-                                    hintText: ((Ai.personas.find(p => p[0] === Settings.aiPersona) || [])[2] || Strings.t("aiOwnPrompt")).slice(0, 90)
+                                    hintText: Strings.t(`aiPersonaNote_${Settings.aiPersona}`)
                                     options: Ai.personas.map(p => [p[0], Strings.t(`aiPersona_${p[0]}`)])
                                     value: Settings.aiPersona
                                     onPicked: v => Settings.aiPersona = v
@@ -1465,9 +1465,12 @@ PanelWindow {
             Layout.fillWidth: true
             spacing: 6
 
+            // a long name goes on two lines rather than under the buttons
             Label {
                 Layout.preferredWidth: Metrics.fontSize * 0.6 * 14
+                Layout.maximumWidth: Metrics.fontSize * 0.6 * 14
                 Layout.alignment: Qt.AlignTop
+                wrapMode: Text.WordWrap
                 text: choice.title
             }
 
