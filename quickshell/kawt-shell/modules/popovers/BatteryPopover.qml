@@ -35,8 +35,17 @@ Popover {
     settingsPage: "screen"
     onPanelOpened: Hardware.refresh() // where the charging stops, as the machine says now
 
+    // a pc has none of it: no battery, maybe no power profiles; what isn't there isn't shown
+    // (the bar has no battery button there at all: modules/bar/BatteryButton.qml)
+    Label {
+        visible: !root.dev.isLaptopBattery
+        text: Strings.t("noBattery")
+        color: Colors.dim
+    }
+
     RowLayout {
         Layout.fillWidth: true
+        visible: root.dev.isLaptopBattery
         spacing: Metrics.padding
 
         PixIcon {
@@ -70,7 +79,7 @@ Popover {
     // health, cycles, energy: one dim line
     Label {
         Layout.fillWidth: true
-        visible: text !== ""
+        visible: root.dev.isLaptopBattery && text !== ""
         elide: Text.ElideRight
         text: [
             SysInfo.batHealth > 0 ? Strings.t("batHealth").arg(Math.round(SysInfo.batHealth * 100)) : "",
@@ -81,8 +90,9 @@ Popover {
         color: Colors.dim
     }
 
-    // power-profiles-daemon
+    // power-profiles-daemon, if it runs (Hardware.profile: "" without it)
     Group {
+        visible: Hardware.profile !== ""
         title: Strings.t("powerMode")
 
         RowLayout {
