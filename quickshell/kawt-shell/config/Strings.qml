@@ -30,6 +30,10 @@ Singleton {
 
     readonly property var enWords: ({
         teNameChars: "a-z, 0-9 and - only",
+        ratesTitle: "A monitor could be faster",
+        ratesLine: "%1 runs at %2 Hz, it can do %3",
+        ratesSet: "Set it",
+        ratesLeave: "Leave it",
         keyPlay: "play",
         keySeek: "5 s",
         keyVol: "volume",
@@ -806,6 +810,10 @@ Singleton {
 
     readonly property var ruWords: ({
         teNameChars: "только a-z, 0-9 и -",
+        ratesTitle: "Монитор может быстрее",
+        ratesLine: "%1 работает на %2 Гц, умеет %3",
+        ratesSet: "Поставить",
+        ratesLeave: "Не надо",
         keyPlay: "играть",
         keySeek: "5 с",
         keyVol: "громкость",

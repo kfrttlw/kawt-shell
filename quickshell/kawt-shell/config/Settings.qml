@@ -108,6 +108,7 @@ Singleton {
     property alias companionLang: adapter.companionLang
     property alias companionQuotes: adapter.companionQuotes
     property alias welcomed: adapter.welcomed
+    property alias ratesAsked: adapter.ratesAsked
     property alias updateAuto: adapter.updateAuto
     property alias updateCheckedAt: adapter.updateCheckedAt
     property alias updateNotified: adapter.updateNotified
@@ -276,6 +277,7 @@ Singleton {
             property string companionLang: "en" // "en" | "ru": what she says
             property bool companionQuotes: true // wise words now and then on a click (fortune-mod's too, in english)
             property bool welcomed: false // the first start's hello and short tour was shown (modules/companion/WelcomePopover.qml)
+            property bool ratesAsked: false // a monitor slower than it can be was asked about, once (services/Rates.qml)
             // kawt's own updates (services/Update.qml): [check] asks github once
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
             property real updateCheckedAt: 0 // ms, the last check that got an answer

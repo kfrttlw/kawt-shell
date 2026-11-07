@@ -60,6 +60,7 @@ ShellRoot {
         Idle.caffeine; // locks after Settings.idleLock minutes without input
         Night.on; // the night light, if it was on
         Hypr.lua; // keeps the special workspace in the bar up to date
+        Rates.wanted; // once: a monitor running slower than it can (services/Rates.qml)
         if (Settings.updateAuto)
             Update.repo; // the weekly update check (one git fetch to github; off in settings -> kawt)
     }
