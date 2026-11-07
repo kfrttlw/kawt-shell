@@ -14,16 +14,27 @@ import qs.services
 // user.lua. "-- keys: super+1..0 | what" lines stand for binds made in a loop or a group.
 // The first one of a key counts: kawt's, then yours, then the standard config's.
 // Plus the keys that work inside kawt's own windows.
+//
+//   ┌ ? Help and keys ─────────────────────────────────── × ┐
+//   │ Find: [shot                                        ]  │
+//   │ [kawt] [Hyprland] [Inside kawt]                        │
+//   │ ┌────────────────────────────────────────────────────┐ │
+//   │ │ super+shift+s   screenshot of an area              │ │
+//   │ └────────────────────────────────────────────────────┘ │
+//   │ 35 keys                │ from hypr/kawt.lua            │
+//   └────────────────────────────────────────────────────────┘
+// Typing finds in all three (typed in the wrong layout too); tab goes to the next tab.
 PanelWindow {
     id: root
 
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("keys", forScreen)
     readonly property bool standard: hyprText.includes("hypr/preset.lua") // hyprland.lua loads kawt's standard config
-    readonly property var binds: { // [{ keys, what }]
+    readonly property var kawtBinds: parse(kawtText) // [{ keys, what }]
+    readonly property var hyprBinds: {
         const freed = standard ? unbinds(userText) : [];
-        const all = parse(kawtText).concat(standard ? parse(userText) : [], parse(hyprText), standard ? parse(presetText).filter(b => !freed.includes(b.keys)) : []);
-        return all.filter((b, i) => all.findIndex(o => o.keys === b.keys) === i);
+        const all = (standard ? parse(userText) : []).concat(parse(hyprText), standard ? parse(presetText).filter(b => !freed.includes(b.keys)) : []);
+        return all.filter((b, i) => all.findIndex(o => o.keys === b.keys) === i && !kawtBinds.some(k => k.keys === b.keys));
     }
     property string kawtText: ""
     property string hyprText: ""
@@ -31,12 +42,30 @@ PanelWindow {
     property string userText: ""
 
     readonly property var inside: [
-        ["launcher", "↑↓ pick · enter run · ctrl+tab mode · ctrl+s pin · prefixes ! > = ? : ;"],
-        ["style (super+w)", "arrows pick a wallpaper · enter set · [ ] theme · t dark/light"],
-        ["power (super+esc)", "↑↓ pick · enter run · enter again: now · esc cancel"],
-        ["todo", "14:30 / 9am / +30m / 05.10 10:00 · #folder · ! !! !!!"],
-        ["everywhere", "esc closes · click outside closes"]
+        { keys: Strings.t("keysRunBox"), what: Strings.t("keysRunBoxWhat") },
+        { keys: Strings.t("keysMenu"), what: Strings.t("keysMenuWhat") },
+        { keys: Strings.t("keysToday"), what: Strings.t("keysTodayWhat") },
+        { keys: Strings.t("keysTasks"), what: Strings.t("keysTasksWhat") },
+        { keys: Strings.t("keysStyle"), what: Strings.t("keysStyleWhat") },
+        { keys: Strings.t("keysPower"), what: Strings.t("keysPowerWhat") },
+        { keys: Strings.t("keysWindows"), what: Strings.t("keysWindowsWhat") },
+        { keys: Strings.t("keysEverywhere"), what: Strings.t("keysEverywhereWhat") }
     ]
+    readonly property var lists: [kawtBinds, hyprBinds, inside]
+    readonly property string query: find.text.trim().toLowerCase()
+    readonly property string queryAlt: Apps.otherLayout(query)
+    readonly property var found: lists.map(l => query ? l.filter(b => {
+            const t = `${b.keys} ${b.what}`.toLowerCase();
+            return t.includes(query) || (queryAlt !== "" && t.includes(queryAlt));
+        }) : l)
+    readonly property var shown: found[tabs.current] ?? []
+
+    // found nothing here, something in another tab: that one
+    onFoundChanged: if (query && shown.length === 0 && found.some(l => l.length))
+        tabs.current = found.findIndex(l => l.length)
+
+    readonly property int rowHeight: Metrics.fontSize + 9
+    readonly property int keysWidth: Math.round(Metrics.fontSize * 0.6 * (tabs.current === 2 ? 26 : 22))
 
     screen: forScreen
     visible: open
@@ -59,7 +88,8 @@ PanelWindow {
             hyprFile.reload();
             presetFile.reload();
             userFile.reload();
-            box.forceActiveFocus();
+            find.text = "";
+            find.input.forceActiveFocus();
         }
     }
 
@@ -130,9 +160,11 @@ PanelWindow {
         onLoadFailed: root.userText = ""
     }
 
-    Rectangle {
+    // the screen behind, dark in dots; a click there closes it
+    Dots {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.45)
+        base: "transparent"
+        dots: Qt.rgba(0, 0, 0, 0.7)
 
         MouseArea {
             anchors.fill: parent
@@ -140,90 +172,141 @@ PanelWindow {
         }
     }
 
-    TitledBox {
+    KWindow {
         id: box
 
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
-        width: Math.min(760, root.width - Metrics.padding * 4)
-        height: body.implicitHeight + Metrics.padding * 2 + contentTop
-        title: "keys"
-        window: true
-        hint: "esc"
-
-        Keys.onEscapePressed: Panels.close()
+        width: Math.min(Math.round(800 * Metrics.scale), root.width - Metrics.padding * 4)
+        height: Math.min(Math.round(560 * Metrics.scale), root.height - Metrics.barHeight - 80)
+        title: Strings.t("keysTitle")
+        icon: "help"
+        status: [
+            root.query ? Strings.t("keysFound").arg(root.shown.length) : Strings.count(root.shown.length, "key"),
+            tabs.current === 0 ? Strings.t("keysFrom").arg("hypr/kawt.lua") : tabs.current === 1 ? Strings.t("keysFrom").arg(root.standard ? "hyprland.lua · user.lua · preset.lua" : "~/.config/hypr/hyprland.lua") : Strings.t("keysInsideNote")
+        ]
+        onCloseClicked: Panels.close()
 
         MouseArea {
             anchors.fill: parent
+            onClicked: find.input.forceActiveFocus()
         }
 
         ColumnLayout {
-            id: body
+            anchors.fill: parent
+            spacing: 6
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Metrics.padding * 1.5
-            anchors.topMargin: Metrics.padding * 1.5 + box.contentTop
-            spacing: 2
-
-            Label {
-                visible: root.kawtText === ""
-                text: "-- couldn't read hypr/kawt.lua --"
-                color: Colors.warn
-            }
-
-            // two columns of  keys  what
-            GridLayout {
+            RowLayout {
                 Layout.fillWidth: true
-                columns: 4
-                columnSpacing: Metrics.padding
-                rowSpacing: 2
+                spacing: 6
 
-                // flat: keys, what, keys, what... (a nested Repeater would take a grid cell itself)
-                Repeater {
-                    model: root.binds.reduce((all, b) => all.concat([b.keys, b.what]), [])
+                Label {
+                    text: Strings.t("findWord")
+                }
 
-                    Label {
-                        required property string modelData
-                        required property int index
-                        readonly property bool isKeys: index % 2 === 0
+                TermInput {
+                    id: find
 
-                        Layout.fillWidth: !isKeys
-                        Layout.preferredWidth: isKeys ? -1 : 1
-                        elide: Text.ElideRight
-                        text: modelData
-                        color: isKeys ? Colors.accent : Colors.fg
+                    Layout.fillWidth: true
+                    prompt: ""
+                    placeholder: Strings.t("keysFindHint")
+
+                    Keys.onEscapePressed: {
+                        if (find.text !== "")
+                            find.text = "";
+                        else
+                            Panels.close();
+                    }
+                    Keys.onUpPressed: flick.contentY = Math.max(0, flick.contentY - root.rowHeight * 3)
+                    Keys.onDownPressed: flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height, flick.contentY + root.rowHeight * 3))
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Tab)
+                            tabs.current = (tabs.current + 1) % 3;
+                        else if (event.key === Qt.Key_Backtab)
+                            tabs.current = (tabs.current + 2) % 3;
+                        else
+                            return;
+                        event.accepted = true;
                     }
                 }
             }
 
-            Label {
-                Layout.topMargin: Metrics.padding
-                text: "-- inside kawt --"
-                color: Colors.dim
+            // searching: how many each tab has
+            Tabs {
+                id: tabs
+
+                Layout.topMargin: 2
+                tabs: ["kawt", "Hyprland", Strings.t("keysInside")].map((n, i) => root.query ? `${n} (${root.found[i].length})` : n)
+                onCurrentChanged: flick.contentY = 0
             }
 
-            Repeater {
-                model: root.inside
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.topMargin: -6
+                color: Colors.well
 
-                RowLayout {
-                    required property var modelData
+                Bevel {
+                    style: "sunk"
+                }
 
-                    Layout.fillWidth: true
-                    spacing: Metrics.padding
+                Label {
+                    visible: root.shown.length === 0
+                    anchors.centerIn: parent
+                    width: parent.width - 24
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    color: tabs.current === 0 && root.kawtText === "" ? Colors.warn : Colors.dim
+                    text: root.query ? `— ${Strings.t("noResults").toLowerCase()} —` : tabs.current === 0 ? Strings.t("keysNoKawt") : Strings.t("keysNoHypr")
+                }
 
-                    Label {
-                        Layout.preferredWidth: Metrics.fontSize * 0.6 * 18
-                        text: modelData[0]
-                        color: Colors.accent
-                    }
+                Flickable {
+                    id: flick
 
-                    Label {
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        text: modelData[1]
-                        color: Colors.dim
+                    x: 3
+                    y: 3
+                    width: parent.width - 6
+                    height: parent.height - 6
+                    clip: true
+                    contentHeight: rows.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    Column {
+                        id: rows
+
+                        width: flick.width
+
+                        Repeater {
+                            model: root.shown
+
+                            Item {
+                                id: row
+
+                                required property var modelData
+
+                                width: rows.width
+                                height: Math.max(root.rowHeight, what.implicitHeight + 6)
+
+                                Label {
+                                    x: 6
+                                    y: 3
+                                    width: root.keysWidth - 12
+                                    elide: Text.ElideRight
+                                    text: row.modelData.keys
+                                    color: Colors.accent
+                                }
+
+                                Label {
+                                    id: what
+
+                                    x: root.keysWidth
+                                    y: 3
+                                    width: parent.width - x - 6
+                                    wrapMode: Text.Wrap
+                                    text: row.modelData.what
+                                }
+                            }
+                        }
                     }
                 }
             }

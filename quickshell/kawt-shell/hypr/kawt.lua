@@ -5,8 +5,8 @@
 -- (pcall: if kawt is missing or broken, Hyprland just skips it instead of failing)
 -- It loads this file straight from the kawt folder, so updates to kawt need no copying.
 --
--- The launcher sits on SUPER + SPACE (where rofi usually is) and SUPER + R opens it in
--- run mode: comment out your own SUPER + SPACE / SUPER + R lines, otherwise both fire.
+-- The run box sits on SUPER + SPACE (where rofi usually is) and SUPER + R opens it in
+-- command mode: comment out your own SUPER + SPACE / SUPER + R lines, otherwise both fire.
 
 -- every bind ends with a "-- comment": the key list (super + /) is read from them
 local kawt = "qs -c kawt-shell ipc call kawt "
@@ -41,9 +41,9 @@ try("autostart", function()
 end)
 
 try("binds", function()
-    bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- rofi-style launcher
-    bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- launcher in run mode, like windows' win+r
-    bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
+    bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- the run box: programs, commands, sums, the ai
+    bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- the run box for a command, like windows' win+r
+    bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- the run box: clipboard history
     bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle menu")) -- the start menu
     bind(mod .. " + comma", hl.dsp.exec_cmd(kawt .. "toggle settings")) -- kawt's settings
     bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
@@ -57,11 +57,11 @@ try("binds", function()
     bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
     bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
     bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)
-    bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shutdown / reboot / suspend menu
+    bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shut down…: power off, restart, sleep, log out, lock
     bind(mod .. " + CTRL + V", hl.dsp.exec_cmd(kawt .. "desk")) -- this desk: windows floating, like KDE <-> tiled
     bind(mod .. " + H", hl.dsp.exec_cmd(kawt .. "companion call")) -- call stripes out of the corner (again: let her go)
-    -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in the profile's
-    -- cfg tab, saved to the folder from there and copied at once)
+    -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in settings ->
+    -- media, saved to the folder from there and copied at once)
     bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
     bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area
     bind("SHIFT + Print", hl.dsp.exec_cmd(kawt .. "screenshot screen")) -- screenshot of the screen
@@ -85,7 +85,7 @@ end)
 --     bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
 -- end)
 -- Locking: kawt locks by itself before sleep (the lid too), on `loginctl lock-session` and after
--- 10 idle minutes (profile -> cfg). No hypridle / hyprlock needed; if you keep them, turn
+-- 10 idle minutes (settings -> screen and lock). No hypridle / hyprlock needed; if you keep them, turn
 -- kawt's off there, or two lockers fight.
 
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over
@@ -99,7 +99,7 @@ end)
 try("lock restore", function()
     hl.config({ misc = { allow_session_lock_restore = true } })
 end)
--- the screen off after the lock (profile -> cfg): a key or the mouse brings it back, by
+-- the screen off after the lock (settings -> screen and lock): a key or the mouse brings it back, by
 -- hyprland itself too, so it never stays dark, even if kawt isn't running
 try("screen wakes on input", function()
     hl.config({ misc = { mouse_move_enables_dpms = true, key_press_enables_dpms = true } })
@@ -131,9 +131,9 @@ try("kawt windows: no shadow", function()
     hl.window_rule({ match = kawt_windows, no_shadow = true })
 end)
 
--- Apps you picked in profile -> cfg -> windows: floating from the start, in the middle, at the
+-- Apps you picked in settings -> windows: floating from the start, in the middle, at the
 -- size the app asks for (not stretched by the layout). kawt writes the list; none yet: nothing
--- what kawt writes for windows (profile -> cfg -> windows, the bar's [tile] / [float]): read once,
+-- what kawt writes for windows (settings -> windows, the bar's [tile] / [float]): read once,
 -- for the two blocks below
 local windows_file = (function()
     local state = os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")
@@ -200,7 +200,7 @@ end)
 
 -- Border and shadow colors of the current kawt theme. kawt rewrites this file and reloads
 -- Hyprland on every theme switch. This file is loaded last, so it wins over earlier colors.
--- lite (profile -> cfg -> look -> old machine): no blur, shadows or animations
+-- lite (settings -> look -> old machine): no blur, shadows or animations
 try("theme colors", function()
     local colors = dofile(os.getenv("HOME") .. "/.local/state/kawt/theme/hyprland_colors.lua")
     hl.config({
@@ -225,7 +225,7 @@ try("theme colors", function()
     end
 end)
 
--- raised frames (profile -> cfg -> look -> frames): a hard shadow a few pixels to the right and
+-- raised frames: a hard shadow a few pixels to the right and
 -- below every window, like an old system's (kawt's own windows draw a dotted one). Not on an
 -- old machine. The offset in a call of its own: if your Hyprland reads it differently, the
 -- rest still applies
