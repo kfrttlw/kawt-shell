@@ -5,12 +5,21 @@ import qs.config
 import qs.components
 import qs.services
 import qs.utils
+import "../../utils/pixicons.js" as Pix
 
-// battery details and the power profile:
-//   [###############-----]  72%
-//   discharging · 3h 12m left · -8.4 W
-//   health 81% · 324 cycles · charge stops at 80%
-//   [saver] balanced  perf
+// The power, the old way: the battery big, how long it lasts; the power profile and where the
+// charging stops, one of a few each; the screen's brightness and the night light under them.
+//
+//   [▮▮▮ ]  72%
+//           3 h 10 min left · on battery
+//   ┌ Mode ─────────────────────────────┐
+//   │ ( ) Quiet  (•) Balanced  ( ) Fast  │
+//   └────────────────────────────────────┘
+//   ┌ Charge up to ──────────────────────┐
+//   │ ( ) 100%  (•) 80%  ( ) 60%          │
+//   └────────────────────────────────────┘
+//   ☼ ──────■──── 60%
+//   [x] Night light · warmer after sunset
 Popover {
     id: root
 
@@ -20,70 +29,122 @@ Popover {
     readonly property bool plugged: charging || full || dev.state === UPowerDeviceState.PendingCharge
 
     name: "battery"
-    title: "battery"
-    cardWidth: 320
-
-    Label {
-        Layout.topMargin: Metrics.spacing
-        text: `[${Fmt.bar(root.dev.percentage, 22)}] ${Math.round(root.dev.percentage * 100)}%`
-        color: !root.plugged && root.dev.percentage < 0.15 ? Colors.warn : Colors.fg
-    }
-
-    Label {
-        Layout.fillWidth: true
-        elide: Text.ElideRight
-        text: [
-            root.full ? "full" : root.charging ? "charging" : root.plugged ? "plugged in, not charging" : "discharging",
-            root.charging && root.dev.timeToFull > 0 ? `${Fmt.uptime(root.dev.timeToFull)} to full` : "",
-            !root.plugged && root.dev.timeToEmpty > 0 ? `${Fmt.uptime(root.dev.timeToEmpty)} left` : "",
-            Math.abs(root.dev.changeRate) >= 0.1 ? `${root.plugged ? "+" : "-"}${Math.abs(root.dev.changeRate).toFixed(1)} W` : ""
-        ].filter(s => s).join(" · ")
-        color: Colors.dim
-    }
-
-    Label {
-        Layout.fillWidth: true
-        elide: Text.ElideRight
-        visible: text !== ""
-        text: [
-            SysInfo.batHealth > 0 ? `health ${Math.round(SysInfo.batHealth * 100)}%` : "",
-            SysInfo.batCycles > 0 ? `${SysInfo.batCycles} cycles` : "",
-            SysInfo.batLimit > 0 && SysInfo.batLimit < 100 ? `charge stops at ${SysInfo.batLimit}%` : "",
-            root.dev.energyCapacity > 0 ? `${root.dev.energy.toFixed(1)}/${root.dev.energyCapacity.toFixed(1)} Wh` : ""
-        ].filter(s => s).join(" · ")
-        color: Colors.dim
-    }
-
-    Rule {
-        Layout.fillWidth: true
-        Layout.topMargin: Metrics.spacing
-    }
-
-    // power-profiles-daemon; the selected one is in [brackets]
-    Label {
-        text: "power profile"
-        color: Colors.dim
-    }
+    title: Strings.t("tab_power")
+    icon: Pix.battery(dev.percentage, charging)
+    cardWidth: 360
+    settingsPage: "screen"
+    onPanelOpened: Hardware.refresh() // where the charging stops, as the machine says now
 
     RowLayout {
-        spacing: Metrics.spacing
+        Layout.fillWidth: true
+        spacing: Metrics.padding
 
-        Repeater {
-            model: [
-                { name: "saver", profile: PowerProfile.PowerSaver },
-                { name: "balanced", profile: PowerProfile.Balanced },
-                { name: "perf", profile: PowerProfile.Performance }
-            ]
+        PixIcon {
+            size: 32
+            name: Pix.battery(root.dev.percentage, root.charging)
+        }
 
-            BracketButton {
-                required property var modelData
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
 
-                visible: modelData.profile !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile
-                label: modelData.name
-                active: PowerProfiles.profile === modelData.profile
-                textColor: PowerProfiles.profile === modelData.profile ? Colors.accent : Colors.fg
-                onClicked: PowerProfiles.profile = modelData.profile
+            Label {
+                text: `${Math.round(root.dev.percentage * 100)}%`
+                font.pixelSize: Metrics.fontSize * 2
+                color: !root.plugged && root.dev.percentage < 0.15 ? Colors.warn : Colors.fg
+            }
+
+            Label {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: [
+                    root.charging && root.dev.timeToFull > 0 ? Strings.t("batFullIn").arg(Fmt.uptime(root.dev.timeToFull)) : "",
+                    !root.plugged && root.dev.timeToEmpty > 0 ? Strings.t("batLeft").arg(Fmt.uptime(root.dev.timeToEmpty)) : "",
+                    root.full ? Strings.t("batFull") : root.charging ? Strings.t("batCharging") : root.plugged ? Strings.t("batPlugged") : Strings.t("batOnBattery")
+                ].filter(s => s).join(" · ")
+                color: Colors.dim
             }
         }
     }
+
+    // health, cycles, energy: one dim line
+    Label {
+        Layout.fillWidth: true
+        visible: text !== ""
+        elide: Text.ElideRight
+        text: [
+            SysInfo.batHealth > 0 ? Strings.t("batHealth").arg(Math.round(SysInfo.batHealth * 100)) : "",
+            SysInfo.batCycles > 0 ? Strings.count(SysInfo.batCycles, "cycle") : "",
+            root.dev.energyCapacity > 0 ? `${root.dev.energy.toFixed(1)}/${root.dev.energyCapacity.toFixed(1)} Wh` : "",
+            Math.abs(root.dev.changeRate) >= 0.1 ? `${root.plugged ? "+" : "−"}${Math.abs(root.dev.changeRate).toFixed(1)} W` : ""
+        ].filter(s => s).join(" · ")
+        color: Colors.dim
+    }
+
+    // power-profiles-daemon
+    Group {
+        title: Strings.t("powerMode")
+
+        RowLayout {
+            spacing: Metrics.padding
+
+            Repeater {
+                model: [
+                    { key: "modeQuiet", profile: PowerProfile.PowerSaver },
+                    { key: "modeBalanced", profile: PowerProfile.Balanced },
+                    { key: "modeFast", profile: PowerProfile.Performance }
+                ]
+
+                Check {
+                    required property var modelData
+
+                    visible: modelData.profile !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile
+                    radio: true
+                    text: Strings.t(modelData.key)
+                    checked: PowerProfiles.profile === modelData.profile
+                    onToggled: PowerProfiles.profile = modelData.profile
+                }
+            }
+        }
+    }
+
+    // where the charging stops (pkexec asks for the password), where the machine lets it be set
+    Group {
+        visible: Hardware.battery !== ""
+        title: Strings.t("chargeUpTo")
+
+        RowLayout {
+            spacing: Metrics.padding
+
+            Repeater {
+                model: [100, 80, 60]
+
+                Check {
+                    required property int modelData
+
+                    radio: true
+                    text: `${modelData}%`
+                    checked: (Hardware.chargeEnd >= 95 ? 100 : Hardware.chargeEnd) === modelData
+                    onToggled: Hardware.setCharge(modelData - 5, modelData)
+                }
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: Strings.t("chargeNote")
+            color: Colors.dim
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: Hardware.status !== ""
+            wrapMode: Text.Wrap
+            text: Hardware.status
+            color: Colors.warn
+        }
+    }
+
+    BrightnessRow {}
 }

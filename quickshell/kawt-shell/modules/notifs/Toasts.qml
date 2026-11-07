@@ -4,7 +4,8 @@ import Quickshell.Wayland
 import qs.config
 import qs.services
 
-// Toast stack in the top-right corner of the focused screen, next to the AI panel if it's open.
+// Toast stack on the right of the focused screen: under the bar, or over the tray when the bar is
+// at the bottom (the newest nearest to it); beside the AI panel if it's open.
 // The window is only as tall as the stack, so it doesn't block clicks below.
 PanelWindow {
     id: root
@@ -21,9 +22,11 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
-    anchors.top: true
+    anchors.top: !Metrics.barBottom
+    anchors.bottom: Metrics.barBottom
     anchors.right: true
     margins.top: Metrics.topGap + Metrics.spacing
+    margins.bottom: Metrics.bottomGap + Metrics.spacing
     // step aside for the ai panel when it's open on this side
     margins.right: Metrics.padding + (Panels.isSidebarOpen(forScreen) && Settings.aiSide !== "left" ? (Settings.aiWide ? Math.round(forScreen.width * 0.62) : Metrics.sidebarWidth) : 0)
 
@@ -38,7 +41,7 @@ PanelWindow {
         // messages kept coming
         Repeater {
             model: ScriptModel {
-                values: Notifs.popups
+                values: Metrics.barBottom ? Notifs.popups.slice().reverse() : Notifs.popups
             }
 
             Toast {

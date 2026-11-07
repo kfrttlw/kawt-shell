@@ -6,7 +6,12 @@ import qs.config
 import qs.components
 import qs.services
 import qs.utils
+import "../../utils/pixicons.js" as Pix
 
+// The network, the old way: Wi-Fi switched on the right of the head; the networks nearby in a
+// sunk list, the one in use red ("connected"), a lock on the ones with a password, "open" on the
+// ones without; the traffic of the last minute between ↓ and ↑; ip, gateway, the band; then
+// [Disconnect] [Who's on the net…] (the system window's network tab) and […] (a hidden network).
 Popover {
     id: root
 
@@ -14,12 +19,15 @@ Popover {
     property string status: ""
     property bool hiddenAsk: false // the lines for a hidden network are open
     property string hiddenSsid: "" // its name, typed: now the password is asked
+    readonly property int rowHeight: Metrics.fontSize + 9
 
     name: "wifi"
-    title: "wifi"
-    // [who's out]: who talks to the internet right now (WhoOut.qml), wider for its columns
-    readonly property int page: pageTabs.current
-    cardWidth: page === 1 ? 480 : 400
+    title: Strings.t("net")
+    icon: Wifi.active ? Pix.wifi(Wifi.active.signalStrength * 100) : NetLinks.wired ? "eth" : "wifi0"
+    cardWidth: 400
+    switchText: Wifi.device !== null ? "Wi-Fi" : ""
+    switchOn: Wifi.enabled
+    onSwitchToggled: Wifi.setEnabled(!Wifi.enabled)
 
     function pick(net: var): void {
         if (net.connected || net.stateChanging)
@@ -41,225 +49,222 @@ Popover {
     onPanelOpened: Wifi.scanning = true
     onPanelClosed: {
         Wifi.scanning = false;
-        pageTabs.current = 0; // the next time it's the networks again, nothing watched
         pskTarget = null;
         status = "";
         if (!Wifi.hiddenBusy)
             Wifi.hiddenStatus = "";
     }
 
-    Tabs {
-        id: pageTabs
-
-        tabs: ["wifi", "who's out"]
-    }
-
     ColumnLayout {
         Layout.fillWidth: true
-        visible: root.page === 0
         spacing: Metrics.spacing
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Metrics.spacing
-
-            BracketButton {
-                label: Wifi.enabled ? "on" : "off"
-                textColor: Wifi.enabled ? Colors.accent : Colors.dim
-                onClicked: Wifi.setEnabled(!Wifi.enabled)
-            }
-
-            Label {
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: Wifi.device?.name ?? "no wifi device"
-                color: Colors.dim
-            }
-
-            BracketButton {
-                visible: Wifi.active !== null
-                label: "disconnect"
-                onClicked: Wifi.active?.disconnect()
-            }
-        }
 
         // cable enp3s0 · vpn wg0
         Label {
             Layout.fillWidth: true
             visible: text !== ""
             elide: Text.ElideRight
-            text: [NetLinks.wired ? `cable ${NetLinks.wired}` : "", NetLinks.vpn ? `vpn ${NetLinks.vpn}` : ""].filter(s => s).join(" · ")
+            text: [NetLinks.wired ? `${Strings.t("wired")} ${NetLinks.wired}` : "", NetLinks.vpn ? `vpn ${NetLinks.vpn}` : ""].filter(s => s).join(" · ")
             color: Colors.accent
         }
 
-        // ---- the connection in use:
-        //   > home   ▂▄▆█ 82%                 5 GHz · ch 36 · 866 Mb/s · WPA2
-        //   ┌ the last minute ─────────────────────── ↓ 1.2M ↑ 34K ┐
-        //   │ in, up from the line; out, down                      │
-        //   └──────────────────────────────────────────────────────┘
-        //   ip ........ 192.168.1.30/24     gateway ... 192.168.1.1
-        //   dns ....... 192.168.1.1 · 1.1.1.1
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.topMargin: Metrics.spacing
-            visible: NetInfo.dev !== "" || Wifi.active !== null
-            spacing: 4
-
-            RowLayout {
-                Layout.fillWidth: true
-                visible: Wifi.active !== null
-                spacing: Metrics.spacing
-
-                Label {
-                    text: `> ${Wifi.active?.name ?? ""}`
-                    color: Colors.accent
-                    font.bold: !Metrics.pixel
-                }
-
-                Label {
-                    text: Wifi.active ? `${Wifi.signalBars(Wifi.active.signalStrength)} ${Math.round(Wifi.active.signalStrength * 100)}%` : ""
-                    color: Colors.dim
-                }
-
-                Label {
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                    text: NetInfo.wifiLine
-                    color: Colors.dim
-                    font.pixelSize: Metrics.size(-2)
-                }
-            }
-
-            TitledBox {
-                Layout.fillWidth: true
-                Layout.topMargin: titleOverhang
-                implicitHeight: graph.implicitHeight + Metrics.padding * 2 + titleOverhang
-                title: "the last minute"
-                hint: `↓${Fmt.rate(NetStats.rx)} ↑${Fmt.rate(NetStats.tx)}`
-
-                TrafficGraph {
-                    id: graph
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: Metrics.padding
-                    anchors.topMargin: Metrics.padding + parent.titleOverhang
-                }
-            }
-
-            // name ...... value, the way the sys tab shows the machine
-            Repeater {
-                model: [["ip", NetInfo.ip], ["ipv6", NetInfo.ip6], ["gateway", NetInfo.gw], ["dns", NetInfo.dns], ["device", [NetInfo.dev, NetInfo.mac].filter(s => s).join(" · ")]].filter(r => r[1])
-
-                RowLayout {
-                    required property var modelData
-
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    Label {
-                        text: `${modelData[0]} ${".".repeat(Math.max(2, 10 - modelData[0].length))} `
-                        color: Colors.dim
-                    }
-
-                    Label {
-                        Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        text: modelData[1]
-                    }
-                }
-            }
+        Label {
+            visible: Wifi.device === null
+            text: Strings.t("noWifi")
+            color: Colors.dim
         }
 
-        Rule {
-            Layout.fillWidth: true
+        Label {
+            visible: Wifi.device !== null && !Wifi.enabled
+            text: Strings.t("wifiOff")
+            color: Colors.dim
         }
 
         Label {
             visible: Wifi.enabled && Wifi.sorted.length === 0
-            text: "scanning..."
+            text: Strings.t("scanning")
             color: Colors.dim
         }
 
-        // ScriptModel: a new scan result moves rows instead of making them all again (the hover
-        // and a failed-connection handler stay with their network)
-        Repeater {
-            model: ScriptModel {
-                values: Wifi.enabled ? Wifi.sorted.slice(0, 10) : []
+        // the networks nearby, sunk in a field
+        Rectangle {
+            Layout.fillWidth: true
+            visible: Wifi.enabled && Wifi.sorted.length > 0
+            implicitHeight: nets.implicitHeight + 6
+            color: Colors.well
+
+            Bevel {
+                style: "sunk"
             }
 
-            Item {
-                id: row
+            Column {
+                id: nets
 
-                required property var modelData
+                x: 3
+                y: 3
+                width: parent.width - 6
 
-                Layout.fillWidth: true
-                implicitHeight: line.implicitHeight + 4
+                // ScriptModel: a new scan result moves rows instead of making them all again
+                // (the hover and a failed-connection handler stay with their network)
+                Repeater {
+                    model: ScriptModel {
+                        values: Wifi.enabled ? Wifi.sorted.slice(0, 8) : []
+                    }
 
-                Connections {
-                    target: row.modelData
+                    Rectangle {
+                        id: row
 
-                    function onConnectionFailed(reason: int): void {
-                        root.status = `failed: ${ConnectionFailReason.toString(reason)}`;
-                        // saved password is wrong/missing -> ask for it (don't call pick(): it would retry a known net forever)
-                        if (reason === ConnectionFailReason.NoSecrets) {
-                            root.pskTarget = row.modelData;
-                            psk.input.forceActiveFocus();
+                        required property var modelData
+                        readonly property bool inUse: modelData.connected
+                        readonly property color ink: inUse ? Colors.onAccent : Colors.fg
+
+                        width: parent.width
+                        height: root.rowHeight
+                        color: inUse ? Colors.accent : rowArea.containsMouse || root.pskTarget === modelData ? Colors.hoverFill : "transparent"
+
+                        Connections {
+                            target: row.modelData
+
+                            function onConnectionFailed(reason: int): void {
+                                root.status = Strings.t("wifiFailed").arg(ConnectionFailReason.toString(reason));
+                                // saved password is wrong/missing -> ask for it (don't call pick(): it would retry a known net forever)
+                                if (reason === ConnectionFailReason.NoSecrets) {
+                                    root.pskTarget = row.modelData;
+                                    psk.input.forceActiveFocus();
+                                }
+                            }
+                        }
+
+                        PixIcon {
+                            id: bars
+
+                            x: 3
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: Pix.wifi(row.modelData.signalStrength * 100)
+                            ink: row.inUse ? Colors.onAccent : "transparent"
+                        }
+
+                        Label {
+                            x: bars.x + bars.width + 6
+                            width: what.x - x - 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            elide: Text.ElideRight
+                            text: row.modelData.name
+                            color: row.ink
+                        }
+
+                        // in use: "connected"; a password: a lock; none: "open" (others nearby can
+                        // see what goes over it unencrypted)
+                        Label {
+                            id: what
+
+                            visible: !lock.visible
+                            anchors.right: parent.right
+                            anchors.rightMargin: 4
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: row.modelData.stateChanging ? "…" : row.inUse ? Strings.t("connected") : !Wifi.isSecure(row.modelData) ? Strings.t("openNet") : row.modelData.known ? Strings.t("savedNet") : ""
+                            color: row.inUse ? Colors.onAccent : !Wifi.isSecure(row.modelData) ? Colors.warn : Colors.dim
+                        }
+
+                        PixIcon {
+                            id: lock
+
+                            visible: !row.inUse && !row.modelData.stateChanging && Wifi.isSecure(row.modelData) && !row.modelData.known
+                            anchors.right: parent.right
+                            anchors.rightMargin: 3
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: "lock"
+                        }
+
+                        MouseArea {
+                            id: rowArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.pick(row.modelData)
                         }
                     }
                 }
+            }
+        }
 
-                Rectangle {
-                    anchors.fill: parent
-                    visible: rowArea.containsMouse || root.pskTarget === row.modelData
-                    color: Colors.hoverFill
+        // the last minute: ↓ 1.3 MB/s [graph] ↑ 41 KB/s
+        RowLayout {
+            Layout.fillWidth: true
+            visible: NetInfo.dev !== "" || Wifi.active !== null
+            spacing: Metrics.spacing
+
+            Label {
+                text: `↓ ${Fmt.rate(NetStats.rx).trim()}`
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Math.round(Metrics.fontSize * 2.6)
+                color: Colors.well
+
+                Bevel {
+                    style: "sunk"
                 }
 
-                RowLayout {
-                    id: line
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 2
-                    anchors.rightMargin: 2
-                    spacing: Metrics.spacing
-
-                    Label {
-                        text: row.modelData.connected ? ">" : " "
-                        color: Colors.accent
-                    }
-
-                    Label {
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        text: row.modelData.name
-                        color: row.modelData.connected ? Colors.accent : Colors.fg
-                    }
-
-                    // saved: it knows the password; open: no password, others nearby can see
-                    // what goes over it unencrypted
-                    Label {
-                        text: row.modelData.stateChanging ? "..." : [row.modelData.known ? "saved" : "", Wifi.isSecure(row.modelData) ? "" : "open"].filter(s => s).join(" ")
-                        color: !row.modelData.stateChanging && !Wifi.isSecure(row.modelData) ? Colors.warn : Colors.dim
-                        font.pixelSize: Metrics.size(-2)
-                    }
-
-                    Label {
-                        text: Wifi.signalBars(row.modelData.signalStrength)
-                        color: Colors.dim
-                    }
+                TrafficGraph {
+                    x: 2
+                    y: 2
+                    width: parent.width - 4
+                    height: parent.height - 4
                 }
+            }
 
-                MouseArea {
-                    id: rowArea
+            Label {
+                text: `↑ ${Fmt.rate(NetStats.tx).trim()}`
+            }
+        }
 
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.pick(row.modelData)
+        // ip · gateway · the band and channel
+        Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            wrapMode: Text.Wrap
+            text: [NetInfo.ip ? `ip ${NetInfo.ip}` : "", NetInfo.gw ? `${Strings.t("gateway")} ${NetInfo.gw}` : "", Wifi.active ? NetInfo.wifiLine : ""].filter(s => s).join(" · ")
+            color: Colors.dim
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Metrics.spacing
+
+            PushButton {
+                visible: Wifi.active !== null
+                minWidth: 0
+                text: Strings.t("disconnect")
+                onClicked: Wifi.active?.disconnect()
+            }
+
+            PushButton {
+                minWidth: 0
+                text: Strings.t("whoOnNet")
+                onClicked: Panels.openWindow("system", "net")
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            // a network that doesn't announce its name: typed in, then its password
+            //   ssid> home  ->  psk> ****  (enter on an empty psk: an open one)
+            PushButton {
+                visible: Wifi.enabled && Wifi.device !== null
+                minWidth: 26
+                text: "…"
+                active: root.hiddenAsk
+                onClicked: {
+                    root.pskTarget = null;
+                    root.hiddenSsid = "";
+                    root.hiddenAsk = !root.hiddenAsk;
+                    ssidInput.text = "";
+                    if (root.hiddenAsk)
+                        ssidInput.input.forceActiveFocus();
                 }
             }
         }
@@ -273,7 +278,7 @@ Popover {
                 Layout.topMargin: Metrics.spacing
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: `password for ${root.pskTarget?.name ?? ""}:`
+                text: Strings.t("passwordFor").arg(root.pskTarget?.name ?? "")
                 color: Colors.dim
                 font.pixelSize: Metrics.size(-2)
             }
@@ -287,28 +292,11 @@ Popover {
                 onAccepted: text => {
                     if (!root.pskTarget || text.length === 0)
                         return;
-                    root.status = `connecting to ${root.pskTarget.name}...`;
+                    root.status = Strings.t("connectingTo").arg(root.pskTarget.name);
                     root.pskTarget.connectWithPsk(text);
                     root.pskTarget = null;
                     psk.text = "";
                 }
-            }
-        }
-
-        // a network that doesn't announce its name: typed in, then its password
-        //   [+ hidden network]  ->  ssid> home  ->  psk> ****  (enter on an empty psk: an open one)
-        BracketButton {
-            visible: Wifi.enabled && Wifi.device !== null && !root.hiddenAsk
-            Layout.topMargin: Metrics.spacing
-            bordered: false
-            label: "+ hidden network"
-            textColor: Colors.dim
-            onClicked: {
-                root.pskTarget = null;
-                root.hiddenSsid = "";
-                root.hiddenAsk = true;
-                ssidInput.text = "";
-                ssidInput.input.forceActiveFocus();
             }
         }
 
@@ -321,7 +309,7 @@ Popover {
                 Layout.topMargin: Metrics.spacing
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: root.hiddenSsid ? `password for ${root.hiddenSsid} (empty: open network):` : "name of the hidden network:"
+                text: root.hiddenSsid ? Strings.t("hiddenPassword").arg(root.hiddenSsid) : Strings.t("hiddenName")
                 color: Colors.dim
                 font.pixelSize: Metrics.size(-2)
             }
@@ -366,7 +354,7 @@ Popover {
             Layout.fillWidth: true
             elide: Text.ElideRight
             text: shown
-            color: shown.startsWith("failed") ? Colors.warn : Colors.dim
+            color: shown.startsWith(Strings.t("wifiFailed").split("%1")[0]) ? Colors.warn : Colors.dim
             font.pixelSize: Metrics.size(-2)
         }
     }
@@ -375,15 +363,6 @@ Popover {
     Binding {
         target: NetInfo
         property: "watching"
-        value: root.open && root.page === 0
-    }
-
-    // made only while it's shown: it looks at the connections every few seconds
-    Loader {
-        Layout.fillWidth: true
-        active: root.page === 1 && root.open
-        visible: active
-
-        sourceComponent: WhoOut {}
+        value: root.open
     }
 }

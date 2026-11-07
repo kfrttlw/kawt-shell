@@ -5,141 +5,169 @@ import qs.config
 import qs.components
 import qs.services
 
-// dmesg-style notification log:
-// [  4521.031] telegram: summary
-//              body
+// The messages, the old way: do not disturb switched on the right of the head; a sunk list, the
+// newest first, a row each (the app's icon, the app · what it says, the time, its words under
+// it); how many are new, [Clear]. A click opens one, a right click lets it go.
 Popover {
     id: root
 
+    // how many were new when it opened (opening reads them)
+    property int wasNew: 0
+
     name: "notifs"
-    title: "dmesg"
-    cardWidth: 440
+    title: Strings.t("notifsTitle")
+    icon: Notifs.unread > 0 ? "bellDot" : "bell"
+    cardWidth: 420
+    switchText: Strings.t("dnd")
+    switchOn: Settings.dnd
+    onSwitchToggled: Settings.dnd = !Settings.dnd
+    settingsPage: "screen"
 
-    onPanelOpened: Notifs.markRead()
-
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Metrics.spacing
-
-        Label {
-            Layout.fillWidth: true
-            text: `${Notifs.count} message${Notifs.count === 1 ? "" : "s"}`
-            color: Colors.dim
-        }
-
-        BracketButton {
-            tag: "dnd"
-            label: Settings.dnd ? "on" : "off"
-            textColor: Settings.dnd ? Colors.accent : Colors.fg
-            onClicked: Settings.dnd = !Settings.dnd
-        }
-
-        BracketButton {
-            label: "clear"
-            onClicked: Notifs.clear()
-        }
-    }
-
-    Rule {
-        Layout.fillWidth: true
+    onPanelOpened: {
+        wasNew = Notifs.unread;
+        Notifs.markRead();
     }
 
     Label {
         visible: Notifs.count === 0
         Layout.fillWidth: true
         horizontalAlignment: Text.AlignHCenter
-        text: "-- no entries --"
+        text: `— ${Strings.t("noMessages")} —`
         color: Colors.dim
     }
 
-    Flickable {
-        id: flick
-
+    // the list, sunk in a field
+    Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(400, log.implicitHeight)
         visible: Notifs.count > 0
-        clip: true
-        contentHeight: log.implicitHeight
-        boundsBehavior: Flickable.StopAtBounds
+        implicitHeight: flick.height + 6
+        color: Colors.well
 
-        Column {
-            id: log
+        Bevel {
+            style: "sunk"
+        }
 
-            width: flick.width
-            spacing: 2
+        Flickable {
+            id: flick
 
-            Repeater {
-                model: ScriptModel {
-                    values: Notifs.list.slice(0, 50)
-                }
+            x: 3
+            y: 3
+            width: parent.width - 6
+            height: Math.min(Math.round(360 * Metrics.scale), log.implicitHeight)
+            clip: true
+            contentHeight: log.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
 
-                Item {
-                    id: entry
+            Column {
+                id: log
 
-                    required property var modelData
-                    readonly property bool critical: Notifs.isCritical(modelData)
+                width: flick.width
 
-                    width: log.width
-                    implicitHeight: lines.implicitHeight + 2
-
-                    Rectangle {
-                        anchors.fill: parent
-                        visible: entryArea.containsMouse
-                        color: Colors.hoverFill
+                Repeater {
+                    model: ScriptModel {
+                        values: Notifs.list.slice(0, 50)
                     }
 
-                    Column {
-                        id: lines
+                    Item {
+                        id: entry
 
-                        width: parent.width
+                        required property var modelData
+                        required property int index
+                        readonly property bool critical: Notifs.isCritical(modelData)
+                        readonly property string picture: modelData?.image || modelData?.appIcon || (DesktopEntries.heuristicLookup(modelData?.appName ?? "")?.icon ?? "")
 
-                        Row {
+                        width: log.width
+                        implicitHeight: lines.implicitHeight + 10
+
+                        Rectangle {
+                            anchors.fill: parent
+                            visible: entryArea.containsMouse
+                            color: Colors.hoverFill
+                        }
+
+                        // a groove between two
+                        Rule {
+                            visible: entry.index > 0
                             width: parent.width
-                            spacing: Metrics.spacing
+                        }
 
-                            Label {
-                                id: stampText
+                        AppIcon {
+                            id: pic
 
-                                text: Notifs.stamp(entry.modelData)
-                                color: Colors.dim
+                            x: 4
+                            y: 6
+                            width: 16
+                            height: 16
+                            visible: entry.picture !== ""
+                            icon: entry.picture
+                            name: entry.modelData.appName ?? ""
+                            colored: true
+                        }
+
+                        PixIcon {
+                            x: 4
+                            y: 6
+                            visible: entry.picture === ""
+                            name: entry.critical ? "warn" : "chat"
+                        }
+
+                        Column {
+                            id: lines
+
+                            x: 26
+                            y: 5
+                            width: parent.width - x - 4
+                            spacing: 2
+
+                            Item {
+                                width: parent.width
+                                height: head.implicitHeight
+
+                                Label {
+                                    id: head
+
+                                    width: parent.width - when.implicitWidth - 8
+                                    elide: Text.ElideRight
+                                    textFormat: Text.PlainText
+                                    text: [entry.modelData.appName, entry.modelData.summary].filter(s => s).join(" · ")
+                                    color: entry.critical ? Colors.warn : Colors.fg
+                                }
+
+                                Label {
+                                    id: when
+
+                                    anchors.right: parent.right
+                                    text: Notifs.timeOf(entry.modelData)
+                                    color: Colors.dim
+                                }
                             }
 
                             Label {
-                                width: parent.width - stampText.width - parent.spacing
+                                width: parent.width
+                                visible: text !== ""
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 3
                                 elide: Text.ElideRight
                                 textFormat: Text.PlainText
-                                text: `${(entry.modelData.appName || "notify").toLowerCase()}: ${entry.modelData.summary}`
-                                color: entry.critical ? Colors.warn : Colors.fg
+                                text: entry.modelData.body
+                                color: Colors.dim
                             }
                         }
 
-                        Label {
-                            x: stampText.width + Metrics.spacing
-                            width: parent.width - x
-                            visible: text !== ""
-                            wrapMode: Text.Wrap
-                            maximumLineCount: 3
-                            elide: Text.ElideRight
-                            textFormat: Text.PlainText
-                            text: entry.modelData.body
-                            color: Colors.dim
-                            font.pixelSize: Metrics.size(-1)
-                        }
-                    }
+                        MouseArea {
+                            id: entryArea
 
-                    MouseArea {
-                        id: entryArea
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton) {
-                                entry.modelData.dismiss();
-                            } else {
-                                Panels.close();
-                                Notifs.activate(entry.modelData);
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: mouse => {
+                                if (mouse.button === Qt.RightButton) {
+                                    entry.modelData.dismiss();
+                                } else {
+                                    Panels.close();
+                                    Notifs.activate(entry.modelData);
+                                }
                             }
                         }
                     }
@@ -148,11 +176,22 @@ Popover {
         }
     }
 
-    Label {
-        Layout.alignment: Qt.AlignRight
+    RowLayout {
+        Layout.fillWidth: true
         visible: Notifs.count > 0
-        text: "click: open · right click: dismiss"
-        color: Colors.dim
-        font.pixelSize: Metrics.size(-3)
+        spacing: Metrics.spacing
+
+        Label {
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: root.wasNew > 0 ? Strings.t("nNew").arg(root.wasNew) : Strings.t("notifsHow")
+            color: Colors.dim
+        }
+
+        PushButton {
+            minWidth: 0
+            text: Strings.t("clearAll")
+            onClicked: Notifs.clear()
+        }
     }
 }

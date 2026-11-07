@@ -32,6 +32,12 @@ Singleton {
         return `[${s.toFixed(3).padStart(9)}]`;
     }
 
+    // when it came, on the shell clock: "14:51"
+    function timeOf(n: var): string {
+        const s = stamps[n?.id];
+        return s === undefined ? "" : Time.fmt(new Date((bootTime + s) * 1000 + Time.offset * 60000));
+    }
+
     function isCritical(n: var): bool {
         return n?.urgency === NotificationUrgency.Critical;
     }
@@ -126,7 +132,7 @@ Singleton {
             }
             const replaced = gone.length > 0;
             // stamp first: tracking it makes it appear in `list` right away
-            root.stamps[n.id] = Date.now() / 1000 - root.bootTime;
+            root.stamps = Object.assign({}, root.stamps, { [n.id]: Date.now() / 1000 - root.bootTime }); // a new object: what shows it sees the change
             n.tracked = true;
             if (Panels.current !== "notifs" && !n.transient && !replaced)
                 root.unread++;
@@ -137,18 +143,19 @@ Singleton {
                 if (p.transient)
                     root.drop(p);
             root.popups = next.slice(0, root.maxPopups);
-            root.trim();
+            root.trim(n);
         }
     }
 
-    // keep the newest maxHistory; and stamps only for what's still there
-    function trim(): void {
+    // keep the newest maxHistory; and stamps only for what's still there, and for `fresh`, the
+    // one just come (the tracked list may not hold it yet: its stamp went with the rest before)
+    function trim(fresh: var): void {
         const all = server.trackedNotifications.values.slice(); // oldest first
         for (let i = 0; i < all.length - maxHistory; i++)
             all[i].dismiss();
         const kept = {};
-        for (const n of server.trackedNotifications.values)
-            if (stamps[n.id] !== undefined)
+        for (const n of [...server.trackedNotifications.values, fresh])
+            if (n && stamps[n.id] !== undefined)
                 kept[n.id] = stamps[n.id];
         stamps = kept;
     }
