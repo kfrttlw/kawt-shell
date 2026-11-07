@@ -350,7 +350,7 @@ PanelWindow {
                 }
 
                 Repeater {
-                    model: [["distro", "distro"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
+                    model: [["distro", "distro"], ["distro-tinted", "distro, tinted"], ["kawt", "kawt"], ["trackpoint", "trackpoint"], ["stripes", "stripes"]]
 
                     BracketButton {
                         required property var modelData
@@ -364,7 +364,7 @@ PanelWindow {
                 Label {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    text: Settings.fetchLogo === "distro" ? "your system's logo, in the theme's colors" : Settings.fetchLogo === "stripes" ? "kawt in stripes, above the info" : Settings.fetchLogo === "trackpoint" ? "g h b and the red nub" : "kawt in half blocks"
+                    text: Settings.fetchLogo === "distro" ? "your system's logo, in its own colors" : Settings.fetchLogo === "distro-tinted" ? "your system's logo, in the theme's colors" : Settings.fetchLogo === "stripes" ? "kawt in stripes, above the info" : Settings.fetchLogo === "trackpoint" ? "g h b and the red nub" : "kawt in half blocks"
                     color: Colors.dim
                     font.pixelSize: Metrics.size(-2)
                 }
