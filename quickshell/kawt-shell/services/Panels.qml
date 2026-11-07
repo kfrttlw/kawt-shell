@@ -35,6 +35,7 @@ Singleton {
     id: root
 
     property string current: ""
+    property string settingsPage: "" // the settings window opens at this page ("bar", "screen"...; modules/settings)
     property string dashboardTab: "" // the profile opens at this tab ("sys": system; modules/profile/Dashboard.qml)
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
     property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
@@ -215,6 +216,13 @@ Singleton {
 
         function screenshot(mode: string): void {
             Screenshot.take(mode || "region");
+        }
+
+        // the settings window at a page: look, bar, screen, media, device, windows, kawt
+        function settings(page: string): void {
+            root.settingsPage = page;
+            root.screen = root.focusedScreen;
+            root.current = "settings";
         }
 
         function toggleLight(): void {

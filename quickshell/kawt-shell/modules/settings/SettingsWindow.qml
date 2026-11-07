@@ -5,7 +5,6 @@ import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
-import "../profile"
 
 // kawt's settings, one window, the one place they live (super + comma, start -> Settings): its
 // pages on the left (look, screen, media, device, windows, kawt), the page on the right. Esc or
@@ -16,15 +15,15 @@ PanelWindow {
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("settings", forScreen)
     property int page: 0
-    // the new pages (look, bar) and the ones still in the old rows (CfgTab's pages, by number)
+    // the pages, in the list's order (each its own file here)
     readonly property var pages: [
         { key: "pageLook", icon: "picture", page: "look" },
         { key: "pageBar", icon: "logoWide", page: "bar" },
-        { key: "pageScreen", icon: "lock", cfg: 1 },
-        { key: "pageMedia", icon: "vol2", cfg: 2 },
-        { key: "pageDevice", icon: "key", cfg: 3 },
-        { key: "pageWindows", icon: "desks", cfg: 4 },
-        { key: "pageKawt", icon: "info", cfg: 5 }
+        { key: "pageScreen", icon: "lock", page: "screen" },
+        { key: "pageMedia", icon: "vol2", page: "media" },
+        { key: "pageDevice", icon: "key", page: "device" },
+        { key: "pageWindows", icon: "desks", page: "windows" },
+        { key: "pageKawt", icon: "info", page: "kawt" }
     ]
     readonly property int rowHeight: Metrics.fontSize + 13
 
@@ -43,7 +42,13 @@ PanelWindow {
 
     OpenWatch {
         open: root.open
-        onOpened: keys.forceActiveFocus()
+        onOpened: {
+            const i = root.pages.findIndex(p => p.page === Panels.settingsPage);
+            if (i >= 0)
+                root.page = i;
+            Panels.settingsPage = "";
+            keys.forceActiveFocus();
+        }
     }
 
     // a click outside closes it
@@ -166,7 +171,7 @@ PanelWindow {
                 readonly property var entry: root.pages[root.page]
 
                 width: pane.width - 6
-                sourceComponent: entry.page === "look" ? lookPage : entry.page === "bar" ? barPage : oldPage
+                sourceComponent: ({ look: lookPage, bar: barPage, screen: screenPage, media: mediaPage, device: devicePage, windows: windowsPage, kawt: kawtPage })[entry.page]
             }
         }
 
@@ -187,21 +192,42 @@ PanelWindow {
         }
 
         Component {
-            id: oldPage
+            id: screenPage
 
-            ColumnLayout {
-                spacing: 6
+            ScreenPage {
+                forScreen: root.forScreen
+            }
+        }
 
-                PageHead {
-                    title: Strings.t(root.pages[root.page].key)
-                    note: Strings.t("legacy")
-                }
+        Component {
+            id: mediaPage
 
-                CfgTab {
-                    Layout.fillWidth: true
-                    profile: root
-                    page: root.pages[root.page].cfg
-                }
+            MediaPage {
+                forScreen: root.forScreen
+            }
+        }
+
+        Component {
+            id: devicePage
+
+            DevicePage {
+                forScreen: root.forScreen
+            }
+        }
+
+        Component {
+            id: windowsPage
+
+            WindowsPage {
+                forScreen: root.forScreen
+            }
+        }
+
+        Component {
+            id: kawtPage
+
+            KawtPage {
+                forScreen: root.forScreen
             }
         }
 
