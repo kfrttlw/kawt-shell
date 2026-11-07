@@ -35,6 +35,7 @@ Singleton {
     id: root
 
     property string current: ""
+    property string dashboardTab: "" // the profile opens at this tab ("cfg": settings, "sys": system; modules/profile/Dashboard.qml)
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
     property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
     property bool locked: false // modules/lock: the session lock screen
@@ -119,6 +120,14 @@ Singleton {
         target: "kawt"
 
         function toggle(name: string): void {
+            // old names and the new homes: the pinned apps are the start menu's now; settings and
+            // system are the profile at those tabs
+            if (name === "dock")
+                name = "menu";
+            if (name === "settings" || name === "system") {
+                root.dashboardTab = name === "settings" ? "cfg" : "sys";
+                name = "dashboard";
+            }
             if (root.current === name && root.screen === root.focusedScreen) {
                 root.close();
             } else {

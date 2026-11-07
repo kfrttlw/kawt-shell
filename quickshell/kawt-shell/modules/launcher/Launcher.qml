@@ -26,7 +26,7 @@ PanelWindow {
     required property ShellScreen forScreen
     // the start menu (the bar's kawt button with raised frames): the same search at the bar's
     // left end, its sections beside it (MenuSections.qml); "launcher" is the plain one in the middle
-    readonly property bool asMenu: Panels.isOpen("menu", forScreen)
+    readonly property bool asMenu: false // the start menu is StartMenu.qml now
     readonly property bool open: Panels.isOpen("launcher", forScreen) || asMenu
     property string section: "apps"
     readonly property int maxRows: asMenu ? 8 : 9

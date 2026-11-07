@@ -44,7 +44,8 @@ try("binds", function()
     bind(mod .. " + SPACE", hl.dsp.exec_cmd(kawt .. "toggle launcher")) -- rofi-style launcher
     bind(mod .. " + R", hl.dsp.exec_cmd(kawt .. "run")) -- launcher in run mode, like windows' win+r
     bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(kawt .. "clipboard")) -- clipboard history
-    bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle dock")) -- pinned apps
+    bind(mod .. " + D", hl.dsp.exec_cmd(kawt .. "toggle menu")) -- the start menu
+    bind(mod .. " + comma", hl.dsp.exec_cmd(kawt .. "toggle settings")) -- kawt's settings
     bind(mod .. " + A", hl.dsp.exec_cmd(kawt .. "sidebar")) -- local ai
     bind(mod .. " + ALT + A", hl.dsp.exec_cmd(kawt .. "selection")) -- the ai on the text you marked
     bind(mod .. " + ALT + V", hl.dsp.exec_cmd(kawt .. "voice")) -- speak to the ai (again: stop)

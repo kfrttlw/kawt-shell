@@ -30,6 +30,9 @@ PanelWindow {
     OpenWatch {
         open: root.open
         onOpened: {
+            if (Panels.dashboardTab !== "")
+                content.show(Panels.dashboardTab);
+            Panels.dashboardTab = "";
             box.forceActiveFocus();
             fadeIn.restart();
         }
