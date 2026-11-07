@@ -87,7 +87,13 @@ Singleton {
         suspendNote: "Keeps everything open, uses almost no power.",
         logoutNote: "Closes your programs and leaves Hyprland.",
         lockNote: "Hides the screen until you type your password.",
-        inSeconds: "in %1 s"
+        inSeconds: "in %1 s",
+        now: "Now",
+        saveFiles: "save your open files",
+        sleepNote: "the screen locks before it sleeps",
+        shuttingDown: "Shutting down in %1 s…",
+        rebooting: "Restarting in %1 s…",
+        loggingOut: "Logging out in %1 s…"
     })
 
     readonly property var ruWords: ({
@@ -148,7 +154,7 @@ Singleton {
         powerOff: "Выключить",
         reboot: "Перезагрузить",
         suspend: "Сон",
-        logout: "Выйти",
+        logout: "Выйти из сеанса",
         lock: "Заблокировать",
         ok: "OK",
         cancel: "Отмена",
@@ -157,6 +163,12 @@ Singleton {
         suspendNote: "Всё останется открытым, почти без энергии.",
         logoutNote: "Закроет программы и выйдет из Hyprland.",
         lockNote: "Спрячет экран до ввода пароля.",
-        inSeconds: "через %1 с"
+        inSeconds: "через %1 с",
+        now: "Сейчас",
+        saveFiles: "сохраните открытые файлы",
+        sleepNote: "экран заблокируется до сна",
+        shuttingDown: "Выключение через %1 с…",
+        rebooting: "Перезагрузка через %1 с…",
+        loggingOut: "Выход через %1 с…"
     })
 }
