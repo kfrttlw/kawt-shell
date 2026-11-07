@@ -1,0 +1,281 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import qs.config
+
+// Which popover / sidebar is open, and on which screen.
+// Only one popover can be open at a time; the sidebar is independent.
+//
+//   qs -c kawt-shell ipc call kawt toggle launcher|menu|dock|style|tray|profile|dashboard|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
+//   qs -c kawt-shell ipc call kawt sidebar
+//   qs -c kawt-shell ipc call kawt run | clipboard
+//   qs -c kawt-shell ipc call kawt lock | lockTest | suspend   (suspend: locks first, then sleeps)
+//   qs -c kawt-shell ipc call kawt caffeine                    (the screen stays on, no idle lock)
+//   qs -c kawt-shell ipc call kawt idle <minutes>              (lock after that long without input, 0 = never)
+//   qs -c kawt-shell ipc call kawt volume up|down|mute · mic mute · brightness up|down|<0-100>
+//   qs -c kawt-shell ipc call kawt media toggle|play|pause|next|prev|back|forward   (the player kawt shows)
+//   qs -c kawt-shell ipc call kawt night                       (night light, needs hyprsunset)
+//   qs -c kawt-shell ipc call kawt screenshot region|window|screen   (a preview asks copy / save)
+//   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
+//   qs -c kawt-shell ipc call kawt close
+//   qs -c kawt-shell ipc call kawt bar [show|hide]             (tucked away it peeks out at the edge)
+//   qs -c kawt-shell ipc call kawt dnd
+//   qs -c kawt-shell ipc call kawt focus [stop|pause]          (the focus timer: a round, or off again)
+//   qs -c kawt-shell ipc call kawt toggleLight
+//   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
+//   qs -c kawt-shell ipc call kawt clearNotifs
+//   qs -c kawt-shell ipc call kawt update                      (a terminal with ./install.sh --update)
+//   qs -c kawt-shell ipc call kawt companion pet|call|sleep|wake|focus|walk|home|toggle
+//   qs -c kawt-shell ipc call kawt selection                   (the ai on the text you marked)
+//   qs -c kawt-shell ipc call kawt voice                       (speak to the ai: again to stop)
+//   qs -c kawt-shell ipc call kawt desk [float|tile|cascade]   (this desk's windows floating <-> tiled)
+Singleton {
+    id: root
+
+    property string current: ""
+    property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
+    property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
+    property bool locked: false // modules/lock: the session lock screen
+    property bool lockTest: false // that lock unlocks by itself after 30 s
+    property bool lockSecure: false // the compositor confirmed the lock: every screen shows it (set by modules/lock)
+    property bool suspendAfterLock: false // suspend() waits for lockSecure, then puts the machine to sleep
+    property string screen: ""
+    property bool sidebarOpen: false
+    property string sidebarScreen: ""
+    property string voice: "" // services/Voice.qml while it listens or writes: the bar shows it
+    property string styleEdit: "" // "new" | "edit": the style window opens with its theme editor
+
+    readonly property string focusedScreen: Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? ""
+
+    function isOpen(name: string, s: ShellScreen): bool {
+        return current === name && screen === s?.name;
+    }
+
+    function toggle(name: string, s: ShellScreen): void {
+        if (isOpen(name, s)) {
+            close();
+        } else {
+            screen = s.name;
+            current = name;
+        }
+    }
+
+    function close(): void {
+        current = "";
+    }
+
+    // open the launcher with a mode prefix typed in, or close it if it's open
+    function launcherWith(prefix: string): void {
+        if (current === "launcher" && screen === focusedScreen) {
+            close();
+        } else {
+            launcherPrefix = prefix;
+            screen = focusedScreen;
+            current = "launcher";
+        }
+    }
+
+    // every lock goes through here: a plain lock always clears test mode, or a lock right
+    // after an old lockTest would still open by itself after 30 s
+    function lock(test: bool): void {
+        lockTest = test;
+        locked = true;
+    }
+
+    // sleep, but never with the desktop open: lock first, sleep once the lock is on every screen
+    // (modules/lock/Lock.qml does the second half)
+    function suspend(): void {
+        suspendAfterLock = true;
+        lock(false);
+    }
+
+    function isSidebarOpen(s: ShellScreen): bool {
+        return sidebarOpen && sidebarScreen === s?.name;
+    }
+
+    function toggleSidebar(s: ShellScreen): void {
+        if (isSidebarOpen(s)) {
+            sidebarOpen = false;
+        } else {
+            sidebarScreen = s.name;
+            sidebarOpen = true;
+        }
+    }
+
+    // the first start: stripes says hello and shows around, once, a moment after the
+    // shell is up (and not over something already open, or the lock)
+    Timer {
+        running: Settings.loaded && !Settings.welcomed && !root.locked && root.current === ""
+        interval: 2500
+        onTriggered: {
+            root.screen = root.focusedScreen;
+            root.current = "welcome";
+        }
+    }
+
+    IpcHandler {
+        target: "kawt"
+
+        function toggle(name: string): void {
+            if (root.current === name && root.screen === root.focusedScreen) {
+                root.close();
+            } else {
+                root.screen = root.focusedScreen;
+                root.current = name;
+            }
+        }
+
+        function close(): void {
+            root.close();
+            root.sidebarOpen = false;
+        }
+
+        // win+r: the launcher straight in run mode, like the Windows "Run" box
+        function run(): void {
+            root.launcherWith("!");
+        }
+
+        // the launcher straight in clipboard history mode
+        function clipboard(): void {
+            root.launcherWith(":");
+        }
+
+        function lock(): void {
+            root.lock(false);
+        }
+
+        // locks, then unlocks by itself after 30 s: try the lock screen safely
+        function lockTest(): void {
+            root.lock(true);
+        }
+
+        function suspend(): void {
+            root.suspend();
+        }
+
+        function caffeine(): void {
+            Idle.caffeine = !Idle.caffeine;
+        }
+
+        // minutes without input before the screen locks; 0 = never
+        function idle(minutes: string): void {
+            const m = parseInt(minutes);
+            if (m >= 0 && m <= 1440)
+                Settings.idleLock = m;
+        }
+
+        // for the media keys (hypr/kawt.lua): the osd shows at once, nothing has to be polled
+        function volume(arg: string): void {
+            if (arg === "mute")
+                Audio.toggleMute();
+            else
+                Audio.step(arg === "down" ? -0.05 : 0.05);
+        }
+
+        function mic(arg: string): void {
+            Audio.toggleMicMute();
+        }
+
+        // the player the bar shows (services/Media.qml): the one picked, or the last one started
+        function media(arg: string): void {
+            Media.command(arg || "toggle");
+        }
+
+        // up | down | a percentage
+        function brightness(arg: string): void {
+            if (arg === "up" || arg === "down")
+                Brightness.step(arg === "down" ? -0.05 : 0.05);
+            else if (/^\d+%?$/.test(arg))
+                Brightness.set(parseInt(arg) / 100);
+        }
+
+        // the bar tucked away (a 2 px edge: the pointer there brings it out) or back
+        function bar(arg: string): void {
+            Settings.barHidden = arg === "hide" ? true : arg === "show" ? false : !Settings.barHidden;
+        }
+
+        function night(): void {
+            Settings.nightLight = !Settings.nightLight;
+        }
+
+        function record(mode: string): void {
+            Recorder.toggle(mode || "region");
+        }
+
+        function screenshot(mode: string): void {
+            Screenshot.take(mode || "region");
+        }
+
+        function toggleLight(): void {
+            Settings.light = !Settings.light;
+        }
+
+        function wallpaper(arg: string): void {
+            Wallpapers.pick(arg || "next");
+        }
+
+        function focus(arg: string): void {
+            if (arg === "stop")
+                Focus.stop();
+            else if (arg === "pause")
+                Focus.paused ? Focus.resume() : Focus.pause();
+            else
+                Focus.toggle();
+        }
+
+        function dnd(): void {
+            Settings.dnd = !Settings.dnd;
+        }
+
+        function clearNotifs(): void {
+            Notifs.clear();
+        }
+
+        // kawt itself, from git: in a terminal, which shows what's new and asks first
+        function update(): void {
+            Update.run();
+        }
+
+        // the ai on the text you marked in any window (explain / translate / fix / summary)
+        function selection(): void {
+            toggle("selection");
+        }
+
+        // speak to the ai panel (services/Voice.qml): starts listening, again: stops and writes it
+        function voice(): void {
+            Voice.toggle();
+        }
+
+        // the first start's hello and tour again (modules/companion/WelcomePopover.qml)
+        function welcome(): void {
+            root.screen = root.focusedScreen;
+            root.current = "welcome";
+        }
+
+        // stripes (services/Companion.qml) from a key or a script: call is super + h
+        function companion(arg: string): void {
+            Companion.command(arg || "pet");
+        }
+
+        // the desk you're on: its windows floating, like KDE, or tiled (services/Hypr.qml);
+        // nothing said: the other way round. cascade: the floating ones one below another
+        function desk(arg: string): void {
+            const id = Hyprland.focusedMonitor?.activeWorkspace?.id ?? 0;
+            if (arg === "cascade")
+                Hypr.cascade(id);
+            else
+                Hypr.setDeskFloating(id, arg === "float" || (arg !== "tile" && !Hypr.deskFloats(id)));
+        }
+
+        function sidebar(): void {
+            if (root.sidebarOpen && root.sidebarScreen === root.focusedScreen) {
+                root.sidebarOpen = false;
+            } else {
+                root.sidebarScreen = root.focusedScreen;
+                root.sidebarOpen = true;
+            }
+        }
+    }
+}

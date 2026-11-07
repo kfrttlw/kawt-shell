@@ -1,0 +1,682 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
+import qs.config
+import qs.components
+import qs.services
+import "../popovers"
+import "../sidebar"
+import "../notifs"
+import "../launcher"
+import "../style"
+import "../background"
+import "../osd"
+import "../profile"
+import "../power"
+import "../help"
+import "../shot"
+import "../companion"
+
+Variants {
+    model: Quickshell.screens
+
+    PanelWindow {
+        id: root
+
+        required property ShellScreen modelData
+        screen: modelData
+
+        implicitHeight: tucked ? 2 : Metrics.barHeight
+        color: "transparent"
+
+        WlrLayershell.namespace: "kawt-bar"
+
+        // tucked away (kawt bar, super+shift+b, or profile -> cfg): a 2 px edge that takes no
+        // room from the windows. The pointer at that edge brings the bar out over them; it goes
+        // again half a second after the pointer leaves, unless one of its panels is open
+        property bool peeking: false
+        readonly property bool tucked: Settings.barHidden && !peeking
+        readonly property bool panelOpen: Panels.current !== "" && Panels.screen === modelData.name
+        readonly property bool focusedHere: modelData.name === Panels.focusedScreen
+        // no window on this screen's workspace (nor a scratchpad over it): stripes may walk there.
+        // Not while her window is open or she's next to the coder: she's there then
+        readonly property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(modelData)
+        readonly property bool emptyDesk: (hyprMonitor?.activeWorkspace?.toplevels?.values?.length ?? 1) === 0 && !(hyprMonitor?.lastIpcObject?.specialWorkspace?.name)
+        readonly property bool companionOut: focusedHere && emptyDesk && Companion.onDesk && Panels.current !== "home" && !(Panels.sidebarOpen && Settings.aiMode === "coder")
+
+        WlrLayershell.exclusionMode: Settings.barHidden ? ExclusionMode.Ignore : ExclusionMode.Auto
+        onPanelOpenChanged: if (!panelOpen && !edge.hovered)
+            leave.restart()
+
+        HoverHandler {
+            id: edge
+
+            onHoveredChanged: {
+                if (hovered) {
+                    leave.stop();
+                    root.peeking = true;
+                } else {
+                    leave.restart();
+                }
+            }
+        }
+
+        Timer {
+            id: leave
+
+            interval: 500
+            onTriggered: root.peeking = edge.hovered || root.panelOpen
+        }
+
+        Connections {
+            target: Settings
+
+            function onBarHiddenChanged(): void {
+                root.peeking = false;
+            }
+        }
+
+        // the top edge, or the bottom one (profile -> cfg -> bar). Every button can be switched
+        // off there too: Settings.barShows(name), with the names used below
+        anchors.top: !Metrics.barBottom
+        anchors.bottom: Metrics.barBottom
+        anchors.left: true
+        anchors.right: true
+
+        // one strip across the screen in the theme's bar color (its background, unless the theme
+        // gives the bar one of its own), a line along its inner edge (the buttons on it have no
+        // frames of their own: their brackets say what's pressable).
+        // Raised frames: the strip stands out like an old taskbar, the buttons' face color unless
+        // the theme gives the bar its own, a light line on top, a dark one below
+        Rectangle {
+            anchors.fill: parent
+            visible: !root.tucked
+            color: Colors.bevel && !Colors.palette.bar ? Colors.face : Colors.bar
+
+            Rectangle {
+                visible: !Colors.bevel
+                width: parent.width
+                height: Metrics.borderWidth
+                y: Metrics.barBottom ? 0 : parent.height - height
+                color: Colors.border
+            }
+
+            Rectangle {
+                visible: Colors.bevel
+                width: parent.width
+                height: 1
+                color: Colors.hi
+            }
+
+            Rectangle {
+                visible: Colors.bevel
+                y: parent.height - 2
+                width: parent.width
+                height: 1
+                color: Colors.lo
+            }
+
+            Rectangle {
+                visible: Colors.bevel
+                y: parent.height - 1
+                width: parent.width
+                height: 1
+                color: Colors.deep
+            }
+        }
+
+        // raised frames: the bar is a taskbar. kawt's start button on the left, the windows of
+        // this workspace after it, the workspaces as squares, then everything else sunk in one
+        // well with the clock at the end, as old systems had their tray
+        Item {
+            id: trayWell
+
+            visible: Colors.bevel && !root.tucked
+            x: netRow.x - Metrics.spacing
+            width: (clock.visible ? clock.x + clock.width : rightRow.x + rightRow.width) + Metrics.spacing - x
+            height: Metrics.barHeight - Metrics.spacing + 2
+            anchors.verticalCenter: parent.verticalCenter
+
+            Bevel {
+                style: "inset"
+            }
+        }
+
+        // left: profile, pinned apps, workspaces (raised frames: the start button first, the
+        // workspaces by the tray)
+        RowLayout {
+            id: leftRow
+
+            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
+            opacity: root.tucked ? 0 : 1
+            anchors.left: parent.left
+            anchors.leftMargin: Metrics.padding
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Metrics.spacing
+
+            // the start menu: the launcher with its sections (modules/launcher)
+            StartButton {
+                id: start
+                visible: Colors.bevel
+                active: Panels.isOpen("menu", root.modelData)
+                onClicked: Panels.toggle("menu", root.modelData)
+            }
+
+            // [●] the lit dot on the lid: you, your settings (raised frames: in the start menu,
+            // its profile and settings)
+            BracketButton {
+                id: profile
+                visible: !Colors.bevel && Settings.barShows("profile")
+                label: "●"
+                ink: Colors.accent
+                active: Panels.isOpen("profile", root.modelData)
+                onClicked: Panels.toggle("profile", root.modelData)
+            }
+
+            // [$] the pinned apps (raised frames: first in the start menu's apps)
+            BracketButton {
+                id: dock
+                visible: !Colors.bevel && Settings.barShows("dock")
+                label: "$"
+                active: Panels.isOpen("dock", root.modelData)
+                onClicked: Panels.toggle("dock", root.modelData)
+            }
+
+            Workspaces {
+                visible: !Colors.bevel && Settings.barShows("workspaces")
+                screen: root.modelData
+            }
+
+            // [tile] / [float]: this desk's windows (raised frames: by the workspaces)
+            DeskButton {
+                visible: !Colors.bevel && wanted
+                screen: root.modelData
+            }
+        }
+
+        // raised frames: the windows of this workspace, up to the workspaces
+        Tasks {
+            visible: Colors.bevel
+            opacity: root.tucked ? 0 : 1
+            screen: root.modelData
+            anchors.left: leftRow.right
+            anchors.leftMargin: Metrics.spacing
+            anchors.right: deskMode.visible ? deskMode.left : deskSquares.visible ? deskSquares.left : trayWell.left
+            anchors.rightMargin: Metrics.sectionGap
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        DeskButton {
+            id: deskMode
+            visible: Colors.bevel && wanted
+            opacity: root.tucked ? 0 : 1
+            screen: root.modelData
+            anchors.right: deskSquares.visible ? deskSquares.left : trayWell.left
+            anchors.rightMargin: Metrics.spacing
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Workspaces {
+            id: deskSquares
+            visible: Colors.bevel && Settings.barShows("workspaces")
+            opacity: root.tucked ? 0 : 1
+            screen: root.modelData
+            anchors.right: trayWell.left
+            anchors.rightMargin: Metrics.spacing
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        // the window you're in, dim: something to read, not to press (on the screen with the
+        // focus; "desktop" when its workspace is empty). It gets what's left up to the network
+        // (a long title ran over the wifi), a fifth of the bar at most, and goes when that's
+        // under a few letters
+        RowLayout {
+            id: titleRow
+
+            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
+            readonly property real room: netRow.x - Metrics.sectionGap - x - titleSep.implicitWidth - spacing
+
+            visible: !Colors.bevel
+            opacity: root.tucked ? 0 : 1
+            anchors.left: leftRow.right
+            anchors.leftMargin: Metrics.spacing
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Metrics.spacing
+
+            BarSep {
+                id: titleSep
+                visible: title.visible
+            }
+
+            Label {
+                id: title
+
+                readonly property string shownTitle: root.emptyDesk ? "desktop" : (Hyprland.activeToplevel?.title ?? "")
+
+                visible: Settings.barShows("title") && root.focusedHere && shownTitle !== "" && titleRow.room >= Metrics.fontSize * 3
+                Layout.maximumWidth: Math.floor(Math.min(root.width * 0.22, titleRow.room))
+                text: shownTitle
+                color: Colors.dim
+                elide: Text.ElideRight
+            }
+        }
+
+        // stripes, then the network, up to the clock (raised frames: the start of
+        // the tray, before the player)
+        RowLayout {
+            id: netRow
+
+            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
+            opacity: root.tucked ? 0 : 1
+            anchors.right: Colors.bevel ? (player.visible ? player.left : rightRow.left) : clock.left
+            anchors.rightMargin: Colors.bevel ? Metrics.spacing : Metrics.sectionGap
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Metrics.spacing
+
+            // stripes (modules/companion)
+            HerButton {
+                id: home
+                active: Panels.isOpen("home", root.modelData)
+                onClicked: Panels.toggle("home", root.modelData)
+            }
+
+            // while a tunnel (wireguard, openvpn, tailscale...) is up; which one: in the wifi panel
+            BracketButton {
+                visible: NetLinks.vpn !== "" && Settings.barShows("vpn")
+                label: "vpn"
+                textColor: Colors.accent
+                active: Panels.isOpen("wifi", root.modelData)
+                onClicked: Panels.toggle("wifi", root.modelData)
+            }
+
+            WifiButton {
+                id: wifi
+                active: Panels.isOpen("wifi", root.modelData)
+                onClicked: Panels.toggle("wifi", root.modelData)
+            }
+
+            NetGraph {
+                id: netGraph
+                visible: Settings.barShows("net")
+                active: Panels.isOpen("wifi", root.modelData)
+                onClicked: Panels.toggle("wifi", root.modelData)
+            }
+        }
+
+        // in the middle; with raised frames at the right end, in the tray
+        ClockButton {
+            id: clock
+            plain: true
+            visible: Settings.barShows("clock")
+            opacity: root.tucked ? 0 : 1
+            anchors.horizontalCenter: Colors.bevel ? undefined : parent.horizontalCenter
+            anchors.right: Colors.bevel ? parent.right : undefined
+            anchors.rightMargin: Metrics.padding
+            anchors.verticalCenter: parent.verticalCenter
+            active: Panels.isOpen("calendar", root.modelData)
+            onClicked: Panels.toggle("calendar", root.modelData)
+        }
+
+        // media follows the clock (raised frames: in the tray, after the network)
+        PlayerButton {
+            id: player
+            plain: true
+            opacity: root.tucked ? 0 : 1
+            anchors.left: Colors.bevel ? undefined : clock.right
+            anchors.leftMargin: Metrics.sectionGap
+            anchors.right: Colors.bevel ? rightRow.left : undefined
+            anchors.rightMargin: Metrics.spacing
+            anchors.verticalCenter: parent.verticalCenter
+            active: Panels.isOpen("player", root.modelData)
+            onClicked: Panels.toggle("player", root.modelData)
+        }
+
+        // right: tray, input/output, power, messages, ai (raised frames: before the clock)
+        RowLayout {
+            id: rightRow
+
+            readonly property bool plainButtons: true // plain items on the bar, no raised frames (components/BarBox.qml)
+            opacity: root.tucked ? 0 : 1
+            anchors.right: Colors.bevel && clock.visible ? clock.left : parent.right
+            anchors.rightMargin: Colors.bevel && clock.visible ? Metrics.spacing : Metrics.padding
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Metrics.spacing
+
+            RecButton {}
+
+            VoiceButton {}
+
+            CastButton {}
+
+            CafButton {}
+
+            Tray {
+                id: tray
+                active: Panels.isOpen("tray", root.modelData)
+                onClicked: Panels.toggle("tray", root.modelData)
+            }
+
+            KbButton {}
+
+            BarSep {}
+
+            BtButton {
+                id: bluetooth
+                active: Panels.isOpen("bluetooth", root.modelData)
+                onClicked: Panels.toggle("bluetooth", root.modelData)
+            }
+
+            MicButton {
+                id: mic
+                active: Panels.isOpen("mic", root.modelData)
+                onClicked: Panels.toggle("mic", root.modelData)
+            }
+
+            VolumeButton {
+                id: volume
+                visible: Settings.barShows("vol")
+                active: Panels.isOpen("volume", root.modelData)
+                onClicked: Panels.toggle("volume", root.modelData)
+            }
+
+            BrightnessButton {
+                id: brightness
+                active: Panels.isOpen("brightness", root.modelData)
+                onClicked: Panels.toggle("brightness", root.modelData)
+            }
+
+            BatteryButton {
+                id: battery
+                active: Panels.isOpen("battery", root.modelData)
+                onClicked: Panels.toggle("battery", root.modelData)
+            }
+
+            BarSep {}
+
+            NotifButton {
+                id: notifs
+                visible: Settings.barShows("log")
+                active: Panels.isOpen("notifs", root.modelData)
+                onClicked: Panels.toggle("notifs", root.modelData)
+            }
+
+            BracketButton {
+                visible: Settings.barShows("ai")
+                label: ">_"
+                active: Panels.isSidebarOpen(root.modelData)
+                onClicked: Panels.toggleSidebar(root.modelData)
+            }
+        }
+
+        // only when kawt draws the wallpaper itself: the image inside would otherwise be decoded
+        // at screen size (8 MB at 1080p, 33 MB at 4K, per screen) even with awww drawing it
+        Lazy {
+            when: Wallpapers.backend === "kawt" && Settings.wallpaper !== ""
+
+            Wallpaper {
+                forScreen: root.modelData
+            }
+        }
+
+        // the faint lines of an old tube over everything (cfg -> look -> scanlines)
+        Lazy {
+            when: Settings.scanlines
+
+            Scanlines {
+                forScreen: root.modelData
+            }
+        }
+
+        // Panels are created when opened and destroyed when closed (components/Lazy.qml):
+        // a hidden window would keep all its items in memory, on every screen.
+        Lazy {
+            when: Panels.isOpen("profile", root.modelData)
+
+            ProfilePopover {
+                forScreen: root.modelData
+                anchorItem: profile
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("dock", root.modelData)
+
+            DockPopover {
+                forScreen: root.modelData
+                anchorItem: dock
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("calendar", root.modelData)
+
+            CalendarPopover {
+                forScreen: root.modelData
+                anchorItem: clock
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("player", root.modelData)
+
+            PlayerPopover {
+                forScreen: root.modelData
+                anchorItem: player
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("wifi", root.modelData)
+
+            WifiPopover {
+                forScreen: root.modelData
+                // with the wifi button hidden, the panel opens under the net graph
+                anchorItem: wifi.visible ? wifi : netGraph
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("volume", root.modelData)
+
+            VolumePopover {
+                forScreen: root.modelData
+                anchorItem: volume
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("brightness", root.modelData)
+
+            BrightnessPopover {
+                forScreen: root.modelData
+                anchorItem: brightness
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("mic", root.modelData)
+
+            MicPopover {
+                forScreen: root.modelData
+                anchorItem: mic
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("bluetooth", root.modelData)
+
+            BluetoothPopover {
+                forScreen: root.modelData
+                anchorItem: bluetooth
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("battery", root.modelData)
+
+            BatteryPopover {
+                forScreen: root.modelData
+                anchorItem: battery
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("notifs", root.modelData)
+
+            NotifsPopover {
+                forScreen: root.modelData
+                anchorItem: notifs
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("tray", root.modelData)
+
+            TrayPopover {
+                forScreen: root.modelData
+                anchorItem: tray
+                barWindow: root
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("home", root.modelData)
+
+            HerPopover {
+                forScreen: root.modelData
+                anchorItem: home
+                barWindow: root
+            }
+        }
+
+        // the first start's hello and tour (Panels opens it once)
+        Lazy {
+            when: Panels.isOpen("welcome", root.modelData)
+
+            WelcomePopover {
+                forScreen: root.modelData
+                barWindow: root
+            }
+        }
+
+        // stripes out on an empty desktop, and in the corner: peeking when something happens
+        // while she's nowhere on the screen, or called (super + h; services/Companion.qml)
+        Lazy {
+            when: root.companionOut
+
+            DeskWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: root.focusedHere && (Companion.peeking || Companion.called) && Companion.enabled
+            linger: 300
+
+            PeekWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        // kept a moment after closing, for the slide out
+        Lazy {
+            when: Panels.isSidebarOpen(root.modelData)
+            linger: 300
+
+            AiSidebar {
+                forScreen: root.modelData
+            }
+        }
+
+        // super + alt + a: the ai on the text you marked (modules/sidebar/SelectionPopup.qml)
+        Lazy {
+            when: Panels.isOpen("selection", root.modelData)
+
+            SelectionPopup {
+                forScreen: root.modelData
+            }
+        }
+
+        // the launcher in the middle, or as the start menu under the kawt button
+        Lazy {
+            when: Panels.isOpen("launcher", root.modelData) || Panels.isOpen("menu", root.modelData)
+
+            Launcher {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("style", root.modelData)
+
+            StyleWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("dashboard", root.modelData)
+
+            Dashboard {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("power", root.modelData)
+
+            PowerMenu {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: Panels.isOpen("keys", root.modelData)
+
+            KeysWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        // only while there is something to show: otherwise every screen kept a toast stack and
+        // an osd window around all the time (the osd lingers for its fade-out)
+        Lazy {
+            when: root.modelData.name === Panels.focusedScreen && Notifs.popups.length > 0 && !Panels.isOpen("notifs", root.modelData)
+
+            Toasts {
+                forScreen: root.modelData
+            }
+        }
+
+        Lazy {
+            when: root.modelData.name === Panels.focusedScreen && Osd.shown
+            linger: 250
+
+            OsdWindow {
+                forScreen: root.modelData
+            }
+        }
+
+        // a screenshot waiting for [copy] / [save] (services/Screenshot.qml)
+        Lazy {
+            when: root.modelData.name === Screenshot.screen && Screenshot.shot !== ""
+
+            ShotPreview {
+                forScreen: root.modelData
+            }
+        }
+    }
+}

@@ -1,0 +1,156 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import qs.config
+import qs.components
+import qs.services
+
+Popover {
+    id: root
+
+    property int monthOffset: 0
+    // from Time.day, not Time.now: the grid below is built again only when the date changes,
+    // not on every tick of the clock
+    readonly property date today: {
+        const [y, m, d] = Time.day.split("-").map(Number);
+        return new Date(y, m - 1, d);
+    }
+    readonly property date shown: new Date(today.getFullYear(), today.getMonth() + monthOffset, 1)
+    readonly property bool isCurrentMonth: monthOffset === 0
+    readonly property var cells: {
+        const startOffset = (shown.getDay() + 6) % 7;
+        const daysInMonth = new Date(shown.getFullYear(), shown.getMonth() + 1, 0).getDate();
+        const out = [];
+        for (let i = 0; i < startOffset; i++)
+            out.push("");
+        for (let d = 1; d <= daysInMonth; d++)
+            out.push(String(d));
+        return out;
+    }
+
+    name: "calendar"
+    title: Qt.formatDate(today, "ddd dd.MM.yyyy").toLowerCase()
+    cardWidth: 240
+
+    onPanelOpened: monthOffset = 0
+
+    RowLayout {
+        Layout.fillWidth: true
+
+        BracketButton {
+            label: "<"
+            bordered: false
+            onClicked: root.monthOffset--
+        }
+
+        Label {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: Qt.formatDate(root.shown, "MMMM yyyy").toLowerCase()
+            color: root.isCurrentMonth ? Colors.fg : Colors.accent
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.monthOffset = 0
+            }
+        }
+
+        BracketButton {
+            label: ">"
+            bordered: false
+            onClicked: root.monthOffset++
+        }
+    }
+
+    Rule {
+        Layout.fillWidth: true
+    }
+
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 7
+        rowSpacing: 2
+        columnSpacing: 2
+
+        Repeater {
+            model: ["mo", "tu", "we", "th", "fr", "sa", "su"]
+
+            Label {
+                required property string modelData
+                required property int index
+
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: modelData
+                color: index >= 5 ? Colors.accent : Colors.dim
+                font.pixelSize: Metrics.fontSize - 2
+            }
+        }
+
+        Repeater {
+            model: root.cells
+
+            Rectangle {
+                required property string modelData
+                readonly property bool isToday: root.isCurrentMonth && modelData === String(root.today.getDate())
+
+                Layout.fillWidth: true
+                implicitHeight: day.implicitHeight + 2
+                color: isToday ? Colors.fg : "transparent"
+
+                Label {
+                    id: day
+
+                    anchors.centerIn: parent
+                    text: parent.modelData
+                    color: parent.isToday ? Colors.bg : Colors.fg
+                }
+            }
+        }
+    }
+
+    // today's timed tasks from the todo tab
+    ColumnLayout {
+        Layout.fillWidth: true
+        Layout.topMargin: Metrics.spacing
+        visible: Todo.today.length > 0
+        spacing: 0
+
+        Label {
+            text: "-- today --"
+            color: Colors.dim
+            font.pixelSize: Metrics.fontSize - 2
+        }
+
+        Repeater {
+            model: ScriptModel {
+                values: Todo.today.slice(0, 5)
+            }
+
+            Label {
+                required property var modelData
+
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: `${Time.fmt(new Date(modelData.due))}  ${modelData.text}`
+                color: modelData.due < Time.now.getTime() ? Colors.warn : Colors.fg
+            }
+        }
+    }
+
+    Label {
+        Layout.alignment: Qt.AlignHCenter
+        text: `week ${root.weekNumber()} · ${Settings.clock24 ? Qt.formatTime(Time.now, "hh:mm:ss") : Qt.formatTime(Time.now, "h:mm:ss AP").toLowerCase()}`
+        color: Colors.dim
+        font.pixelSize: Metrics.fontSize - 2
+    }
+
+    // ISO-8601 week number
+    function weekNumber(): int {
+        const d = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+        const day = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - day);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    }
+}

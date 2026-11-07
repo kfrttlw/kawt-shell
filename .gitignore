@@ -1,0 +1,34 @@
+# secrets: the repo never holds any (an api key lives in ~/.local/state/kawt/secrets.json), keep it that way
+.env
+.env.*
+*.key
+*.pem
+
+# local dumps / logs that never belong in the repo
+*.qslog
+*.log
+
+# backups made by install.sh
+*.bak.*
+
+# the dev installer: only links the configs, never runs pacman (for testing on a ready machine)
+install-dev.sh
+
+# runtime state (settings, notes, generated colors) lives in ~/.local/state/kawt,
+# but just in case it gets copied in here
+settings.json
+notes.txt
+launcher.json
+
+# editors / qml tooling
+.qmlls.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# python
+__pycache__/
+
+# plans and pictures for what's next: local only, never in the repo
+ideas/

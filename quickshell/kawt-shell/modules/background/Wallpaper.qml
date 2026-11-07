@@ -1,0 +1,46 @@
+import QtQuick
+import Quickshell
+import Quickshell.Wayland
+import qs.config
+import qs.services
+
+// Wallpaper on the background layer, used when neither awww nor swww is installed.
+// Only shown once one is picked in the style panel, so a hyprpaper setup keeps working until then.
+PanelWindow {
+    id: root
+
+    required property ShellScreen forScreen
+
+    screen: forScreen
+    visible: true // created only when it's needed (Bar.qml)
+    color: Colors.bg
+
+    WlrLayershell.namespace: "kawt-wallpaper"
+    WlrLayershell.layer: WlrLayer.Background
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+
+    anchors.top: true
+    anchors.left: true
+    anchors.right: true
+    anchors.bottom: true
+
+    Image {
+        anchors.fill: parent
+        source: Wallpapers.shown ? `file://${Wallpapers.shown}` : ""
+        fillMode: Image.PreserveAspectCrop
+        smooth: !Settings.wallDither // a dithered one keeps its dots sharp
+        asynchronous: true
+        // decode at screen resolution, not the file's (a 6K jpg would eat ~100MB otherwise).
+        // From the screen, not the window: the window's size is 0 until the compositor sets it,
+        // and a sourceSize of 0 means "full size" for the first load
+        sourceSize.width: root.forScreen.width * (root.devicePixelRatio || 1)
+        sourceSize.height: root.forScreen.height * (root.devicePixelRatio || 1)
+        opacity: status === Image.Ready ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+            }
+        }
+    }
+}

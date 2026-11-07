@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+# kawt doctor: checks the whole chain "pick a theme -> files written -> apps read them"
+# and says where it breaks. Changes nothing. The one thing it sends out: a question to the
+# aur for quickshell's version, and only when quickshell came from there.
+# The packages of the parts installed and their libraries: ./install.sh --check says.
+#   ./doctor.sh
+
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/kawt
+zshrc=${ZDOTDIR:-$HOME}/.zshrc
+problems=0
+
+if [[ -t 1 ]]; then ok=$'\e[1m[ ok ]\e[0m' bad=$'\e[1;31m[ !! ]\e[0m' dim=$'\e[2m' off=$'\e[0m'; else ok='[ ok ]' bad='[ !! ]' dim='' off=''; fi
+good() { printf '%s %s\n' "$ok" "$1"; }
+fail() { printf '%s %s\n' "$bad" "$1"; [[ -n ${2:-} ]] && printf '       %s%s%s\n' "$dim" "$2" "$off"; problems=$((problems + 1)); }
+info() { printf '       %s%s%s\n' "$dim" "$1" "$off"; }
+# a "key": value from settings.json (pretty-printed by quickshell)
+setting() { sed -n "s/^ *\"$1\": *\"\{0,1\}\([^\",]*\)\"\{0,1\},\{0,1\} *$/\1/p" "$state/settings.json" 2> /dev/null | head -n 1; }
+
+echo "-- shell"
+# by process name: matching the command line would also find this very script
+if pgrep -x qs > /dev/null || pgrep -x quickshell > /dev/null; then good "quickshell is running"; else fail "quickshell is not running" "start kawt: qs -c kawt-shell -d"; fi
+# quickshell built for an older Qt than the installed one warns "built against Qt X" and may crash.
+#   from the aur: built here before the last Qt update (install dates)
+#   from arch:    Arch built it before our Qt and hasn't rebuilt it yet (build dates)
+if command -v pacman > /dev/null; then
+    q=$(pacman -Qq 2> /dev/null | grep -xE 'quickshell(-git)?' | head -n 1)
+    if [[ -n $q ]]; then
+        at() { date -d "$(LC_ALL=C pacman -Qi -- "$1" 2> /dev/null | sed -n "s/^$2 *: //p")" +%s 2> /dev/null; }
+        if pacman -Qmq 2> /dev/null | grep -x "$q" > /dev/null; then
+            from=aur kind="Install Date"
+        else
+            from=arch kind="Build Date"
+        fi
+        qt_at=$(at qt6-base "$kind") qs_at=$(at "$q" "$kind")
+        if [[ -n $qt_at && -n $qs_at ]] && ((qt_at > qs_at)); then
+            if [[ $from == arch ]]; then
+                fail "$q is built for an older Qt: Arch hasn't rebuilt it yet (it may crash)" "the rebuild comes with sudo pacman -Syu, usually within days; kawt works meanwhile"
+            else
+                helper=$(command -v paru || command -v yay || true)
+                fix="./install.sh (it builds it again)"
+                [[ -n $helper ]] && fix="${helper##*/} -S --rebuild $q"
+                fail "$q was built before the last Qt update (it may crash)" "build it again: $fix"
+            fi
+        else
+            good "$q is built against the current Qt"
+        fi
+        # pacman -Syu doesn't look at the AUR: is there a newer quickshell there? (not for -git)
+        if [[ $from == aur && $q == quickshell ]]; then
+            have=$(pacman -Q quickshell 2> /dev/null | cut -d' ' -f2)
+            aur=$(curl -s -m 10 "https://aur.archlinux.org/rpc/v5/info?arg%5B%5D=quickshell" 2> /dev/null | grep -o '"Version":"[^"]*"' | head -n 1 | cut -d'"' -f4)
+            if [[ -n $aur && -n $have ]] && (($(vercmp "$aur" "$have") > 0)); then
+                info "quickshell $aur is in the aur (you have $have): ./install.sh updates it (or paru -Syu / yay -Syu)"
+            fi
+        fi
+    fi
+fi
+if [[ -f $config/quickshell/kawt-shell/shell.qml ]]; then
+    good "config: $(readlink -f "$config/quickshell/kawt-shell")"
+else
+    fail "~/.config/quickshell/kawt-shell is missing or a broken link" "run ./install.sh"
+fi
+
+echo "-- packages"
+# the installer knows what each part needs; --check only looks (pacman -Q, -Dk, ldd)
+"$(dirname "${BASH_SOURCE[0]}")/install.sh" --check 2>&1 | grep -v -e '^$' -e '^-- what kawt needs here --$'
+code=${PIPESTATUS[0]}
+((code == 0)) || problems=$((problems + 1))
+
+echo "-- theme"
+theme=$(setting theme) light=$(setting light) term=$(setting termColors)
+# a theme kawt doesn't have any more (mono, amber, phosphor) and that isn't one of your own shows as thinkpad
+case ${theme:=thinkpad} in
+    thinkpad | wallpaper) ;;
+    *) grep -qs "\"$theme\"" "${XDG_CONFIG_HOME:-$HOME/.config}/kawt/themes.json" || theme=thinkpad ;;
+esac
+want="$theme-$([[ $light == true ]] && echo light || echo dark)"
+info "settings.json: theme=$theme light=${light:-false} terminal=${term:-soft}  ->  $want"
+if [[ -f $state/theme/kitty.conf ]]; then
+    have=$(sed -n '1s/.*kawt theme: \([^ ]*\).*/\1/p' "$state/theme/kitty.conf")
+    if [[ $have == "$want" ]]; then
+        good "generated colors are for $have ($(date -r "$state/theme/kitty.conf" '+%d.%m %H:%M'))"
+    else
+        fail "generated colors are for '$have', but the theme is '$want'" "kawt didn't rewrite them: switch the theme once in super+w (kawt must be running)"
+    fi
+else
+    fail "no generated colors in ${state/#$HOME/\~}/theme/" "start kawt once, it writes them on startup"
+fi
+
+echo "-- wallpaper theme"
+wall=$(setting wallpaper)
+if [[ -z $wall ]]; then
+    info "no wallpaper picked in kawt (super+w): the wallpaper theme needs one"
+elif [[ ! -f $wall ]]; then
+    fail "the wallpaper file is gone: $wall" "pick one again in super+w"
+else
+    good "wallpaper: ${wall/#$HOME/\~}"
+    # the analysis kawt stored: version 4+, made from this wallpaper, colorful or not
+    pal=$(tr -d '\n ' < "$state/settings.json" | grep -o '"wallPalette":{[^}]*}')
+    pver=$(printf '%s' "$pal" | grep -o '"version":[0-9]*' | cut -d: -f2)
+    psrc=$(printf '%s' "$pal" | grep -o '"source":"[^"]*"' | cut -d'"' -f4)
+    phue=$(printf '%s' "$pal" | grep -o '"hue":[0-9.]*' | cut -d: -f2)
+    pcol=$(printf '%s' "$pal" | grep -o '"colorful":[a-z]*' | cut -d: -f2)
+    # kawt measures each new wallpaper with ffmpeg; without it, only while super+w is open
+    if command -v ffmpeg > /dev/null; then
+        hint="kawt measures it by itself when it runs; restart it: qs kill -c kawt-shell; qs -c kawt-shell -d"
+    else
+        hint="no ffmpeg, so kawt measures it only while super+w is open (sudo pacman -S ffmpeg)"
+    fi
+    if [[ -z $pal || ${pver:-0} -lt 4 ]]; then
+        fail "the wallpaper isn't analysed yet (or by an older kawt)" "$hint"
+    elif [[ $psrc != "$wall" ]]; then
+        fail "the analysis is of another wallpaper" "$hint"
+    elif [[ $pcol != true ]]; then
+        info "kawt finds this wallpaper gray (no real color), so the wallpaper theme is gray"
+    else
+        good "analysed: main hue ${phue%%.*}°, strength $(setting wallStrength)"
+    fi
+    [[ $theme == wallpaper ]] && good "the wallpaper theme is selected" || info "selected theme: $theme (pick 'wallpaper' in super+w to use it)"
+fi
+
+echo "-- kitty"
+kc=$config/kitty/kitty.conf
+if [[ ! -e $kc ]]; then
+    fail "no kitty.conf" "run ./install.sh"
+else
+    [[ -L $kc ]] && good "kitty.conf -> $(readlink -f "$kc")" || info "kitty.conf is your own file, not kawt's"
+    if grep -E '^[[:space:]]*include[[:space:]].*kawt/theme/kitty.conf' "$kc" > /dev/null; then
+        good "kitty.conf includes the kawt colors"
+    else
+        fail "kitty.conf doesn't include the kawt colors" "add: include ~/.local/state/kawt/theme/kitty.conf"
+    fi
+    # anything after the include that sets colors overrides the theme
+    after=$(awk '/include .*kawt\/theme\/kitty.conf/ {seen = 1; next} seen && /^[[:space:]]*(foreground|background|color[0-9]+|include)[[:space:]]/ {print NR": "$0}' "$kc")
+    [[ -n $after ]] && fail "kitty.conf sets colors after the kawt include, these win:" "$after"
+fi
+info "open terminals recolor on a theme switch only if 'recolor open terminals' is on in super+w"
+
+echo "-- fastfetch"
+ffc=$config/fastfetch/config.jsonc
+if ! command -v fastfetch > /dev/null; then
+    info "fastfetch isn't installed (optional: sudo pacman -S fastfetch)"
+elif [[ -L $ffc && $(readlink -f "$ffc") == "$state/theme/fastfetch.jsonc" ]]; then
+    have=$(sed -n '1s/.*kawt theme: \([^ ]*\).*/\1/p' "$state/theme/fastfetch.jsonc" 2> /dev/null)
+    [[ -n $have ]] && good "fastfetch uses kawt's colors ($have)" || info "fastfetch uses kawt's starting config: kawt rewrites it in the theme colors when it runs"
+else
+    info "fastfetch uses its own config, not kawt's (./install.sh links it to kawt's)"
+fi
+
+echo "-- hyprland"
+hl=$config/hypr/hyprland.lua
+if [[ -f $hl ]]; then
+    grep -vE '^[[:space:]]*--' "$hl" | grep -F "kawt-shell/hypr/kawt.lua" > /dev/null && good "hyprland.lua loads kawt" || fail "hyprland.lua doesn't load kawt" "run ./install.sh"
+    [[ -f $state/theme/hyprland_colors.lua ]] && good "border colors file exists" || fail "no hyprland_colors.lua yet" "switch the theme once in super+w"
+fi
+
+echo "-- zsh prompt"
+if [[ -f $zshrc ]]; then
+    if grep -vE '^[[:space:]]*#' "$zshrc" | grep -F "kawt-shell/zsh/kawt.zsh-theme" > /dev/null; then
+        good ".zshrc loads the kawt prompt"
+        # a PROMPT set after our line would replace it
+        late=$(awk '/kawt-shell\/zsh\/kawt.zsh-theme/ {seen = 1; next} seen && /^[[:space:]]*(PROMPT|PS1|source .*(p10k|powerlevel|starship|oh-my-posh))/ {print NR": "$0}' "$zshrc")
+        [[ -n $late ]] && fail "something after the kawt line replaces the prompt:" "$late"
+        # the prompt is only seen if terminals open zsh
+        login=$(getent passwd "$(id -un)" 2> /dev/null | cut -d: -f7)
+        if [[ -z $login || $login == */zsh ]]; then
+            good "zsh is your shell"
+        else
+            fail "terminals open ${login##*/}, not zsh: the prompt isn't seen" "make zsh your shell: chsh -s $(command -v zsh || echo /usr/bin/zsh)"
+        fi
+    else
+        fail ".zshrc doesn't load the kawt prompt" "run ./install.sh"
+    fi
+    grep -E 'powerlevel10k|p10k|starship init|oh-my-posh' "$zshrc" | grep -vE '^[[:space:]]*#' > /dev/null &&
+        fail "a prompt engine is still active in .zshrc (powerlevel10k / starship / oh-my-posh)" "those set their own (truecolor) colors; comment them out"
+else
+    info "no .zshrc"
+fi
+
+echo "-- features"
+# kawt.lua is loaded with dofile: hyprland doesn't see edits to it until a reload
+if command -v hyprctl > /dev/null; then
+    if hyprctl binds 2> /dev/null | grep -F "kawt record" > /dev/null; then
+        good "hyprland has the current kawt binds"
+    else
+        fail "hyprland runs older kawt binds (recording keys are missing)" "hyprctl reload"
+    fi
+fi
+for tool in wf-recorder:recording ffmpeg:"wallpaper theme" grim:screenshots slurp:"area selection" cliphist:"clipboard history"; do
+    command -v "${tool%%:*}" > /dev/null && good "${tool%%:*}" || fail "${tool%%:*} is missing (${tool#*:})" "sudo pacman -S ${tool%%:*}"
+done
+if ls /sys/class/bluetooth 2> /dev/null | grep -q .; then
+    if systemctl is-active --quiet bluetooth 2> /dev/null; then
+        good "bluetooth service is running"
+    else
+        fail "bluetooth service isn't running" "sudo pacman -S --needed bluez bluez-utils && sudo systemctl enable --now bluetooth"
+    fi
+fi
+
+echo "-- locking"
+# kawt locks before sleep through logind (services/Session.qml): it needs gdbus and systemd-inhibit
+if command -v gdbus > /dev/null && command -v systemd-inhibit > /dev/null; then
+    good "gdbus + systemd-inhibit: kawt locks before sleep and on loginctl lock-session"
+    [[ $(setting lockOnSleep) == false ]] && info "but 'before sleep' is off in profile -> cfg"
+else
+    fail "no gdbus or systemd-inhibit: kawt can't lock before sleep" "sudo pacman -S --needed glib2 systemd"
+fi
+# a second locker would fight kawt's over the screen
+for other in hypridle hyprlock swayidle swaylock; do
+    pgrep -x "$other" > /dev/null && info "$other is running too: let only one of them lock (kawt's switches are in profile -> cfg)"
+done
+
+echo "-- network (what goes out by itself)"
+# kawt sends nothing in the background; what else on the system does, if anything
+if command -v NetworkManager > /dev/null; then
+    # [connectivity] from all of networkmanager's config files, merged
+    conn=$(NetworkManager --print-config 2> /dev/null | awk '/^\[/ { s = ($0 == "[connectivity]"); next } s')
+    uri=$(printf '%s\n' "$conn" | sed -n 's/^uri=//p' | tail -n 1)
+    every=$(printf '%s\n' "$conn" | sed -n 's/^interval=//p' | tail -n 1)
+    if [[ -n $uri ]] && ! printf '%s\n' "$conn" | grep -qx 'enabled=false' && [[ ${every:-300} != 0 ]]; then
+        host=${uri#*://} host=${host%%/*}
+        info "networkmanager asks $host every $((${every:-300} / 60)) min if there is internet (it's how it finds wifi login pages: cafés, hotels)"
+        info "to switch it off: printf '[connectivity]\\nenabled=false\\n' | sudo tee /etc/NetworkManager/conf.d/90-no-check.conf && sudo systemctl reload NetworkManager"
+    else
+        good "networkmanager doesn't check the internet by itself"
+    fi
+fi
+if [[ $(setting aiProvider) == api ]]; then
+    info "the ai panel is on an api provider: what you ask it goes to $(setting apiUrl)"
+fi
+info "live, by program: tools/net.sh -w"
+
+echo "-- ai (ollama)"
+model=$(setting ollamaModel)
+url=$(setting ollamaUrl)
+url=${url:-http://localhost:11434}
+if ! command -v ollama > /dev/null; then
+    fail "ollama is not installed" "sudo pacman -S ollama   (or ollama-rocm / ollama-cuda for the gpu)"
+elif ! tags=$(curl -s -m 3 "$url/api/tags"); then
+    fail "ollama doesn't answer at $url" "start it: sudo systemctl enable --now ollama"
+else
+    good "ollama answers at $url"
+    # OLLAMA_HOST=0.0.0.0 opens it to the whole network: anyone on the same wifi can use the models
+    port=${url##*:} port=${port%%/*}
+    if command -v ss > /dev/null && [[ $port =~ ^[0-9]+$ ]]; then
+        where=$(ss -Htln "sport = :$port" 2> /dev/null | awk '{ print $4 }')
+        if printf '%s\n' "$where" | grep -qE '^(0\.0\.0\.0|\*|\[::\]):'; then
+            fail "ollama listens on the whole network, not just this machine (OLLAMA_HOST=0.0.0.0?)" "anyone on your wifi can use your models: sudo systemctl edit ollama, drop OLLAMA_HOST (or set it to 127.0.0.1), then sudo systemctl restart ollama"
+        elif [[ -n $where ]]; then
+            good "ollama listens only on this machine"
+        fi
+    fi
+    pulled=$(printf '%s' "$tags" | grep -o '"name":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' ')
+    if [[ -z $pulled ]]; then
+        fail "no models downloaded" "ollama pull ${model:-llama3.2}"
+    elif [[ " $pulled " == *" ${model:-llama3.2} "* || " $pulled " == *" ${model:-llama3.2}:latest "* ]]; then
+        good "model ${model:-llama3.2} is downloaded"
+    else
+        fail "kawt uses model '${model:-llama3.2}', but it isn't downloaded" "ollama pull ${model:-llama3.2}   (downloaded: $pulled)"
+    fi
+fi
+
+echo
+if ((problems)); then echo "$problems problem(s) above"; else echo "all good. colors still off? run ./colortest.sh"; fi

@@ -1,0 +1,1924 @@
+# kawt emoji list: emoji, english, russian, other names. Made by tools/emoji-list.py (emoji 2.16.0, unicode CLDR names)
+#️⃣	keycap #	клавиши #	hash
+*️⃣	keycap *	клавиши *	asterisk
+0️⃣	keycap 0	клавиши 0	zero
+1️⃣	keycap 1	клавиши 1	one
+2️⃣	keycap 2	клавиши 2	two
+3️⃣	keycap 3	клавиши 3	three
+4️⃣	keycap 4	клавиши 4	four
+5️⃣	keycap 5	клавиши 5	five
+6️⃣	keycap 6	клавиши 6	six
+7️⃣	keycap 7	клавиши 7	seven
+8️⃣	keycap 8	клавиши 8	eight
+9️⃣	keycap 9	клавиши 9	nine
+©️	copyright	значок защиты авторского права	
+®️	registered	зарегистрированныи товарныи знак	
+‼️	double exclamation mark	два восклицательных знака	bangbang
+⁉️	exclamation question mark	восклицательныи и вопросительныи знаки	interrobang
+™️	trade mark	товарныи знак	tm
+ℹ️	information	значок информации	information source
+↔️	left-right arrow	стрелка влево-вправо	left right arrow
+↕️	up-down arrow	стрелка вверх-вниз	arrow up down up down arrow
+↖️	up-left arrow	стрелка влево-вверх	arrow upper left up left arrow
+↗️	up-right arrow	стрелка вправо-вверх	arrow upper right up right arrow
+↘️	down-right arrow	стрелка вправо-вниз	arrow lower right down right arrow
+↙️	down-left arrow	стрелка влево-вниз	arrow lower left down left arrow
+↩️	right arrow curving left	стрелка вправо с поворотом влево	leftwards arrow with hook
+↪️	left arrow curving right	стрелка влево с поворотом вправо	arrow right hook
+⌚	watch	наручные часы	
+⌛	hourglass done	песочные часы	hourglass
+⌨️	keyboard	клавиатура	
+⏏️	eject button	выброс	eject symbol
+⏩	fast-forward button	перемотка вперед	fast forward fast forward button
+⏪	fast reverse button	перемотка назад	rewind
+⏫	fast up button	два треугольника острием вверх	arrow double up
+⏬	fast down button	два треугольника острием вниз	arrow double down
+⏭️	next track button	следующии трек	black right pointing double triangle with vertical bar
+⏮️	last track button	предыдущии трек	previous track button black left pointing double triangle with vertical bar
+⏯️	play or pause button	воспроизведение/пауза	black right pointing triangle with double vertical bar
+⏰	alarm clock	будильник	
+⏱️	stopwatch	секундомер	
+⏲️	timer clock	таимер	
+⏳	hourglass not done	время пошло	hourglass flowing sand
+⏸️	pause button	пауза	double vertical bar
+⏹️	stop button	стоп	black square for stop
+⏺️	record button	запись	black circle for record
+Ⓜ️	circled m	буква «м» в кружке	m
+▪️	black small square	черныи квадратик	
+▫️	white small square	белыи квадратик	
+▶️	play button	воспроизведение	arrow forward
+◀️	reverse button	реверс	arrow backward
+◻️	white medium square	белыи квадрат	
+◼️	black medium square	черныи квадрат	
+◽	white medium-small square	небольшой белый квадрат	white medium small square
+◾	black medium-small square	небольшой черный квадрат	black medium small square
+☀️	sun	солнце	sunny
+☁️	cloud	облако	
+☂️	umbrella	зонт	open umbrella
+☃️	snowman	снеговик под снегом	snowman with snow
+☄️	comet	комета	
+☎️	telephone	телефон	phone
+☑️	check box with check	галочка в квадрате	ballot box with check
+☔	umbrella with rain drops	зонт под дождем	umbrella
+☕	hot beverage	горячий напиток	coffee
+☘️	shamrock	трилистник	
+☝️	index pointing up	указательныи палец вверх	point up
+☠️	skull and crossbones	череп и кости	
+☢️	radioactive	радиация	radioactive sign
+☣️	biohazard	биологическая угроза	biohazard sign
+☦️	orthodox cross	православныи крест	
+☪️	star and crescent	звезда и полумесяц	
+☮️	peace symbol	пацифик	
+☯️	yin yang	инь-ян	
+☸️	wheel of dharma	колесо дхармы	
+☹️	frowning face	грустит	white frowning face
+☺️	smiling face	улыбается	relaxed
+♀️	female sign	женскии символ	
+♂️	male sign	мужскои символ	
+♈	aries	знак зодиака овен	
+♉	taurus	знак зодиака телец	
+♊	gemini	знак зодиака близнецы	
+♋	cancer	знак зодиака рак	
+♌	leo	знак зодиака лев	
+♍	virgo	знак зодиака дева	
+♎	libra	знак зодиака весы	
+♏	scorpio	знак зодиака скорпион	scorpius
+♐	sagittarius	знак зодиака стрелец	
+♑	capricorn	знак зодиака козерог	
+♒	aquarius	знак зодиака водолей	
+♓	pisces	знак зодиака рыбы	
+♟️	chess pawn	пешка	
+♠️	spade suit	пики	spades
+♣️	club suit	трефы	clubs
+♥️	heart suit	червы	hearts
+♦️	diamond suit	бубны	diamonds
+♨️	hot springs	горячие источники	hotsprings
+♻️	recycling symbol	утилизация	recycle
+♾️	infinity	бесконечность	
+♿	wheelchair symbol	значок «для инвалидов»	wheelchair
+⚒️	hammer and pick	кирка и молот	
+⚓	anchor	якорь	
+⚔️	crossed swords	скрещенные мечи	
+⚕️	medical symbol	медицинскии символ	
+⚖️	balance scale	весы	scales
+⚗️	alembic	перегонныи сосуд	
+⚙️	gear	шестеренка	
+⚛️	atom symbol	символ атома	
+⚜️	fleur-de-lis	геральдическая лилия	fleur de lis
+⚠️	warning	значок предупреждения	
+⚡	high voltage	высокое напряжение	zap
+⚧️	transgender symbol	трансгендер	
+⚪	white circle	белый круг	
+⚫	black circle	черный круг	
+⚰️	coffin	гроб	
+⚱️	funeral urn	урна с прахом	
+⚽	soccer ball	футбол	soccer
+⚾	baseball	бейсбол	
+⛄	snowman without snow	снеговик	snowman
+⛅	sun behind cloud	солнце за облаками	partly sunny
+⛈️	cloud with lightning and rain	гроза	thunder cloud and rain
+⛎	ophiuchus	знак зодиака змееносец	
+⛏️	pick	кирка	
+⛑️	rescue worker’s helmet	каска с белым крестом	helmet with white cross rescue worker helmet rescue workers helmet
+⛓️	chains	цепь	
+⛓️‍💥	broken chain	разорванная цепь	
+⛔	no entry	въезд запрещен	
+⛩️	shinto shrine	синтоистскии храм	
+⛪	church	церковь	
+⛰️	mountain	гора	
+⛱️	umbrella on ground	пляжныи зонт	parasol on ground
+⛲	fountain	фонтан	
+⛳	flag in hole	гольф	golf
+⛴️	ferry	паром	
+⛵	sailboat	парусник	boat
+⛷️	skier	горные лыжи	
+⛸️	ice skate	коньки	
+⛹️	person bouncing ball	баскетболист	bouncing ball person person with ball
+⛹️‍♀️	woman bouncing ball	женщина с мячом	basketball woman bouncing ball woman
+⛹️‍♂️	man bouncing ball	мужчина с мячом	basketball man bouncing ball man
+⛺	tent	палатка	
+⛽	fuel pump	заправка	fuelpump
+✂️	scissors	ножницы	
+✅	check mark button	белая галочка	white check mark
+✈️	airplane	самолет	
+✉️	envelope	конверт	
+✊	raised fist	поднятый кулак	fist fist raised
+✋	raised hand	поднятая ладонь	hand
+✌️	victory hand	жест v	v
+✍️	writing hand	пишущая рука	
+✏️	pencil	карандаш	pencil2
+✒️	black nib	перьевои наконечник	
+✔️	check mark	галочка	heavy check mark
+✖️	multiply	знак умножения	heavy multiplication x
+✝️	latin cross	латинскии крест	
+✡️	star of david	звезда давида	
+✨	sparkles	блестки	
+✳️	eight-spoked asterisk	восьмиконечная звездочка	eight spoked asterisk
+✴️	eight-pointed star	восьмиконечная звезда	eight pointed black star eight pointed star
+❄️	snowflake	снежинка	
+❇️	sparkle	искра	
+❌	cross mark	крестик	x
+❎	cross mark button	кнопка «крестик»	negative squared cross mark
+❓	red question mark	красный вопросительный знак	question
+❔	white question mark	белый вопросительный знак	grey question
+❕	white exclamation mark	белый восклицательный знак	grey exclamation
+❗	red exclamation mark	красный восклицательный знак	heavy exclamation mark exclamation
+❣️	heart exclamation	восклицательныи знак в виде сердца	heavy heart exclamation heavy heart exclamation mark ornament
+❤️	red heart	алое сердце	heart
+❤️‍🔥	heart on fire	горящее сердце	
+❤️‍🩹	mending heart	заживающее сердце	
+➕	plus	знак сложения	heavy plus sign
+➖	minus	знак вычитания	heavy minus sign
+➗	divide	знак деления	heavy division sign
+➡️	right arrow	стрелка вправо	arrow right
+➰	curly loop	петля	
+➿	double curly loop	двойная петля	loop
+⤴️	right arrow curving up	стрелка вправо с поворотом вверх	arrow heading up
+⤵️	right arrow curving down	стрелка вправо с поворотом вниз	arrow heading down
+⬅️	left arrow	стрелка влево	arrow left
+⬆️	up arrow	стрелка вверх	arrow up
+⬇️	down arrow	стрелка вниз	arrow down
+⬛	black large square	большой черный квадрат	
+⬜	white large square	большой белый квадрат	
+⭐	star	желтая звезда	
+⭕	hollow red circle	красное кольцо	o
+〰️	wavy dash	волнистая линия	
+〽️	part alternation mark	вступает другои голос	
+㊗️	japanese congratulations button	поздравление	congratulations
+㊙️	japanese secret button	секрет	secret
+🀄	mahjong red dragon	маджонг	mahjong
+🃏	joker	джокер	black joker
+🅰️	a button (blood type)	ii группа крови	a a button blood type
+🅱️	b button (blood type)	iii группа крови	b b button blood type
+🅾️	o button (blood type)	i группа крови	o2 o button blood type
+🅿️	p button	парковка	parking
+🆎	ab button (blood type)	iv группа крови	ab ab button blood type
+🆑	cl button	кнопка «очистить»	cl
+🆒	cool button	значок «круто»	cool
+🆓	free button	значок «бесплатно»	free
+🆔	id button	значок «идентификация»	id
+🆕	new button	значок «новинка»	new
+🆖	ng button	значок «не годится»	ng
+🆗	ok button	значок «ок»	ok
+🆘	sos button	значок sos	sos
+🆙	up! button	значок «обновление»	up up button
+🆚	vs button	значок «против»	vs
+🇦🇨	ascension island	флаг о в вознесения	flag for ascension island
+🇦🇩	andorra	флаг андорра	flag for andorra
+🇦🇪	united arab emirates	флаг оаэ	flag for united arab emirates
+🇦🇫	afghanistan	флаг афганистан	flag for afghanistan
+🇦🇬	antigua & barbuda	флаг антигуа и барбуда	flag for antigua & barbuda antigua barbuda
+🇦🇮	anguilla	флаг ангилья	flag for anguilla
+🇦🇱	albania	флаг албания	flag for albania
+🇦🇲	armenia	флаг армения	flag for armenia
+🇦🇴	angola	флаг ангола	flag for angola
+🇦🇶	antarctica	флаг антарктида	flag for antarctica
+🇦🇷	argentina	флаг аргентина	flag for argentina
+🇦🇸	american samoa	флаг американское самоа	flag for american samoa
+🇦🇹	austria	флаг австрия	flag for austria
+🇦🇺	australia	флаг австралия	flag for australia
+🇦🇼	aruba	флаг аруба	flag for aruba
+🇦🇽	åland islands	флаг аландские о ва	flag for åland islands aland islands
+🇦🇿	azerbaijan	флаг азербайджан	flag for azerbaijan
+🇧🇦	bosnia & herzegovina	флаг босния и герцеговина	flag for bosnia & herzegovina bosnia herzegovina
+🇧🇧	barbados	флаг барбадос	flag for barbados
+🇧🇩	bangladesh	флаг бангладеш	flag for bangladesh
+🇧🇪	belgium	флаг бельгия	flag for belgium
+🇧🇫	burkina faso	флаг буркина фасо	flag for burkina faso
+🇧🇬	bulgaria	флаг болгария	flag for bulgaria
+🇧🇭	bahrain	флаг бахрейн	flag for bahrain
+🇧🇮	burundi	флаг бурунди	flag for burundi
+🇧🇯	benin	флаг бенин	flag for benin
+🇧🇱	st. barthélemy	флаг сен бартелеми	flag for st. barthélemy st barthelemy
+🇧🇲	bermuda	флаг бермудские о ва	flag for bermuda
+🇧🇳	brunei	флаг бруней	flag for brunei
+🇧🇴	bolivia	флаг боливия	flag for bolivia
+🇧🇶	caribbean netherlands	флаг бонэйр синт эстатиус и саба	flag for caribbean netherlands
+🇧🇷	brazil	флаг бразилия	flag for brazil
+🇧🇸	bahamas	флаг багамы	flag for bahamas
+🇧🇹	bhutan	флаг бутан	flag for bhutan
+🇧🇻	bouvet island	флаг о в буве	flag for bouvet island
+🇧🇼	botswana	флаг ботсвана	flag for botswana
+🇧🇾	belarus	флаг беларусь	flag for belarus
+🇧🇿	belize	флаг белиз	flag for belize
+🇨🇦	canada	флаг канада	flag for canada
+🇨🇨	cocos (keeling) islands	флаг кокосовые о ва	flag for cocos islands cocos islands
+🇨🇩	congo-kinshasa	флаг конго киншаса	flag for congo kinshasa congo kinshasa
+🇨🇫	central african republic	флаг центрально африканская республика	flag for central african republic
+🇨🇬	congo-brazzaville	флаг конго браззавиль	flag for congo brazzaville congo brazzaville
+🇨🇭	switzerland	флаг швейцария	flag for switzerland
+🇨🇮	côte d’ivoire	флаг кот д’ивуар	flag for côte d’ivoire cote divoire
+🇨🇰	cook islands	флаг о ва кука	flag for cook islands
+🇨🇱	chile	флаг чили	flag for chile
+🇨🇲	cameroon	флаг камерун	flag for cameroon
+🇨🇳	china	флаг китай	flag for china cn
+🇨🇴	colombia	флаг колумбия	flag for colombia
+🇨🇵	clipperton island	флаг о в клиппертон	flag for clipperton island
+🇨🇶	sark	флаг сарк	flag for sark
+🇨🇷	costa rica	флаг коста рика	flag for costa rica
+🇨🇺	cuba	флаг куба	flag for cuba
+🇨🇻	cape verde	флаг кабо верде	flag for cape verde
+🇨🇼	curaçao	флаг кюрасао	flag for curaçao curacao
+🇨🇽	christmas island	флаг о в рождества	flag for christmas island
+🇨🇾	cyprus	флаг кипр	flag for cyprus
+🇨🇿	czechia	флаг чехия	flag for czech republic czech republic
+🇩🇪	germany	флаг германия	flag for germany de
+🇩🇬	diego garcia	флаг диего гарсия	flag for diego garcia
+🇩🇯	djibouti	флаг джибути	flag for djibouti
+🇩🇰	denmark	флаг дания	flag for denmark
+🇩🇲	dominica	флаг доминика	flag for dominica
+🇩🇴	dominican republic	флаг доминиканская республика	flag for dominican republic
+🇩🇿	algeria	флаг алжир	flag for algeria
+🇪🇦	ceuta & melilla	флаг сеута и мелилья	flag for ceuta & melilla ceuta melilla
+🇪🇨	ecuador	флаг эквадор	flag for ecuador
+🇪🇪	estonia	флаг эстония	flag for estonia
+🇪🇬	egypt	флаг египет	flag for egypt
+🇪🇭	western sahara	флаг западная сахара	flag for western sahara
+🇪🇷	eritrea	флаг эритрея	flag for eritrea
+🇪🇸	spain	флаг испания	flag for spain es
+🇪🇹	ethiopia	флаг эфиопия	flag for ethiopia
+🇪🇺	european union	флаг европейский союз	flag for european union eu
+🇫🇮	finland	флаг финляндия	flag for finland
+🇫🇯	fiji	флаг фиджи	flag for fiji
+🇫🇰	falkland islands	флаг фолклендские о ва	flag for falkland islands
+🇫🇲	micronesia	флаг федеративные штаты микронезии	flag for micronesia
+🇫🇴	faroe islands	флаг фарерские о ва	flag for faroe islands
+🇫🇷	france	флаг франция	flag for france fr
+🇬🇦	gabon	флаг габон	flag for gabon
+🇬🇧	united kingdom	флаг великобритания	flag for united kingdom gb uk
+🇬🇩	grenada	флаг гренада	flag for grenada
+🇬🇪	georgia	флаг грузия	flag for georgia
+🇬🇫	french guiana	флаг французская гвиана	flag for french guiana
+🇬🇬	guernsey	флаг гернси	flag for guernsey
+🇬🇭	ghana	флаг гана	flag for ghana
+🇬🇮	gibraltar	флаг гибралтар	flag for gibraltar
+🇬🇱	greenland	флаг гренландия	flag for greenland
+🇬🇲	gambia	флаг гамбия	flag for gambia
+🇬🇳	guinea	флаг гвинея	flag for guinea
+🇬🇵	guadeloupe	флаг гваделупа	flag for guadeloupe
+🇬🇶	equatorial guinea	флаг экваториальная гвинея	flag for equatorial guinea
+🇬🇷	greece	флаг греция	flag for greece
+🇬🇸	south georgia & south sandwich islands	флаг южная георгия и южные сандвичевы о ва	flag for south georgia & south sandwich islands south georgia south sandwich islands
+🇬🇹	guatemala	флаг гватемала	flag for guatemala
+🇬🇺	guam	флаг гуам	flag for guam
+🇬🇼	guinea-bissau	флаг гвинея бисау	flag for guinea bissau guinea bissau
+🇬🇾	guyana	флаг гайана	flag for guyana
+🇭🇰	hong kong sar china	флаг гонконг (сар)	flag for hong kong hong kong
+🇭🇲	heard island & mcdonald islands	флаг о ва херд и макдональд	flag for heard & mcdonald islands heard mcdonald islands
+🇭🇳	honduras	флаг гондурас	flag for honduras
+🇭🇷	croatia	флаг хорватия	flag for croatia
+🇭🇹	haiti	флаг гаити	flag for haiti
+🇭🇺	hungary	флаг венгрия	flag for hungary
+🇮🇨	canary islands	флаг канарские о ва	flag for canary islands
+🇮🇩	indonesia	флаг индонезия	flag for indonesia
+🇮🇪	ireland	флаг ирландия	flag for ireland
+🇮🇱	israel	флаг израиль	flag for israel
+🇮🇲	isle of man	флаг о в мэн	flag for isle of man
+🇮🇳	india	флаг индия	flag for india
+🇮🇴	british indian ocean territory	флаг британская территория в индийском океане	flag for british indian ocean territory
+🇮🇶	iraq	флаг ирак	flag for iraq
+🇮🇷	iran	флаг иран	flag for iran
+🇮🇸	iceland	флаг исландия	flag for iceland
+🇮🇹	italy	флаг италия	flag for italy it
+🇯🇪	jersey	флаг джерси	flag for jersey
+🇯🇲	jamaica	флаг ямайка	flag for jamaica
+🇯🇴	jordan	флаг иордания	flag for jordan
+🇯🇵	japan	флаг япония	flag for japan jp
+🇰🇪	kenya	флаг кения	flag for kenya
+🇰🇬	kyrgyzstan	флаг киргизия	flag for kyrgyzstan
+🇰🇭	cambodia	флаг камбоджа	flag for cambodia
+🇰🇮	kiribati	флаг кирибати	flag for kiribati
+🇰🇲	comoros	флаг коморы	flag for comoros
+🇰🇳	st. kitts & nevis	флаг сент китс и невис	flag for st. kitts & nevis st kitts nevis
+🇰🇵	north korea	флаг кндр	flag for north korea
+🇰🇷	south korea	флаг республика корея	flag for south korea kr
+🇰🇼	kuwait	флаг кувейт	flag for kuwait
+🇰🇾	cayman islands	флаг о ва кайман	flag for cayman islands
+🇰🇿	kazakhstan	флаг казахстан	flag for kazakhstan
+🇱🇦	laos	флаг лаос	flag for laos
+🇱🇧	lebanon	флаг ливан	flag for lebanon
+🇱🇨	st. lucia	флаг сент люсия	flag for st. lucia st lucia
+🇱🇮	liechtenstein	флаг лихтенштейн	flag for liechtenstein
+🇱🇰	sri lanka	флаг шри ланка	flag for sri lanka
+🇱🇷	liberia	флаг либерия	flag for liberia
+🇱🇸	lesotho	флаг лесото	flag for lesotho
+🇱🇹	lithuania	флаг литва	flag for lithuania
+🇱🇺	luxembourg	флаг люксембург	flag for luxembourg
+🇱🇻	latvia	флаг латвия	flag for latvia
+🇱🇾	libya	флаг ливия	flag for libya
+🇲🇦	morocco	флаг марокко	flag for morocco
+🇲🇨	monaco	флаг монако	flag for monaco
+🇲🇩	moldova	флаг молдова	flag for moldova
+🇲🇪	montenegro	флаг черногория	flag for montenegro
+🇲🇫	st. martin	флаг сен мартен	flag for st. martin st martin
+🇲🇬	madagascar	флаг мадагаскар	flag for madagascar
+🇲🇭	marshall islands	флаг маршалловы о ва	flag for marshall islands
+🇲🇰	north macedonia	флаг северная македония	flag for macedonia macedonia
+🇲🇱	mali	флаг мали	flag for mali
+🇲🇲	myanmar (burma)	флаг мьянма (бирма)	flag for myanmar myanmar
+🇲🇳	mongolia	флаг монголия	flag for mongolia
+🇲🇴	macao sar china	флаг макао (сар)	flag for macau macau
+🇲🇵	northern mariana islands	флаг северные марианские о ва	flag for northern mariana islands
+🇲🇶	martinique	флаг мартиника	flag for martinique
+🇲🇷	mauritania	флаг мавритания	flag for mauritania
+🇲🇸	montserrat	флаг монтсеррат	flag for montserrat
+🇲🇹	malta	флаг мальта	flag for malta
+🇲🇺	mauritius	флаг маврикий	flag for mauritius
+🇲🇻	maldives	флаг мальдивы	flag for maldives
+🇲🇼	malawi	флаг малави	flag for malawi
+🇲🇽	mexico	флаг мексика	flag for mexico
+🇲🇾	malaysia	флаг малайзия	flag for malaysia
+🇲🇿	mozambique	флаг мозамбик	flag for mozambique
+🇳🇦	namibia	флаг намибия	flag for namibia
+🇳🇨	new caledonia	флаг новая каледония	flag for new caledonia
+🇳🇪	niger	флаг нигер	flag for niger
+🇳🇫	norfolk island	флаг о в норфолк	flag for norfolk island
+🇳🇬	nigeria	флаг нигерия	flag for nigeria
+🇳🇮	nicaragua	флаг никарагуа	flag for nicaragua
+🇳🇱	netherlands	флаг нидерланды	flag for netherlands
+🇳🇴	norway	флаг норвегия	flag for norway
+🇳🇵	nepal	флаг непал	flag for nepal
+🇳🇷	nauru	флаг науру	flag for nauru
+🇳🇺	niue	флаг ниуэ	flag for niue
+🇳🇿	new zealand	флаг новая зеландия	flag for new zealand
+🇴🇲	oman	флаг оман	flag for oman
+🇵🇦	panama	флаг панама	flag for panama
+🇵🇪	peru	флаг перу	flag for peru
+🇵🇫	french polynesia	флаг французская полинезия	flag for french polynesia
+🇵🇬	papua new guinea	флаг папуа новая гвинея	flag for papua new guinea
+🇵🇭	philippines	флаг филиппины	flag for philippines
+🇵🇰	pakistan	флаг пакистан	flag for pakistan
+🇵🇱	poland	флаг польша	flag for poland
+🇵🇲	st. pierre & miquelon	флаг сен пьер и микелон	flag for st. pierre & miquelon st pierre miquelon
+🇵🇳	pitcairn islands	флаг о ва питкэрн	flag for pitcairn islands
+🇵🇷	puerto rico	флаг пуэрто рико	flag for puerto rico
+🇵🇸	palestinian territories	флаг палестинские территории	flag for palestinian territories
+🇵🇹	portugal	флаг португалия	flag for portugal
+🇵🇼	palau	флаг палау	flag for palau
+🇵🇾	paraguay	флаг парагвай	flag for paraguay
+🇶🇦	qatar	флаг катар	flag for qatar
+🇷🇪	réunion	флаг реюньон	flag for réunion reunion
+🇷🇴	romania	флаг румыния	flag for romania
+🇷🇸	serbia	флаг сербия	flag for serbia
+🇷🇺	russia	флаг россия	flag for russia ru
+🇷🇼	rwanda	флаг руанда	flag for rwanda
+🇸🇦	saudi arabia	флаг саудовская аравия	flag for saudi arabia
+🇸🇧	solomon islands	флаг соломоновы о ва	flag for solomon islands
+🇸🇨	seychelles	флаг сейшельские о ва	flag for seychelles
+🇸🇩	sudan	флаг судан	flag for sudan
+🇸🇪	sweden	флаг швеция	flag for sweden
+🇸🇬	singapore	флаг сингапур	flag for singapore
+🇸🇭	st. helena ascension & tristan da cunha	флаг о в св. елены	flag for st. helena st helena
+🇸🇮	slovenia	флаг словения	flag for slovenia
+🇸🇯	svalbard & jan mayen	флаг шпицберген и ян майен	flag for svalbard & jan mayen svalbard jan mayen
+🇸🇰	slovakia	флаг словакия	flag for slovakia
+🇸🇱	sierra leone	флаг сьерра леоне	flag for sierra leone
+🇸🇲	san marino	флаг сан марино	flag for san marino
+🇸🇳	senegal	флаг сенегал	flag for senegal
+🇸🇴	somalia	флаг сомали	flag for somalia
+🇸🇷	suriname	флаг суринам	flag for suriname
+🇸🇸	south sudan	флаг южный судан	flag for south sudan
+🇸🇹	são tomé & príncipe	флаг сан томе и принсипи	flag for são tomé & príncipe sao tome principe
+🇸🇻	el salvador	флаг сальвадор	flag for el salvador
+🇸🇽	sint maarten	флаг синт мартен	flag for sint maarten
+🇸🇾	syria	флаг сирия	flag for syria
+🇸🇿	eswatini	флаг эсватини	flag for swaziland swaziland
+🇹🇦	tristan da cunha	флаг тристан да кунья	flag for tristan da cunha
+🇹🇨	turks & caicos islands	флаг тёркс и кайкос	flag for turks & caicos islands turks caicos islands
+🇹🇩	chad	флаг чад	flag for chad
+🇹🇫	french southern and antarctic lands	флаг французские южные территории	flag for french southern territories french southern territories
+🇹🇬	togo	флаг того	flag for togo
+🇹🇭	thailand	флаг таиланд	flag for thailand
+🇹🇯	tajikistan	флаг таджикистан	flag for tajikistan
+🇹🇰	tokelau	флаг токелау	flag for tokelau
+🇹🇱	timor-leste	флаг восточный тимор	flag for timor leste timor leste
+🇹🇲	turkmenistan	флаг туркменистан	flag for turkmenistan
+🇹🇳	tunisia	флаг тунис	flag for tunisia
+🇹🇴	tonga	флаг тонга	flag for tonga
+🇹🇷	türkiye	флаг турция	flag for turkey turkey tr
+🇹🇹	trinidad & tobago	флаг тринидад и тобаго	flag for trinidad & tobago trinidad tobago
+🇹🇻	tuvalu	флаг тувалу	flag for tuvalu
+🇹🇼	taiwan	флаг тайвань	flag for taiwan
+🇹🇿	tanzania	флаг танзания	flag for tanzania
+🇺🇦	ukraine	флаг украина	flag for ukraine
+🇺🇬	uganda	флаг уганда	flag for uganda
+🇺🇲	u.s. outlying islands	флаг внешние малые о ва (сша)	flag for u.s. outlying islands us outlying islands
+🇺🇳	united nations	флаг организация объединенных наций	
+🇺🇸	united states	флаг соединенные штаты	flag for united states us
+🇺🇾	uruguay	флаг уругвай	flag for uruguay
+🇺🇿	uzbekistan	флаг узбекистан	flag for uzbekistan
+🇻🇦	vatican city	флаг ватикан	flag for vatican city
+🇻🇨	st. vincent & grenadines	флаг сент винсент и гренадины	flag for st. vincent & grenadines st vincent grenadines
+🇻🇪	venezuela	флаг венесуэла	flag for venezuela
+🇻🇬	british virgin islands	флаг виргинские о ва (великобритания)	flag for british virgin islands
+🇻🇮	u.s. virgin islands	флаг виргинские о ва (сша)	flag for u.s. virgin islands us virgin islands
+🇻🇳	vietnam	флаг вьетнам	flag for vietnam
+🇻🇺	vanuatu	флаг вануату	flag for vanuatu
+🇼🇫	wallis & futuna	флаг уоллис и футуна	flag for wallis & futuna wallis futuna
+🇼🇸	samoa	флаг самоа	flag for samoa
+🇽🇰	kosovo	флаг косово	flag for kosovo
+🇾🇪	yemen	флаг йемен	flag for yemen
+🇾🇹	mayotte	флаг майотта	flag for mayotte
+🇿🇦	south africa	флаг южно африканская республика	flag for south africa
+🇿🇲	zambia	флаг замбия	flag for zambia
+🇿🇼	zimbabwe	флаг зимбабве	flag for zimbabwe
+🈁	japanese here button	значок «здесь»	koko
+🈂️	japanese service charge button	цена услуги	sa
+🈚	japanese free of charge button	бесплатно	u7121
+🈯	japanese reserved button	забронировано	u6307
+🈲	japanese prohibited button	запрет	u7981
+🈳	japanese vacancy button	есть места	u7a7a
+🈴	japanese passing grade button	проходной балл	u5408
+🈵	japanese no vacancy button	нет мест	u6e80
+🈶	japanese not free of charge button	платно	u6709
+🈷️	japanese monthly amount button	месяц	u6708
+🈸	japanese application button	заявка	u7533
+🈹	japanese discount button	скидка	u5272
+🈺	japanese open for business button	открыто	u55b6
+🉐	japanese bargain button	удачная сделка	ideograph advantage
+🉑	japanese acceptable button	допустимость	accept
+🌀	cyclone	циклон	
+🌁	foggy	туман	
+🌂	closed umbrella	закрытый зонт	
+🌃	night with stars	звездная ночь	
+🌄	sunrise over mountains	восход солнца над горами	
+🌅	sunrise	восход	
+🌆	cityscape at dusk	закат в городе	city sunset
+🌇	sunset	закат	city sunrise
+🌈	rainbow	радуга	
+🌉	bridge at night	мост ночью	
+🌊	water wave	волна	ocean
+🌋	volcano	вулкан	
+🌌	milky way	млечный путь	
+🌍	globe showing europe-africa	европа и африка на земном шаре	earth africa globe showing europe africa
+🌎	globe showing americas	америка на земном шаре	earth americas
+🌏	globe showing asia-australia	азия и австралия на земном шаре	earth asia globe showing asia australia
+🌐	globe with meridians	меридианы	
+🌑	new moon	новолуние	
+🌒	waxing crescent moon	молодая луна	
+🌓	first quarter moon	луна в первой четверти	
+🌔	waxing gibbous moon	прибывающая луна	moon
+🌕	full moon	полнолуние	
+🌖	waning gibbous moon	убывающая луна	
+🌗	last quarter moon	луна в последней четверти	
+🌘	waning crescent moon	старая луна	
+🌙	crescent moon	полумесяц	
+🌚	new moon face	новая луна с лицом	new moon with face
+🌛	first quarter moon face	луна в первой четверти с лицом	first quarter moon with face
+🌜	last quarter moon face	луна в последней четверти с лицом	last quarter moon with face
+🌝	full moon face	полная луна с лицом	full moon with face
+🌞	sun with face	солнце с лицом	
+🌟	glowing star	сияющая звезда	star2
+🌠	shooting star	падающая звезда	stars
+🌡️	thermometer	термометр	
+🌤️	sun behind small cloud	солнце за облачком	white sun with small cloud
+🌥️	sun behind large cloud	солнце за облаком	white sun behind cloud
+🌦️	sun behind rain cloud	слепои дождь	white sun behind cloud with rain
+🌧️	cloud with rain	дождь	
+🌨️	cloud with snow	снег	
+🌩️	cloud with lightning	молния	
+🌪️	tornado	торнадо	cloud with tornado
+🌫️	fog	густои туман	
+🌬️	wind face	дует ветер	wind blowing face
+🌭	hot dog	хот дог	hotdog
+🌮	taco	тако	
+🌯	burrito	буррито	
+🌰	chestnut	каштан	
+🌱	seedling	росток	
+🌲	evergreen tree	елка	
+🌳	deciduous tree	дерево	
+🌴	palm tree	пальма	
+🌵	cactus	кактус	
+🌶️	hot pepper	острыи перец	
+🌷	tulip	тюльпан	
+🌸	cherry blossom	цветок вишни	
+🌹	rose	роза	
+🌺	hibiscus	гибискус	
+🌻	sunflower	подсолнух	
+🌼	blossom	цветок	
+🌽	ear of corn	кукурузный початок	corn
+🌾	sheaf of rice	колос	ear of rice
+🌿	herb	веточка	
+🍀	four leaf clover	четырехлистный клевер	
+🍁	maple leaf	кленовый лист	
+🍂	fallen leaf	падающие листья	
+🍃	leaf fluttering in wind	листья на ветру	leaves
+🍄	mushroom	гриб	
+🍄‍🟫	brown mushroom	бурый гриб	
+🍅	tomato	помидор	
+🍆	eggplant	баклажан	
+🍇	grapes	виноград	
+🍈	melon	дыня	
+🍉	watermelon	арбуз	
+🍊	tangerine	мандарин	orange mandarin
+🍋	lemon	лимон	
+🍋‍🟩	lime	лайм	
+🍌	banana	банан	
+🍍	pineapple	ананас	
+🍎	red apple	красное яблоко	apple
+🍏	green apple	зеленое яблоко	
+🍐	pear	груша	
+🍑	peach	персик	
+🍒	cherries	вишня	
+🍓	strawberry	клубника	
+🍔	hamburger	гамбургер	
+🍕	pizza	пицца	
+🍖	meat on bone	мясо на косточке	
+🍗	poultry leg	куриная ножка	
+🍘	rice cracker	рисовый крекер	
+🍙	rice ball	онигири	
+🍚	cooked rice	рис	rice
+🍛	curry rice	рис с карри	curry
+🍜	steaming bowl	лапша	ramen
+🍝	spaghetti	спагетти	
+🍞	bread	хлеб	
+🍟	french fries	картофель фри	fries
+🍠	roasted sweet potato	печеный сладкий картофель	sweet potato
+🍡	dango	данго	
+🍢	oden	одэн	
+🍣	sushi	суши	
+🍤	fried shrimp	жареная креветка	
+🍥	fish cake with swirl	камабоко	fish cake
+🍦	soft ice cream	мороженое в стаканчике	icecream
+🍧	shaved ice	мороженое в креманке	
+🍨	ice cream	мороженое	
+🍩	doughnut	пончик	
+🍪	cookie	печенье	
+🍫	chocolate bar	шоколад	
+🍬	candy	конфета	
+🍭	lollipop	леденец	
+🍮	custard	пудинг	
+🍯	honey pot	мед	
+🍰	shortcake	кусочек торта	cake
+🍱	bento box	бэнто	bento
+🍲	pot of food	кастрюля с горячей едой	stew
+🍳	cooking	яичница на сковороде	egg fried egg
+🍴	fork and knife	вилка и нож	
+🍵	teacup without handle	чашка без ручки	tea
+🍶	sake	бутылка саке	
+🍷	wine glass	бокал вина	
+🍸	cocktail glass	коктейль	cocktail
+🍹	tropical drink	тропический коктейль	
+🍺	beer mug	кружка пива	beer
+🍻	clinking beer mugs	чокающиеся кружки	beers
+🍼	baby bottle	бутылочка с соской	
+🍽️	fork and knife with plate	тарелка с приборами	plate with cutlery
+🍾	bottle with popping cork	шампанское	champagne
+🍿	popcorn	попкорн	
+🎀	ribbon	бантик	
+🎁	wrapped gift	подарок	gift
+🎂	birthday cake	торт ко дню рождения	birthday
+🎃	jack-o-lantern	тыква фонарь	jack o lantern
+🎄	christmas tree	новогодняя елка	
+🎅	santa claus	санта клаус	santa
+🎆	fireworks	фейерверк	
+🎇	sparkler	бенгальский огонь	
+🎈	balloon	воздушный шарик	
+🎉	party popper	хлопушка	tada
+🎊	confetti ball	конфетти	
+🎋	tanabata tree	бамбук с бумажными лентами	
+🎌	crossed flags	скрещенные флаги	
+🎍	pine decoration	украшенный бамбук	bamboo
+🎎	japanese dolls	японские куклы	dolls
+🎏	carp streamer	вымпелы в виде карпов	flags
+🎐	wind chime	музыка ветра	
+🎑	moon viewing ceremony	праздник луны	rice scene
+🎒	backpack	ранец	school satchel
+🎓	graduation cap	шапочка выпускника	mortar board
+🎖️	military medal	военная медаль	medal military
+🎗️	reminder ribbon	памятная лента	
+🎙️	studio microphone	студииныи микрофон	
+🎚️	level slider	слаидер	
+🎛️	control knobs	регуляторы	
+🎞️	film frames	кинопленка	film strip
+🎟️	admission tickets	билеты	tickets
+🎠	carousel horse	лошадь на карусели	
+🎡	ferris wheel	колесо обозрения	
+🎢	roller coaster	американские горки	
+🎣	fishing pole	удочка с рыбой	fishing pole and fish
+🎤	microphone	микрофон	
+🎥	movie camera	кинокамера	
+🎦	cinema	видеозапись	
+🎧	headphone	наушники	headphones
+🎨	artist palette	палитра с красками	art
+🎩	top hat	цилиндр	tophat
+🎪	circus tent	цирковой шатер	
+🎫	ticket	билет	
+🎬	clapper board	хлопушка нумератор	clapper
+🎭	performing arts	маски	
+🎮	video game	видеоигры	
+🎯	bullseye	мишень	dart
+🎰	slot machine	игровой автомат	
+🎱	pool 8 ball	бильярд	8ball
+🎲	game die	игральная кость	
+🎳	bowling	боулинг	
+🎴	flower playing cards	цветочная карта	
+🎵	musical note	нота	
+🎶	musical notes	ноты	notes
+🎷	saxophone	саксофон	
+🎸	guitar	гитара	
+🎹	musical keyboard	клавишные	
+🎺	trumpet	труба	
+🎻	violin	скрипка	
+🎼	musical score	нотный стан	
+🎽	running shirt	футболка для бега	running shirt with sash
+🎾	tennis	теннис	
+🎿	skis	лыжи	ski
+🏀	basketball	баскетбол	
+🏁	chequered flag	клетчатый флаг	checkered flag
+🏂	snowboarder	сноубордист	
+🏃	person running	человек бежит	runner running
+🏃‍♀️	woman running	женщина бежит	running woman
+🏃‍♀️‍➡️	woman running facing right	женщина бежит направленные вправо	
+🏃‍♂️	man running	мужчина бежит	running man
+🏃‍♂️‍➡️	man running facing right	мужчина бежит направленные вправо	
+🏃‍➡️	person running facing right	человек бежит направленные вправо	
+🏄	person surfing	серфинг	surfer
+🏄‍♀️	woman surfing	серфингистка	surfing woman
+🏄‍♂️	man surfing	серфингист	surfing man
+🏅	sports medal	спортивная медаль	medal sports
+🏆	trophy	кубок	
+🏇	horse racing	скачки	
+🏈	american football	американский футбол	football
+🏉	rugby football	регби	
+🏊	person swimming	плавание	swimmer
+🏊‍♀️	woman swimming	пловчиха	swimming woman
+🏊‍♂️	man swimming	пловец	swimming man
+🏋️	person lifting weights	тяжелоатлет	weight lifting weight lifter
+🏋️‍♀️	woman lifting weights	женщина со штангои	weight lifting woman
+🏋️‍♂️	man lifting weights	мужчина со штангои	weight lifting man
+🏌️	person golfing	гольфист	golfing golfer
+🏌️‍♀️	woman golfing	женщина играет в гольф	golfing woman
+🏌️‍♂️	man golfing	мужчина играет в гольф	golfing man
+🏍️	motorcycle	мотоцикл	racing motorcycle
+🏎️	racing car	гоночныи автомобиль	
+🏏	cricket game	крикет	cricket bat and ball
+🏐	volleyball	волейбол	
+🏑	field hockey	хоккей на траве	field hockey stick and ball
+🏒	ice hockey	хоккей	ice hockey stick and puck
+🏓	ping pong	настольный теннис	table tennis paddle and ball
+🏔️	snow-capped mountain	гора со снежнои шапкои	mountain snow snow capped mountain
+🏕️	camping	кемпинг	
+🏖️	beach with umbrella	пляж	beach umbrella
+🏗️	building construction	строика	
+🏘️	houses	дома	house buildings
+🏙️	cityscape	ночнои город	
+🏚️	derelict house	заброшенныи дом	derelict house building
+🏛️	classical building	античное здание	
+🏜️	desert	пустыня	
+🏝️	desert island	остров	
+🏞️	national park	национальныи парк	
+🏟️	stadium	стадион	
+🏠	house	дом	
+🏡	house with garden	дом с садом	
+🏢	office building	офисное здание	office
+🏣	japanese post office	японская почта	post office
+🏤	post office	почта	european post office
+🏥	hospital	больница	
+🏦	bank	банк	
+🏧	atm sign	значок банкомата	atm
+🏨	hotel	гостиница	
+🏩	love hotel	гостиница для свиданий	
+🏪	convenience store	круглосуточный магазин	
+🏫	school	школа	
+🏬	department store	универмаг	
+🏭	factory	завод	
+🏮	red paper lantern	красный бумажный фонарик	izakaya lantern lantern
+🏯	japanese castle	японский замок	
+🏰	castle	замок	european castle
+🏳️	white flag	белыи флаг	waving white flag
+🏳️‍⚧️	transgender flag	флаг трансгендерного сообщества	
+🏳️‍🌈	rainbow flag	радужныи флаг	
+🏴	black flag	черный флаг	waving black flag
+🏴‍☠️	pirate flag	пиратскии флаг	
+🏴󠁧󠁢󠁥󠁮󠁧󠁿	england	флаг англия	
+🏴󠁧󠁢󠁳󠁣󠁴󠁿	scotland	флаг шотландия	
+🏴󠁧󠁢󠁷󠁬󠁳󠁿	wales	флаг уэльс	
+🏵️	rosette	розетка	
+🏷️	label	бирка	
+🏸	badminton	бадминтон	badminton racquet and shuttlecock
+🏹	bow and arrow	лук со стрелой	
+🏺	amphora	амфора	
+🐀	rat	крыса	
+🐁	mouse	мышь	mouse2
+🐂	ox	бык	
+🐃	water buffalo	буйвол	
+🐄	cow	корова	cow2
+🐅	tiger	тигр	tiger2
+🐆	leopard	леопард	
+🐇	rabbit	кролик	rabbit2
+🐈	cat	кошка	cat2
+🐈‍⬛	black cat	черная кошка	
+🐉	dragon	дракон	
+🐊	crocodile	крокодил	
+🐋	whale	кит	whale2
+🐌	snail	улитка	
+🐍	snake	змея	
+🐎	horse	лошадь	racehorse
+🐏	ram	баран	
+🐐	goat	коза	
+🐑	ewe	овца	sheep
+🐒	monkey	обезьяна	
+🐓	rooster	петух	
+🐔	chicken	курица	
+🐕	dog	собака	dog2
+🐕‍🦺	service dog	служебная собака	
+🐖	pig	свинья	pig2
+🐗	boar	кабан	
+🐘	elephant	слон	
+🐙	octopus	осьминог	
+🐚	spiral shell	раковина	shell
+🐛	bug	гусеница	
+🐜	ant	муравей	
+🐝	honeybee	пчела	bee
+🐞	lady beetle	божья коровка	beetle
+🐟	fish	рыба	
+🐠	tropical fish	тропическая рыба	
+🐡	blowfish	рыба еж	
+🐢	turtle	черепаха	
+🐣	hatching chick	цыпленок в яйце	
+🐤	baby chick	цыпленок боком	
+🐥	front-facing baby chick	цыпленок	hatched chick front facing baby chick
+🐦	bird	птица	
+🐦‍⬛	black bird	черная птица	raven crow rook
+🐦‍🔥	phoenix	феникс	
+🐧	penguin	пингвин	
+🐨	koala	морда коалы	
+🐩	poodle	пудель	
+🐪	camel	одногорбый верблюд	dromedary camel
+🐫	two-hump camel	двугорбый верблюд	camel two hump camel
+🐬	dolphin	дельфин	flipper
+🐭	mouse face	морда мыши	mouse
+🐮	cow face	морда коровы	cow
+🐯	tiger face	морда тигра	tiger
+🐰	rabbit face	морда кролика	rabbit
+🐱	cat face	морда кошки	cat
+🐲	dragon face	голова дракона	
+🐳	spouting whale	кит с фонтанчиком	whale
+🐴	horse face	морда лошади	horse
+🐵	monkey face	морда обезьяны	
+🐶	dog face	морда собаки	dog
+🐷	pig face	морда свиньи	pig
+🐸	frog	голова лягушки	
+🐹	hamster	морда хомяка	
+🐺	wolf	морда волка	
+🐻	bear	морда медведя	
+🐻‍❄️	polar bear	морда белого медведя	
+🐼	panda	морда панды	panda face
+🐽	pig nose	свиной пятачок	
+🐾	paw prints	следы животного	feet
+🐿️	chipmunk	бурундук	
+👀	eyes	глаза	
+👁️	eye	глаз	
+👁️‍🗨️	eye in speech bubble	значок свидетеля	eye speech bubble
+👂	ear	ухо	
+👃	nose	нос	
+👄	mouth	рот	lips
+👅	tongue	язык	
+👆	backhand index pointing up	указывающий вверх палец	point up 2
+👇	backhand index pointing down	указывающий вниз палец	point down
+👈	backhand index pointing left	указывающий налево палец	point left
+👉	backhand index pointing right	указывающий направо палец	point right
+👊	oncoming fist	кулак	fist oncoming punch facepunch
+👋	waving hand	машет рукой	wave
+👌	ok hand	жест «все хорошо»	
+👍	thumbs up	большой палец вверх	thumbsup +1
+👎	thumbs down	большой палец вниз	thumbsdown  1 -1
+👏	clapping hands	аплодисменты	clap
+👐	open hands	ладони в стороны	
+👑	crown	корона	
+👒	woman’s hat	шляпка	womans hat
+👓	glasses	очки	eyeglasses
+👔	necktie	галстук	
+👕	t-shirt	футболка	tshirt shirt t shirt
+👖	jeans	джинсы	
+👗	dress	платье	
+👘	kimono	кимоно	
+👙	bikini	бикини	
+👚	woman’s clothes	блузка	womans clothes
+👛	purse	кошелек	
+👜	handbag	сумка	
+👝	clutch bag	клатч	pouch
+👞	man’s shoe	ботинок	mans shoe shoe
+👟	running shoe	кроссовки	athletic shoe
+👠	high-heeled shoe	туфли на каблуке	high heel high heeled shoe
+👡	woman’s sandal	босоножки	sandal womans sandal
+👢	woman’s boot	сапог	boot womans boot
+👣	footprints	следы	
+👤	bust in silhouette	силуэт человека	
+👥	busts in silhouette	два силуэта	
+👦	boy	мальчик	
+👧	girl	девочка	
+👨	man	мужчина	
+👨‍⚕️	man health worker	врач	
+👨‍⚖️	man judge	мужчина-судья	
+👨‍✈️	man pilot	мужчина-пилот	
+👨‍❤️‍👨	couple with heart man man	влюбленная пара мужчина мужчина	
+👨‍❤️‍💋‍👨	kiss man man	поцелуи мужчина мужчина	couplekiss man man
+👨‍🌾	man farmer	мужчина фермер	
+👨‍🍳	man cook	мужчина повар	
+👨‍🍼	man feeding baby	кормящий мужчина	
+👨‍🎓	man student	студент	
+👨‍🎤	man singer	мужчина певец	
+👨‍🎨	man artist	мужчина художник	
+👨‍🏫	man teacher	учитель	
+👨‍🏭	man factory worker	мужчина рабочий	
+👨‍👦	family man boy	семья мужчина мальчик	
+👨‍👦‍👦	family man boy boy	семья мужчина мальчик мальчик	
+👨‍👧	family man girl	семья мужчина девочка	
+👨‍👧‍👦	family man girl boy	семья мужчина девочка мальчик	
+👨‍👧‍👧	family man girl girl	семья мужчина девочка девочка	
+👨‍👨‍👦	family man man boy	семья мужчина мужчина мальчик	
+👨‍👨‍👦‍👦	family man man boy boy	семья мужчина мужчина мальчик мальчик	
+👨‍👨‍👧	family man man girl	семья мужчина мужчина девочка	
+👨‍👨‍👧‍👦	family man man girl boy	семья мужчина мужчина девочка мальчик	
+👨‍👨‍👧‍👧	family man man girl girl	семья мужчина мужчина девочка девочка	
+👨‍👩‍👦	family man woman boy	семья мужчина женщина мальчик	
+👨‍👩‍👦‍👦	family man woman boy boy	семья мужчина женщина мальчик мальчик	
+👨‍👩‍👧	family man woman girl	семья мужчина женщина девочка	
+👨‍👩‍👧‍👦	family man woman girl boy	семья мужчина женщина девочка мальчик	
+👨‍👩‍👧‍👧	family man woman girl girl	семья мужчина женщина девочка девочка	
+👨‍💻	man technologist	мужчина инженер	
+👨‍💼	man office worker	офисный работник мужчина	
+👨‍🔧	man mechanic	мужчина механик	
+👨‍🔬	man scientist	мужчина ученый	
+👨‍🚀	man astronaut	мужчина космонавт	
+👨‍🚒	man firefighter	мужчина пожарный	
+👨‍🦯	man with white cane	мужчина с тростью для ходьбы	man with probing cane
+👨‍🦯‍➡️	man with white cane facing right	мужчина с тростью для ходьбы направленные вправо	
+👨‍🦰	man red hair	мужчина рыжие волосы	red haired man
+👨‍🦱	man curly hair	мужчина кудрявые волосы	curly haired man
+👨‍🦲	man bald	мужчина без волос	bald man
+👨‍🦳	man white hair	мужчина седые волосы	white haired man
+👨‍🦼	man in motorized wheelchair	мужчина в электрическом кресле коляске	
+👨‍🦼‍➡️	man in motorized wheelchair facing right	мужчина в электрическом кресле коляске направленные вправо	
+👨‍🦽	man in manual wheelchair	мужчина в ручном кресле коляске	
+👨‍🦽‍➡️	man in manual wheelchair facing right	мужчина в ручном кресле коляске направленные вправо	
+👩	woman	женщина	
+👩‍⚕️	woman health worker	женщина-врач	
+👩‍⚖️	woman judge	женщина-судья	
+👩‍✈️	woman pilot	женщина-пилот	
+👩‍❤️‍👨	couple with heart woman man	влюбленная пара женщина мужчина	
+👩‍❤️‍👩	couple with heart woman woman	влюбленная пара женщина женщина	
+👩‍❤️‍💋‍👨	kiss woman man	поцелуи женщина мужчина	couplekiss man woman
+👩‍❤️‍💋‍👩	kiss woman woman	поцелуи женщина женщина	couplekiss woman woman
+👩‍🌾	woman farmer	женщина фермер	
+👩‍🍳	woman cook	повариха	
+👩‍🍼	woman feeding baby	кормящая женщина	
+👩‍🎓	woman student	студентка	
+👩‍🎤	woman singer	певица	
+👩‍🎨	woman artist	художница	
+👩‍🏫	woman teacher	учительница	
+👩‍🏭	woman factory worker	работница	
+👩‍👦	family woman boy	семья женщина мальчик	
+👩‍👦‍👦	family woman boy boy	семья женщина мальчик мальчик	
+👩‍👧	family woman girl	семья женщина девочка	
+👩‍👧‍👦	family woman girl boy	семья женщина девочка мальчик	
+👩‍👧‍👧	family woman girl girl	семья женщина девочка девочка	
+👩‍👩‍👦	family woman woman boy	семья женщина женщина мальчик	
+👩‍👩‍👦‍👦	family woman woman boy boy	семья женщина женщина мальчик мальчик	
+👩‍👩‍👧	family woman woman girl	семья женщина женщина девочка	
+👩‍👩‍👧‍👦	family woman woman girl boy	семья женщина женщина девочка мальчик	
+👩‍👩‍👧‍👧	family woman woman girl girl	семья женщина женщина девочка девочка	
+👩‍💻	woman technologist	женщина инженер	
+👩‍💼	woman office worker	офисная работница	
+👩‍🔧	woman mechanic	женщина механик	
+👩‍🔬	woman scientist	ученая	
+👩‍🚀	woman astronaut	женщина космонавт	
+👩‍🚒	woman firefighter	женщина пожарный	
+👩‍🦯	woman with white cane	женщина с тростью для ходьбы	woman with probing cane
+👩‍🦯‍➡️	woman with white cane facing right	женщина с тростью для ходьбы направленные вправо	
+👩‍🦰	woman red hair	женщина рыжие волосы	red haired woman
+👩‍🦱	woman curly hair	женщина кудрявые волосы	curly haired woman
+👩‍🦲	woman bald	женщина без волос	bald woman
+👩‍🦳	woman white hair	женщина седые волосы	white haired woman
+👩‍🦼	woman in motorized wheelchair	женщина в электрическом кресле коляске	
+👩‍🦼‍➡️	woman in motorized wheelchair facing right	женщина в электрическом кресле коляске направленные вправо	
+👩‍🦽	woman in manual wheelchair	женщина в ручном кресле коляске	
+👩‍🦽‍➡️	woman in manual wheelchair facing right	женщина в ручном кресле коляске направленные вправо	
+👪	family	семья	
+👫	woman and man holding hands	мужчина и женщина	couple
+👬	men holding hands	двое мужчин	two men holding hands
+👭	women holding hands	две женщины	two women holding hands
+👮	police officer	полицейский	cop
+👮‍♀️	woman police officer	женщина-полицеискии	policewoman
+👮‍♂️	man police officer	мужчина-полицеискии	policeman
+👯	people with bunny ears	люди с ушами кролика	dancers
+👯‍♀️	women with bunny ears	женщины с ушами кролика	dancing women
+👯‍♂️	men with bunny ears	мужчины с ушами кролика	dancing men
+👰	person with veil	невеста	
+👰‍♀️	woman with veil	женщина в фате	bride with veil
+👰‍♂️	man with veil	мужчина в фате	
+👱	person blond hair	человек со светлыми волосами	blond haired person person with blond hair
+👱‍♀️	woman blond hair	блондинка	blonde woman blond haired woman
+👱‍♂️	man blond hair	блондин	blond haired man
+👲	person with skullcap	мужчина в китайской шапке	man with gua pi mao
+👳	person wearing turban	человек в тюрбане	person with turban
+👳‍♀️	woman wearing turban	женщина в тюрбане	woman with turban
+👳‍♂️	man wearing turban	мужчина в тюрбане	man with turban
+👴	old man	пожилой мужчина	older man
+👵	old woman	пожилая женщина	older woman
+👶	baby	младенец	
+👷	construction worker	строитель	
+👷‍♀️	woman construction worker	женщина-строитель	construction worker woman
+👷‍♂️	man construction worker	мужчина-строитель	construction worker man
+👸	princess	принцесса	
+👹	ogre	чудовище	japanese ogre
+👺	goblin	японский гоблин	japanese goblin
+👻	ghost	привидение	
+👼	baby angel	ангелочек	angel
+👽	alien	инопланетянин	
+👾	alien monster	космический монстр	space invader
+👿	angry face with horns	злой чертенок	imp
+💀	skull	череп	
+💁	person tipping hand	человек тянет руку	tipping hand person information desk person
+💁‍♀️	woman tipping hand	женщина тянет руку	sassy woman tipping hand woman
+💁‍♂️	man tipping hand	мужчина тянет руку	sassy man tipping hand man
+💂	guard	гвардеец	
+💂‍♀️	woman guard	женщина-гвардеец	guardswoman
+💂‍♂️	man guard	мужчина-гвардеец	guardsman
+💃	woman dancing	танцующая женщина	dancer
+💄	lipstick	помада	
+💅	nail polish	маникюр	nail care
+💆	person getting massage	человеку массируют лицо	massage
+💆‍♀️	woman getting massage	женщине массируют лицо	massage woman
+💆‍♂️	man getting massage	мужчине массируют лицо	massage man
+💇	person getting haircut	человек у парикмахера	haircut
+💇‍♀️	woman getting haircut	женщина у парикмахера	haircut woman
+💇‍♂️	man getting haircut	мужчина у парикмахера	haircut man
+💈	barber pole	парикмахерская	barber
+💉	syringe	шприц	
+💊	pill	пилюля	
+💋	kiss mark	след от поцелуя	kiss
+💌	love letter	любовное письмо	
+💍	ring	кольцо	
+💎	gem stone	драгоценный камень	gem
+💏	kiss	поцелуй	couplekiss
+💐	bouquet	букет	
+💑	couple with heart	влюбленная пара	
+💒	wedding	свадьба	
+💓	beating heart	пульсирующее сердце	heartbeat
+💔	broken heart	разбитое сердце	
+💕	two hearts	два сердца	
+💖	sparkling heart	сверкающее сердце	
+💗	growing heart	растущее сердце	heartpulse
+💘	heart with arrow	сердце пронзенное стрелой	cupid
+💙	blue heart	синее сердце	
+💚	green heart	зеленое сердце	
+💛	yellow heart	желтое сердце	
+💜	purple heart	фиолетовое сердце	
+💝	heart with ribbon	сердце с лентой	gift heart
+💞	revolving hearts	вращающиеся сердца	
+💟	heart decoration	значок «сердце»	
+💠	diamond with a dot	ромб с точкой	diamond shape with a dot inside
+💡	light bulb	лампочка	bulb
+💢	anger symbol	значок «гнев»	anger
+💣	bomb	бомба	
+💤	zzz	сон	
+💥	collision	взрыв	boom
+💦	sweat droplets	капли пота	sweat drops
+💧	droplet	капля	
+💨	dashing away	исчезновение	dash
+💩	pile of poo	какашка	poop hankey shit
+💪	flexed biceps	бицепс	muscle
+💫	dizzy	кружащаяся звезда	
+💬	speech balloon	облачко с многоточием	
+💭	thought balloon	облачко с мыслями	
+💮	white flower	белый цветок	
+💯	hundred points	сто баллов	100
+💰	money bag	мешок денег	moneybag
+💱	currency exchange	обмен валюты	
+💲	heavy dollar sign	жирный знак доллара	
+💳	credit card	кредитная карта	
+💴	yen banknote	банкнота иены	yen
+💵	dollar banknote	банкнота доллара	dollar
+💶	euro banknote	банкнота евро	euro
+💷	pound banknote	банкнота фунта	pound
+💸	money with wings	банкнота с крылышками	
+💹	chart increasing with yen	биржа	chart
+💺	seat	кресло	
+💻	laptop	ноутбук	computer
+💼	briefcase	портфель	
+💽	computer disk	диск	minidisc
+💾	floppy disk	дискета	
+💿	optical disk	cd	cd
+📀	dvd	dvd	
+📁	file folder	папка	
+📂	open file folder	открытая папка	
+📃	page with curl	страница с загибом	
+📄	page facing up	страница	
+📅	calendar	календарь	date
+📆	tear-off calendar	отрывной календарь	calendar tear off calendar
+📇	card index	органайзер	
+📈	chart increasing	диаграмма роста	chart with upwards trend
+📉	chart decreasing	диаграмма падения	chart with downwards trend
+📊	bar chart	гистограмма	
+📋	clipboard	планшет с зажимом	
+📌	pushpin	канцелярская кнопка	
+📍	round pushpin	канцелярская кнопка с шариком	
+📎	paperclip	скрепка	
+📏	straight ruler	линейка	
+📐	triangular ruler	линейка треугольник	
+📑	bookmark tabs	стикеры закладки	
+📒	ledger	блокнот	
+📓	notebook	тетрадь	
+📔	notebook with decorative cover	записная книжка	
+📕	closed book	закрытая книга	
+📖	open book	открытая книга	book
+📗	green book	зеленая книга	
+📘	blue book	синяя книга	
+📙	orange book	оранжевая книга	
+📚	books	книги	
+📛	name badge	бейдж	
+📜	scroll	свиток	
+📝	memo	заметка	pencil
+📞	telephone receiver	телефонная трубка	
+📟	pager	пейджер	
+📠	fax machine	факс	fax
+📡	satellite antenna	спутниковая антенна	satellite
+📢	loudspeaker	громкоговоритель	
+📣	megaphone	мегафон	mega
+📤	outbox tray	исходящие	
+📥	inbox tray	входящие	
+📦	package	посылка	
+📧	e-mail	электронная почта	email e mail
+📨	incoming envelope	входящее письмо	
+📩	envelope with arrow	исходящее письмо	
+📪	closed mailbox with lowered flag	закрытый почтовый ящик с опущенным флажком	mailbox closed
+📫	closed mailbox with raised flag	закрытый почтовый ящик с поднятым флажком	mailbox
+📬	open mailbox with raised flag	открытый почтовый ящик с поднятым флажком	mailbox with mail
+📭	open mailbox with lowered flag	открытый почтовый ящик с опущенным флажком	mailbox with no mail
+📮	postbox	почтовый ящик	
+📯	postal horn	почтовый рожок	
+📰	newspaper	газета	
+📱	mobile phone	мобильный телефон	iphone
+📲	mobile phone with arrow	входящий вызов	calling
+📳	vibration mode	режим вибрации	
+📴	mobile phone off	выключенный телефон	
+📵	no mobile phones	мобильные телефоны запрещены	
+📶	antenna bars	сигнал сети	signal strength
+📷	camera	фотоаппарат	
+📸	camera with flash	фотоаппарат со вспышкой	camera flash
+📹	video camera	видеокамера	
+📺	television	телевизор	tv
+📻	radio	радио	
+📼	videocassette	видеокассета	vhs
+📽️	film projector	кинопроектор	
+📿	prayer beads	четки	
+🔀	shuffle tracks button	случайный выбор	twisted rightwards arrows
+🔁	repeat button	повтор	repeat
+🔂	repeat single button	повтор одной песни	repeat one
+🔃	clockwise vertical arrows	по часовой стрелке	arrows clockwise
+🔄	counterclockwise arrows button	против часовой стрелки	arrows counterclockwise
+🔅	dim button	низкая яркость	low brightness
+🔆	bright button	высокая яркость	high brightness
+🔇	muted speaker	без звука	mute
+🔈	speaker low volume	низкая громкость	speaker
+🔉	speaker medium volume	средняя громкость	sound
+🔊	speaker high volume	высокая громкость	loud sound
+🔋	battery	батарейка	
+🔌	electric plug	вилка	
+🔍	magnifying glass tilted left	лупа наклоненная влево	mag
+🔎	magnifying glass tilted right	лупа наклоненная вправо	mag right
+🔏	locked with pen	закрытый замок с перьевой ручкой	lock with ink pen
+🔐	locked with key	закрытый замок с ключом	closed lock with key
+🔑	key	ключ	
+🔒	locked	закрытый замок	lock
+🔓	unlocked	открытый замок	unlock
+🔔	bell	колокольчик	
+🔕	bell with slash	перечеркнутый колокольчик	no bell
+🔖	bookmark	закладка	
+🔗	link	гиперссылка	
+🔘	radio button	круглая кнопка	
+🔙	back arrow	стрелка «назад»	back
+🔚	end arrow	стрелка «конец»	end
+🔛	on! arrow	стрелка «активно»	on on arrow
+🔜	soon arrow	стрелка «скоро»	soon
+🔝	top arrow	стрелка «верх»	top
+🔞	no one under eighteen	для людей старше восемнадцати лет	underage
+🔟	keycap 10	клавиши 10	ten keycap ten
+🔠	input latin uppercase	ввод прописными	capital abcd
+🔡	input latin lowercase	ввод строчными	abcd
+🔢	input numbers	ввод цифр	1234
+🔣	input symbols	ввод символов	symbols
+🔤	input latin letters	ввод латиницей	abc
+🔥	fire	огонь	
+🔦	flashlight	фонарик	
+🔧	wrench	гаечный ключ	
+🔨	hammer	молоток	
+🔩	nut and bolt	болт и гайка	
+🔪	kitchen knife	нож	hocho knife
+🔫	water pistol	водяной пистолет	gun
+🔬	microscope	микроскоп	
+🔭	telescope	телескоп	
+🔮	crystal ball	хрустальный шар	
+🔯	dotted six-pointed star	шестиконечная звезда	six pointed star dotted six pointed star
+🔰	japanese symbol for beginner	символ новичка	beginner
+🔱	trident emblem	трезубец	trident
+🔲	black square button	кнопка с черной рамкой	
+🔳	white square button	кнопка с белой рамкой	
+🔴	red circle	красный круг	
+🔵	blue circle	голубой круг	large blue circle
+🔶	large orange diamond	большой оранжевый ромб	
+🔷	large blue diamond	большой голубой ромб	
+🔸	small orange diamond	небольшой оранжевый ромб	
+🔹	small blue diamond	небольшой голубой ромб	
+🔺	red triangle pointed up	треугольник вершиной вверх	small red triangle
+🔻	red triangle pointed down	треугольник вершиной вниз	small red triangle down
+🔼	upwards button	треугольник острием вверх	arrow up small
+🔽	downwards button	треугольник острием вниз	arrow down small
+🕉️	om	ом	om symbol
+🕊️	dove	голубь	dove of peace
+🕋	kaaba	кааба	
+🕌	mosque	мечеть	
+🕍	synagogue	синагога	
+🕎	menorah	менора	menorah with nine branches
+🕐	one o’clock	час	clock1 one oclock
+🕑	two o’clock	два часа	clock2 two oclock
+🕒	three o’clock	три часа	clock3 three oclock
+🕓	four o’clock	четыре часа	clock4 four oclock
+🕔	five o’clock	пять часов	clock5 five oclock
+🕕	six o’clock	шесть часов	clock6 six oclock
+🕖	seven o’clock	семь часов	clock7 seven oclock
+🕗	eight o’clock	восемь часов	clock8 eight oclock
+🕘	nine o’clock	девять часов	clock9 nine oclock
+🕙	ten o’clock	десять часов	clock10 ten oclock
+🕚	eleven o’clock	одиннадцать часов	clock11 eleven oclock
+🕛	twelve o’clock	двенадцать часов	clock12 twelve oclock
+🕜	one-thirty	полвторого	clock130 one thirty
+🕝	two-thirty	полтретьего	clock230 two thirty
+🕞	three-thirty	полчетвертого	clock330 three thirty
+🕟	four-thirty	полпятого	clock430 four thirty
+🕠	five-thirty	полшестого	clock530 five thirty
+🕡	six-thirty	полседьмого	clock630 six thirty
+🕢	seven-thirty	полвосьмого	clock730 seven thirty
+🕣	eight-thirty	полдевятого	clock830 eight thirty
+🕤	nine-thirty	полдесятого	clock930 nine thirty
+🕥	ten-thirty	пол одиннадцатого	clock1030 ten thirty
+🕦	eleven-thirty	полдвенадцатого	clock1130 eleven thirty
+🕧	twelve-thirty	полпервого	clock1230 twelve thirty
+🕯️	candle	свеча	
+🕰️	mantelpiece clock	каминные часы	
+🕳️	hole	дыра	
+🕴️	person in suit levitating	бизнесмен в воздухе	business suit levitating man in business suit levitating
+🕵️	detective	детектив	sleuth or spy
+🕵️‍♀️	woman detective	женщина-детектив	female detective
+🕵️‍♂️	man detective	мужчина-детектив	male detective
+🕶️	sunglasses	солнечные очки	dark sunglasses
+🕷️	spider	паук	
+🕸️	spider web	паутина	
+🕹️	joystick	джоистик	
+🕺	man dancing	танцующий мужчина	
+🖇️	linked paperclips	скрепки	paperclips
+🖊️	pen	шариковая ручка	lower left ballpoint pen
+🖋️	fountain pen	перьевая ручка	lower left fountain pen
+🖌️	paintbrush	кисточка	lower left paintbrush
+🖍️	crayon	восковои мелок	lower left crayon
+🖐️	hand with fingers splayed	раскрытая ладонь	raised hand with fingers splayed
+🖕	middle finger	средний палец	fu reversed hand with middle finger extended
+🖖	vulcan salute	вулканский салют	raised hand with part between middle and ring fingers
+🖤	black heart	черное сердце	
+🖥️	desktop computer	компьютер	
+🖨️	printer	принтер	
+🖱️	computer mouse	мышка	three button mouse
+🖲️	trackball	трекбол	
+🖼️	framed picture	картина	frame with picture
+🗂️	card index dividers	маркированные папки	
+🗃️	card file box	картотека	
+🗄️	file cabinet	архивныи шкаф	
+🗑️	wastebasket	корзина для мусора	
+🗒️	spiral notepad	перекиднои блокнот	spiral note pad
+🗓️	spiral calendar	перекиднои календарь	spiral calendar pad
+🗜️	clamp	компрессор	compression
+🗝️	old key	старинныи ключ	
+🗞️	rolled-up newspaper	свернутая газета	rolled up newspaper newspaper roll
+🗡️	dagger	кинжал	dagger knife
+🗣️	speaking head	говорящая голова	speaking head in silhouette
+🗨️	left speech bubble	пустое облачко	
+🗯️	right anger bubble	гневное облачко	
+🗳️	ballot box with ballot	избирательная урна	ballot box
+🗺️	world map	карта мира	
+🗻	mount fuji	фудзияма	
+🗼	tokyo tower	токийская башня	
+🗽	statue of liberty	статуя свободы	
+🗾	map of japan	карта японии	japan
+🗿	moai	истукан	moyai
+😀	grinning face	широко улыбается	grinning
+😁	beaming face with smiling eyes	светится от счастья	grin
+😂	face with tears of joy	смеется до слез	joy
+😃	grinning face with big eyes	смеется	smiley
+😄	grinning face with smiling eyes	смеется с закрытыми глазами	smile
+😅	grinning face with sweat	нервно смеется	sweat smile
+😆	grinning squinting face	смеется с прищуренными глазами	satisfied laughing
+😇	smiling face with halo	с нимбом	innocent
+😈	smiling face with horns	улыбающийся чертенок	smiling imp
+😉	winking face	подмигивает	wink
+😊	smiling face with smiling eyes	довольно улыбается	blush
+😋	face savoring food	вкусно	yum
+😌	relieved face	испытывает облегчение	relieved
+😍	smiling face with heart-eyes	влюбленное лицо	heart eyes smiling face with heart eyes
+😎	smiling face with sunglasses	лицо в темных очках	sunglasses
+😏	smirking face	ухмыляется	smirk
+😐	neutral face	все равно	
+😑	expressionless face	без эмоций	expressionless
+😒	unamused face	скучает	unamused
+😓	downcast face with sweat	в холодном поту	sweat
+😔	pensive face	размышляет	pensive
+😕	confused face	в замешательстве	confused
+😖	confounded face	в растерянности	confounded
+😗	kissing face	целует	kissing
+😘	face blowing a kiss	воздушный поцелуй	kissing heart
+😙	kissing face with smiling eyes	счастливый поцелуй	kissing smiling eyes
+😚	kissing face with closed eyes	целует с закрытыми глазами	kissing closed eyes
+😛	face with tongue	показывает язык	stuck out tongue
+😜	winking face with tongue	показывает язык и подмигивает	stuck out tongue winking eye
+😝	squinting face with tongue	морщится и показывает язык	stuck out tongue closed eyes
+😞	disappointed face	разочарование	disappointed
+😟	worried face	беспокоится	worried
+😠	angry face	сердится	angry
+😡	enraged face	злится	rage pout
+😢	crying face	плачет	cry
+😣	persevering face	упорство	persevere
+😤	face with steam from nose	в ожидании успеха	triumph
+😥	sad but relieved face	обошлось	disappointed relieved
+😦	frowning face with open mouth	в изумлении	frowning
+😧	anguished face	страдает	anguished
+😨	fearful face	боится	fearful
+😩	weary face	усталость	weary
+😪	sleepy face	хочет спать	sleepy
+😫	tired face	сильная усталость	
+😬	grimacing face	гримаса	grimacing
+😭	loudly crying face	слезы рекой	sob
+😮	face with open mouth	удивление	open mouth
+😮‍💨	face exhaling	выдыхает	
+😯	hushed face	неприятный сюрприз	hushed
+😰	anxious face with sweat	сильно беспокоится	cold sweat
+😱	face screaming in fear	в ужасе	scream
+😲	astonished face	в шоке	astonished
+😳	flushed face	краснеет	flushed
+😴	sleeping face	спит	sleeping
+😵	face with crossed-out eyes	головокружение	dizzy face face with crossed out eyes knocked out face
+😵‍💫	face with spiral eyes	ошеломление	
+😶	face without mouth	лицо без рта	no mouth
+😶‍🌫️	face in clouds	лицо в облаках	
+😷	face with medical mask	в медицинской маске	mask
+😸	grinning cat with smiling eyes	смеющийся кот	smile cat
+😹	cat with tears of joy	смеющийся до слез кот	joy cat
+😺	grinning cat	улыбающийся кот	smiley cat
+😻	smiling cat with heart-eyes	влюбленный кот	heart eyes cat smiling cat with heart eyes
+😼	cat with wry smile	ухмыляющийся кот	smirk cat
+😽	kissing cat	целующий кот	
+😾	pouting cat	злой кот	
+😿	crying cat	плачущий кот	crying cat face
+🙀	weary cat	кот в шоке	scream cat
+🙁	slightly frowning face	немного грустит	
+🙂	slightly smiling face	слегка улыбается	
+🙂‍↔️	head shaking horizontally	отрицательно качает головой	
+🙂‍↕️	head shaking vertically	положительно качает головой	
+🙃	upside-down face	вверх тормашками	upside down face
+🙄	face with rolling eyes	закатывает глаза	roll eyes
+🙅	person gesturing no	человек против	no good
+🙅‍♀️	woman gesturing no	женщина против	ng woman no good woman
+🙅‍♂️	man gesturing no	мужчина против	no good man ng man
+🙆	person gesturing ok	человек за	ok person
+🙆‍♀️	woman gesturing ok	женщина за	ok woman
+🙆‍♂️	man gesturing ok	мужчина за	ok man
+🙇	person bowing	человек кланяется	bow
+🙇‍♀️	woman bowing	женщина кланяется	bowing woman
+🙇‍♂️	man bowing	мужчина кланяется	bowing man
+🙈	see-no-evil monkey	ничего не вижу	see no evil see no evil monkey
+🙉	hear-no-evil monkey	ничего не слышу	hear no evil hear no evil monkey
+🙊	speak-no-evil monkey	ничего никому не скажу	speak no evil speak no evil monkey
+🙋	person raising hand	человек с поднятой рукой	raising hand
+🙋‍♀️	woman raising hand	женщина с поднятои рукои	raising hand woman
+🙋‍♂️	man raising hand	мужчина с поднятои рукои	raising hand man
+🙌	raising hands	ура	raised hands
+🙍	person frowning	нахмурившийся человек	frowning person
+🙍‍♀️	woman frowning	нахмурившаяся женщина	frowning woman
+🙍‍♂️	man frowning	нахмурившиися мужчина	frowning man
+🙎	person pouting	обиженный человек	pouting face person with pouting face
+🙎‍♀️	woman pouting	обиженная женщина	pouting woman
+🙎‍♂️	man pouting	обиженныи мужчина	pouting man
+🙏	folded hands	сложенные руки	pray
+🚀	rocket	ракета	
+🚁	helicopter	вертолет	
+🚂	locomotive	паровоз	steam locomotive
+🚃	railway car	вагон	
+🚄	high-speed train	скоростной поезд	bullettrain side high speed train
+🚅	bullet train	поезд пуля	bullettrain front
+🚆	train	поезд	train2
+🚇	metro	метро	
+🚈	light rail	легкий рельсовый транспорт	
+🚉	station	железнодорожный вокзал	
+🚊	tram	трамвай	
+🚋	tram car	трамвайный вагон	train
+🚌	bus	автобус	
+🚍	oncoming bus	автобус спереди	
+🚎	trolleybus	троллейбус	
+🚏	bus stop	автобусная остановка	busstop
+🚐	minibus	микроавтобус	
+🚑	ambulance	машина скорой помощи	
+🚒	fire engine	пожарная машина	
+🚓	police car	полицейская машина	
+🚔	oncoming police car	полицейская машина спереди	
+🚕	taxi	такси	
+🚖	oncoming taxi	такси спереди	
+🚗	automobile	автомобиль	car red car
+🚘	oncoming automobile	автомобиль спереди	
+🚙	sport utility vehicle	джип	blue car
+🚚	delivery truck	грузовик	truck
+🚛	articulated lorry	фура	
+🚜	tractor	трактор	
+🚝	monorail	монорельс	
+🚞	mountain railway	поезд в горах	
+🚟	suspension railway	подвесная железная дорога	
+🚠	mountain cableway	вагон фуникулера	
+🚡	aerial tramway	канатная дорога	
+🚢	ship	корабль	
+🚣	person rowing boat	гребля	rowboat
+🚣‍♀️	woman rowing boat	гребчиха	rowing woman
+🚣‍♂️	man rowing boat	гребец	rowing man
+🚤	speedboat	катер	
+🚥	horizontal traffic light	горизонтальный светофор	traffic light
+🚦	vertical traffic light	вертикальный светофор	
+🚧	construction	строительные работы	
+🚨	police car light	мигалка	rotating light
+🚩	triangular flag	треугольный флаг	triangular flag on post
+🚪	door	дверь	
+🚫	prohibited	запрещено	no entry sign
+🚬	cigarette	сигарета	smoking
+🚭	no smoking	курение запрещено	
+🚮	litter in bin sign	бросайте мусор в урну	put litter in its place
+🚯	no littering	не мусорьте	do not litter
+🚰	potable water	питьевая вода	
+🚱	non-potable water	непитьевая вода	non potable water
+🚲	bicycle	велосипед	bike
+🚳	no bicycles	перечеркнутый велосипед	
+🚴	person biking	велосипедист	bicyclist
+🚴‍♀️	woman biking	женщина на велосипеде	biking woman
+🚴‍♂️	man biking	мужчина на велосипеде	biking man
+🚵	person mountain biking	человек на горном велосипеде	mountain bicyclist
+🚵‍♀️	woman mountain biking	женщина на горном велосипеде	mountain biking woman
+🚵‍♂️	man mountain biking	мужчина на горном велосипеде	mountain biking man
+🚶	person walking	человек идет	walking
+🚶‍♀️	woman walking	женщина идет	walking woman
+🚶‍♀️‍➡️	woman walking facing right	женщина идет направленные вправо	
+🚶‍♂️	man walking	мужчина идет	walking man
+🚶‍♂️‍➡️	man walking facing right	мужчина идет направленные вправо	
+🚶‍➡️	person walking facing right	человек идет направленные вправо	
+🚷	no pedestrians	переход запрещен	
+🚸	children crossing	знак «дети»	
+🚹	men’s room	мужской туалет	mens mens room
+🚺	women’s room	женский туалет	womens womens room
+🚻	restroom	уборная	
+🚼	baby symbol	пеленальная	
+🚽	toilet	унитаз	
+🚾	water closet	туалет	wc
+🚿	shower	душ	
+🛀	person taking bath	человек в ванне	bath
+🛁	bathtub	ванна	
+🛂	passport control	паспортный контроль	
+🛃	customs	таможня	
+🛄	baggage claim	получение багажа	
+🛅	left luggage	забытый багаж	
+🛋️	couch and lamp	диван и торшер	
+🛌	person in bed	человек в кровати	sleeping bed sleeping accommodation
+🛍️	shopping bags	пакеты	shopping
+🛎️	bellhop bell	гостиничныи звонок	
+🛏️	bed	кровать	
+🛐	place of worship	религия	
+🛑	stop sign	знак «стоп»	
+🛒	shopping cart	тележка для покупок	
+🛕	hindu temple	индуистский храм	
+🛖	hut	хижина	
+🛗	elevator	лифт	
+🛘	landslide	оползень	
+🛙	lighthouse	маяк	
+🛜	wireless	беспроводная сеть	
+🛝	playground slide	детская горка	
+🛞	wheel	автомобильное колесо	
+🛟	ring buoy	спасательный круг	
+🛠️	hammer and wrench	молот и гаечныи ключ	
+🛡️	shield	щит	
+🛢️	oil drum	бочка	
+🛣️	motorway	шоссе	
+🛤️	railway track	железная дорога	
+🛥️	motor boat	моторная лодка	
+🛩️	small airplane	маленькии самолет	
+🛫	airplane departure	взлет	flight departure
+🛬	airplane arrival	посадка	airplane arriving flight arrival
+🛰️	satellite	спутник	artificial satellite
+🛳️	passenger ship	пассажирскии лаинер	
+🛴	kick scooter	самокат	
+🛵	motor scooter	скутер	
+🛶	canoe	каноэ	
+🛷	sled	санки	
+🛸	flying saucer	летающая тарелка	
+🛹	skateboard	скейтборд	
+🛺	auto rickshaw	авторикша	
+🛻	pickup truck	пикап	
+🛼	roller skate	роликовые коньки	
+🟠	orange circle	оранжевый круг	
+🟡	yellow circle	желтый круг	
+🟢	green circle	зеленый круг	
+🟣	purple circle	фиолетовый круг	
+🟤	brown circle	коричневый круг	
+🟥	red square	красный квадрат	
+🟦	blue square	синий квадрат	
+🟧	orange square	оранжевый квадрат	
+🟨	yellow square	желтый квадрат	
+🟩	green square	зеленый квадрат	
+🟪	purple square	фиолетовый квадрат	
+🟫	brown square	коричневый квадрат	
+🟰	heavy equals sign	жирный знак равенства	
+🤌	pinched fingers	щепоть	
+🤍	white heart	белое сердце	
+🤎	brown heart	коричневое сердце	
+🤏	pinching hand	жест «мало»	
+🤐	zipper-mouth face	рот на замке	zipper mouth face
+🤑	money-mouth face	деньги в глазах	money mouth face
+🤒	face with thermometer	с градусником во рту	
+🤓	nerd face	очкарик	
+🤔	thinking face	думает	thinking
+🤕	face with head-bandage	с перевязанной головой	face with head bandage
+🤖	robot	робот	robot face
+🤗	smiling face with open hands	обнимает	hugging face hugs
+🤘	sign of the horns	рокерский жест	metal
+🤙	call me hand	жест «позвони мне»	
+🤚	raised back of hand	поднятая рука	
+🤛	left-facing fist	кулак влево	fist left left facing fist
+🤜	right-facing fist	кулак вправо	fist right right facing fist
+🤝	handshake	рукопожатие	
+🤞	crossed fingers	скрещенные пальцы	
+🤟	love-you gesture	я тебя люблю	love you gesture
+🤠	cowboy hat face	в ковбойской шляпе	
+🤡	clown face	клоун	
+🤢	nauseated face	тошнит	
+🤣	rolling on the floor laughing	катается со смеху	rofl
+🤤	drooling face	пускает слюни	
+🤥	lying face	лжец	
+🤦	person facepalming	человек потерял дар речи	facepalm
+🤦‍♀️	woman facepalming	женщина потеряла дар речи	
+🤦‍♂️	man facepalming	мужчина потерял дар речи	
+🤧	sneezing face	чихает	
+🤨	face with raised eyebrow	не верит	raised eyebrow
+🤩	star-struck	звезды в глазах	star struck
+🤪	zany face	сумасшедшее лицо	
+🤫	shushing face	тс с с	
+🤬	face with symbols on mouth	цензура	cursing face
+🤭	face with hand over mouth	прикрывает рот рукой	hand over mouth
+🤮	face vomiting	рвота	vomiting face
+🤯	exploding head	взрыв мозга	
+🤰	pregnant woman	беременная женщина	
+🤱	breast-feeding	кормление грудью	breast feeding
+🤲	palms up together	ладони лодочкой	
+🤳	selfie	селфи	
+🤴	prince	принц	
+🤵	person in tuxedo	жених	
+🤵‍♀️	woman in tuxedo	женщина в смокинге	
+🤵‍♂️	man in tuxedo	мужчина в смокинге	
+🤶	mrs. claus	миссис клаус	mrs claus
+🤷	person shrugging	человек пожимает плечами	shrug
+🤷‍♀️	woman shrugging	женщина пожимает плечами	
+🤷‍♂️	man shrugging	мужчина пожимает плечами	
+🤸	person cartwheeling	акробатический трюк	cartwheeling
+🤸‍♀️	woman cartwheeling	женщина-акробат	
+🤸‍♂️	man cartwheeling	акробат	
+🤹	person juggling	жонглер	juggling person
+🤹‍♀️	woman juggling	женщина-жонглер	
+🤹‍♂️	man juggling	мужчина-жонглер	
+🤺	person fencing	фехтовальщик	
+🤼	people wrestling	борцы	wrestling
+🤼‍♀️	women wrestling	женщины-борцы	
+🤼‍♂️	men wrestling	мужчины-борцы	
+🤽	person playing water polo	водное поло	water polo
+🤽‍♀️	woman playing water polo	женщина играет в водное поло	
+🤽‍♂️	man playing water polo	мужчина играет в водное поло	
+🤾	person playing handball	гандбол	handball person
+🤾‍♀️	woman playing handball	гандболистка	
+🤾‍♂️	man playing handball	гандболист	
+🤿	diving mask	маска с трубкой	
+🥀	wilted flower	увядший цветок	
+🥁	drum	барабан	
+🥂	clinking glasses	чокающиеся бокалы	
+🥃	tumbler glass	стакан с виски	
+🥄	spoon	ложка	
+🥅	goal net	спортивные ворота	
+🥇	1st place medal	золотая медаль	
+🥈	2nd place medal	серебряная медаль	
+🥉	3rd place medal	бронзовая медаль	
+🥊	boxing glove	боксерская перчатка	
+🥋	martial arts uniform	спортивное кимоно	
+🥌	curling stone	керлинг	
+🥍	lacrosse	лакросс	
+🥎	softball	софтбол	
+🥏	flying disc	летающий диск	
+🥐	croissant	круассан	
+🥑	avocado	авокадо	
+🥒	cucumber	огурец	
+🥓	bacon	бекон	
+🥔	potato	картофель	
+🥕	carrot	морковь	
+🥖	baguette bread	багет	
+🥗	green salad	овощной салат	
+🥘	shallow pan of food	рагу в сковороде	
+🥙	stuffed flatbread	шаурма	
+🥚	egg	яйцо	egg2
+🥛	glass of milk	стакан молока	milk glass
+🥜	peanuts	арахис	
+🥝	kiwi fruit	киви	
+🥞	pancakes	блины	
+🥟	dumpling	вареник	
+🥠	fortune cookie	печенье с предсказанием	
+🥡	takeout box	коробка для еды на вынос	
+🥢	chopsticks	палочки для еды	
+🥣	bowl with spoon	миска с ложкой	
+🥤	cup with straw	стакан с соломинкой	
+🥥	coconut	кокос	
+🥦	broccoli	брокколи	
+🥧	pie	пирог	
+🥨	pretzel	крендель	
+🥩	cut of meat	кусок мяса	
+🥪	sandwich	сэндвич	
+🥫	canned food	консервы	
+🥬	leafy green	зеленый салат	
+🥭	mango	манго	
+🥮	moon cake	лунный пирог	
+🥯	bagel	бублик	
+🥰	smiling face with hearts	улыбающееся лицо с сердечками	smiling face with three hearts
+🥱	yawning face	зевает	
+🥲	smiling face with tear	улыбающееся лицо со слезой	
+🥳	partying face	на вечеринке	
+🥴	woozy face	чувствует головокружение	
+🥵	hot face	жар	
+🥶	cold face	мерзнет	
+🥷	ninja	ниндзя	
+🥸	disguised face	маскировка	
+🥹	face holding back tears	еле сдерживает слезы	
+🥺	pleading face	умоляет	
+🥻	sari	сари	
+🥼	lab coat	лабораторный халат	
+🥽	goggles	защитные очки	
+🥾	hiking boot	треккинговый ботинок	
+🥿	flat shoe	балетки	
+🦀	crab	краб	
+🦁	lion	морда льва	lion face
+🦂	scorpion	скорпион	
+🦃	turkey	индейка	
+🦄	unicorn	голова единорога	unicorn face
+🦅	eagle	орел	
+🦆	duck	утка	
+🦇	bat	летучая мышь	
+🦈	shark	акула	
+🦉	owl	сова	
+🦊	fox	морда лисицы	fox face
+🦋	butterfly	бабочка	
+🦌	deer	олень	
+🦍	gorilla	горилла	harambe
+🦎	lizard	ящерица	
+🦏	rhinoceros	носорог	
+🦐	shrimp	креветка	
+🦑	squid	кальмар	
+🦒	giraffe	жираф	
+🦓	zebra	зебра	
+🦔	hedgehog	еж	
+🦕	sauropod	зауропод	
+🦖	t-rex	ти рекс	t rex
+🦗	cricket	сверчок	
+🦘	kangaroo	кенгуру	
+🦙	llama	лама	
+🦚	peacock	павлин	
+🦛	hippopotamus	гиппопотам	
+🦜	parrot	попугай	
+🦝	raccoon	морда енота	
+🦞	lobster	омар	
+🦟	mosquito	комар	
+🦠	microbe	микроб	
+🦡	badger	барсук	
+🦢	swan	лебедь	
+🦣	mammoth	мамонт	
+🦤	dodo	дронт	
+🦥	sloth	ленивец	
+🦦	otter	выдра	
+🦧	orangutan	орангутан	
+🦨	skunk	скунс	
+🦩	flamingo	фламинго	
+🦪	oyster	устрица	
+🦫	beaver	бобр	
+🦬	bison	бизон	
+🦭	seal	тюлень	
+🦮	guide dog	собака поводырь	
+🦯	white cane	белая трость	probing cane
+🦴	bone	кость	
+🦵	leg	нога	
+🦶	foot	щиколотка	
+🦷	tooth	зуб	
+🦸	superhero	супергерой	
+🦸‍♀️	woman superhero	женщина-супергерои	superhero woman
+🦸‍♂️	man superhero	мужчина-супергерои	superhero man
+🦹	supervillain	суперзлодей	
+🦹‍♀️	woman supervillain	женщина-суперзлодеи	supervillain woman
+🦹‍♂️	man supervillain	мужчина-суперзлодеи	supervillain man
+🦺	safety vest	спасательный жилет	
+🦻	ear with hearing aid	ухо со слуховым аппаратом	
+🦼	motorized wheelchair	кресло коляска с мотором	
+🦽	manual wheelchair	кресло коляска с ручным приводом	
+🦾	mechanical arm	механическая рука	
+🦿	mechanical leg	механическая нога	
+🧀	cheese wedge	сыр	cheese
+🧁	cupcake	капкейк	
+🧂	salt	солонка	
+🧃	beverage box	пакетик сока	
+🧄	garlic	чеснок	
+🧅	onion	лук	
+🧆	falafel	фалафель	
+🧇	waffle	вафля	
+🧈	butter	масло	
+🧉	mate	мате	
+🧊	ice	кубик льда	ice cube
+🧋	bubble tea	чай с шариками	
+🧌	troll	тролль	
+🧍	person standing	человек стоит	standing person
+🧍‍♀️	woman standing	женщина стоит	standing woman
+🧍‍♂️	man standing	мужчина стоит	standing man
+🧎	person kneeling	человек на коленях	kneeling person
+🧎‍♀️	woman kneeling	женщина на коленях	kneeling woman
+🧎‍♀️‍➡️	woman kneeling facing right	женщина на коленях направленные вправо	
+🧎‍♂️	man kneeling	мужчина на коленях	kneeling man
+🧎‍♂️‍➡️	man kneeling facing right	мужчина на коленях направленные вправо	
+🧎‍➡️	person kneeling facing right	человек на коленях направленные вправо	
+🧏	deaf person	глухой человек	
+🧏‍♀️	deaf woman	глухая женщина	
+🧏‍♂️	deaf man	глухои мужчина	
+🧐	face with monocle	с моноклем	monocle face
+🧑	person	взрослый	adult
+🧑‍⚕️	health worker	медицинскии работник	
+🧑‍⚖️	judge	судья	
+🧑‍✈️	pilot	пилот	
+🧑‍🌾	farmer	фермер	
+🧑‍🍳	cook	повар	
+🧑‍🍼	person feeding baby	кормящий человек	
+🧑‍🎄	mx claus	санта	
+🧑‍🎓	student	учащийся	
+🧑‍🎤	singer	певец	
+🧑‍🎨	artist	художник	
+🧑‍🏫	teacher	педагог	
+🧑‍🏭	factory worker	рабочий	
+🧑‍💻	technologist	инженер	
+🧑‍💼	office worker	офисный работник	
+🧑‍🔧	mechanic	механик	
+🧑‍🔬	scientist	ученый	
+🧑‍🚀	astronaut	космонавт	
+🧑‍🚒	firefighter	пожарный	
+🧑‍🤝‍🧑	people holding hands	люди держащиеся за руки	
+🧑‍🦯	person with white cane	человек с белой тростью	person with probing cane
+🧑‍🦯‍➡️	person with white cane facing right	человек с белой тростью направленные вправо	
+🧑‍🦰	person red hair	взрослый рыжие волосы	
+🧑‍🦱	person curly hair	взрослый кудрявые волосы	
+🧑‍🦲	person bald	взрослый без волос	
+🧑‍🦳	person white hair	взрослый седые волосы	
+🧑‍🦼	person in motorized wheelchair	человек в кресле коляске с мотором	
+🧑‍🦼‍➡️	person in motorized wheelchair facing right	человек в кресле коляске с мотором направленные вправо	
+🧑‍🦽	person in manual wheelchair	человек в кресле коляске с ручным приводом	
+🧑‍🦽‍➡️	person in manual wheelchair facing right	человек в кресле коляске с ручным приводом направленные вправо	
+🧑‍🧑‍🧒	family adult adult child	семья двое взрослых и ребенок	
+🧑‍🧑‍🧒‍🧒	family adult adult child child	семья двое взрослых и двое детей	
+🧑‍🧒	family adult child	семья взрослый и ребенок	
+🧑‍🧒‍🧒	family adult child child	семья взрослый и двое детей	
+🧑‍🩰	ballet dancer	артист балета	
+🧒	child	ребенок	
+🧓	older person	пожилой человек	older adult
+🧔	person beard	бородатый человек	bearded person
+🧔‍♀️	woman beard	бородатая женщина	
+🧔‍♂️	man beard	бородатыи мужчина	
+🧕	woman with headscarf	женщина в платке	
+🧖	person in steamy room	человек в бане	sauna person
+🧖‍♀️	woman in steamy room	женщина в бане	sauna woman
+🧖‍♂️	man in steamy room	мужчина в бане	sauna man
+🧗	person climbing	человек взбирается по скале	climbing
+🧗‍♀️	woman climbing	женщина взбирается по скале	climbing woman
+🧗‍♂️	man climbing	мужчина взбирается по скале	climbing man
+🧘	person in lotus position	человек в позе лотоса	lotus position
+🧘‍♀️	woman in lotus position	женщина в позе лотоса	lotus position woman
+🧘‍♂️	man in lotus position	мужчина в позе лотоса	lotus position man
+🧙	mage	маг	
+🧙‍♀️	woman mage	волшебница	mage woman
+🧙‍♂️	man mage	волшебник	mage man
+🧚	fairy	фея	
+🧚‍♀️	woman fairy	женщина-фея	fairy woman
+🧚‍♂️	man fairy	мужчина-фея	fairy man
+🧛	vampire	вампир	
+🧛‍♀️	woman vampire	женщина-вампир	vampire woman
+🧛‍♂️	man vampire	мужчина-вампир	vampire man
+🧜	merperson	русалка	
+🧜‍♀️	mermaid	женщина-русалка	
+🧜‍♂️	merman	тритон	
+🧝	elf	эльф	
+🧝‍♀️	woman elf	женщина-эльф	elf woman
+🧝‍♂️	man elf	мужчина-эльф	elf man
+🧞	genie	джинн	
+🧞‍♀️	woman genie	женщина-джинн	genie woman
+🧞‍♂️	man genie	мужчина-джинн	genie man
+🧟	zombie	зомби	
+🧟‍♀️	woman zombie	женщина-зомби	zombie woman
+🧟‍♂️	man zombie	мужчина-зомби	zombie man
+🧠	brain	мозг	
+🧡	orange heart	оранжевое сердце	
+🧢	billed cap	бейсболка	
+🧣	scarf	шарф	
+🧤	gloves	перчатки	
+🧥	coat	пальто	
+🧦	socks	носки	
+🧧	red envelope	красный конверт	
+🧨	firecracker	динамитная шашка	
+🧩	puzzle piece	пазл	jigsaw
+🧪	test tube	пробирка	
+🧫	petri dish	чашка петри	
+🧬	dna	днк	
+🧭	compass	компас	
+🧮	abacus	счеты	
+🧯	fire extinguisher	огнетушитель	
+🧰	toolbox	ящик для инструментов	
+🧱	brick	кирпичи	bricks
+🧲	magnet	магнит	
+🧳	luggage	багаж	
+🧴	lotion bottle	бутылка лосьона	
+🧵	thread	катушка ниток	
+🧶	yarn	клубок	
+🧷	safety pin	английская булавка	
+🧸	teddy bear	плюшевый мишка	
+🧹	broom	метла	
+🧺	basket	корзина	
+🧻	roll of paper	рулон бумаги	
+🧼	soap	мыло	
+🧽	sponge	губка	
+🧾	receipt	чек	
+🧿	nazar amulet	назар бонджук	
+🩰	ballet shoes	пуанты	
+🩱	one-piece swimsuit	цельный купальник	one piece swimsuit
+🩲	briefs	плавки	swim brief
+🩳	shorts	шорты	
+🩴	thong sandal	вьетнамки	
+🩵	light blue heart	голубое сердце	
+🩶	grey heart	серое сердце	
+🩷	pink heart	розовое сердце	
+🩸	drop of blood	капля крови	
+🩹	adhesive bandage	пластырь	
+🩺	stethoscope	стетоскоп	
+🩻	x-ray	рентген	x ray
+🩼	crutch	костыль	
+🪀	yo-yo	йо йо	yo yo
+🪁	kite	воздушный змей	
+🪂	parachute	парашют	
+🪃	boomerang	бумеранг	
+🪄	magic wand	волшебная палочка	
+🪅	piñata	пиньята	pinata
+🪆	nesting dolls	матрешка	
+🪇	maracas	маракасы	
+🪈	flute	флейта	
+🪉	harp	арфа	
+🪊	trombone	тромбон	
+🪋	meteor	метеорит	
+🪌	eraser	ластик	
+🪍	net with handle	сачок	
+🪎	treasure chest	сундук с сокровищами	
+🪏	shovel	лопата	
+🪐	ringed planet	планета с кольцом	
+🪑	chair	стул	
+🪒	razor	бритва	
+🪓	axe	топор	
+🪔	diya lamp	масляная лампа	
+🪕	banjo	банджо	
+🪖	military helmet	армейская каска	
+🪗	accordion	аккордеон	
+🪘	long drum	конга	
+🪙	coin	монета	
+🪚	carpentry saw	пила по дереву	
+🪛	screwdriver	отвертка	
+🪜	ladder	лестница	
+🪝	hook	крюк	
+🪞	mirror	зеркало	
+🪟	window	окно	
+🪠	plunger	вантуз	
+🪡	sewing needle	швейная игла	
+🪢	knot	узел	
+🪣	bucket	ведро	
+🪤	mouse trap	мышеловка	
+🪥	toothbrush	зубная щетка	
+🪦	headstone	надгробие	
+🪧	placard	плакат	
+🪨	rock	камень	
+🪩	mirror ball	диско шар	
+🪪	identification card	удостоверение личности	
+🪫	low battery	низкий уровень заряда	
+🪬	hamsa	хамса	
+🪭	folding hand fan	веер	
+🪮	hair pick	афро гребень	
+🪯	khanda	кханда	
+🪰	fly	муха	
+🪱	worm	червяк	
+🪲	beetle	жук	
+🪳	cockroach	таракан	
+🪴	potted plant	растение в горшке	
+🪵	wood	древесина	
+🪶	feather	перо	
+🪷	lotus	лотос	
+🪸	coral	коралл	
+🪹	empty nest	пустое гнездо	
+🪺	nest with eggs	гнездо с яйцами	
+🪻	hyacinth	гиацинт	
+🪼	jellyfish	медуза	
+🪽	wing	крыло	
+🪾	leafless tree	дерево без листвы	
+🪿	goose	гусь	
+🫀	anatomical heart	сердце человека	
+🫁	lungs	легкие	
+🫂	people hugging	обнимающиеся люди	
+🫃	pregnant man	беременный мужчина	
+🫄	pregnant person	беременный человек	
+🫅	person with crown	человек с короной	
+🫆	fingerprint	отпечаток пальца	
+🫈	hairy creature	снежный человек	
+🫌	monarch butterfly	бабочка монарх	
+🫍	orca	косатка	
+🫎	moose	лось	
+🫏	donkey	осел	
+🫐	blueberries	голубика	
+🫑	bell pepper	болгарский перец	
+🫒	olive	оливка	
+🫓	flatbread	лепешка	
+🫔	tamale	тамале	
+🫕	fondue	фондю	
+🫖	teapot	чайник	
+🫗	pouring liquid	стакан с жидкостью	
+🫘	beans	фасоль	
+🫙	jar	банка	
+🫚	ginger root	корень имбиря	
+🫛	pea pod	стручок гороха	
+🫜	root vegetable	корнеплод	
+🫝	pickle	маринованный огурец	
+🫟	splatter	клякса	
+🫠	melting face	тает	
+🫡	saluting face	воинское приветствие	
+🫢	face with open eyes and hand over mouth	прикрывает рот рукой с открытыми глазами	
+🫣	face with peeking eye	подсматривает	
+🫤	face with diagonal mouth	с перекошенным ртом	
+🫥	dotted line face	лицо пунктиром	
+🫦	biting lip	кусать губы	
+🫧	bubbles	пузыри	
+🫨	shaking face	трясущееся лицо	
+🫩	face with bags under eyes	лицо с мешками под глазами	
+🫪	distorted face	лицо перекосило	
+🫫	cracking face	трескается	
+🫯	fight cloud	драка	
+🫰	hand with index finger and thumb crossed	жест «деньги»	
+🫱	rightwards hand	рука вправо	
+🫲	leftwards hand	рука влево	
+🫳	palm down hand	рука ладонью вниз	
+🫴	palm up hand	рука ладонью вверх	
+🫵	index pointing at the viewer	указательный палец на себя	
+🫶	heart hands	жест «сердце»	
+🫷	leftwards pushing hand	рука ладонью влево	
+🫸	rightwards pushing hand	рука ладонью вправо	
+🫹	leftwards thumb sign	большой палец влево	
+🫺	rightwards thumb sign	большой палец вправо	

@@ -1,0 +1,887 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Wayland
+import qs.config
+import qs.components
+import qs.services
+import "../profile"
+
+// ┌─run─────────────────────────────────────esc┐
+// │ [apps] run  term  calc  ai                  │
+// │ $ fire█                                     │
+// │ > ▣ Firefox *                   web browser │
+// └─────────────────────────────────────────────┘
+// rofi-style launcher. Modes are just prefixes: !cmd shell, >cmd terminal, =expr calc, ?text ai,
+// $text a command from the ai (enter: it's written; enter again: into > to look at and run;
+// tab: copy; it never runs by itself), :text clipboard, ;text open windows, .text emoji, so they
+// can be typed directly or picked with
+// ctrl+tab / a click on the tab. → on an app with actions of its own (firefox: a private window)
+// lists them.
+// The lists are ScriptModels with reused rows: typing a letter re-sorts the rows that are
+// already there instead of making all of them (and their icons) again.
+PanelWindow {
+    id: root
+
+    required property ShellScreen forScreen
+    // the start menu (the bar's kawt button with raised frames): the same search at the bar's
+    // left end, its sections beside it (MenuSections.qml); "launcher" is the plain one in the middle
+    readonly property bool asMenu: Panels.isOpen("menu", forScreen)
+    readonly property bool open: Panels.isOpen("launcher", forScreen) || asMenu
+    property string section: "apps"
+    readonly property int maxRows: asMenu ? 8 : 9
+    readonly property int rowHeight: Metrics.fontSize + 16
+
+    readonly property var modes: [
+        { prefix: "", name: "apps" },
+        { prefix: "!", name: "run" },
+        { prefix: ">", name: "term" },
+        { prefix: "=", name: "calc" },
+        { prefix: "?", name: "ai" },
+        { prefix: "$", name: "cmd" },
+        { prefix: ":", name: "clip" },
+        { prefix: ";", name: "win" },
+        { prefix: ".", name: "emoji" }
+    ]
+    readonly property string query: input.text
+    readonly property string mode: modes.some(m => m.prefix && query.startsWith(m.prefix)) ? query[0] : ""
+    readonly property int modeIndex: modes.findIndex(m => m.prefix === mode)
+    readonly property string arg: mode ? query.slice(1).trim() : query
+    // the plain calculator at once; with qalc, what it can't do a moment later (services/Apps.qml)
+    readonly property string calcPlain: mode === "=" ? Apps.calc(arg) : ""
+    readonly property string calcResult: mode !== "=" ? "" : calcPlain || (Apps.qalcFor === arg ? Apps.qalcOut : "")
+    // the app whose own actions are listed (→ on it); typing goes back to the search
+    property var expanded: null
+    // $: the ai's command is there, for what's typed now (Ai is only named in this mode)
+    readonly property bool cmdReady: mode === "$" && Ai.cmdFor === arg && Ai.cmdText !== "" && !Ai.cmdBusy
+    // the menu with nothing typed: your pinned apps first, as a start menu has them
+    readonly property var results: !open || mode ? [] : expanded ? [expanded, ...Apps.actionsOf(expanded)] : asMenu && !query.trim() ? [...Apps.pinned, ...Apps.search("").filter(a => !Apps.isPinned(a))].slice(0, 60) : Apps.search(query).slice(0, 60)
+    readonly property var clips: open && mode === ":" ? Clipboard.search(arg) : []
+    readonly property var emojis: open && mode === "." ? Emoji.search(arg) : []
+    // open windows whose title or class has the typed text
+    // (typed in the wrong layout: found too, services/Apps.qml)
+    readonly property string argAlt: Apps.otherLayout(arg.toLowerCase())
+    readonly property var wins: open && mode === ";" ? Hypr.windows.filter(w => {
+        const t = `${w.title} ${w.lastIpcObject?.class ?? ""}`.toLowerCase();
+        return t.includes(arg.toLowerCase()) || (argAlt !== "" && t.includes(argAlt));
+    }) : []
+    // how many rows the current mode lists (apps, clipboard entries or windows)
+    readonly property int rows: mode === ":" ? clips.length : mode === ";" ? wins.length : mode === "." ? emojis.length : results.length
+    property int current: 0
+
+    screen: forScreen
+    visible: open
+    color: "transparent"
+
+    WlrLayershell.namespace: "kawt-launcher"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    anchors.top: true
+    anchors.left: true
+    anchors.right: true
+    anchors.bottom: true
+
+    OpenWatch {
+        open: root.open
+        onOpened: {
+            root.section = "apps";
+            input.text = Panels.launcherPrefix;
+            Panels.launcherPrefix = "";
+            root.current = 0;
+            input.input.forceActiveFocus();
+            fadeIn.restart();
+        }
+    }
+    onQueryChanged: {
+        current = 0;
+        expanded = null;
+        // typing in the menu searches, whatever section is open (as old start menus did)
+        if (query !== "")
+            section = "apps";
+    }
+    // with a section open the search is hidden, and a hidden field gets no keys: the box takes
+    // them then (below)
+    onSectionChanged: {
+        if (section === "apps")
+            input.input.forceActiveFocus();
+        else
+            box.forceActiveFocus();
+        // profile and settings are one pane (the profile's own tabs): settings opens its cfg
+        if (section === "profile" || section === "settings")
+            pane.item?.show(section === "settings" ? "cfg" : "today");
+    }
+    onCurrentChanged: (mode === ":" ? clipList : mode === ";" ? winList : mode === "." ? emojiList : list).positionViewAtIndex(current, ListView.Contain)
+    onModeChanged: {
+        if (mode === ":")
+            Clipboard.refresh();
+        else if (mode === ";")
+            Hypr.refreshWindows();
+        else if (mode === ".")
+            Emoji.wanted = true; // the list is read the first time
+    }
+    onArgChanged: if (mode === "=" && arg && !Apps.calc(arg))
+        Apps.qalc(arg)
+
+    function move(delta: int): void {
+        if (rows > 0)
+            current = (current + delta + rows) % rows;
+    }
+
+    function setMode(i: int): void {
+        const m = modes[(i + modes.length) % modes.length];
+        input.text = m.prefix + arg;
+        input.input.cursorPosition = input.text.length;
+        input.input.forceActiveFocus();
+    }
+
+    function accept(): void {
+        if (mode === "!" && arg) {
+            Apps.run(arg);
+        } else if (mode === ">" && arg) {
+            Apps.runInTerminal(arg);
+        } else if (mode === "=" && calcResult) {
+            // qalc's "≈ 0.33": the number
+            const value = calcResult.replace(/^[≈=]\s*/, "");
+            try {
+                Quickshell.clipboardText = value;
+            } catch (e) {
+                Quickshell.execDetached(["wl-copy", "--", value]); // older quickshell
+            }
+        } else if (mode === ":" && clips[current]) {
+            Clipboard.copy(clips[current]);
+        } else if (mode === ";" && wins[current]) {
+            Hypr.focusWindow(wins[current]);
+        } else if (mode === "." && emojis[current]) {
+            Emoji.pick(emojis[current]);
+        } else if (mode === "?" && arg) {
+            Panels.sidebarScreen = forScreen.name;
+            Panels.sidebarOpen = true;
+            Ai.send(arg);
+        } else if (mode === "$" && arg) {
+            // the command written: into terminal mode, to read (and change) before it runs
+            if (cmdReady) {
+                input.text = `>${Ai.cmdText}`;
+                input.input.cursorPosition = input.text.length;
+            } else {
+                Ai.suggestCommand(arg);
+            }
+            return;
+        } else if (!mode && results[current]) {
+            Apps.launch(results[current]);
+        } else {
+            return;
+        }
+        Panels.close();
+    }
+
+    // dim the screen like a terminal taking over (the menu doesn't: it's part of the bar)
+    Rectangle {
+        anchors.fill: parent
+        color: root.asMenu ? "transparent" : Qt.rgba(0, 0, 0, 0.35)
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: Panels.close()
+        }
+    }
+
+    TitledBox {
+        id: box
+
+        readonly property int sectionsWidth: Math.round(140 * Metrics.scale)
+        // the profile's tabs want the room they have under the bar's [●] (700 px)
+        readonly property bool wideSection: root.section === "profile" || root.section === "settings"
+        readonly property int inner: Math.max(Math.round(30 * Metrics.fontSize), wideSection ? (pane.item?.implicitHeight ?? 0) : 0)
+
+        // the menu hangs from the bar's left end (or stands on it, with the bar at the bottom),
+        // as big whichever section is open
+        x: root.asMenu ? Metrics.padding : Math.round((root.width - width) / 2)
+        y: !root.asMenu ? Math.round(root.height * 0.18) : Metrics.barBottom ? root.height - height - Metrics.bottomGap - Metrics.spacing : Metrics.topGap + Metrics.spacing
+        width: root.asMenu ? Math.min(Math.round((wideSection ? 700 : 480) * Metrics.scale) + sectionsWidth + Metrics.spacing + Metrics.padding * 2, root.width - Metrics.padding * 2) : Math.min(640, root.width - Metrics.padding * 2)
+        height: root.asMenu ? Math.min(root.height - Metrics.topGap - Metrics.bottomGap - Metrics.spacing * 2, contentTop + Metrics.padding * 2 + inner + Metrics.spacing + footer.implicitHeight) : body.implicitHeight + Metrics.padding * 2 + contentTop
+        title: !root.asMenu ? "run" : root.section === "apps" ? root.modes[Math.max(0, root.modeIndex)].name : root.section
+        hint: "esc"
+        window: true
+
+        // a section open: esc closes, a letter goes back to the search with it
+        Keys.onEscapePressed: Panels.close()
+        Keys.onPressed: event => {
+            if (event.text.length === 1 && event.text >= " " && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
+                root.section = "apps";
+                input.text += event.text;
+                input.input.cursorPosition = input.text.length;
+                event.accepted = true;
+            }
+        }
+
+        NumberAnimation {
+            id: fadeIn
+
+            target: box
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 120
+        }
+
+        MouseArea {
+            anchors.fill: parent // swallow clicks so they don't close the launcher
+        }
+
+        ColumnLayout {
+            id: body
+
+            visible: !root.asMenu || root.section === "apps"
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Metrics.padding
+            anchors.leftMargin: Metrics.padding + (root.asMenu ? box.sectionsWidth + Metrics.spacing : 0)
+            anchors.topMargin: Metrics.padding + box.contentTop
+            spacing: Metrics.spacing
+
+            // [apps] run term calc ai
+            Row {
+                spacing: Metrics.spacing
+
+                Repeater {
+                    model: root.modes
+
+                    Item {
+                        id: tab
+
+                        required property var modelData
+                        required property int index
+                        readonly property bool selected: index === root.modeIndex
+
+                        implicitWidth: tabText.implicitWidth + 6
+                        implicitHeight: tabText.implicitHeight + 2
+
+                        Rectangle {
+                            anchors.fill: parent
+                            visible: tabArea.containsMouse
+                            color: Colors.hoverFill
+                        }
+
+                        Brackets {
+                            id: tabText
+
+                            anchors.centerIn: parent
+                            text: tab.modelData.name
+                            look: tab.selected ? "on" : "off"
+                            shown: tab.selected
+                        }
+
+                        MouseArea {
+                            id: tabArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.setMode(tab.index)
+                        }
+                    }
+                }
+            }
+
+            TermInput {
+                id: input
+
+                Layout.fillWidth: true
+                prompt: "$"
+                placeholder: "search apps..."
+                onAccepted: root.accept()
+
+                // TextInput doesn't use these keys, so they bubble up to here
+                Keys.onEscapePressed: {
+                    if (root.expanded)
+                        root.expanded = null;
+                    else
+                        Panels.close();
+                }
+                Keys.onUpPressed: root.move(-1)
+                Keys.onDownPressed: root.move(1)
+                // at the end of the line: the selected app's own actions
+                Keys.onRightPressed: event => {
+                    const app = root.results[root.current];
+                    if (!root.mode && !root.expanded && !app?.isAction && (app?.actions?.length ?? 0) > 0) {
+                        root.expanded = app;
+                        root.current = 0;
+                    } else {
+                        event.accepted = false;
+                    }
+                }
+                Keys.onLeftPressed: event => {
+                    if (root.expanded)
+                        root.expanded = null;
+                    else
+                        event.accepted = false;
+                }
+                Keys.onPressed: event => {
+                    const ctrl = event.modifiers & Qt.ControlModifier;
+                    if (ctrl && event.key === Qt.Key_Tab)
+                        root.setMode(root.modeIndex + 1);
+                    else if (ctrl && event.key === Qt.Key_Backtab)
+                        root.setMode(root.modeIndex - 1);
+                    else if (event.key === Qt.Key_Tab && root.cmdReady) {
+                        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy', "sh", Ai.cmdText]);
+                        Panels.close();
+                    } else if (event.key === Qt.Key_Tab)
+                        root.move(1);
+                    else if (event.key === Qt.Key_Backtab)
+                        root.move(-1);
+                    else if (ctrl && (event.key === Qt.Key_N || event.key === Qt.Key_J))
+                        root.move(1);
+                    else if (ctrl && (event.key === Qt.Key_P || event.key === Qt.Key_K))
+                        root.move(-1);
+                    else if (ctrl && event.key === Qt.Key_D && root.mode === ":" && root.clips[root.current])
+                        Clipboard.remove(root.clips[root.current]);
+                    else if (ctrl && event.key === Qt.Key_S && root.results[root.current])
+                        Apps.togglePin(root.results[root.current]);
+                    else if (ctrl && event.key === Qt.Key_O && root.results[root.current]) {
+                        const app = root.results[root.current];
+                        Apps.setOffline(app.isAction ? app.app.id : app.id, !Apps.isOffline(app));
+                    } else
+                        return;
+                    event.accepted = true;
+                }
+            }
+
+            Rule {
+                Layout.fillWidth: true
+            }
+
+            // what a prefixed command will do
+            Label {
+                visible: root.mode !== ""
+                Layout.fillWidth: true
+                Layout.topMargin: 2
+                Layout.bottomMargin: 2
+                elide: Text.ElideRight
+                text: {
+                    if (root.mode === "!")
+                        return root.arg ? `sh -c '${root.arg}'` : "run a shell command in the background";
+                    if (root.mode === ">")
+                        return root.arg ? `${Settings.terminal} ${root.arg}` : "run a command in a terminal";
+                    if (root.mode === "=")
+                        return root.calcResult ? `${/^[≈=]/.test(root.calcResult) ? "" : "= "}${root.calcResult}   (enter: copy)`
+                            : Apps.hasQalc ? "calculator: 2*(3+4) · 10 km to mi · 100 usd to eur · today + 3 weeks" : "calculator: 2*(3+4), 2^10, 15%4";
+                    if (root.mode === ":")
+                        return !Clipboard.available ? "clipboard history needs cliphist: sudo pacman -S cliphist"
+                            : `${root.clips.length} copied · enter: copy again · ctrl+d: forget`;
+                    if (root.mode === ";")
+                        return `${root.wins.length} window${root.wins.length === 1 ? "" : "s"} · enter: go there`;
+                    if (root.mode === ".")
+                        return Emoji.all.length === 0 ? "reading the emoji list..." : root.arg ? `${root.emojis.length} found · enter: copy${Emoji.canType ? " and type in" : ""}` : `yours first · english or russian: .heart .сердце · enter: copy${Emoji.canType ? " and type in" : ""}`;
+                    // only in "?" mode: just naming Ai here would load the whole ai service (and
+                    // all saved chats) on the first letter typed into the launcher
+                    if (root.mode === "?")
+                        return root.arg ? `ask ${Ai.modelName}: ${root.arg}` : "ask the ai";
+                    if (root.mode === "$") {
+                        if (!root.arg)
+                            return "say what you want done, the ai writes one command: $ the biggest files in my home";
+                        if (Ai.cmdBusy)
+                            return `~ ${Ai.modelName} is writing it...`;
+                        if (Ai.cmdFor === root.arg && Ai.cmdError)
+                            return `!! ${Ai.cmdError}`;
+                        return root.cmdReady ? `$ ${Ai.cmdText}` : `enter: ask ${Ai.modelName} for a command (it never runs by itself)`;
+                    }
+                    return "";
+                }
+                color: (root.mode === "=" && root.calcResult) || root.cmdReady ? Colors.accent : root.mode === "$" && root.arg && Ai.cmdError && Ai.cmdFor === root.arg ? Colors.warn : root.arg ? Colors.fg : Colors.dim
+            }
+
+            // $: what the command does, what to look out for, and what the keys do now
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: root.cmdReady
+                spacing: 2
+
+                Label {
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    wrapMode: Text.Wrap
+                    text: root.cmdReady ? Ai.cmdAbout : ""
+                    color: Colors.dim
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    readonly property var risks: root.cmdReady ? Ai.risks(Ai.cmdText) : []
+                    visible: risks.length > 0
+                    wrapMode: Text.Wrap
+                    text: `[!] careful: ${risks.join(", ")}. read it before you run it`
+                    color: Colors.warn
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: "enter: into > (the terminal) to look at and run · tab: copy · keep typing: ask again"
+                    color: Colors.dim
+                    font.pixelSize: Metrics.fontSize - 2
+                }
+            }
+
+            Label {
+                visible: (root.mode === "" && root.results.length === 0) || (root.mode === ":" && Clipboard.available && root.clips.length === 0) || (root.mode === ";" && root.wins.length === 0) || (root.mode === "." && Emoji.all.length > 0 && root.emojis.length === 0)
+                text: root.mode === ":" && !root.arg ? "-- nothing copied yet --" : root.mode === ";" && !root.arg ? "-- no windows --" : "-- no match --"
+                color: Colors.dim
+            }
+
+            // clipboard: [clear history] (second click: sure?)
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.mode === ":" && root.clips.length > 0
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                BracketButton {
+                    id: wipeButton
+
+                    property bool armed: false
+
+                    label: armed ? "sure? click again" : "clear history"
+                    textColor: Colors.warn
+                    bordered: false
+                    onClicked: {
+                        if (armed) {
+                            armed = false;
+                            Clipboard.wipe();
+                        } else {
+                            armed = true;
+                            wipeDisarm.restart();
+                        }
+                    }
+
+                    Timer {
+                        id: wipeDisarm
+
+                        interval: 3000
+                        onTriggered: wipeButton.armed = false
+                    }
+                }
+            }
+
+            // clipboard history: newest first
+            ListView {
+                id: clipList
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === ":" && count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.clips
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: clipRow
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+                    readonly property bool image: modelData.text.startsWith("[[ binary data")
+
+                    width: clipList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: clipRow.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: clipRow.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        Label {
+                            text: clipRow.image ? "img" : "txt"
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            // one line: newlines and tabs shown as spaces
+                            text: clipRow.modelData.text.replace(/\s+/g, " ")
+                            color: clipRow.selected ? Colors.accent : Colors.fg
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = clipRow.index
+                        onClicked: mouse => {
+                            root.current = clipRow.index;
+                            if (mouse.button === Qt.RightButton)
+                                Clipboard.remove(clipRow.modelData);
+                            else
+                                root.accept();
+                        }
+                    }
+                }
+            }
+
+            ListView {
+                id: list
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.results
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: entry
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+                    readonly property bool pinned: Apps.isPinned(modelData)
+
+                    width: list.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: entry.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: entry.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        AppIcon {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            icon: entry.modelData.icon
+                            name: entry.modelData.name
+                            colored: entry.selected
+                        }
+
+                        // the typed letters stand out
+                        Label {
+                            textFormat: Text.StyledText
+                            text: Apps.highlight(entry.modelData.name, root.query, entry.selected ? Colors.fg : Colors.accent)
+                            color: entry.selected ? Colors.accent : Colors.fg
+                        }
+
+                        Label {
+                            visible: entry.pinned
+                            text: "*"
+                            color: Colors.accent
+                        }
+
+                        // started without internet (ctrl+o)
+                        Label {
+                            visible: Apps.isOffline(entry.modelData)
+                            text: "no net"
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignRight
+                            elide: Text.ElideRight
+                            text: (entry.modelData.genericName || entry.modelData.comment || "").toLowerCase()
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        // not onEntered: that also fires when the list scrolls under a resting mouse
+                        onPositionChanged: root.current = entry.index
+                        onClicked: mouse => {
+                            root.current = entry.index;
+                            if (mouse.button === Qt.RightButton)
+                                Apps.togglePin(entry.modelData);
+                            else
+                                root.accept();
+                        }
+                    }
+                }
+            }
+
+            // open windows: > icon title                      ws 2 · firefox
+            ListView {
+                id: winList
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === ";" && count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.wins
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: win
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+                    readonly property string cls: modelData.lastIpcObject?.class ?? ""
+
+                    width: winList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: win.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: win.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        AppIcon {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            icon: DesktopEntries.heuristicLookup(win.cls)?.icon ?? ""
+                            name: win.cls || win.modelData.title || "?"
+                            colored: win.selected
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            text: win.modelData.title || win.cls
+                            color: win.selected ? Colors.accent : Colors.fg
+                        }
+
+                        Label {
+                            text: [win.modelData.workspace ? `ws ${win.modelData.workspace.id}` : "", win.cls.toLowerCase()].filter(s => s).join(" · ")
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = win.index
+                        onClicked: {
+                            root.current = win.index;
+                            root.accept();
+                        }
+                    }
+                }
+            }
+
+            // emoji: > 😀  grinning face                      широко улыбается
+            ListView {
+                id: emojiList
+
+                // the russian names next to the english ones on a russian (ukrainian...) system,
+                // or when that's what was typed; otherwise the other english names
+                readonly property bool cyrillic: /^(ru|uk|be)/.test(Qt.locale().name) || /[а-яёіїєґ]/i.test(root.arg)
+
+                Layout.fillWidth: true
+                implicitHeight: Math.min(count, root.maxRows) * root.rowHeight
+                visible: root.mode === "." && count > 0
+                clip: true
+                reuseItems: true
+                model: ScriptModel {
+                    values: root.emojis
+                }
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: Item {
+                    id: emo
+
+                    required property var modelData
+                    required property int index
+                    readonly property bool selected: index === root.current
+
+                    width: emojiList.width
+                    height: root.rowHeight
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: emo.selected
+                        color: Colors.hoverFill
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 2
+                        anchors.rightMargin: 4
+                        spacing: Metrics.spacing
+
+                        Label {
+                            text: emo.selected ? ">" : " "
+                            color: Colors.accent
+                        }
+
+                        Label {
+                            Layout.preferredWidth: Metrics.fontSize * 2
+                            horizontalAlignment: Text.AlignHCenter
+                            text: emo.modelData.e
+                            font.pixelSize: Metrics.fontSize + 4
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: emo.modelData.en
+                            color: emo.selected ? Colors.accent : Colors.fg
+                        }
+
+                        Label {
+                            Layout.maximumWidth: emojiList.width * 0.45
+                            elide: Text.ElideRight
+                            text: emojiList.cyrillic ? emo.modelData.ru : emo.modelData.other
+                            color: Colors.dim
+                            font.pixelSize: Metrics.fontSize - 2
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onPositionChanged: root.current = emo.index
+                        onClicked: {
+                            root.current = emo.index;
+                            root.accept();
+                        }
+                    }
+                }
+            }
+
+            Label {
+                Layout.alignment: Qt.AlignRight
+                text: root.mode === ":" ? "↑↓ select · enter copy · ctrl+d / rmb forget · ctrl+tab mode"
+                    : root.mode === ";" ? "↑↓ select · enter go to the window · ctrl+tab mode"
+                    : root.mode === "." ? "↑↓ select · enter copy · ctrl+tab mode"
+                    : root.mode === "$" ? "enter: write it · enter again: into the terminal · tab: copy · ctrl+tab mode"
+                    : root.expanded ? "↑↓ select · enter run · esc back"
+                    : ((root.results[root.current]?.actions?.length ?? 0) > 0 && !root.results[root.current]?.isAction ? "→ its actions · " : "") + "↑↓ select · enter run · ctrl+s / rmb pin (*) · ctrl+o no net · ctrl+tab mode"
+                color: Colors.dim
+                font.pixelSize: Metrics.fontSize - 3
+            }
+        }
+
+        // ---- the start menu: its sections on the left, the open one on the right ("apps" is
+        // the search above; only the open one exists), the power buttons along the bottom
+        MenuSections {
+            id: sections
+
+            visible: root.asMenu
+            x: Metrics.padding
+            y: box.contentTop + Metrics.padding
+            width: box.sectionsWidth
+            height: footer.y - Metrics.spacing - y
+            current: root.section
+            onPicked: name => root.section = name
+        }
+
+        Loader {
+            id: pane
+
+            x: sections.x + sections.width + Metrics.spacing
+            y: sections.y
+            width: box.width - x - Metrics.padding
+            height: sections.height
+            active: root.asMenu && root.section !== "apps"
+            visible: active
+            sourceComponent: root.section === "today" ? todayPane : root.section === "notes" ? notesPane : root.section === "system" ? systemPane : root.section === "desks" ? desksPane : profilePane
+        }
+
+        MenuFooter {
+            id: footer
+
+            visible: root.asMenu
+            x: Metrics.padding
+            y: box.height - Metrics.padding - height
+            width: box.width - Metrics.padding * 2
+        }
+
+        Component {
+            id: todayPane
+
+            MenuToday {}
+        }
+
+        Component {
+            id: notesPane
+
+            MenuNotes {}
+        }
+
+        Component {
+            id: systemPane
+
+            MenuSystem {}
+        }
+
+        Component {
+            id: desksPane
+
+            MenuDesks {
+                screen: root.forScreen
+            }
+        }
+
+        // the bar's [●] profile, whole: the quick switches, then its tabs (cfg: the settings)
+        Component {
+            id: profilePane
+
+            ProfileContent {
+                open: root.open
+                forScreen: root.forScreen
+                Component.onCompleted: show(root.section === "settings" ? "cfg" : "today")
+            }
+        }
+    }
+}
