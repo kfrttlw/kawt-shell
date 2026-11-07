@@ -1469,3 +1469,24 @@ function battery(level, charging) {
 function volume(level, muted) {
     return muted || level <= 0 ? "vol0" : level < 0.5 ? "vol1" : "vol2";
 }
+
+// a radio button, drawn: a sunk round field (dark edge on the top and the left, light below and
+// right), the dot when it's on
+function radioMap(on) {
+    var g = [];
+    for (var y = 0; y < 16; y++) {
+        var row = "";
+        for (var x = 0; x < 16; x++) {
+            var d = Math.sqrt((x + 0.5 - 8) * (x + 0.5 - 8) + (y + 0.5 - 8) * (y + 0.5 - 8));
+            var upper = x + y < 15;
+            var c = ".";
+            if (d <= 6.2)
+                c = d > 5.2 ? (upper ? "g" : "w") : d > 4.2 ? (upper ? "k" : "l") : on && d <= 2.2 ? "k" : "w";
+            row += c;
+        }
+        g.push(row);
+    }
+    return g;
+}
+icons.radioOff = radioMap(false);
+icons.radioOn = radioMap(true);
