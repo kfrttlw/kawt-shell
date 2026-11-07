@@ -201,9 +201,24 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", cmd]);
     }
 
-    // `>cmd` in the launcher: run in a terminal that stays open afterwards
+    // `>cmd` in the launcher (shift + enter on a command): run in a terminal that stays open
+    // afterwards
     function runInTerminal(cmd: string): void {
         Quickshell.execDetached([...terminalCmd(), "sh", "-c", `${cmd}; exec "\${SHELL:-sh}"`]);
+    }
+
+    // what was typed and run in the launcher or the start menu, newest first (the launcher's
+    // command mode lists it)
+    readonly property list<string> runs: adapter.runs
+
+    function remember(cmd: string): void {
+        cmd = cmd.trim();
+        if (cmd)
+            adapter.runs = [cmd, ...adapter.runs.filter(c => c !== cmd)].slice(0, 30);
+    }
+
+    function forget(cmd: string): void {
+        adapter.runs = adapter.runs.filter(c => c !== cmd);
     }
 
     function terminalCmd(): list<string> {
@@ -315,6 +330,7 @@ Singleton {
             property var counts: ({}) // desktop entry id -> launches
             property var pinned: [] // desktop entry ids, in dock order
             property var offline: [] // desktop entry ids started without internet
+            property var runs: [] // commands run from the launcher, newest first
         }
     }
 }

@@ -99,6 +99,7 @@ PanelWindow {
             Panels.toggleSidebar(forScreen);
             break;
         case "run":
+            Apps.remember(query.trim());
             Apps.run(query.trim());
             Panels.close();
             break;
