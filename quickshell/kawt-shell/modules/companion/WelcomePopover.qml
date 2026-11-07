@@ -4,24 +4,26 @@ import qs.config
 import qs.components
 import qs.services
 
-// ┌─hello: 1 / 6──────────────────────────────────esc┐
-// │  ░▒░   ┌──────────────────────────────────┐        │
-// │  ▒█▒   │ hi! I'm stripes, I live in kawt   │        │
-// │  ░█░   └──────────────────────────────────┘        │
-// │  super + space      apps                          │
-// │  ...                                               │
-// │  ■ ■ □ □ □ □                 [< back] [enter next] │
-// └────────────────────────────────────────────────────┘
+// ┌──────────────────────────────────────────────────┐
+// │ ≡ Welcome to kawt · 2 / 6                    ☑ On │
+// │ ┌──────┐  the keyboard does most things here       │
+// │ │ ░▒░  │  super+space   the run box               │
+// │ │ ▒█▒  │  super+d       the start menu            │
+// │ └──────┘  ...                                     │
+// │ ▮▮▯▯▯▯                    [< Back] [Next >] [Skip] │
+// └──────────────────────────────────────────────────┘
 // The first start: stripes says hello and shows the few things worth knowing, in six short
-// steps, in her language (english or russian, picked on the first one, with her name).
-// Once: closed or done, it's not shown again (Settings.welcomed); again from profile -> cfg -> kawt ->
-// [tour], or `qs -c kawt-shell ipc call kawt welcome`.
+// steps, like an old system's setup wizard, in her language (english or russian, picked on the
+// first one, with her name).
+// Once: closed or done, it's not shown again (Settings.welcomed); again from settings -> kawt ->
+// Tour, or `qs -c kawt-shell ipc call kawt welcome`.
 Popover {
     id: root
 
     name: "welcome"
-    title: `${ru ? ["привет", "клавиши", "вид", "ии", "я", "всё"][step] : ["hello", "keys", "look", "ai", "me", "that's all"][step]}: ${step + 1} / ${steps.length}`
-    cardWidth: 480
+    title: `${ru ? "Добро пожаловать в kawt" : "Welcome to kawt"} · ${step + 1} / ${steps.length}`
+    icon: "stripes"
+    cardWidth: 500
 
     readonly property bool ru: Companion.lang === "ru"
     property int step: 0
@@ -30,51 +32,53 @@ Popover {
     readonly property var steps: ru ? [
         { say: `привет! я ${Companion.name}, живу тут, в kawt. давай покажу, что где, это быстро`, anim: "", lines: [] },
         { say: "почти всё здесь делается с клавиатуры", anim: "type", lines: [
-            ["super + space", "программы"],
+            ["super + space", "запуск: программы, команды, примеры"],
+            ["super + d", "«Пуск», он же кнопка kawt на панели"],
             ["super + q / e / b", "терминал, файлы, браузер"],
-            ["super + d", "закреплённые программы"],
             ["super + /", "все клавиши, в любой момент"]] },
         { say: "сделай его своим", anim: "", lines: [
-            ["super + w", "обои и темы"],
+            ["super + w", "обои и тема"],
             ["super + shift + w", "тёмная <-> светлая"],
+            ["super + ,", "настройки: панель, экран, окна, звук"],
             ["", "тема красит всё: терминал, thunar, рамки окон"]] },
         { say: "маленький ии, весь на этом компьютере", anim: "think", lines: [
             ["super + a", "панель ии (ollama)"],
             ["super + alt + a", "про выделенный текст"],
             ["super + alt + v", "сказать голосом"]] },
         { say: "а это я", anim: "", lines: [
-            ["[≡] на панели", "я, мой вид и что я говорю"],
+            ["«Пуск» -> stripes", "я, мой вид и что я говорю"],
             ["пустой стол", "я там гуляю, а когда ничего не происходит, засыпаю"],
             ["super + h", "позвать меня, ещё раз: отпустить"],
-            ["", "не нужна? выключается в [≡] -> talk"]] },
+            ["", "не нужна? выключается флажком в моём окне"]] },
         { say: "вот и всё! удачи", anim: "dance", lines: [
-            ["профиль", "слева на панели: настройки (cfg), окна в своём размере"],
+            ["super + i", "«Сегодня»: задачи, заметки, фокус"],
             ["мониторы", "~/kawt/install.sh --monitors"],
-            ["ещё раз", "профиль -> cfg -> kawt -> [tour]"]] }
+            ["ещё раз", "настройки -> kawt -> «Знакомство»"]] }
     ] : [
         { say: `hi! I'm ${Companion.name}, I live here in kawt. let me show you around, it's quick`, anim: "", lines: [] },
         { say: "the keyboard does most things here", anim: "type", lines: [
-            ["super + space", "apps"],
+            ["super + space", "the run box: apps, commands, sums"],
+            ["super + d", "the start menu, the kawt button in the bar"],
             ["super + q / e / b", "terminal, files, browser"],
-            ["super + d", "pinned apps"],
             ["super + /", "every key, any time"]] },
         { say: "make it yours", anim: "", lines: [
-            ["super + w", "wallpapers and themes"],
+            ["super + w", "wallpaper and theme"],
             ["super + shift + w", "dark <-> light"],
+            ["super + ,", "settings: the bar, the screen, windows, sound"],
             ["", "the theme colors it all: the terminal, thunar, the borders"]] },
         { say: "a little ai, all on this machine", anim: "think", lines: [
             ["super + a", "the ai panel (ollama)"],
             ["super + alt + a", "on the text you marked"],
             ["super + alt + v", "speak to it"]] },
         { say: "and this is me", anim: "", lines: [
-            ["[≡] in the bar", "me, my look and what I say"],
+            ["start -> stripes", "me, my look and what I say"],
             ["an empty desktop", "I walk about there, and fall asleep when nothing happens"],
             ["super + h", "call me, again: let me go"],
-            ["", "don't want me? off in [≡] -> talk"]] },
+            ["", "don't want me? the switch in my window turns me off"]] },
         { say: "that's all! have fun", anim: "dance", lines: [
-            ["the profile", "left in the bar: settings (cfg), windows at their own size"],
+            ["super + i", "today: tasks, notes, the focus timer"],
             ["monitors", "~/kawt/install.sh --monitors"],
-            ["this again", "profile -> cfg -> kawt -> [tour]"]] }
+            ["this again", "settings -> kawt -> Tour"]] }
     ]
     readonly property var now: steps[step]
     readonly property bool last: step === steps.length - 1
@@ -113,103 +117,118 @@ Popover {
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: Metrics.spacing * 2
+        spacing: Metrics.padding
 
-        Her {
-            id: her
-
-            Layout.alignment: Qt.AlignTop
-            size: Math.round(120 * Metrics.scale)
-            forScreen: root.forScreen
-            origin: Qt.point(root.margins.left, Metrics.barBottom ? root.forScreen.height - root.margins.bottom - root.height : root.margins.top)
-            anim: root.now.anim
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Companion.talkNow()
-            }
-        }
-
-        // what she says, in a box
+        // her, sunk on the left, as a wizard's picture
         Rectangle {
+            Layout.alignment: Qt.AlignTop
+            implicitWidth: her.width + 8
+            implicitHeight: Math.max(her.height + 8, Math.round(170 * Metrics.scale))
+            color: Colors.well
+            clip: true
+
+            Bevel {
+                style: "sunk"
+            }
+
+            Her {
+                id: her
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 4
+                size: Math.round(120 * Metrics.scale)
+                forScreen: root.forScreen
+                origin: Qt.point(root.margins.left, Metrics.barBottom ? root.forScreen.height - root.margins.bottom - root.height : root.margins.top)
+                anim: root.now.anim
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Companion.talkNow()
+                }
+            }
+        }
+
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            implicitHeight: said.implicitHeight + Metrics.spacing * 2
-            color: Colors.hoverFill
-            border.color: Colors.border
-            border.width: Metrics.borderWidth
+            Layout.alignment: Qt.AlignTop
+            spacing: 4
 
-            Label {
-                id: said
-
-                anchors.fill: parent
-                anchors.margins: Metrics.spacing
-                wrapMode: Text.Wrap
-                text: root.now.say
-            }
-        }
-    }
-
-    // the first step: his language and his name
-    RowLayout {
-        visible: root.step === 0
-        spacing: 0
-
-        Label {
-            text: root.ru ? "говорит " : "speaks "
-            color: Colors.dim
-        }
-
-        Repeater {
-            model: [["en", "english"], ["ru", "русский"]]
-
-            BracketButton {
-                required property var modelData
-
-                label: modelData[1]
-                active: Companion.lang === modelData[0]
-                textColor: Companion.lang === modelData[0] ? Colors.accent : Colors.dim
-                bordered: false
-                onClicked: Settings.companionLang = modelData[0]
-            }
-        }
-    }
-
-    TermInput {
-        Layout.fillWidth: true
-        visible: root.step === 0
-        prompt: root.ru ? "имя>" : "name>"
-        placeholder: root.ru ? "stripes (или своё, enter)" : "stripes (or one of yours, enter)"
-        Component.onCompleted: text = Settings.companionName
-        onAccepted: t => {
-            Settings.companionName = t.trim().slice(0, 24);
-            root.go(1);
-        }
-    }
-
-    //  super + space      apps
-    Repeater {
-        model: root.now.lines
-
-        RowLayout {
-            required property var modelData
-
-            Layout.fillWidth: true
-            spacing: Metrics.spacing
-
-            Label {
-                Layout.preferredWidth: Math.round(150 * Metrics.scale)
-                visible: modelData[0] !== ""
-                text: modelData[0]
-                color: Colors.accent
-            }
-
+            // what she says
             Label {
                 Layout.fillWidth: true
+                Layout.bottomMargin: 4
                 wrapMode: Text.Wrap
-                text: modelData[1]
-                color: modelData[0] !== "" ? Colors.fg : Colors.dim
+                text: root.now.say
+                font.pixelSize: Metrics.size(2)
+            }
+
+            // the first step: her language and her name
+            Group {
+                visible: root.step === 0
+                title: root.ru ? "Говорит" : "She speaks"
+
+                Repeater {
+                    model: [["en", "English"], ["ru", "Русский"]]
+
+                    Check {
+                        required property var modelData
+
+                        radio: true
+                        text: modelData[1]
+                        checked: Companion.lang === modelData[0]
+                        onToggled: Settings.companionLang = modelData[0]
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.step === 0
+                spacing: 6
+
+                Label {
+                    text: root.ru ? "Имя:" : "Name:"
+                }
+
+                TermInput {
+                    Layout.fillWidth: true
+                    prompt: ""
+                    placeholder: root.ru ? "stripes (или своё, enter)" : "stripes (or one of yours, enter)"
+                    Component.onCompleted: text = Settings.companionName
+                    onAccepted: t => {
+                        Settings.companionName = t.trim().slice(0, 24);
+                        root.go(1);
+                    }
+                }
+            }
+
+            //  super + space      the run box
+            Repeater {
+                model: root.now.lines
+
+                RowLayout {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    spacing: Metrics.spacing
+
+                    Label {
+                        Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 18)
+                        Layout.alignment: Qt.AlignTop
+                        visible: modelData[0] !== ""
+                        text: modelData[0]
+                        color: Colors.accent
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        text: modelData[1]
+                        color: modelData[0] !== "" ? Colors.fg : Colors.dim
+                    }
+                }
             }
         }
     }
@@ -217,22 +236,33 @@ Popover {
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: Metrics.spacing
-        spacing: Metrics.spacing
+        spacing: 6
 
-        // ■ ■ □ □ □ □: where you are; a click goes there
-        Repeater {
-            model: root.steps.length
+        // where you are: a block a step, the done ones red; a click goes there
+        Row {
+            spacing: 2
 
-            Label {
-                required property int index
+            Repeater {
+                model: root.steps.length
 
-                text: index <= root.step ? "■" : "□"
-                color: index === root.step ? Colors.accent : Colors.dim
+                Rectangle {
+                    required property int index
 
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.step = index
+                    width: 8
+                    height: 12
+                    color: index <= root.step ? Colors.accent : Colors.well
+
+                    Bevel {
+                        visible: index > root.step
+                        style: "sunk"
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -2
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.step = index
+                    }
                 }
             }
         }
@@ -241,26 +271,22 @@ Popover {
             Layout.fillWidth: true
         }
 
-        BracketButton {
-            visible: root.step > 0
-            tag: "<"
-            label: root.ru ? "назад" : "back"
+        PushButton {
+            enabled: root.step > 0
+            text: root.ru ? "< Назад" : "< Back"
             onClicked: root.go(-1)
         }
 
-        BracketButton {
-            visible: !root.last
-            tag: "esc"
-            label: root.ru ? "пропустить" : "skip"
-            textColor: Colors.dim
-            onClicked: root.done()
+        PushButton {
+            text: root.last ? (root.ru ? "Готово" : "Finish") : (root.ru ? "Дальше >" : "Next >")
+            isDefault: true
+            onClicked: root.last ? root.done() : root.go(1)
         }
 
-        BracketButton {
-            tag: "enter"
-            label: root.last ? (root.ru ? "готово" : "done") : (root.ru ? "дальше" : "next")
-            textColor: Colors.accent
-            onClicked: root.last ? root.done() : root.go(1)
+        PushButton {
+            visible: !root.last
+            text: root.ru ? "Пропустить" : "Skip"
+            onClicked: root.done()
         }
     }
 }
