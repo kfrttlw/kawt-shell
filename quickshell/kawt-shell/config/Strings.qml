@@ -430,7 +430,9 @@ Singleton {
         drawnBy: "Drawn by",
         transitionWord: "how it changes:",
         styleKeys: "keys: arrows pick · enter sets · r random · t dark / light · esc puts back what was on",
-        applyWord: "Apply"
+        applyWord: "Apply",
+        wallOnNow: "on now",
+        wallApplyToSet: "Apply sets it"
     })
 
     readonly property var ruWords: ({
@@ -839,6 +841,8 @@ Singleton {
         drawnBy: "Кто рисует",
         transitionWord: "как сменяются:",
         styleKeys: "клавиши: стрелки — выбрать · enter — поставить · r — случайные · t — светлая / тёмная · esc — вернуть как было",
-        applyWord: "Применить"
+        applyWord: "Применить",
+        wallOnNow: "стоят сейчас",
+        wallApplyToSet: "«Применить» — поставить"
     })
 }
