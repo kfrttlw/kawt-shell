@@ -208,10 +208,11 @@ Singleton {
     // from the theme's own colors, so every theme has them, yours and the wallpaper's too;
     // themes.json may still give face, hi and lo itself. Dark or light by the background, not by
     // the variant: a theme of your own may be black in both
-    readonly property bool bevel: Settings.frames !== "flat"
+    // the flat look went with kawt 98: an old "frames": "flat" in settings.json is left alone
+    readonly property bool bevel: true
     // [ ] around what you can press (components/Bracket.qml): not with raised frames, a button's
     // own edge says it there
-    readonly property bool brackets: Settings.brackets && !bevel
+    readonly property bool brackets: false
     readonly property bool darkBg: luminance(bg) < 0.25
     readonly property color white: "#ffffff"
     readonly property color black: "#000000"

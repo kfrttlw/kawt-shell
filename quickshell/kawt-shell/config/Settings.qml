@@ -99,6 +99,8 @@ Singleton {
     property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
     property alias companion: adapter.companion
+    property alias micAlways: adapter.micAlways
+    property alias btAlways: adapter.btAlways
     property alias companionMode: adapter.companionMode
     property alias companionLook: adapter.companionLook
     property alias companionName: adapter.companionName
@@ -263,6 +265,8 @@ Singleton {
             property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's [tile] / [float], super + ctrl + v; services/Hypr.qml)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // the companion, stripes (services/Companion.qml): [≡] in the bar is her window
+            property bool micAlways: false // the mic in the tray even while nothing listens (modules/bar/MicButton.qml)
+            property bool btAlways: false // bluetooth in the tray even with nothing connected (modules/bar/BtButton.qml)
             property bool companion: true // off: no walks, no peeks, nothing runs for her
             property string companionMode: "walk" // "walk" (an empty desktop is hers) | "home" (she keeps off it)
             property string companionLook: "mood" // "mood" (she picks) | "red" | "ink" | "stripes"

@@ -14,7 +14,7 @@ BarIcon {
     readonly property var connected: Bluetooth.devices.values.filter(d => d.connected)
     property bool hardware: false
 
-    visible: Settings.barShows("bt") && adapter !== null && connected.length > 0
+    visible: Settings.barShows("bt") && (adapter !== null || hardware) && (connected.length > 0 || Settings.btAlways)
     // only with a device connected: the bluetooth panel is in the start menu's system otherwise
     icon: "bt"
     tip: connected.length === 0 ? Strings.t("bluetooth") : `${Strings.t("bluetooth")}: ${connected.map(d => d.name + (d.batteryAvailable ? ` ${Math.round(d.battery * 100)}%` : "")).join(", ")}`

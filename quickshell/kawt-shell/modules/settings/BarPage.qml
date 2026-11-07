@@ -110,8 +110,8 @@ ColumnLayout {
                     ["log", "bellDot", "notifs", ""],
                     ["kb", "", "layoutOpt", "ifMore"],
                     ["br", "sun", "brightness", "ifCan"],
-                    ["mic", "mic", "micOpt", "whileUsed"],
-                    ["bt", "bt", "bluetooth", "whileConnected"],
+                    ["mic", "mic", "micAlwaysOpt", "whileUsed"],
+                    ["bt", "bt", "btAlwaysOpt", "whileConnected"],
                     ["player", "note", "musicOpt", "whilePlays"],
                     ["tray", "", "appIcons", "behindArrow"],
                     ["clock", "", "clockOpt", ""],
@@ -120,14 +120,21 @@ ColumnLayout {
 
                 Check {
                     required property var modelData
+                    // the mic and bluetooth come by themselves; ticked, they stay
+                    readonly property string always: modelData[0] === "mic" ? "micAlways" : modelData[0] === "bt" ? "btAlways" : ""
 
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     icon: modelData[1]
                     text: Strings.t(modelData[2])
                     note: modelData[3] ? Strings.t(modelData[3]) : ""
-                    checked: Settings.barShows(modelData[0])
-                    onToggled: Settings.toggleBar(modelData[0])
+                    checked: always ? Settings[always] : Settings.barShows(modelData[0])
+                    onToggled: {
+                        if (always)
+                            Settings[always] = !Settings[always];
+                        else
+                            Settings.toggleBar(modelData[0]);
+                    }
                 }
             }
         }
