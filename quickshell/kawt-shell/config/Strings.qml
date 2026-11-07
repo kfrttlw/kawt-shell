@@ -17,6 +17,17 @@ Singleton {
         return d[key] ?? enWords[key] ?? ruWords[key] ?? key;
     }
 
+    // "4 days", "4 дня": n and its word in the form it takes (russian has three: one, few,
+    // many; the words are key_one, key_few, key_many)
+    function count(n: int, key: string): string {
+        let form = n === 1 ? "one" : "many";
+        if (ru) {
+            const a = n % 10, b = n % 100;
+            form = a === 1 && b !== 11 ? "one" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "few" : "many";
+        }
+        return `${n} ${t(`${key}_${form}`)}`;
+    }
+
     readonly property var enWords: ({
         start: "kawt",
         startTip: "Programs, Today, settings, shutdown",
@@ -238,7 +249,41 @@ Singleton {
         sleepNote: "the screen locks before it sleeps",
         shuttingDown: "Shutting down in %1 s…",
         rebooting: "Restarting in %1 s…",
-        loggingOut: "Logging out in %1 s…"
+        loggingOut: "Logging out in %1 s…",
+        tab_today: "Today",
+        tab_todo: "Tasks",
+        tab_notes: "Notes",
+        tab_focus: "Focus",
+        tab_sys: "Machine",
+        tab_top: "Processes",
+        tab_net: "Network",
+        tab_power: "Power",
+        doneOf: "%1 of %2 done",
+        focusRounds: "focus: %1",
+        todayKeys: "n — new · x — done",
+        memory: "memory",
+        upFor: "up",
+        round_one: "round",
+        round_many: "rounds",
+        day_one: "day",
+        day_many: "days",
+        todayList: "tasks for today",
+        nOfM: "%1 of %2",
+        freeDay: "a free day",
+        newTask: "new: “14:30 call mom !!”",
+        breakTime: "Break",
+        focusNothing: "nothing in particular",
+        focusStart: "Start",
+        focusOnTask: "On a task…",
+        focusStop: "Stop",
+        focusPaused: "paused",
+        focusGoal: "today %1 of %2",
+        weekWord: "week",
+        streakIs: "streak: %1",
+        inMin: "%1m",
+        inHours: "%1h",
+        inHoursMin: "%1h %2m",
+        inDays: "%1d"
     })
 
     readonly property var ruWords: ({
@@ -462,6 +507,42 @@ Singleton {
         sleepNote: "экран заблокируется до сна",
         shuttingDown: "Выключение через %1 с…",
         rebooting: "Перезагрузка через %1 с…",
-        loggingOut: "Выход через %1 с…"
+        loggingOut: "Выход через %1 с…",
+        tab_today: "Сегодня",
+        tab_todo: "Задачи",
+        tab_notes: "Заметки",
+        tab_focus: "Фокус",
+        tab_sys: "Машина",
+        tab_top: "Процессы",
+        tab_net: "Сеть",
+        tab_power: "Питание",
+        doneOf: "%1 из %2 сделано",
+        focusRounds: "фокус: %1",
+        todayKeys: "n — новая · x — готово",
+        memory: "память",
+        upFor: "работает",
+        round_one: "раунд",
+        round_few: "раунда",
+        round_many: "раундов",
+        day_one: "день",
+        day_few: "дня",
+        day_many: "дней",
+        todayList: "задачи на сегодня",
+        nOfM: "%1 из %2",
+        freeDay: "свободный день",
+        newTask: "новая: «14:30 позвонить маме !!»",
+        breakTime: "Перерыв",
+        focusNothing: "ни над чем особенным",
+        focusStart: "Старт",
+        focusOnTask: "На задачу…",
+        focusStop: "Стоп",
+        focusPaused: "пауза",
+        focusGoal: "сегодня %1 из %2",
+        weekWord: "неделя",
+        streakIs: "серия: %1",
+        inMin: "%1 мин",
+        inHours: "%1 ч",
+        inHoursMin: "%1 ч %2 мин",
+        inDays: "%1 д"
     })
 }

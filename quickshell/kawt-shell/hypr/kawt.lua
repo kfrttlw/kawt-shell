@@ -114,6 +114,23 @@ try("layer rule", function()
     })
 end)
 
+-- kawt's own windows (today, system: components/AppWindow.qml) float in the middle at the size
+-- they ask for, and draw their own frame: no border, rounding, blur or shadow from hyprland.
+-- One try each: a name this hyprland doesn't know leaves the others working
+local kawt_windows = { class = "^(org.quickshell)$" }
+try("kawt windows", function()
+    hl.window_rule({ match = kawt_windows, float = true, center = true })
+end)
+try("kawt windows: no border", function()
+    hl.window_rule({ match = kawt_windows, border_size = 0, rounding = 0 })
+end)
+try("kawt windows: no blur", function()
+    hl.window_rule({ match = kawt_windows, no_blur = true })
+end)
+try("kawt windows: no shadow", function()
+    hl.window_rule({ match = kawt_windows, no_shadow = true })
+end)
+
 -- Apps you picked in profile -> cfg -> windows: floating from the start, in the middle, at the
 -- size the app asks for (not stretched by the layout). kawt writes the list; none yet: nothing
 -- what kawt writes for windows (profile -> cfg -> windows, the bar's [tile] / [float]): read once,

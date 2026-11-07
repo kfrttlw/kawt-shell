@@ -8,7 +8,8 @@ import qs.config
 // Which popover / sidebar is open, and on which screen.
 // Only one popover can be open at a time; the sidebar is independent.
 //
-//   qs -c kawt-shell ipc call kawt toggle launcher|menu|dock|style|tray|profile|dashboard|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
+//   qs -c kawt-shell ipc call kawt toggle launcher|menu|style|tray|today|system|settings|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
+//   qs -c kawt-shell ipc call kawt window today|system <tab>   (today todo notes focus · sys top net power)
 //   qs -c kawt-shell ipc call kawt sidebar
 //   qs -c kawt-shell ipc call kawt run | clipboard
 //   qs -c kawt-shell ipc call kawt lock | lockTest | suspend   (suspend: locks first, then sleeps)
@@ -36,7 +37,11 @@ Singleton {
 
     property string current: ""
     property string settingsPage: "" // the settings window opens at this page ("bar", "screen"...; modules/settings)
-    property string dashboardTab: "" // the profile opens at this tab ("sys": system; modules/profile/Dashboard.qml)
+    // kawt's own windows (components/AppWindow.qml), open beside the panels: a panel opening
+    // doesn't close them. The tab each opens at next ("" = the one it had)
+    property var windows: ({}) // "today" | "system" -> true while it's open
+    property string todayTab: ""
+    property string systemTab: ""
     property string launcherPrefix: "" // the launcher opens with this typed in ("!" = run mode)
     property int aiTab: 0 // the ai panel's open tab: 0 chat, 1 chats, 2 models, 3 cfg
     property bool locked: false // modules/lock: the session lock screen
@@ -66,6 +71,39 @@ Singleton {
 
     function close(): void {
         current = "";
+    }
+
+    function isWindowOpen(name: string): bool {
+        return windows[name] === true;
+    }
+
+    // opened (at `tab`, if one's given), or closed if it's open and no tab was asked for
+    function toggleWindow(name: string, tab: string): void {
+        if (isWindowOpen(name) && !tab) {
+            closeWindow(name);
+            return;
+        }
+        if (name === "today")
+            todayTab = tab;
+        else if (name === "system")
+            systemTab = tab;
+        current = ""; // the menu it was opened from
+        windows = Object.assign({}, windows, { [name]: true });
+    }
+
+    // the taskbar's icon for one of them, by its title ("" for any other app's window)
+    function windowIcon(cls: string, title: string): string {
+        if (cls !== "org.quickshell")
+            return "";
+        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : "logo";
+    }
+
+    function closeWindow(name: string): void {
+        if (!isWindowOpen(name))
+            return;
+        const w = Object.assign({}, windows);
+        delete w[name];
+        windows = w;
     }
 
     // open the launcher with a mode prefix typed in, or close it if it's open
@@ -121,13 +159,17 @@ Singleton {
         target: "kawt"
 
         function toggle(name: string): void {
-            // old names and the new homes: the pinned apps are the start menu's now; settings and
-            // system are the profile at those tabs
+            // old names and the new homes: the pinned apps are the start menu's now; the profile
+            // is the today window, system its own
             if (name === "dock")
                 name = "menu";
+            if (name === "dashboard" || name === "profile" || name === "today") {
+                root.toggleWindow("today", "");
+                return;
+            }
             if (name === "system") {
-                root.dashboardTab = "sys";
-                name = "dashboard";
+                root.toggleWindow("system", "");
+                return;
             }
             if (root.current === name && root.screen === root.focusedScreen) {
                 root.close();
@@ -140,6 +182,11 @@ Singleton {
         function close(): void {
             root.close();
             root.sidebarOpen = false;
+        }
+
+        // one of kawt's windows at a tab: window today todo · window system net
+        function window(name: string, tab: string): void {
+            root.toggleWindow(name === "dashboard" || name === "profile" ? "today" : name, tab || (name === "system" ? "sys" : "today"));
         }
 
         // win+r: the launcher straight in run mode, like the Windows "Run" box

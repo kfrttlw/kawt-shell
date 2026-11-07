@@ -11,7 +11,7 @@ Singleton {
 
     // polls only while something shows it: the profile, the dashboard, the start menu, the lock screen
     // (the lock screen shows the heat too, but not once its picture is off: services/Idle.qml)
-    readonly property bool active: Panels.current === "profile" || Panels.current === "dashboard" || Panels.current === "power" || Panels.current === "menu" || (Panels.locked && !Idle.screenOff)
+    readonly property bool active: Panels.isWindowOpen("today") || Panels.isWindowOpen("system") || Panels.current === "power" || Panels.current === "menu" || (Panels.locked && !Idle.screenOff)
 
     readonly property string user: Quickshell.env("USER") ?? "user"
     property string host: ""

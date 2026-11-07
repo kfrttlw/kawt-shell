@@ -7,14 +7,18 @@ import qs.components
 import qs.services
 import "../popovers"
 
-// Everything inside the profile: tabs sys / top / todo / notes / cfg.
-// Used by the small popover under [●] and by the full-screen dashboard (super + i).
+// What's inside kawt's two windows, by tabs: today (super + i) has today / todo / notes /
+// focus, system has machine / processes / net / power (TodayWindow.qml, SystemWindow.qml).
+// The tabs keep what they share here: the opened task and note, the power buttons' second click.
 ColumnLayout {
     id: root
 
     property bool open: false
     property ShellScreen forScreen: null
-    property bool wide: false // the dashboard: more room, so cards sit side by side
+    property bool wide: true // room for cards side by side
+    // the tabs, by name: show("focus")
+    property list<string> tabNames: ["today", "todo", "notes", "focus"]
+    readonly property string shown: tabNames[tabs.current] ?? ""
 
     spacing: Metrics.spacing
 
@@ -36,10 +40,10 @@ ColumnLayout {
     function until(ms: real): string {
         const m = Math.max(0, Math.round((ms - Time.now.getTime()) / 60000));
         if (m < 60)
-            return `${m}m`;
+            return Strings.t("inMin").arg(m);
         if (m < 1440)
-            return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
-        return `${Math.floor(m / 1440)}d`;
+            return m % 60 ? Strings.t("inHoursMin").arg(Math.floor(m / 60)).arg(m % 60) : Strings.t("inHours").arg(m / 60);
+        return Strings.t("inDays").arg(Math.floor(m / 1440));
     }
 
     OpenWatch {
@@ -107,9 +111,6 @@ ColumnLayout {
         onTriggered: root.armed = ""
     }
 
-    // the tabs, by name: show("focus"), and the task opened in todo
-    readonly property list<string> tabNames: ["today", "todo", "notes", "focus", "sys", "top"]
-
     function show(name: string): void {
         tabs.current = Math.max(0, tabNames.indexOf(name));
     }
@@ -120,26 +121,17 @@ ColumnLayout {
         show("todo");
     }
 
-    // [wifi] [bt] [dnd] [night] [caf] [mic]          bat 72% ▮▮▮▮▮▮▮▯▯▯
-    QuickSwitches {
-        Layout.fillWidth: true
-    }
-
-    Rule {
-        Layout.fillWidth: true
-    }
-
     Tabs {
         id: tabs
 
-        tabs: root.tabNames
+        tabs: root.tabNames.map(n => Strings.t(`tab_${n}`))
     }
 
     // the process list is only sampled while its tab is on screen
     Binding {
         target: SysInfo
         property: "topActive"
-        value: tabs.current === root.tabNames.indexOf("top")
+        value: root.shown === "top"
         when: root.open
     }
 
@@ -150,7 +142,7 @@ ColumnLayout {
         required property string name
 
         Layout.fillWidth: true
-        active: tabs.current === root.tabNames.indexOf(name)
+        active: root.shown === name
         visible: active
     }
 
@@ -202,7 +194,29 @@ ColumnLayout {
         sourceComponent: Component {
             SysTab {
                 profile: root
+                part: "main"
             }
+        }
+    }
+
+    Page {
+        name: "power"
+
+        sourceComponent: Component {
+            SysTab {
+                profile: root
+                part: "power"
+            }
+        }
+    }
+
+    // who's on the net: the wifi panel's second page, here with room
+    Page {
+        name: "net"
+        Layout.topMargin: Metrics.spacing
+
+        sourceComponent: Component {
+            WhoOut {}
         }
     }
 

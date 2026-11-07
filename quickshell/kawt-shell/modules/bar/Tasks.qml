@@ -77,6 +77,7 @@ Item {
 
                 required property var modelData
                 readonly property string cls: root.clsOf(modelData)
+                readonly property string kawtIcon: Panels.windowIcon(cls, modelData.title ?? "")
                 readonly property bool focused: Hyprland.activeToplevel === modelData
                 readonly property bool isAway: Hypr.isAway(modelData)
                 readonly property bool urgent: root.isUrgent(modelData) && !focused
@@ -90,7 +91,16 @@ Item {
                 spacing: 4
                 onClicked: root.press(modelData)
 
+                // kawt's own windows (today, system): their pixel icon
+                PixIcon {
+                    visible: task.kawtIcon !== ""
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: task.kawtIcon
+                    ink: task.isAway ? Colors.dim : "transparent"
+                }
+
                 AppIcon {
+                    visible: task.kawtIcon === ""
                     anchors.verticalCenter: parent.verticalCenter
                     width: 16
                     height: 16
