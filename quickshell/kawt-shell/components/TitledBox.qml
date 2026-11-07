@@ -49,16 +49,25 @@ Rectangle {
         y: 3
         width: parent.width - 6
         height: root.barHeight
-        color: root.focused ? Colors.accent : Colors.titleOff
+        color: root.focused ? Colors.title : Colors.titleOff
+
+        // kawt's red striped block on every title
+        PixIcon {
+            id: titleLogo
+
+            x: 3
+            anchors.verticalCenter: parent.verticalCenter
+            name: "logo"
+        }
 
         Label {
-            anchors.left: parent.left
-            anchors.leftMargin: Metrics.spacing
+            anchors.left: titleLogo.right
+            anchors.leftMargin: 4
             anchors.right: barHint.left
             anchors.rightMargin: Metrics.spacing
             anchors.verticalCenter: parent.verticalCenter
             text: root.title
-            color: root.focused ? Colors.onAccent : Colors.titleOffText
+            color: root.focused ? Colors.titleInk : Colors.titleOffText
             font.bold: !Metrics.pixel
             elide: Text.ElideRight
         }
@@ -70,7 +79,7 @@ Rectangle {
             anchors.rightMargin: Metrics.spacing
             anchors.verticalCenter: parent.verticalCenter
             text: root.hint
-            color: root.focused ? Colors.onAccent : Colors.titleOffText
+            color: root.focused ? Colors.titleInk : Colors.titleOffText
             opacity: 0.8
             font.pixelSize: Metrics.size(-2)
         }

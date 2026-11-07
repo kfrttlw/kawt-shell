@@ -98,7 +98,8 @@ ColumnLayout {
             BracketButton {
                 label: "-"
                 bordered: false
-                onClicked: Settings.fontSize = Math.max(9, Metrics.fontSize - 1)
+                // the pixel font is sharp at 11 and 22 only
+                onClicked: Settings.fontSize = Metrics.pixel ? 11 : Math.max(9, Metrics.fontSize - 1)
             }
 
             Label {
@@ -108,19 +109,22 @@ ColumnLayout {
             BracketButton {
                 label: "+"
                 bordered: false
-                onClicked: Settings.fontSize = Math.min(28, Metrics.fontSize + 1)
+                onClicked: Settings.fontSize = Metrics.pixel ? 22 : Math.min(28, Metrics.fontSize + 1)
             }
 
-            // the two kawt knows, the ones installed (ibm plex mono is kawt's own)
+            // kawt's own pixel font (fonts/, always there), and the ones kawt knows, if installed
             Repeater {
-                model: [["BlexMono Nerd Font Mono", "plex"], ["JetBrainsMono Nerd Font Mono", "jetbrains"]].filter(f => Metrics.installed.includes(f[0]))
+                model: [["Departure Mono", "departure"], ["BlexMono Nerd Font Mono", "plex"], ["JetBrainsMono Nerd Font Mono", "jetbrains"]].filter(f => f[0] === "Departure Mono" || Metrics.installed.includes(f[0]))
 
                 BracketButton {
                     required property var modelData
 
                     label: modelData[1]
-                    textColor: Metrics.fontFamily === modelData[0] ? Colors.accent : Colors.dim
-                    onClicked: Settings.fontFamily = modelData[0]
+                    textColor: Settings.fontFamily === modelData[0] ? Colors.accent : Colors.dim
+                    onClicked: {
+                        Settings.fontFamily = modelData[0];
+                        Settings.fontSize = modelData[0] === "Departure Mono" ? 11 : 13;
+                    }
                 }
             }
 
@@ -131,6 +135,28 @@ ColumnLayout {
                 text: Settings.fontFamily
                 placeholder: "a monospace font, as fc-list calls it"
                 onAccepted: t => Settings.fontFamily = t.trim() || "BlexMono Nerd Font Mono"
+            }
+        }
+
+        // kawt's words: the system's language, or russian / english (config/Strings.qml)
+        RowLayout {
+            spacing: Metrics.spacing
+
+            Label {
+                text: Strings.ru ? "язык:" : "language:"
+                color: Colors.dim
+            }
+
+            Repeater {
+                model: [["", Strings.ru ? "как в системе" : "system"], ["ru", "русский"], ["en", "english"]]
+
+                BracketButton {
+                    required property var modelData
+
+                    label: modelData[1]
+                    textColor: Settings.language === modelData[0] ? Colors.accent : Colors.dim
+                    onClicked: Settings.language = modelData[0]
+                }
             }
         }
 
