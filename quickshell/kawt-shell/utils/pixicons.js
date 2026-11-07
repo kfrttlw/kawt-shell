@@ -1490,3 +1490,40 @@ function radioMap(on) {
 }
 icons.radioOff = radioMap(false);
 icons.radioOn = radioMap(true);
+
+// a check box, drawn: a sunk square field, the tick when it's on
+function boxMap(on) {
+    var tick = {};
+    for (var i = 0; i < 3; i++) {
+        tick[(4 + i) + "," + (7 + i)] = 1;
+        tick[(4 + i) + "," + (8 + i)] = 1;
+    }
+    for (var j = 0; j < 5; j++) {
+        tick[(6 + j) + "," + (9 - j)] = 1;
+        tick[(6 + j) + "," + (10 - j)] = 1;
+    }
+    var g = [];
+    for (var y = 0; y < 16; y++) {
+        var row = "";
+        for (var x = 0; x < 16; x++) {
+            var c = ".";
+            if (x >= 1 && x <= 13 && y >= 1 && y <= 13) {
+                if (x === 1 || y === 1)
+                    c = x === 13 || y === 13 ? "w" : "g";
+                else if (x === 13 || y === 13)
+                    c = "w";
+                else if (x === 2 || y === 2)
+                    c = x === 12 || y === 12 ? "l" : "k";
+                else if (x === 12 || y === 12)
+                    c = "l";
+                else
+                    c = on && tick[x + "," + y] ? "k" : "w";
+            }
+            row += c;
+        }
+        g.push(row);
+    }
+    return g;
+}
+icons.boxOff = boxMap(false);
+icons.boxOn = boxMap(true);
