@@ -19,6 +19,7 @@ import "../help"
 import "../shot"
 import "../companion"
 import "../settings"
+import "../desktop"
 
 Variants {
     model: Quickshell.screens
@@ -436,6 +437,15 @@ Variants {
             WelcomePopover {
                 forScreen: root.modelData
                 barWindow: root
+            }
+        }
+
+        // the files on the desktop, on the main screen (the one at 0, 0): under stripes, made first
+        Lazy {
+            when: Settings.deskIcons && root.modelData === (Quickshell.screens.find(s => s.x === 0 && s.y === 0) ?? Quickshell.screens[0])
+
+            DeskIcons {
+                forScreen: root.modelData
             }
         }
 

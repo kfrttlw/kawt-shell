@@ -49,6 +49,7 @@ PanelWindow {
         { keys: Strings.t("keysStyle"), what: Strings.t("keysStyleWhat") },
         { keys: Strings.t("keysPower"), what: Strings.t("keysPowerWhat") },
         { keys: Strings.t("keysWindows"), what: Strings.t("keysWindowsWhat") },
+        { keys: Strings.t("keysDesk"), what: Strings.t("keysDeskWhat") },
         { keys: Strings.t("keysEverywhere"), what: Strings.t("keysEverywhereWhat") }
     ]
     readonly property var lists: [kawtBinds, hyprBinds, inside]
