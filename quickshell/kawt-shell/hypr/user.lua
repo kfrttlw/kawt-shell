@@ -7,6 +7,7 @@
 --                  preset.unbind("SUPER + B")
 --                  hl.bind("SUPER + B", hl.dsp.exec_cmd("chromium")) -- browser
 --              (a "-- comment" at the end puts it in kawt's key list, super + /)
+--              kawt's own keys (super + h, super + l...) the same way: kawt.unbind("SUPER + H")
 --   programs   the standard keys super + q / e / b start these
 --
 -- What the standard config does: ~/.config/quickshell/kawt-shell/hypr/preset.lua

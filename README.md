@@ -371,7 +371,8 @@ setup to a backup, every question again).
   and everything of your own goes to `~/.config/hypr/user.lua` (made once, never replaced):
   monitors, layouts, mouse speed, `preset.terminal = "foot"` (and `files`, `browser`), any
   setting again (the last one counts). A key bound twice does both, so free a standard one
-  first: `preset.unbind("SUPER + B")`, then bind yours. Each part of the standard config runs
+  first: `preset.unbind("SUPER + B")` (kawt's own keys: `kawt.unbind("SUPER + H")`), then bind
+  yours. Each part of the standard config runs
   in its own `pcall`: one that doesn't fit your Hyprland version is skipped, not the rest.
   Your old `hyprland.lua` goes to the backup (`user.lua` says where); `--uninstall` puts it
   back, or, with none, copies the standard config into `hyprland.lua` so it works without
@@ -529,9 +530,17 @@ Everything is also reachable over IPC, for your own binds or a timer:
 `kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar [show|hide]`,
 `kawt desk [float|tile|cascade]`, `kawt companion pet|call|sleep|wake|focus|walk|home|toggle`,
 `kawt focus [stop|pause]`, `kawt welcome` (the first start's tour again), `kawt theme new|edit` (the theme editor), `kawt selection`, `kawt voice`.
-The volume, mic, brightness and media ones are for the media keys: there is a ready block in
-`hypr/kawt.lua` (and `kawt.conf`) to uncomment, after removing your own XF86 binds. Through
-kawt, the osd shows at once.
+The volume, mic, brightness and media ones are for the media keys. kawt's standard config binds
+them already; in a config of your own, remove your XF86 binds, then one line after the one that
+loads kawt: `kawt.media_keys()` in `hyprland.lua` (or, in an old `hyprland.conf`,
+`source = ~/.config/quickshell/kawt-shell/hypr/kawt-media.conf`). Through kawt, the osd shows at
+once.
+
+One of kawt's keys is taken by something of yours (`super + h` and `super + l` move the focus
+in many configs)? Free it after the line that loads kawt, then bind your own:
+`kawt.unbind("SUPER + H")` in `hyprland.lua` or `user.lua` (`unbind = SUPER, H` in an old
+`hyprland.conf`). The key list (`super + /`) follows. What the key did stays on its ipc call,
+for another key.
 
 ## Your own look
 
@@ -597,7 +606,8 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   data/                  the emoji list, stripes' picture for fastfetch
   shaders/               stripes (stripes.frag, built into stripes.frag.qsb)
   scripts/               the shell scripts kawt runs
-  hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua; kawt.conf for an old hyprland.conf)
+  hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua; kawt.conf for an old hyprland.conf,
+                         kawt-media.conf its media keys, if you want them through kawt)
   hypr/preset.lua        kawt's standard Hyprland config (with hypr/hyprland.lua + hypr/user.lua)
   hypr/nvidia.lua        Hyprland's environment for an nvidia card (the installer adds it on a yes)
   hypr/login.sh          starts Hyprland from the console: at login on tty1 or with `start`

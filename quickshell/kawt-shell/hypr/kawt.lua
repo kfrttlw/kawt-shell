@@ -7,6 +7,16 @@
 --
 -- The run box sits on SUPER + SPACE (where rofi usually is) and SUPER + R opens it in
 -- command mode: comment out your own SUPER + SPACE / SUPER + R lines, otherwise both fire.
+--
+-- Nothing has to be changed in this file (an update would stop at a change here). After the
+-- line that loads it, in your own config (hyprland.lua, or user.lua with kawt's standard one):
+--   kawt.unbind("SUPER + H")   frees one of the keys below, for a bind of your own
+--   kawt.media_keys()          the volume, brightness and player keys through kawt (see below)
+
+-- what your own config gets: the table `kawt`. (Below it the word is the command kawt's keys
+-- run, a local of this file; `api` is the table)
+kawt = { binds = {} } -- "SUPER+H" -> the bind, for kawt.unbind
+local api = kawt
 
 -- every bind ends with a "-- comment": the key list (super + /) is read from them
 local kawt = "qs -c kawt-shell ipc call kawt "
@@ -21,12 +31,28 @@ local function try(what, fn)
     end
 end
 
+-- "SUPER + SHIFT + s" -> "SUPER+SHIFT+S"
+local function norm(keys)
+    return (keys:upper():gsub("%s+", ""))
+end
+
 -- one key at a time: a key this Hyprland doesn't take is skipped alone (said in hyprland's log),
--- not with every key after it (print among them)
+-- not with every key after it (print among them). Remembered by its keys, for kawt.unbind
 local function bind(keys, ...)
-    local ok, err = pcall(hl.bind, keys, ...)
+    local ok, b = pcall(hl.bind, keys, ...)
     if not ok then
-        print("kawt.lua: " .. keys .. " skipped: " .. tostring(err))
+        print("kawt.lua: " .. keys .. " skipped: " .. tostring(b))
+        return
+    end
+    api.binds[norm(keys)] = b
+end
+
+-- free one of kawt's keys for a bind of your own (a key bound twice does both). What it did
+-- stays reachable: qs -c kawt-shell ipc call kawt ... on another key
+function api.unbind(keys)
+    local b = api.binds[norm(keys)]
+    if b ~= nil then
+        b:set_enabled(false)
     end
 end
 
@@ -72,18 +98,27 @@ try("binds", function()
 end)
 
 -- Media keys through kawt (optional): the osd shows at once and kawt doesn't have to poll the
--- brightness. Remove your own XF86 binds first (both would fire), then uncomment:
--- try("media keys", function()
---     bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(kawt .. "volume up"), { locked = true })
---     bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(kawt .. "volume down"), { locked = true })
---     bind("XF86AudioMute", hl.dsp.exec_cmd(kawt .. "volume mute"), { locked = true })
---     bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
---     bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true })
---     bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true })
---     bind("XF86AudioPlay", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
---     bind("XF86AudioNext", hl.dsp.exec_cmd(kawt .. "media next"), { locked = true })
---     bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
--- end)
+-- brightness. Not bound until your own config asks: remove your own XF86 binds first (both
+-- would fire), then call kawt.media_keys() after the line that loads this file. With kawt's
+-- standard config (hypr/preset.lua) they're bound already, and this does nothing.
+-- (no "-- comment" after these: they're in the key list only once they're bound)
+function api.media_keys()
+    if type(preset) == "table" then
+        return
+    end
+    try("media keys", function()
+        bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(kawt .. "volume up"), { locked = true, repeating = true })
+        bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(kawt .. "volume down"), { locked = true, repeating = true })
+        bind("XF86AudioMute", hl.dsp.exec_cmd(kawt .. "volume mute"), { locked = true })
+        bind("XF86AudioMicMute", hl.dsp.exec_cmd(kawt .. "mic mute"), { locked = true })
+        bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(kawt .. "brightness up"), { locked = true, repeating = true })
+        bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(kawt .. "brightness down"), { locked = true, repeating = true })
+        bind("XF86AudioPlay", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
+        bind("XF86AudioPause", hl.dsp.exec_cmd(kawt .. "media toggle"), { locked = true })
+        bind("XF86AudioNext", hl.dsp.exec_cmd(kawt .. "media next"), { locked = true })
+        bind("XF86AudioPrev", hl.dsp.exec_cmd(kawt .. "media prev"), { locked = true })
+    end)
+end
 -- Locking: kawt locks by itself before sleep (the lid too), on `loginctl lock-session` and after
 -- 10 idle minutes (settings -> screen and lock). No hypridle / hyprlock needed; if you keep them, turn
 -- kawt's off there, or two lockers fight.
