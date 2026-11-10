@@ -15,8 +15,8 @@ Singleton {
     property real started: 0
     property int elapsed: 0 // seconds
     property string pending: ""
-    // off | mic | system (what you hear) | both; an older kawt only knew the mic on or off
-    readonly property string sound: Settings.recordSound || (Settings.recordAudio ? "mic" : "off")
+    // off | mic | system (what you hear) | both
+    readonly property string sound: Settings.recordSound || "off"
 
     function toggle(mode: string): void {
         if (recording) {

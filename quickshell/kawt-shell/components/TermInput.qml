@@ -42,7 +42,6 @@ Item {
 
         Bevel {
             style: "sunk"
-            flatLine: false
         }
     }
 

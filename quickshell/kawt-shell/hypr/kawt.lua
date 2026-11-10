@@ -225,19 +225,19 @@ try("theme colors", function()
     end
 end)
 
--- raised frames: a hard shadow a few pixels to the right and
--- below every window, like an old system's (kawt's own windows draw a dotted one). Not on an
+-- a hard shadow a few pixels to the right and
+-- below every window, like an old system's (kawt's own windows draw theirs). Not on an
 -- old machine. The offset in a call of its own: if your Hyprland reads it differently, the
 -- rest still applies
 try("hard shadow", function()
     local colors = dofile(os.getenv("HOME") .. "/.local/state/kawt/theme/hyprland_colors.lua")
-    if colors.bevel and not colors.lite then
+    if not colors.lite then
         hl.config({ decoration = { shadow = { enabled = true, sharp = true, range = colors.shadow_range or 1 } } })
     end
 end)
 try("hard shadow offset", function()
     local colors = dofile(os.getenv("HOME") .. "/.local/state/kawt/theme/hyprland_colors.lua")
-    if colors.bevel and not colors.lite then
+    if not colors.lite then
         hl.config({ decoration = { shadow = { offset = colors.shadow_offset or "5 5" } } })
     end
 end)

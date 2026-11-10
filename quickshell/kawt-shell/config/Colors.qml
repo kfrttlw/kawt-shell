@@ -20,8 +20,8 @@ import "../utils/wallpalette.js" as WallPalette
 // letters, digits and -. "bar" (optional) is the bar's own color; without it, it's bg.
 // "face", "hi", "lo" (optional) are the frames' face, light edge and dark edge; without them
 // kawt makes them from the others.
-// The file is read again whenever it's saved. The style window writes it too: [+ new] and
-// [edit] there (modules/style/ThemeEditor.qml) make and change themes without typing json.
+// The file is read again whenever it's saved. The style window writes it too: New… and
+// Edit… there (modules/style/ThemeEditor.qml) make and change themes without typing json.
 Singleton {
     id: root
 
@@ -197,22 +197,13 @@ Singleton {
     readonly property color warn: palette.warn
     readonly property color hoverFill: palette.hoverFill
     readonly property color bar: palette.bar ?? palette.bg // the bar's own, if the theme has one
-    // the [ ] around what you can press: a step dimmer than the words (components/Brackets.qml),
-    // darker still around what's switched off
-    readonly property color bracket: mix(dim, border, 0.3)
-    readonly property color bracketOff: mix(dim, border, 0.75)
 
-    // ---- the frames (Settings.frames). "bevel" draws kawt like an old system: whatever stands
-    // out has a light edge on the top and the left and a dark one on the bottom and the right,
-    // whatever is sunk (fields, lists) the other way round (components/Bevel.qml). The edges come
-    // from the theme's own colors, so every theme has them, yours and the wallpaper's too;
-    // themes.json may still give face, hi and lo itself. Dark or light by the background, not by
-    // the variant: a theme of your own may be black in both
-    // the flat look went with kawt 98: an old "frames": "flat" in settings.json is left alone
-    readonly property bool bevel: true
-    // [ ] around what you can press (components/Bracket.qml): not with raised frames, a button's
-    // own edge says it there
-    readonly property bool brackets: false
+    // ---- the frames. kawt is drawn like an old system: whatever stands out has a light edge on
+    // the top and the left and a dark one on the bottom and the right, whatever is sunk (fields,
+    // lists) the other way round (components/Bevel.qml). The edges come from the theme's own
+    // colors, so every theme has them, yours and the wallpaper's too; themes.json may still give
+    // face, hi and lo itself. Dark or light by the background, not by the variant: a theme of
+    // your own may be black in both
     readonly property bool darkBg: luminance(bg) < 0.25
     readonly property color white: "#ffffff"
     readonly property color black: "#000000"

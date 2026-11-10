@@ -265,7 +265,7 @@ PanelWindow {
                 visible: root.lit > root.checks.length + 4
                 spacing: Metrics.spacing
 
-                Brackets {
+                TagLabel {
                     text: "any key"
                 }
 

@@ -195,7 +195,7 @@ WlSessionLockSurface {
                     spacing: Metrics.spacing
 
                     // the layout you're typing the password in; click to switch
-                    BracketButton {
+                    LabelButton {
                         visible: Keyboard.code !== ""
                         label: Keyboard.code
                         onClicked: Keyboard.next()
@@ -244,18 +244,18 @@ WlSessionLockSurface {
                         color: Colors.dim
                     }
 
-                    BracketButton {
+                    LabelButton {
                         label: "<<"
                         onClicked: media.player?.previous()
                     }
 
-                    BracketButton {
+                    LabelButton {
                         label: media.player?.isPlaying ? "||" : ">"
                         textColor: media.player?.isPlaying ? Colors.accent : Colors.fg
                         onClicked: media.player?.togglePlaying()
                     }
 
-                    BracketButton {
+                    LabelButton {
                         label: ">>"
                         onClicked: media.player?.next()
                     }

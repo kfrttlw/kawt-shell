@@ -25,7 +25,7 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, Colors.bevel, root.fetchPng, Settings.iconStyle);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, root.fetchPng, Settings.iconStyle);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         // the icons of the other look out first, once it changed: the pixel look has no file
         // icons of its own
@@ -45,7 +45,7 @@ Singleton {
         if (live && (Hypr.lua || reload))
             args.push("@hyprreload", "");
         else if (live)
-            args.push("@hyprkeyword", Gen.hyprKeywords(Colors.palette, Settings.lite, Colors.bevel));
+            args.push("@hyprkeyword", Gen.hyprKeywords(Colors.palette, Settings.lite));
         proc.command = args;
         proc.running = true;
     }
