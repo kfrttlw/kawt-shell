@@ -10,7 +10,7 @@ BarIcon {
     readonly property string ssid: Wifi.active?.name ?? ""
     readonly property bool wired: NetLinks.wired !== ""
 
-    visible: Settings.barShows("wifi") && (Wifi.device !== null || wired) && Settings.wifiStyle !== "hidden"
+    visible: Settings.barShows("wifi") && (Wifi.device !== null || wired)
     icon: wired ? "eth" : !Wifi.enabled || ssid === "" ? "wifi0" : Pix.wifi(Wifi.active.signalStrength * 100)
     tip: wired ? `${Strings.t("net")}: ${Strings.t("wired")} ${NetLinks.wired}` : !Wifi.enabled || ssid === "" ? Strings.t("noNet") : `${Strings.t("net")}: ${ssid} · ${Math.round(Wifi.active.signalStrength * 100)}%`
 }

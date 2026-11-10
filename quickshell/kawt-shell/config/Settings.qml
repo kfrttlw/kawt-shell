@@ -23,7 +23,6 @@ Singleton {
     property alias screenshotDir: adapter.screenshotDir
     property alias screenshotAsk: adapter.screenshotAsk
     property alias screenshotFreeze: adapter.screenshotFreeze
-    property alias wifiStyle: adapter.wifiStyle
     property alias wallPalette: adapter.wallPalette
     property alias wallStrength: adapter.wallStrength
     property alias recordDir: adapter.recordDir
@@ -57,7 +56,6 @@ Singleton {
     property alias aiSandbox: adapter.aiSandbox
     property alias aiSandboxImage: adapter.aiSandboxImage
     property alias aiRunSecs: adapter.aiRunSecs
-    property alias recordAudio: adapter.recordAudio
     property alias recordSound: adapter.recordSound
     property alias mediaPlayer: adapter.mediaPlayer
     property alias playerNetCovers: adapter.playerNetCovers
@@ -89,8 +87,6 @@ Singleton {
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
     property alias language: adapter.language
-    property alias brackets: adapter.brackets
-    property alias frames: adapter.frames
     property alias crt: adapter.crt
     property alias bootScreen: adapter.bootScreen
     property alias lite: adapter.lite
@@ -124,21 +120,42 @@ Singleton {
     // phosphor went: a theme that isn't there any more shows as thinkpad, config/Colors.qml), and
     // the wallpaper theme is the thinkpad's with the wallpaper's color as its light ("calm", the
     // new standard)
-    function newLook(): void {
-        if (lookVersion >= 4)
+    // Then two settings went (5): recordAudio (recordSound says it all) and wifiStyle (the network
+    // is switched off in settings -> bar, like any other part). `was` is the file as it was
+    // written, where the ones that are no settings any more can still be read, this once
+    function newLook(was: var): void {
+        if (lookVersion >= 5)
             return;
-        if (lookVersion < 2 && theme === "mono")
-            theme = "thinkpad";
-        if (lookVersion < 2 && fontFamily === "JetBrainsMono Nerd Font Mono")
-            fontFamily = "BlexMono Nerd Font Mono";
-        if (wallStrength === "strong")
-            wallStrength = "calm";
-        // kawt 98: the pixel font, unless you picked another font or size yourself
-        if (lookVersion < 4 && fontFamily === "BlexMono Nerd Font Mono" && fontSize === 13) {
-            fontFamily = "Departure Mono";
-            fontSize = 11;
+        if (lookVersion < 4) {
+            if (lookVersion < 2 && theme === "mono")
+                theme = "thinkpad";
+            if (lookVersion < 2 && fontFamily === "JetBrainsMono Nerd Font Mono")
+                fontFamily = "BlexMono Nerd Font Mono";
+            if (wallStrength === "strong")
+                wallStrength = "calm";
+            // kawt 98: the pixel font, unless you picked another font or size yourself
+            if (fontFamily === "BlexMono Nerd Font Mono" && fontSize === 13) {
+                fontFamily = "Departure Mono";
+                fontSize = 11;
+            }
         }
-        lookVersion = 4;
+        if ((was?.recordSound ?? "") === "" && was?.recordAudio === true)
+            recordSound = "mic";
+        else if (recordSound === "")
+            recordSound = "off";
+        if (was?.wifiStyle === "hidden" && barShows("wifi"))
+            toggleBar("wifi");
+        lookVersion = 5;
+    }
+
+    // settings.json as it was written, for newLook; {} when it can't be read
+    function written(text: string): var {
+        try {
+            const v = JSON.parse(text);
+            return v !== null && typeof v === "object" ? v : {};
+        } catch (e) {
+            return {};
+        }
     }
 
     // "~/x" -> "/home/user/x"
@@ -167,13 +184,13 @@ Singleton {
         onAdapterUpdated: if (readable) writeAdapter()
         onLoaded: {
             readable = Saved.readable(text(), path);
-            root.newLook();
+            root.newLook(root.written(text()));
             root.loaded = true;
         }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();
-            root.newLook();
+            root.newLook({});
             root.loaded = true;
         }
 
@@ -192,7 +209,6 @@ Singleton {
             property string screenshotDir: "~/Pictures/screenshots"
             property bool screenshotAsk: true // a preview in the corner asks: copy / save (services/Screenshot.qml); false = saved and copied at once
             property bool screenshotFreeze: true // the screen stands still while an area is picked (needs hyprpicker)
-            property string wifiStyle: "name" // the bar's wifi button: "name" | "bars" (signal only) | "hidden" (the net graph opens wifi)
             property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
             property string wallStrength: "calm" // how much of the wallpaper's color the wallpaper theme takes: "calm" (only its light) | "strong" | "full"
             property string recordDir: "~/Videos/recordings"
@@ -227,8 +243,7 @@ Singleton {
             property string aiSandbox: "bwrap" // "bwrap" (bubblewrap) | "podman" (with aiSandboxImage)
             property string aiSandboxImage: "" // podman: an image you pulled yourself (kawt never pulls one)
             property int aiRunSecs: 120 // a command is stopped after this long
-            property bool recordAudio: false // record the microphone too (older kawt; recordSound wins when set)
-            property string recordSound: "" // "off" | "mic" | "system" (what you hear) | "both"; "" = recordAudio decides
+            property string recordSound: "off" // a recording's sound: "off" | "mic" | "system" (what you hear) | "both"
             property string mediaPlayer: "" // the player picked in the player popover's tabs (services/Media.qml)
             property bool playerNetCovers: false // covers that are online (spotify's): fetched only with this on
             property string ollamaUrl: "http://localhost:11434"
@@ -260,8 +275,6 @@ Singleton {
             property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
             property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22
             property string language: "en" // kawt's words: "en" | "ru" (config/Strings.qml)
-            property bool brackets: true // [ ] around what you can press; off: plain words, the chosen ones in the accent color
-            property string frames: "bevel" // "bevel": the old system look, raised buttons and panels, sunk fields and lists, kawt's windows with a title bar | "flat": thin lines (config/Colors.qml, components/Bevel.qml)
             property bool crt: true // the lock (and the boot screen) switch on and off like an old picture tube (components/CrtTube.qml)
             property bool bootScreen: true // a bios-like check list once at login, any key skips it (modules/boot)
             property bool lite: false // an old machine (a t60, an x200): no blur, shadows or animations in hyprland, graphs half as often, no visualizer
@@ -269,7 +282,7 @@ Singleton {
             property int barHeight: 0 // px, 0 = fits the font
             property bool barBottom: false // the bar at the bottom edge instead of the top
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
-            property var barHide: [] // bar buttons switched off: "profile", "dock", "workspaces", "title", "vpn", "wifi", "net", "clock", "player", "tray", "kb", "bt", "mic", "vol", "br", "bat", "log", "home", "ai", "desk"
+            property var barHide: [] // the bar's parts switched off (settings -> bar): "quick", "workspaces", "tray", "vpn", "player", "bt", "mic", "wifi", "vol", "br", "bat", "log", "kb", "clock"
             property var floatClasses: [] // window classes that float at their own size (settings -> windows)
             property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's [tile] / [float], super + ctrl + v; services/Hypr.qml)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)

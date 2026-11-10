@@ -15,7 +15,6 @@ Item {
     id: root
 
     property string style: "raised" // "raised" | "sunk" | "pressed" | "etched" | "inset" (= "well") | "bump"
-    property bool flatLine: true
     // other edge colors than kawt's now ({ hi, hi2, lo, deep }: the theme editor's little desktop)
     property var colors: null
     readonly property var c: colors ?? Colors
