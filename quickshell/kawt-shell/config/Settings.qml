@@ -83,6 +83,8 @@ Singleton {
     property alias wallDither: adapter.wallDither
     property alias themeTerminals: adapter.themeTerminals
     property alias fetchLogo: adapter.fetchLogo
+    property alias iconStyle: adapter.iconStyle
+    property alias deskIcons: adapter.deskIcons
     property alias fetchPicture: adapter.fetchPicture
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
@@ -252,6 +254,8 @@ Singleton {
             property bool themeTerminals: true // recolor open terminals on theme change
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" | "picture" (utils/themegen.js)
             property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)
+            property string iconStyle: "classic" // folders, the bin and files in thunar and on the desktop: "classic" (painted, utils/classicicons.js) | "pixel" (in the theme's colors, utils/folders.js)
+            property bool deskIcons: true // ~/Desktop's files on the desktop, with the home folder and the bin (modules/desktop)
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
             property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22

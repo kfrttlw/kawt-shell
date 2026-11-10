@@ -14,6 +14,8 @@ Singleton {
     id: root
 
     readonly property string dir: `${Settings.dir}/theme`
+    property string iconsWritten: "" // the icon look last written
+    property int written: 0 // goes up each time the files are there: the desktop's icons read them again
     property int queued: 0 // 0 none, 1 quiet, 2 live: a switch that came in while writing
 
     // reload: hyprland reads its config again even without hyprland.lua (lite switched off: the
@@ -23,8 +25,16 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, Colors.bevel, root.fetchPng);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, Colors.bevel, root.fetchPng, Settings.iconStyle);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
+        // the icons of the other look out first, once it changed: the pixel look has no file
+        // icons of its own
+        if (root.iconsWritten !== Settings.iconStyle) {
+            args.push("@clean", "icons/kawt/kawt-desk");
+            if (Settings.iconStyle === "pixel")
+                args.push("@clean", "icons/kawt/scalable/mimetypes");
+            root.iconsWritten = Settings.iconStyle;
+        }
         for (const name in f)
             args.push(name, f[name]);
         if (live && Settings.themeTerminals)
@@ -94,6 +104,11 @@ Singleton {
             root.apply(false, false);
         }
 
+        // thunar and the "open file" windows take the other icons at once (@gtk, live)
+        function onIconStyleChanged(): void {
+            root.apply(true, false);
+        }
+
         // hyprland's blur, shadows and animations: at once
         function onLiteChanged(): void {
             root.apply(true, !Settings.lite);
@@ -118,6 +133,7 @@ Singleton {
         id: proc
 
         onExited: {
+            root.written++;
             if (root.queued > 0) {
                 const live = root.queued === 2;
                 root.queued = 0;

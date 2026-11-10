@@ -164,5 +164,9 @@ function files(name, t, light) {
     };
     for (const icon in icons)
         out[`icons/kawt/scalable/places/${icon}.svg`] = svg(icons[icon], colors);
+    // the desktop's (modules/desktop): its folders and the bin, the files from papirus
+    const desk = { folder: "folder", home: "user-home", desktop: "user-desktop", trash: "user-trash", "trash-full": "user-trash-full" };
+    for (const kind in desk)
+        out[`icons/kawt/kawt-desk/${kind}.svg`] = svg(icons[desk[kind]], colors);
     return out;
 }

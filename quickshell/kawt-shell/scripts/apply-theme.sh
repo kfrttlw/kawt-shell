@@ -6,6 +6,7 @@
 #   @hyprreload reload Hyprland so it picks up the new border colors (hyprland.lua)
 #   @hyprkeyword content is "option value" lines, set at once with hyprctl keyword (hyprland.conf:
 #               no reload needed)
+#   @clean      content is a folder under <dir>: removed (the icons of a look no longer picked)
 #   @gtk        content is "dark" or "light" (+ " live" on a switch): the gtk theme to match, set
 #               only where install.sh linked ~/.config/gtk-3.0/gtk.css to kawt's; live, open gtk
 #               apps read their colors and icons again (gtk does that when the theme changes)
@@ -26,6 +27,12 @@ while [ $# -ge 2 ]; do
             ;;
         @hyprreload)
             hyprctl reload > /dev/null 2>&1
+            ;;
+        @clean)
+            case $content in
+                "" | /* | *..*) ;; # only a folder in there
+                *) rm -rf -- "${dir:?}/$content" ;;
+            esac
             ;;
         @hyprkeyword)
             printf '%s\n' "$content" | while read -r key value; do
