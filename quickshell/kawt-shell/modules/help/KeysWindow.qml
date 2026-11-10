@@ -8,7 +8,8 @@ import qs.components
 import qs.services
 
 // super + /: every kawt bind, read straight from hypr/kawt.lua (each hl.bind line ends with a
-// "-- what it does" comment), so the list can't drift away from the real binds. Then the binds
+// "-- what it does" comment), so the list can't drift away from the real binds; less the ones
+// your config frees with kawt.unbind. Then the binds
 // of your Hyprland config that carry such a comment: ~/.config/hypr/hyprland.lua, and with
 // kawt's standard config hypr/preset.lua (less what user.lua frees with preset.unbind) and
 // user.lua. "-- keys: super+1..0 | what" lines stand for binds made in a loop or a group.
@@ -30,9 +31,13 @@ PanelWindow {
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("keys", forScreen)
     readonly property bool standard: hyprText.includes("hypr/preset.lua") // hyprland.lua loads kawt's standard config
-    readonly property var kawtBinds: parse(kawtText) // [{ keys, what }]
+    // kawt's own, less the ones your config frees with kawt.unbind (user.lua, or hyprland.lua)
+    readonly property var kawtBinds: {
+        const freed = unbinds(userText, "kawt").concat(unbinds(hyprText, "kawt"));
+        return parse(kawtText).filter(b => !freed.includes(b.keys)); // [{ keys, what }]
+    }
     readonly property var hyprBinds: {
-        const freed = standard ? unbinds(userText) : [];
+        const freed = standard ? unbinds(userText, "preset") : [];
         const all = (standard ? parse(userText) : []).concat(parse(hyprText), standard ? parse(presetText).filter(b => !freed.includes(b.keys)) : []);
         return all.filter((b, i) => all.findIndex(o => o.keys === b.keys) === i && !kawtBinds.some(k => k.keys === b.keys));
     }
@@ -117,11 +122,12 @@ PanelWindow {
         return out;
     }
 
-    // the keys a user.lua frees: preset.unbind("SUPER + V") -> "super+v"
-    function unbinds(text: string): var {
+    // the keys a config frees: preset.unbind("SUPER + V") -> "super+v" (who: "preset" | "kawt")
+    function unbinds(text: string, who: string): var {
         const out = [];
+        const freed = new RegExp(`^\\s*${who}\\.unbind\\(\\s*"([^"]+)"\\s*\\)`);
         for (const line of text.split("\n")) {
-            const m = line.match(/^\s*preset\.unbind\(\s*"([^"]+)"\s*\)/);
+            const m = line.match(freed);
             if (m)
                 out.push(root.pretty(m[1]));
         }
