@@ -34,16 +34,23 @@ Two themes of its own, picked in `super + w`: **Graphite** (a black ThinkPad) an
 (the old grey, paper-light), and **From the wallpaper** (the same greys, lit in your wallpaper's
 own color instead of red), each dark or light (`super + shift + w`), and your own
 ([below](#your-own-look)). Everything follows: GTK apps and thunar, kitty and other terminals,
-Hyprland's borders, fastfetch, the prompt, the folder icons.
+Hyprland's borders, fastfetch, the prompt.
 
 The words are in [Departure Mono](https://departuremono.com), a pixel font drawn on an 11 px
 grid (SIL OFL, it comes with kawt in `fonts/`), sharp at 11 and 22. Long text (notes, the ai's
-answers) is in IBM Plex Mono when it's installed. Icons are kawt's own 16 px stickers, in the
-theme's colors.
+answers) is in IBM Plex Mono when it's installed. The panels' icons are kawt's own 16 px
+stickers, in the theme's colors. Files and folders (on the desktop, in thunar, in the "open
+file" windows) are **classic** by default: painted ones as desktops had them, tan folders seen a
+little from above with their sign big on the corner, an open metal bin with crumpled paper, a
+page for each kind of file; or **pixel** ones in the theme's colors (settings → look → icons).
 
 <p align="center">
-<img src="assets/folders.png" alt="kawt's folder icons in the black, white and wallpaper themes" width="88%"><br>
-<sub>thunar's folders, drawn by kawt in the theme you're on</sub>
+<img src="assets/desktop-icons.png" alt="files on the desktop: home, the bin, folders, an archive, a right click menu on a folder; the classic icons: folders with signs, the bin empty and full, pages for text, pictures, pdf, sound, video, scripts, a box for archives, a gear for programs" width="100%"><br>
+<sub>files on the desktop and the classic icons, in 64, 32 and 16 px</sub>
+</p>
+<p align="center">
+<img src="assets/folders.png" alt="kawt's pixel folder icons in the black, white and wallpaper themes" width="70%"><br>
+<sub>or pixel ones, drawn in the theme you're on</sub>
 </p>
 
 Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
@@ -115,6 +122,20 @@ from then on, on any desk.
 
 Floating desks need Hyprland's Lua config (0.55+); with an old `hyprland.conf` the rest of kawt
 works, the desks stay tiled.
+
+## Files on the desktop
+
+As in KDE: the desktop shows `~/Desktop` (or wherever `user-dirs.dirs` says it is), with the
+home folder and the bin on top, a column after another, on the main screen. A click picks one
+(`ctrl` one more), a band picks many; a double click or `enter` opens it with the app you chose
+for its kind (a folder in the file manager, a launcher starts its app). Dragged, it stands
+where you let it go, in the grid, and stays there. Right click: **Open**, **Terminal here**,
+**Cut**, **Copy**, **Rename** (`F2`: the name in a field under the picture), **Move to the
+trash** (`del`), **Ask AI** about a picture; on the empty desktop **New folder**, **New text
+file**, **Paste**, **Arrange** by name / kind / date, **Line up**. A file dropped there from a
+file manager is copied in; copied or cut ones paste into thunar too. The bin is the real one
+(`~/.local/share/Trash`, thunar's "restore" works): full, it shows its paper; **Empty the trash**
+asks once more. A picture file shows itself. Off in settings → look → icons.
 
 ## Your day
 
