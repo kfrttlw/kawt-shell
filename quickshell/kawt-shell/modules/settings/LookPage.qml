@@ -217,6 +217,41 @@ ColumnLayout {
         }
     }
 
+    // folders, the bin and files: in thunar and on the desktop (utils/classicicons.js, utils/folders.js)
+    Group {
+        title: Strings.t("iconsGroup")
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 20
+
+            Repeater {
+                model: [["classic", "iconsClassic", "iconsClassicNote"], ["pixel", "iconsPixel", "iconsPixelNote"]]
+
+                Check {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignTop
+                    radio: true
+                    text: Strings.t(modelData[1])
+                    note: Strings.t(modelData[2])
+                    checked: Settings.iconStyle === modelData[0]
+                    onToggled: Settings.iconStyle = modelData[0]
+                }
+            }
+        }
+
+        Check {
+            Layout.fillWidth: true
+            text: Strings.t("deskIcons")
+            note: Strings.t("deskIconsNote")
+            checked: Settings.deskIcons
+            onToggled: Settings.deskIcons = !Settings.deskIcons
+        }
+    }
+
     Group {
         title: Strings.t("effects")
 
