@@ -86,6 +86,9 @@ Singleton {
     property alias fetchLogo: adapter.fetchLogo
     property alias iconStyle: adapter.iconStyle
     property alias deskIcons: adapter.deskIcons
+    property alias cursorStyle: adapter.cursorStyle
+    property alias cursorSize: adapter.cursorSize
+    property alias cursorWas: adapter.cursorWas
     property alias fetchPicture: adapter.fetchPicture
     property alias fontFamily: adapter.fontFamily
     property alias fontSize: adapter.fontSize
@@ -274,6 +277,9 @@ Singleton {
             property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)
             property string iconStyle: "classic" // folders, the bin and files in thunar and on the desktop: "classic" (painted, utils/classicicons.js) | "pixel" (in the theme's colors, utils/folders.js)
             property bool deskIcons: true // ~/Desktop's files on the desktop, with the home folder and the bin (modules/desktop)
+            property string cursorStyle: "" // the mouse cursor: "" the system's (kawt doesn't touch it) | "stripes" | "terminal" (services/Cursor.qml)
+            property int cursorSize: 1 // kawt's cursor, every pixel 1 to 4 times (24 to 96 px)
+            property string cursorWas: "" // "name size": the cursor there was before kawt's, given back when it's off again
             // the look, yours without editing the repo (config/Metrics.qml reads these)
             property string fontFamily: "Departure Mono" // a monospace one: kawt lines text up in columns. "Departure Mono" comes with kawt (fonts/); "BlexMono Nerd Font Mono" = ibm plex mono
             property int fontSize: 11 // px; panels grow with it. The pixel font: 11 or 22

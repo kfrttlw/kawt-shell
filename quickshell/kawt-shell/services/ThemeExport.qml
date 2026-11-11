@@ -25,7 +25,7 @@ Singleton {
             queued = Math.max(queued, live ? 2 : 1);
             return;
         }
-        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, root.fetchPng, Settings.iconStyle);
+        const f = Gen.files(Colors.fullName, Colors.palette, Settings.termColors, Settings.fetchLogo, Metrics.fontFamily, Settings.lite, root.fetchPng, Settings.iconStyle, Cursor.theme ? { theme: Cursor.theme, size: Cursor.size } : null);
         const args = ["sh", `${Quickshell.shellDir}/scripts/apply-theme.sh`, dir];
         // the icons of the other look out first, once it changed: the pixel look has no file
         // icons of its own
@@ -107,6 +107,16 @@ Singleton {
         // thunar and the "open file" windows take the other icons at once (@gtk, live)
         function onIconStyleChanged(): void {
             root.apply(true, false);
+        }
+
+        // kawt's cursor in the environment of programs started from now on (hypr/kawt.lua);
+        // hyprland itself gets it at once from services/Cursor.qml
+        function onCursorStyleChanged(): void {
+            root.apply(false, false);
+        }
+
+        function onCursorSizeChanged(): void {
+            root.apply(false, false);
         }
 
         // hyprland's blur, shadows and animations: at once

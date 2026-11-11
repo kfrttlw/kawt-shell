@@ -252,6 +252,69 @@ ColumnLayout {
         }
     }
 
+    // the mouse cursor: one of kawt's two (tools/cursors.py) or the system's (services/Cursor.qml)
+    Group {
+        title: Strings.t("cursorGroup")
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 20
+
+            Repeater {
+                model: [["", "cursorSystem", "cursorSystemNote"], ["stripes", "cursorStripes", "cursorStripesNote"], ["terminal", "cursorTerminal", "cursorTerminalNote"]]
+
+                Check {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignTop
+                    radio: true
+                    text: Strings.t(modelData[1])
+                    note: Strings.t(modelData[2])
+                    checked: Settings.cursorStyle === modelData[0]
+                    onToggled: Settings.cursorStyle = modelData[0]
+                }
+            }
+        }
+
+        // its size: whole times only, a pixel stays a square
+        RowLayout {
+            Layout.fillWidth: true
+            visible: Settings.cursorStyle !== ""
+            spacing: 12
+
+            Label {
+                text: Strings.t("cursorSize")
+            }
+
+            Repeater {
+                model: [1, 2, 3, 4]
+
+                Check {
+                    required property int modelData
+
+                    radio: true
+                    text: `×${modelData}`
+                    checked: Settings.cursorSize === modelData
+                    onToggled: Settings.cursorSize = modelData
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            visible: Settings.cursorStyle !== ""
+            wrapMode: Text.WordWrap
+            text: Strings.t("cursorSizeNote")
+            color: Colors.dim
+        }
+    }
+
     Group {
         title: Strings.t("effects")
 

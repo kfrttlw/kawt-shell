@@ -912,7 +912,16 @@ Singleton {
         trayMenu: "menu >",
         trayMouse: "lmb open · rmb menu · mmb alt",
         whoKill: "kill",
-        whoKillSure: "sure? kill"
+        whoKillSure: "sure? kill",
+        cursorGroup: "Cursor",
+        cursorSystem: "The system's",
+        cursorSystemNote: "kawt leaves it as it is",
+        cursorStripes: "Stripes",
+        cursorStripesNote: "cut in kawt's bars, like the logo; busy: the bars run",
+        cursorTerminal: "Terminal",
+        cursorTerminalNote: "the console's: fat pixels, typing on a red block, busy: | / - \\",
+        cursorSize: "Size",
+        cursorSizeNote: "every pixel 1 to 4 times, never blurred. Old X11 programs take it when they're started again"
     })
 
     readonly property var ruWords: ({
@@ -1808,6 +1817,15 @@ Singleton {
         trayMenu: "меню >",
         trayMouse: "лкм открыть · пкм меню · скм другое",
         whoKill: "завершить",
-        whoKillSure: "точно? завершить"
+        whoKillSure: "точно? завершить",
+        cursorGroup: "Курсор",
+        cursorSystem: "Системный",
+        cursorSystemNote: "kawt его не трогает",
+        cursorStripes: "Полоски",
+        cursorStripesNote: "нарезан полосками, как лого; занят: полоски бегут",
+        cursorTerminal: "Терминал",
+        cursorTerminalNote: "как в консоли: толстые пиксели, ввод — красный блок, занят: | / - \\",
+        cursorSize: "Размер",
+        cursorSizeNote: "каждый пиксель от 1 до 4 раз, без размытия. Старые X11-программы подхватят его после перезапуска"
     })
 }

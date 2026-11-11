@@ -61,6 +61,7 @@ ShellRoot {
         Night.on; // the night light, if it was on
         Hypr.lua; // keeps the special workspace in the bar up to date
         Rates.wanted; // once: a monitor running slower than it can (services/Rates.qml)
+        Cursor.theme; // kawt's cursor to hyprland, if one is picked (settings -> look)
         if (Settings.updateAuto)
             Update.repo; // the weekly update check (one git fetch to github; off in settings -> kawt)
     }

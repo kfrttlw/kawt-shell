@@ -1,0 +1,4 @@
+[Icon Theme]
+Name=kawt-terminal
+Comment=kawt's cursor: the console's, fat pixels and a red block (tools/cursors.py)
+Inherits=Adwaita

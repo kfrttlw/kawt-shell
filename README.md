@@ -53,6 +53,17 @@ page for each kind of file; or **pixel** ones in the theme's colors (settings �
 <sub>or pixel ones, drawn in the theme you're on</sub>
 </p>
 
+**The cursor** stays the system's until you pick one of kawt's two (settings → look → cursor):
+**Stripes**, cut in kawt's bars like the logo (busy: the bars run, red when nothing can be done
+yet), or **Terminal**, the console's: fat pixels, typing on a red block, busy `| / - \`. Pixel
+cursors, every pixel 1 to 4 times and never blurred; Hyprland draws them over every window and
+tells GTK. Back to the system's, the one you had comes back.
+
+<p align="center">
+<img src="assets/cursors.png" alt="kawt's two cursors on black and on paper: stripes (an arrow cut in white bars, a hand, an i-beam, busy in red bars, help, copy, resize arrows, not allowed) and terminal (a fat arrow, a fat hand, a red block for typing, a red spinner)" width="100%"><br>
+<sub>Stripes and Terminal: arrow, hand, typing, busy, help, copy, crosshair, move, resize, not allowed</sub>
+</p>
+
 Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
 bars, stripes herself, the trackpoint, a sunset, an old prompt, graph paper. The installer puts
 them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
@@ -603,6 +614,7 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
                          (today, system, settings, wallpaper and theme), the lock, stripes
   components/            the parts they're made of (buttons, frames, fields, windows, icons)
   fonts/                 Departure Mono (SIL OFL), kawt's pixel font (-> ~/.local/share/fonts/kawt)
+  cursors/               kawt's two cursors, XCursor (drawn by tools/cursors.py; -> ~/.local/share/icons once picked)
   data/                  the emoji list, stripes' picture for fastfetch
   shaders/               stripes (stripes.frag, built into stripes.frag.qsb)
   scripts/               the shell scripts kawt runs
@@ -628,10 +640,12 @@ python3 tools/check.py   # catches the mistakes that stop the shell from loading
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 tools/net.sh -w          # which programs talk to the internet, live (the wifi panel's who's out, in a terminal)
 tools/qsb.sh             # builds the shaders again after a change (qt6-shadertools)
+python3 tools/cursors.py # draws kawt's cursors again after a change in it (--check, --preview sheet.png)
 ```
 
 The same check runs on every push and pull request (`.github/workflows/check.yml`), with
-`shellcheck` over the scripts and the Lua files' syntax: what it can see without Hyprland.
+`shellcheck` over the scripts, the Lua files' syntax and whether the cursors in the repo are what
+`tools/cursors.py` draws: what it can see without Hyprland.
 
 ## License
 
