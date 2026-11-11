@@ -96,8 +96,9 @@ code=$?
 ((code == 2)) && exit 2
 
 log=$tmp/qs.log
-# what stops a part of kawt from loading: qt's words for it
-broken='is not a type|Type [A-Za-z_.]+ unavailable|non-existent (default )?property|Non-existent attached object|Invalid property assignment|Cannot override FINAL|Expected token|Syntax ?[Ee]rror|Unexpected token|is not installed|Property value set multiple times|Invalid alias|in Connections element|ReferenceError|is not a function|Failed to load|failed to load|Cannot assign to read-only|Cannot assign object'
+# what stops a part of kawt from loading: qt's words for it ("Unable to assign QSomeType to": a
+# value of the wrong kind, the property stays empty; [undefined] / [null] there is the machine's)
+broken='is not a type|Type [A-Za-z_.]+ unavailable|non-existent (default )?property|Non-existent attached object|Invalid property assignment|Cannot override FINAL|Expected token|Syntax ?[Ee]rror|Unexpected token|is not installed|Property value set multiple times|Invalid alias|in Connections element|ReferenceError|is not a function|Failed to load|failed to load|Cannot assign to read-only|Cannot assign object|Unable to assign Q[A-Za-z]+ to'
 # what kawt itself may say about a machine without Hyprland, a system bus, pipewire...: shown
 mapfile -t bad < <(grep -E "$broken" "$log" | sed 's/^[^:]*file:\/\/[^ ]*kawt-shell\//kawt-shell\//' | sort | uniq -c | sort -rn)
 mapfile -t other < <(grep -iE 'warn|error|TypeError' "$log" | grep -vE "$broken" | sed 's/^ *//' | cut -c1-200 | sort | uniq -c | sort -rn | head -n 25)

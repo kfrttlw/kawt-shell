@@ -19,8 +19,10 @@ Popover {
     id: root
 
     readonly property PwNode source: Pipewire.defaultAudioSource
-    readonly property list<PwNode> sources: Pipewire.nodes.values.filter(n => !n.isStream && !n.isSink && n.audio && n.properties["media.class"] === "Audio/Source")
-    readonly property list<PwNode> apps: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio")
+    // plain arrays, not list<PwNode>: a ScriptModel takes only those (qt won't assign a typed list
+    // to its values, and the list stayed empty)
+    readonly property var sources: Pipewire.nodes.values.filter(n => !n.isStream && !n.isSink && n.audio && n.properties["media.class"] === "Audio/Source")
+    readonly property var apps: Pipewire.nodes.values.filter(n => n.isStream && n.properties["media.class"] === "Stream/Input/Audio")
 
     name: "mic"
     title: Strings.t("micTitle")
