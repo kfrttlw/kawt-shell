@@ -1,10 +1,11 @@
-# The checks that need no Hyprland: run on every push and pull request.
+# The checks that need no Hyprland: run on every push.
 # The same by hand, before a commit: python3 tools/check.py (and shellcheck, if you have it)
 name: check
 
+# on every push, to any branch: a pull request from a branch here shows these same checks, so
+# running them again for it only doubled them
 on:
   push:
-  pull_request:
 
 permissions:
   contents: read
@@ -37,7 +38,12 @@ jobs:
       # a mistake in kawt.lua isn't loud: hyprland skips the file (pcall) and kawt's keys are gone
       - name: lua syntax
         run: |
-          sudo apt-get install -y -qq --no-install-recommends lua5.4 > /dev/null
+          # the runner's package list can be stale and its mirror can miss a moment: fresh, and again
+          for i in 1 2 3; do
+            sudo apt-get update -qq > /dev/null && sudo apt-get install -y -qq --no-install-recommends lua5.4 > /dev/null && break
+            [ "$i" = 3 ] && exit 1
+            sleep 10
+          done
           for f in $(git ls-files '*.lua'); do luac5.4 -p "$f" || exit 1; done
 
   # the shell really loaded: quickshell in an arch container, kawt in a headless sway, every
