@@ -13,7 +13,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # what stops the shell from loading: imports, a property set twice, javascript too new
       # for qt, a FINAL property, kawt's words in both languages (tools/check.py says more)
@@ -50,6 +50,9 @@ jobs:
       - name: packages
         run: |
           pacman -Syu --noconfirm --needed git sway dbus ttf-dejavu wl-clipboard > /dev/null
+          # arch's sway carries a file capability (realtime priority), which a container won't run:
+          # a plain copy of it, first in PATH
+          install -m 755 /usr/bin/sway /usr/local/bin/sway
           useradd -m tester
           echo 'tester ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/tester
 
@@ -63,7 +66,7 @@ jobs:
           fi
           qs --version
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: kawt loads
         run: |
