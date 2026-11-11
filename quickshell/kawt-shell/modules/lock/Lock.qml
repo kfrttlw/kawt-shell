@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pam
 import qs.config
@@ -26,6 +27,10 @@ Scope {
     property int testLeft: 0
 
     readonly property bool checking: pam.active
+    // there while the screen is locked (gone at log out with the rest of XDG_RUNTIME_DIR): kawt
+    // started again after a crash (scripts/keep.sh) finds it and locks at once, instead of
+    // leaving the screen to hyprland's "the lock died" picture, or open
+    readonly property string marker: `${Quickshell.env("XDG_RUNTIME_DIR") || "/tmp"}/kawt-locked`
 
     function tryUnlock(password: string): void {
         if (pam.active || password === "")
@@ -69,6 +74,7 @@ Scope {
         target: Panels
 
         function onLockedChanged(): void {
+            Quickshell.execDetached(Panels.locked ? ["touch", "--", root.marker] : ["rm", "-f", "--", root.marker]);
             if (Panels.locked) {
                 Panels.close(); // popovers would sit above nothing
                 root.result = "";
@@ -93,6 +99,16 @@ Scope {
             root.testLeft--;
             if (root.testLeft <= 0)
                 root.unlock();
+        }
+    }
+
+    // locked when kawt went: locked again
+    Process {
+        running: true
+        command: ["test", "-e", root.marker]
+        onExited: code => {
+            if (code === 0 && !Panels.locked)
+                Panels.lock(false);
         }
     }
 

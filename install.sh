@@ -1067,8 +1067,9 @@ start_shell() {
         pgrep -f 'qs -c kawt-shell' > /dev/null || break
         sleep 0.1
     done
-    # in a session of its own: it outlives this script and the terminal it runs in
-    if ! setsid -f qs -c kawt-shell -d > /dev/null 2>&1; then
+    # in a session of its own: it outlives this script and the terminal it runs in. Through
+    # scripts/keep.sh, which starts it again if it crashes
+    if ! setsid -f sh "$qs_dst/scripts/keep.sh" > /dev/null 2>&1; then
         warn "could not start the shell" "qs -c kawt-shell -d"
         return 1
     fi

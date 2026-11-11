@@ -56,10 +56,10 @@ function api.unbind(keys)
     end
 end
 
--- start the shell with Hyprland
+-- start the shell with Hyprland, kept running: started again if it crashes (scripts/keep.sh)
 try("autostart", function()
     hl.on("hyprland.start", function()
-        hl.exec_cmd("qs -c kawt-shell")
+        hl.exec_cmd('sh "' .. os.getenv("HOME") .. '/.config/quickshell/kawt-shell/scripts/keep.sh"')
         -- the password window for apps that need admin rights (gparted, mounting a disk...);
         -- without one they just fail. Not installed: this does nothing
         hl.exec_cmd("systemctl --user start hyprpolkitagent")
@@ -126,7 +126,8 @@ end
 -- the kawt look: square windows, like the bar. kawt.lua is loaded last, so this wins over
 -- the rounding in hyprland.lua; delete this block to keep your own.
 -- allow_session_lock_restore: if the kawt lock screen ever crashes, restarting quickshell
--- (from a tty: qs -c kawt-shell -d) brings it back instead of leaving the screen stuck.
+-- (scripts/keep.sh does that by itself, and kawt locks again) brings it back instead of leaving
+-- the screen stuck.
 -- (two separate calls: if one option doesn't exist in your Hyprland version, the other still applies)
 try("square windows", function()
     hl.config({ decoration = { rounding = 0 } })
