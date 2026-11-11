@@ -10,6 +10,9 @@ Singleton {
 
     readonly property string dir: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/kawt`
     property bool loaded: false // the file is read (or there was none): what's here is yours
+    // the ai's standard system prompt: the "short" persona's (services/Ai.qml), and where your own
+    // starts from. The one place it's written
+    readonly property string aiDefaultSystem: "Answer briefly and informatively. Get straight to the point, skip filler and repetition. Use a list or a code block only when it really helps. Answer in the language of the question."
 
     property alias theme: adapter.theme
     property alias light: adapter.light
@@ -220,7 +223,7 @@ Singleton {
             property string aiKeepAlive: "5m" // how long the model stays loaded after an answer; "0" = free at once
             property real aiTemperature: 0.7
             property int aiHistory: 20 // earlier messages sent along as context
-            property string aiSystem: "Answer briefly and informatively. Get straight to the point, skip filler and repetition. Use a list or a code block only when it really helps. Answer in the language of the question." // system prompt
+            property string aiSystem: root.aiDefaultSystem // your own system prompt (persona "custom"); "" = none
             property string apiUrl: "https://api.openai.com/v1" // any OpenAI-compatible service
             property string apiModel: "gpt-4o-mini"
             property bool aiWide: false // the ai panel opened wide, with the files column
