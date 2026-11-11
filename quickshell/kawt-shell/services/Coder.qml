@@ -12,8 +12,8 @@ import qs.utils
 //   list    files of a folder                    runs at once
 //   search  lines containing a text              runs at once
 //   read    numbered lines of a file             runs at once
-//   edit    replace a piece of a file / new file waits for [apply] or [skip], shown as a diff
-//   run     a shell command (tests, a build)     waits for [run] or [skip]; then runs in a
+//   edit    replace a piece of a file / new file waits for Apply or Skip, shown as a diff
+//   run     a shell command (tests, a build)     waits for Run or Skip; then runs in a
 //                                                sandbox (scripts/sandbox.sh: no network, only
 //                                                the folder writable, a time limit). Only
 //                                                there's a sandbox and Settings.aiRun is on
@@ -21,8 +21,8 @@ import qs.utils
 // Every path goes through scripts/coder-tool.sh, which refuses anything outside the folder.
 // What a command changed is found from two pictures of the project, from before and after it
 // (coder-tool.sh snap / changes: git trees in kawt's own folder in ~/.cache, never the project's
-// .git), and shown in its step file by file. [changes] shows every file the agent changed this
-// session as one diff each; [undo] puts all of them back, by edit or by command (not what
+// .git), and shown in its step file by file. Changes shows every file the agent changed this
+// session as one diff each; Undo puts all of them back, by edit or by command (not what
 // .gitignore hides, build output: a command's changes there aren't seen).
 Singleton {
     id: root
@@ -43,16 +43,16 @@ Singleton {
     property var convo: [] // the conversation in the provider's own format
     property var queue: [] // tool calls of the current reply still to run
     property int stepCount: 0
-    property var pending: null // the edit waiting for [apply]: { stepId, path, content, original, folder }
-    // what [undo] takes back, oldest first: { folder, path, original } an edit (original null:
+    property var pending: null // the edit waiting for Apply: { stepId, path, content, original, folder }
+    // what Undo takes back, oldest first: { folder, path, original } an edit (original null:
     // it made the file), { folder, before, after, paths, count } a command (two pictures, the
     // files it changed; fewer paths than count: some were put back one by one since)
     property var history: []
-    // each file the agent changed, as it was before its first change to it, for [changes] and
-    // the count on [undo]: "<folder>\n<path>" -> { folder, path, original } (from an edit) or
+    // each file the agent changed, as it was before its first change to it, for Changes and
+    // the count on Undo: "<folder>\n<path>" -> { folder, path, original } (from an edit) or
     // { folder, path, picture } (from a command)
     property var changedFiles: ({})
-    // a command is on (its picture from before, itself, then what it changed): no [undo] and
+    // a command is on (its picture from before, itself, then what it changed): no Undo and
     // no new task until it's all known
     readonly property bool settling: runner.run !== null
     property int session: 0 // one more with each [+]: what the old one still reports is dropped
@@ -61,7 +61,7 @@ Singleton {
 
     readonly property int changedCount: Object.keys(changedFiles).length
 
-    // these files ("<folder>\n<path>", as in changedFiles) were just changed again: [changes]
+    // these files ("<folder>\n<path>", as in changedFiles) were just changed again: Changes
     // reads their diffs anew
     signal filesTouched(var keys)
     readonly property bool canUndo: changedCount > 0 && !running && !settling
@@ -415,7 +415,7 @@ Answer in the language of the user's task.`;
         });
     }
 
-    // [apply]: write it, remember the original for [undo], go on.
+    // Apply: write it, remember the original for Undo, go on.
     // The new content was made from the file as it was when the diff was shown; if it changed
     // since (you edited it while the diff waited), writing would throw your change away. So it's
     // read again first, and the model is told to redo the edit instead.
@@ -451,7 +451,7 @@ Answer in the language of the user's task.`;
         }, undefined, p.folder);
     }
 
-    // [skip]: tell the model, it decides what's next
+    // Skip: tell the model, it decides what's next
     function skip(): void {
         const p = pending;
         if (!p)
@@ -463,7 +463,7 @@ Answer in the language of the user's task.`;
 
     // ------------------------------------------------------------------ commands
 
-    // shown whole, waiting for [run]: nothing runs before that
+    // shown whole, waiting for Run: nothing runs before that
     function prepareRun(call: var, id: real): void {
         const command = String(call.args.command ?? "").trim();
         if (!command) {
@@ -476,9 +476,9 @@ Answer in the language of the user's task.`;
         action = "run (waiting for you)";
     }
 
-    // [run]: a picture of the project first, then the command in the sandbox, with a time
+    // Run: a picture of the project first, then the command in the sandbox, with a time
     // limit, then another picture. The exit code, the output and the files it changed go to
-    // the model; the files to its step, [changes] and [undo]
+    // the model; the files to its step, Changes and Undo
     function execRun(p: var): void {
         setStep(p.stepId, { status: "running", text: "" });
         action = `run ${p.command}`;
@@ -617,7 +617,7 @@ Answer in the language of the user's task.`;
         sandboxCheck.running = true;
     }
 
-    // one more change for [undo] and [changes] (see history and changedFiles above)
+    // one more change for Undo and Changes (see history and changedFiles above)
     function remember(c: var): void {
         history = [...history, c];
         const ch = Object.assign({}, changedFiles);
@@ -656,7 +656,7 @@ Answer in the language of the user's task.`;
             restoreFile(c.folder, c.path, c, cb);
     }
 
-    // [undo]: every file the agent changed back as it was, newest change first: so each ends as
+    // Undo: every file the agent changed back as it was, newest change first: so each ends as
     // it was before the agent's first change to it, whatever came between
     function undo(): void {
         if (!canUndo)
@@ -679,8 +679,8 @@ Answer in the language of the user's task.`;
             addStep({ kind: "info", text: Strings.t("coderUndoNothing") });
     }
 
-    // one file of [changes] back as it was before the agent's first change to it. The changes
-    // before that are told to leave it alone, so [undo] later doesn't take it back again
+    // one file of Changes back as it was before the agent's first change to it. The changes
+    // before that are told to leave it alone, so Undo later doesn't take it back again
     // (it may be yours by then)
     function putBack(key: string): void {
         const c = changedFiles[key];
@@ -699,7 +699,7 @@ Answer in the language of the user's task.`;
         });
     }
 
-    // the diff of one file of [changes], from before the agent's first change to it to now:
+    // the diff of one file of Changes, from before the agent's first change to it to now:
     // cb({ how: new|gone|changed|same, lines, plus, minus }) or cb(null)
     function diffOf(key: string, cb: var): void {
         const c = changedFiles[key];

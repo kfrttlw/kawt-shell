@@ -149,7 +149,7 @@ Singleton {
         adapter.pinned = isPinned(app) ? adapter.pinned.filter(id => id !== app.id) : [...adapter.pinned, app.id];
     }
 
-    // ---- apps started without internet (ctrl+o in the launcher, [offline] in the wifi panel's
+    // ---- apps started without internet (ctrl+o in the launcher, offline in the wifi panel's
     // [who's out]): in a network of their own with nothing in it, unshare's, as the same user
     // (no root, no sandbox otherwise: files, sound, the screen as always). Only what kawt starts:
     // the launcher, the dock (an app started another way has the internet as usual). One that's

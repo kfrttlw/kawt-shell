@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 
 // kawt's words, in english and russian: Strings.t("key"). English unless Settings.language is
-// "ru" (cfg -> look -> language); the system's language doesn't change it. A key missing in one
+// "ru" (settings -> look -> language); the system's language doesn't change it. A key missing in one
 // language shows the other's, a key missing in both shows itself.
 // New words go here, not into the panels, so both languages stay whole.
 Singleton {

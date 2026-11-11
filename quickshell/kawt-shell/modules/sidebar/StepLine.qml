@@ -103,7 +103,7 @@ Item {
             }
         }
 
-        // ---- a command: waiting for [run], then what it printed
+        // ---- a command: waiting for Run, then what it printed
         Rectangle {
             Layout.fillWidth: true
             Layout.leftMargin: root.size * 2
@@ -185,7 +185,7 @@ Item {
 
         // ---- what a command changed: a file a line, each one's diff behind [diff]
         Repeater {
-            // the first 30 (a build may make hundreds): [changes] has them all
+            // the first 30 (a build may make hundreds): Changes has them all
             model: root.step.kind === "tool" && root.showDiff ? (root.step.files ?? []).slice(0, 30) : []
 
             ColumnLayout {

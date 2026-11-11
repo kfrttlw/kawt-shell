@@ -53,7 +53,7 @@ Item {
         return out.filter(p => p.code || p.text.trim() !== "");
     }
 
-    // "+ task: ..." lines the model wrote ([x] tasks in the chat): [add 2 tasks] puts them in todo
+    // "+ task: ..." lines the model wrote (my tasks in the chat): [add 2 tasks] puts them in todo
     readonly property var tasks: kind === "assistant" && !streaming && Settings.aiTodo ? Ai.tasksIn(text) : []
     property bool tasksAdded: false
 

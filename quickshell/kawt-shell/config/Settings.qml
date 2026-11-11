@@ -240,9 +240,9 @@ Singleton {
             property int aiCoderSteps: 15 // the coder stops after this many steps; 0 = never
             property string aiVoiceModel: "base" // whisper.cpp model for speaking to the ai: "tiny" | "base" | "small"
             property bool aiVoiceSend: false // what you said is sent at once, instead of into the input
-            property bool aiTodo: false // your open tasks go along with every chat question ([x] tasks)
-            property string aiVisionModel: "" // ollama: the model that gets pictures (a screenshot's [ask]); "" = the chat's
-            property bool aiRun: true // the coder may ask to run commands (each one waits for [run]), in a sandbox
+            property bool aiTodo: false // your open tasks go along with every chat question (my tasks)
+            property string aiVisionModel: "" // ollama: the model that gets pictures (a screenshot's Ask AI); "" = the chat's
+            property bool aiRun: true // the coder may ask to run commands (each one waits for Run), in a sandbox
             property string aiSandbox: "bwrap" // "bwrap" (bubblewrap) | "podman" (with aiSandboxImage)
             property string aiSandboxImage: "" // podman: an image you pulled yourself (kawt never pulls one)
             property int aiRunSecs: 120 // a command is stopped after this long
@@ -287,7 +287,7 @@ Singleton {
             property bool barHidden: false // tucked away: a 2 px edge, the pointer there brings it out (kawt bar, super+shift+b)
             property var barHide: [] // the bar's parts switched off (settings -> bar): "quick", "workspaces", "tray", "vpn", "player", "bt", "mic", "wifi", "vol", "br", "bat", "log", "kb", "clock"
             property var floatClasses: [] // window classes that float at their own size (settings -> windows)
-            property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's [tile] / [float], super + ctrl + v; services/Hypr.qml)
+            property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's Tile / Free, like KDE, super + ctrl + v; services/Hypr.qml)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
             // the companion, stripes (services/Companion.qml): the start menu's "stripes" (super + h on her) is her window
             property bool micAlways: false // the mic in the tray even while nothing listens (modules/bar/MicButton.qml)
@@ -300,8 +300,8 @@ Singleton {
             property bool companionQuotes: true // wise words now and then on a click (fortune-mod's too, in english)
             property bool welcomed: false // the first start's hello and short tour was shown (modules/companion/WelcomePopover.qml)
             property bool ratesAsked: false // a monitor slower than it can be was asked about, once (services/Rates.qml)
-            // kawt's own updates (services/Update.qml): [check] asks github once
-            property bool updateAuto: true // and once a week by itself (one git fetch); off: only [check]
+            // kawt's own updates (services/Update.qml): Check asks github once
+            property bool updateAuto: true // and once a week by itself (one git fetch); off: only Check
             property real updateCheckedAt: 0 // ms, the last check that got an answer
             property string updateNotified: "" // the upstream commit the last notification was about
             property int lookVersion: 0 // which of kawt's looks the settings were last brought up to (newLook)

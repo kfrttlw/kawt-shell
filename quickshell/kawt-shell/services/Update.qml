@@ -6,9 +6,9 @@ import qs.config
 import qs.utils
 
 // kawt's own updates (settings -> kawt). Knowing whether there's a new version means
-// asking github: [check] does that once (git fetch), and Settings.updateAuto (on by default)
+// asking github: Check does that once (git fetch), and Settings.updateAuto (on by default)
 // does it by itself once a week, saying so in a notification only when there's something new
-// (stripes hops out to say so). Off: nothing goes out unless [check] is pressed. [update]
+// (stripes hops out to say so). Off: nothing goes out unless Check is pressed. Update
 // opens a terminal with ./install.sh --update, which shows what's new and asks before it
 // changes anything (and may need sudo for a new package).
 //   qs -c kawt-shell ipc call kawt update
@@ -35,7 +35,7 @@ Singleton {
         status = Strings.t("updAsking");
         failed = false;
         // the branch it follows gone from the remote (dev, merged and deleted): what main has
-        // that this doesn't, which [update] moves it to (install.sh --update)
+        // that this doesn't, which Update moves it to (install.sh --update)
         checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q --prune || exit 1; u="@{u}"; git rev-parse -q --verify "$u" > /dev/null || u=origin/main; git rev-list --count "HEAD..$u" && git rev-parse "$u" && git log --no-merges --format=%s -n 1 "HEAD..$u"', "sh", repo];
         checker.running = true;
     }
@@ -92,7 +92,7 @@ Singleton {
         }
     }
 
-    // the notification's [update] (or a click on it, in the log too) runs the update;
+    // the notification's Update (or a click on it, in the log too) runs the update;
     // nothing comes when it's dismissed. notify-send -A waits for it
     Process {
         id: asker

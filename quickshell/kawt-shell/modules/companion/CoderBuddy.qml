@@ -4,7 +4,7 @@ import qs.services
 
 // stripes next to the coder (ai panel -> coder): she thinks while the model does, types while a
 // tool runs, puts kawt's red block over her head when a diff waits for you, hops when it's
-// applied, glitches on an error and after [undo]. Idle, she's just herself.
+// applied, glitches on an error and after Undo. Idle, she's just herself.
 Item {
     id: root
 

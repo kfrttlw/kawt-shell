@@ -1,7 +1,7 @@
 #!/bin/sh
 # usage: sandbox.sh check
 #        sandbox.sh <folder> <seconds> <command>
-# The coder's `run` (services/Coder.qml), only after you pressed [run]: <command> in sh,
+# The coder's `run` (services/Coder.qml), only after you pressed Run: <command> in sh,
 # inside the project folder, shut off from everything else.
 #   bwrap (bubblewrap, the default): the folder is /work, the one place it can write (git's
 #     own folders in it read-only, see gitPlaces); /usr and a few files of /etc read-only; its
@@ -11,7 +11,7 @@
 #     --network=none, the folder at /work, files stay yours (keep-id)
 # Limits: <seconds>, then it's killed (exit 124); 2 GB of memory and 256 processes (through
 # systemd-run when there's a user manager); the output cut at 64 KB.
-# Stopped (TERM, kawt's [stop]): the command is stopped and the rest still runs (exit 143).
+# Stopped (TERM, kawt's Stop): the command is stopped and the rest still runs (exit 143).
 # After it: git folders the command made are renamed and named in the output (gitPlaces).
 #   check   prints what there is ("bwrap" / "podman <image>"), exit 1 if nothing works
 # Exit: the command's own; 124 timed out; 125 no sandbox (it never runs outside one).
@@ -160,7 +160,7 @@ keep=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/kawt-run.XXXXXX") || exit 125
 errs=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/kawt-run.XXXXXX") || exit 125
 pidFile=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/kawt-run.XXXXXX") || exit 125
 trap 'rm -f "$code" "$ids" "$keep" "$errs" "$pidFile" "$pidFile.stop"' EXIT
-# [stop] in kawt sends TERM here. Without a trap sh would just end, and the command would go on
+# Stop in kawt sends TERM here. Without a trap sh would just end, and the command would go on
 # to its time limit with nobody looking for git folders after it. So the command gets the TERM
 # (timeout passes it on: bwrap ends and takes the sandbox with it, podman stops the container)
 # and the rest of this script runs as always
