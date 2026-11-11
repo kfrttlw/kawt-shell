@@ -37,7 +37,7 @@ Singleton {
     signal heard(string text)
 
     // the bar's [● voice 0:05] reads this from Panels: the bar doesn't start this service
-    readonly property string barText: recording ? `● voice ${Fmt.mmss(elapsed)}` : writing ? "~ writing" : ""
+    readonly property string barText: recording ? Strings.t("voiceBar").arg(Fmt.mmss(elapsed)) : writing ? Strings.t("voiceBarWriting") : ""
     onBarTextChanged: Panels.voice = barText
 
     // into the ai panel: its input (open it if it's closed), or sent at once (Settings.aiVoiceSend)
@@ -68,11 +68,11 @@ Singleton {
             return;
         }
         if (!ready) {
-            status = !bin ? "voice needs whisper-cpp: sudo pacman -S whisper-cpp" : `no voice model yet: ai -> settings -> voice -> get ${size}`;
+            status = !bin ? Strings.t("voiceNeedsBin") : Strings.t("voiceNoModel").arg(size);
             Quickshell.execDetached(["notify-send", "-a", "kawt", "-e", "--", "voice", status]);
             return;
         }
-        status = "listening...";
+        status = Strings.t("voiceListening");
         elapsed = 0;
         rec.running = true;
     }
@@ -81,7 +81,7 @@ Singleton {
     function get(name: string): void {
         if (fetch.running)
             return;
-        status = `getting the ${name} model...`;
+        status = Strings.t("voiceGetting").arg(name);
         fetch.name = name;
         fetch.command = ["sh", "-c", 'mkdir -p "$1" && curl -fL --retry 2 -o "$1/ggml-$2.bin.part" "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-$2.bin" && mv "$1/ggml-$2.bin.part" "$1/ggml-$2.bin"', "sh", dir, name];
         fetch.running = true;
@@ -118,7 +118,7 @@ Singleton {
 
         command: ["pw-record", "--rate", "16000", "--channels", "1", "--format", "s16", root.wav]
         onExited: code => {
-            root.status = "writing it down...";
+            root.status = Strings.t("voiceWriting");
             whisper.running = true;
         }
     }
@@ -143,15 +143,15 @@ Singleton {
             // [BLANK_AUDIO], (music), [Music]: not words
             const text = out.replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
             if (code === 3) {
-                root.status = "nothing was recorded: is there a mic? (pw-record)";
+                root.status = Strings.t("voiceNoRecording");
                 return;
             }
             if (code !== 0) {
-                root.status = "whisper failed (is the model whole? get it again)";
+                root.status = Strings.t("voiceFailed");
                 return;
             }
             if (!text) {
-                root.status = "heard nothing";
+                root.status = Strings.t("voiceHeardNothing");
                 return;
             }
             root.status = "";

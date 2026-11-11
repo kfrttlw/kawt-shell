@@ -146,8 +146,8 @@ WlSessionLockSurface {
                     Layout.fillWidth: true
                     visible: text !== ""
                     wrapMode: Text.Wrap
-                    text: root.lockScope.status === "" ? "" : (root.lockScope.status.startsWith("checking") ? "" : "[!] ") + root.lockScope.status
-                    color: root.lockScope.status.startsWith("checking") ? Colors.dim : Colors.warn
+                    text: root.lockScope.status === "" ? "" : (root.lockScope.result === "checking" ? "" : "[!] ") + root.lockScope.status
+                    color: root.lockScope.result === "checking" ? Colors.dim : Colors.warn
                 }
 
                 Label {
@@ -413,7 +413,7 @@ WlSessionLockSurface {
                             visible: text !== ""
                             wrapMode: Text.Wrap
                             text: root.lockScope.status
-                            color: root.lockScope.status.startsWith("checking") ? Colors.dim : Colors.warn
+                            color: root.lockScope.result === "checking" ? Colors.dim : Colors.warn
                         }
 
                         Label {

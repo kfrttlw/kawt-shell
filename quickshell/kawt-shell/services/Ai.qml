@@ -151,7 +151,7 @@ Singleton {
             return;
         if (useApi && (!Settings.apiUrl || !apiKey)) {
             setMessages([...messages, { role: "user", text, time: Date.now() }]);
-            note("api: set the url, model and key in [models] first");
+            note(Strings.t("aiNoteNoApi"));
             return;
         }
         // attached files go in front of the question; the chat shows just their names
@@ -236,7 +236,7 @@ Singleton {
 
         onDone: (code, out) => {
             if (code !== 0 || !out) {
-                root.note("the picture is gone (it was in ~/.cache/kawt/ai): asked without it");
+                root.note(Strings.t("aiNotePictureGone"));
                 root.ask(root.modelName);
                 return;
             } else {
@@ -311,7 +311,7 @@ Singleton {
         while (ctx < need && ctx < 16384)
             ctx *= 2;
         if (ctx > Settings.aiCtx && !useApi)
-            note(`context raised to ${ctx / 1024}k for this message (it's long)`);
+            note(Strings.t("aiNoteContext").arg(ctx / 1024));
 
         const xhr = new XMLHttpRequest();
         req = xhr;
@@ -411,12 +411,12 @@ Singleton {
                 Settings.apiModel = args[0];
             else
                 Settings.ollamaModel = args[0];
-            note(`model -> ${args[0]}`);
+            note(Strings.t("aiNoteModel").arg(args[0]));
         } else if (cmd === "/model" || cmd === "/models") {
             refresh();
-            note(models.length ? `models: ${models.map(m => m.name).join(", ")}` : "no models (ollama pull llama3.2)");
+            note(models.length ? Strings.t("aiNoteModels").arg(models.map(m => m.name).join(", ")) : Strings.t("aiNoteNoModels"));
         } else {
-            note(`unknown command: ${cmd}`);
+            note(Strings.t("aiNoteUnknownCmd").arg(cmd));
         }
     }
 
@@ -496,13 +496,13 @@ Singleton {
             maybeCompare(wasMain);
         if (status === 0) {
             if (useApi) {
-                note(`can't reach ${Settings.apiUrl}`);
+                note(Strings.t("aiNoteNoReach").arg(Settings.apiUrl));
             } else {
                 online = false;
-                note("ollama is offline: sudo systemctl enable --now ollama");
+                note(Strings.t("aiNoteOllamaOff"));
             }
         } else if (status >= 400 && !gotError) {
-            note(useApi ? `api: http ${status} (check the key and the model name)` : `http ${status}, is the model pulled? ollama pull ${Settings.ollamaModel}`);
+            note(useApi ? Strings.t("aiNoteApiHttp").arg(status) : Strings.t("aiNoteHttp").arg(status).arg(Settings.ollamaModel));
         }
         if (!useApi)
             psTimer.restart(); // the model just (re)loaded: show its memory soon
@@ -529,7 +529,7 @@ Singleton {
         busy = false;
         if (looped) {
             looped = false;
-            note("stopped: the model started repeating itself. try [retry], a bigger context, or a bigger model");
+            note(Strings.t("aiNoteLooped"));
             return;
         }
         comparing = false;
@@ -571,7 +571,7 @@ Singleton {
             const t = out.trim();
             const a = root.actions.find(a => a[0] === root.clipAction);
             if (code !== 0 || !t) {
-                root.note("the clipboard is empty (copy some text first)");
+                root.note(Strings.t("aiNoteEmptyClip"));
                 return;
             }
             // shown short in the chat, sent in full
@@ -613,22 +613,22 @@ Singleton {
                 data = JSON.parse(xhr.responseText);
             } catch (e) {}
             if (xhr.status === 0) {
-                cb("", useApi ? `can't reach ${Settings.apiUrl}` : "ollama is offline: sudo systemctl enable --now ollama");
+                cb("", useApi ? Strings.t("aiNoteNoReach").arg(Settings.apiUrl) : Strings.t("aiNoteOllamaOff"));
                 return;
             }
             const err = data && data.error;
             if (xhr.status >= 400 || !data) {
-                cb("", `model error: ${(err && err.message) || err || `http ${xhr.status}`}`);
+                cb("", Strings.t("aiNoteModelError").arg((err && err.message) || err || `http ${xhr.status}`));
                 return;
             }
             const msg = useApi ? data.choices && data.choices[0] && data.choices[0].message : data.message;
             const text = ((msg && msg.content) || "").trim();
-            cb(text, text ? "" : "the model said nothing");
+            cb(text, text ? "" : Strings.t("aiNoteSaidNothing"));
         };
         const messages = [{ role: "system", content: system }, { role: "user", content: prompt }];
         if (useApi) {
             if (!Settings.apiUrl || !apiKey) {
-                cb("", "api: set the url, model and key in the ai panel's [models] first");
+                cb("", Strings.t("aiNoteNoApi"));
                 return xhr;
             }
             xhr.open("POST", `${Settings.apiUrl.replace(/\/+$/, "")}/chat/completions`);
@@ -880,7 +880,7 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         stdout: StdioCollector {
             onStreamFinished: root.files = text.split("\n").filter(l => l)
         }
-        onExited: code => root.fileStatus = code === 4 ? "can't open that folder" : ""
+        onExited: code => root.fileStatus = code === 4 ? Strings.t("aiFileCantOpen") : ""
     }
 
     Job {
@@ -891,9 +891,9 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         onDone: (code, out) => {
             if (code === 0) {
                 root.attachments = [...root.attachments, { path: reader.path, text: out }];
-                root.fileStatus = out.length >= root.fileLimit ? `${reader.path}: only the first ${root.fileLimit / 1000}k characters` : "";
+                root.fileStatus = out.length >= root.fileLimit ? Strings.t("aiFileCut").arg(reader.path).arg(root.fileLimit / 1000) : "";
             } else {
-                root.fileStatus = `${reader.path}: ${({ 3: "outside the folder, not allowed", 6: "not a text file" })[code] ?? "can't read it"}`;
+                root.fileStatus = `${reader.path}: ${Strings.t(({ 3: "aiFileOutside", 6: "aiFileNotText" })[code] ?? "aiFileCantRead")}`;
             }
             root.nextAttach();
         }
@@ -948,7 +948,7 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         if (!name || pulling)
             return;
         pulling = true;
-        pullStatus = `${name}: starting...`;
+        pullStatus = Strings.t("aiPullStarting").arg(name);
         const xhr = new XMLHttpRequest();
         let seen = 0;
         xhr.onreadystatechange = () => {
@@ -964,7 +964,7 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
                     if (m.error)
                         root.pullStatus = `${name}: ${m.error}`;
                     else if (m.total && m.completed)
-                        root.pullStatus = `${name}: ${m.status} ${Math.round(m.completed / m.total * 100)}% of ${root.size(m.total)}`;
+                        root.pullStatus = Strings.t("aiPullPercent").arg(name).arg(m.status).arg(Math.round(m.completed / m.total * 100)).arg(root.size(m.total));
                     else if (m.status)
                         root.pullStatus = `${name}: ${m.status}`;
                 } catch (e) {}
@@ -972,9 +972,9 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
             if (xhr.readyState === 4) {
                 root.pulling = false;
                 if (xhr.status === 0)
-                    root.pullStatus = "ollama is offline";
+                    root.pullStatus = Strings.t("aiPullOffline");
                 else if (root.pullStatus.endsWith("success"))
-                    root.pullStatus = `${name}: done`;
+                    root.pullStatus = Strings.t("aiPullDone").arg(name);
                 root.refresh();
             }
         };
@@ -1064,7 +1064,7 @@ head -c ${fileLimit} -- "$real"`, "sh", reader.path, Settings.expand(Settings.ai
         interval: 120000
         onTriggered: {
             root.stop();
-            root.note("no response for 2 min, stopped");
+            root.note(Strings.t("aiNoteTimeout"));
         }
     }
 

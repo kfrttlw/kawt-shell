@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Networking
 import qs.utils
+import qs.config
 
 // Thin layer over Quickshell.Networking (NetworkManager backend), plus hidden networks
 // through nmcli (scripts/wifi-hidden.sh): they don't show up in a scan, so the name is typed
@@ -35,13 +36,15 @@ Singleton {
     // ---- a hidden network. Here and not in the panel: closing the panel mid-way must not
     // cut nmcli off while it's still handing the password over
     property string hiddenStatus: "" // "connecting to x..." / "connected to x" / "failed: why"
+    property bool hiddenFailed: false // that last one
     readonly property bool hiddenBusy: hiddenJob.running
 
     // psk "" = an open network. The password goes to the script on stdin, never as an argument
     function connectHidden(ssid: string, psk: string): void {
         if (hiddenJob.running || !ssid)
             return;
-        hiddenStatus = `connecting to ${ssid}...`;
+        hiddenStatus = Strings.t("connectingTo").arg(ssid);
+        hiddenFailed = false;
         hiddenJob.ssid = ssid;
         hiddenJob.input = psk;
         hiddenJob.command = ["sh", `${Quickshell.shellDir}/scripts/wifi-hidden.sh`, ssid];
@@ -60,7 +63,10 @@ Singleton {
             input = "";
             stdinEnabled = false;
         }
-        onDone: (code, out) => root.hiddenStatus = code === 0 ? `connected to ${ssid}` : `failed: ${out.trim().split("\n").pop() || "couldn't connect"}`
+        onDone: (code, out) => {
+            root.hiddenFailed = code !== 0;
+            root.hiddenStatus = code === 0 ? Strings.t("connectedTo").arg(ssid) : Strings.t("wifiFailed").arg(out.trim().split("\n").pop() || "nmcli");
+        }
     }
 
     Binding {

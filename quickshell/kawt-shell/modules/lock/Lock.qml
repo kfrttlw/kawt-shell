@@ -13,7 +13,11 @@ import qs.services
 Scope {
     id: root
 
-    property string status: ""
+    // how the last try went: "" | "checking" | "denied" | "tries" (too many) | "error"; status
+    // says it in words
+    property string result: ""
+    property string pamMessage: ""
+    readonly property string status: result === "" ? "" : result === "checking" ? Strings.t("lockChecking") : result === "denied" ? Strings.t("lockDenied").arg(fails) : result === "tries" ? Strings.t("lockTooMany") : Strings.t("lockPamError").arg(pamMessage || "unknown")
     property int fails: 0
     // the right password: the lock switches off like an old tube first (LockSurface.qml says
     // when it's done; a second at most), then it's gone
@@ -27,7 +31,7 @@ Scope {
         if (pam.active || password === "")
             return;
         pending = password;
-        status = "checking...";
+        result = "checking";
         pam.start();
     }
 
@@ -36,7 +40,7 @@ Scope {
         leaveTimeout.stop();
         leaving = false;
         pending = "";
-        status = "";
+        result = "";
         fails = 0;
         testLeft = 0;
         Panels.lockTest = false;
@@ -48,7 +52,7 @@ Scope {
             unlock();
             return;
         }
-        status = "";
+        result = "";
         leaving = true;
         leaveTimeout.restart();
     }
@@ -67,7 +71,7 @@ Scope {
         function onLockedChanged(): void {
             if (Panels.locked) {
                 Panels.close(); // popovers would sit above nothing
-                root.status = "";
+                root.result = "";
                 root.testLeft = Panels.lockTest ? 30 : 0;
             }
         }
@@ -110,9 +114,8 @@ Scope {
                 root.leave();
             } else {
                 root.fails++;
-                root.status = result === PamResult.MaxTries ? "too many attempts, wait a bit"
-                    : result === PamResult.Error ? `pam error: ${message || "unknown"}`
-                    : `access denied (${root.fails})`;
+                root.pamMessage = message || "";
+                root.result = result === PamResult.MaxTries ? "tries" : result === PamResult.Error ? "error" : "denied";
             }
         }
     }

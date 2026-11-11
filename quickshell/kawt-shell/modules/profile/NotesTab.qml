@@ -404,7 +404,7 @@ RowLayout {
 
                     Label {
                         visible: !noteEdit.text
-                        text: "first line = title\n# a heading · - [ ] a box · - a point"
+                        text: Strings.t("notesHint")
                         color: Colors.dim
                     }
 

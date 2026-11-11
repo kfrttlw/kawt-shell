@@ -90,7 +90,7 @@ Popover {
 
                 Label {
                     visible: appRow.modelData.hasMenu
-                    text: "menu >"
+                    text: Strings.t("trayMenu")
                     color: Colors.dim
                     font.pixelSize: Metrics.size(-2)
                 }
@@ -124,7 +124,7 @@ Popover {
     Label {
         visible: !root.app
         Layout.alignment: Qt.AlignRight
-        text: "lmb open · rmb menu · mmb alt"
+        text: Strings.t("trayMouse")
         color: Colors.dim
         font.pixelSize: Metrics.size(-3)
     }
