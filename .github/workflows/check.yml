@@ -39,3 +39,34 @@ jobs:
         run: |
           sudo apt-get install -y -qq --no-install-recommends lua5.4 > /dev/null
           for f in $(git ls-files '*.lua'); do luac5.4 -p "$f" || exit 1; done
+
+  # the shell really loaded: quickshell in an arch container, kawt in a headless sway, every
+  # panel, window and page opened over ipc; what qt says didn't load fails it (tools/load-test.sh)
+  load:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    timeout-minutes: 40
+    steps:
+      - name: packages
+        run: |
+          pacman -Syu --noconfirm --needed git sway dbus ttf-dejavu wl-clipboard > /dev/null
+          useradd -m tester
+          echo 'tester ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/tester
+
+      # from the repos if they have it, built from the aur if not
+      - name: quickshell
+        run: |
+          if pacman -Si quickshell > /dev/null 2>&1; then
+            pacman -S --noconfirm quickshell > /dev/null
+          else
+            sudo -u tester bash -c 'cd ~ && git clone -q --depth 1 https://aur.archlinux.org/quickshell.git && cd quickshell && makepkg -si --noconfirm --needed > build.log 2>&1 || { tail -n 60 build.log; exit 1; }'
+          fi
+          qs --version
+
+      - uses: actions/checkout@v4
+
+      - name: kawt loads
+        run: |
+          chown -R tester: "$GITHUB_WORKSPACE"
+          sudo -u tester tools/load-test.sh
+
