@@ -35,6 +35,12 @@ FloatingWindow {
         Panels.closeWindow(name);
     }
 
+    // its title and icon for the taskbar (Panels.windowIcon), kept up to date while it's open
+    onTitleChanged: Panels.setWindowLook(name, title, icon)
+    onIconChanged: Panels.setWindowLook(name, title, icon)
+    Component.onCompleted: Panels.setWindowLook(name, title, icon)
+    Component.onDestruction: Panels.forgetWindowLook(name)
+
     // closed by hyprland (super + q, the taskbar's menu): kawt lets it go too
     onClosed: close()
 

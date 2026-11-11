@@ -42,8 +42,15 @@ PanelWindow {
         ["llama3.1:8b", "4.9G", "smartest here, needs ~8G ram", "самая умная здесь, нужно ~8G памяти"]
     ]
     // more names for the by-name completion (from ollama.com/library)
-    readonly property list<string> popular: ["llama3.2", "llama3.1", "llama3.3", "mistral", "mistral-nemo", "mixtral", "qwen2.5", "qwen2.5:1.5b", "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder", "qwen2.5-coder:1.5b", "qwen2.5-coder:3b", "qwen3", "qwen3:0.6b", "qwen3:1.7b", "qwen3:4b", "qwen3:8b", "deepseek-r1", "deepseek-r1:1.5b", "deepseek-r1:7b", "deepseek-r1:8b", "gemma2", "gemma2:2b", "gemma3", "gemma3:12b", "phi3", "phi3:mini", "phi4", "codellama", "codegemma", "starcoder2", "llava", "llava:7b", "moondream", "qwen2.5vl", "qwen2.5vl:3b", "qwen2.5vl:7b", "tinyllama", "smollm2", "smollm2:360m", "granite3.1-dense", "nomic-embed-text"]
-    readonly property string defaultSystem: "Answer briefly and informatively. Get straight to the point, skip filler and repetition. Use a list or a code block only when it really helps. Answer in the language of the question."
+    readonly property list<string> popular: [
+        "llama3.2", "llama3.1", "llama3.3", "mistral", "mistral-nemo", "mixtral", "qwen2.5",
+        "qwen2.5:1.5b", "qwen2.5:7b", "qwen2.5:14b", "qwen2.5-coder", "qwen2.5-coder:1.5b",
+        "qwen2.5-coder:3b", "qwen3", "qwen3:0.6b", "qwen3:1.7b", "qwen3:4b", "qwen3:8b",
+        "deepseek-r1", "deepseek-r1:1.5b", "deepseek-r1:7b", "deepseek-r1:8b", "gemma2",
+        "gemma2:2b", "gemma3", "gemma3:12b", "phi3", "phi3:mini", "phi4", "codellama", "codegemma",
+        "starcoder2", "llava", "llava:7b", "moondream", "qwen2.5vl", "qwen2.5vl:3b", "qwen2.5vl:7b",
+        "tinyllama", "smollm2", "smollm2:360m", "granite3.1-dense", "nomic-embed-text"
+    ]
 
     screen: forScreen
     visible: open || progress > 0
@@ -1242,12 +1249,12 @@ PanelWindow {
                                     }
 
                                     PushButton {
-                                        visible: Settings.aiSystem !== root.defaultSystem
+                                        visible: Settings.aiSystem !== Settings.aiDefaultSystem
                                         small: true
                                         text: Strings.t("aiDefault")
                                         onClicked: {
-                                            Settings.aiSystem = root.defaultSystem;
-                                            systemEdit.text = root.defaultSystem;
+                                            Settings.aiSystem = Settings.aiDefaultSystem;
+                                            systemEdit.text = Settings.aiDefaultSystem;
                                         }
                                     }
                                 }

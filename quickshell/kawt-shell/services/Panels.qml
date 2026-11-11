@@ -111,11 +111,29 @@ Singleton {
             windows = Object.assign({}, windows, { [name]: true });
     }
 
+    // each of them as the taskbar sees it, while it's open: name -> { title, icon }. Told by the
+    // window itself (components/AppWindow.qml), so a title in another language or with today's
+    // date in it is still found
+    property var windowLooks: ({})
+
+    function setWindowLook(name: string, title: string, icon: string): void {
+        windowLooks = Object.assign({}, windowLooks, { [name]: { title, icon } });
+    }
+
+    function forgetWindowLook(name: string): void {
+        const w = Object.assign({}, windowLooks);
+        delete w[name];
+        windowLooks = w;
+    }
+
     // the taskbar's icon for one of them, by its title ("" for any other app's window)
     function windowIcon(cls: string, title: string): string {
         if (cls !== "org.quickshell")
             return "";
-        return title.startsWith(Strings.t("system")) ? "chart" : title.startsWith(Strings.t("today")) ? "check" : title.startsWith(Strings.t("settingsTitle")) ? "gear" : title.startsWith(Strings.t("styleTitle")) ? "wallpaper" : "logo";
+        for (const name in windowLooks)
+            if (windowLooks[name].title === title)
+                return windowLooks[name].icon;
+        return "logo";
     }
 
     function closeWindow(name: string): void {
