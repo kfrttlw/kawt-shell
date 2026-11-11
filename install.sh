@@ -23,6 +23,8 @@
 #                                Right after a git pull by hand (a version from before --update):
 #                                what that pull brought, the same way
 #                                (also: qs -c kawt-shell ipc call kawt update, or Update in settings -> kawt)
+#   ./install.sh --rollback      back to the version before the last update, if the new one broke
+#                                something (once more: forward again; the next --update brings it back)
 #   ./install.sh --check         is all of that there? only says (./doctor.sh asks it too)
 #   ./install.sh --monitors      your monitors: each at its best mode, or picked by hand
 #   ./install.sh --help
@@ -135,10 +137,12 @@ pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tess
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
-mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from="" fresh=0
+mode=install dry=0 yes=0 preset="" packages=1 update=1 updated_from="" fresh=0 rolled=0
 for arg in "$@"; do
     case $arg in
         --update) mode=update ;;
+        --rollback) mode=rollback ;;
+        --rolled-back) rolled=1 ;; # the installer of the version --rollback went back to
         --check) mode=check ;;
         --monitors) mode=monitors ;;
         --updated=*) updated_from=${arg#*=} ;; # the new install.sh, after --update pulled it (from: the commit before)
@@ -151,7 +155,7 @@ for arg in "$@"; do
         -u | --uninstall) mode=uninstall ;;
         --fresh) mode=fresh ;;
         -h | --help)
-            sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
             exit 0
             ;;
         *)
@@ -182,6 +186,8 @@ if [[ $mode == install || $mode == update || $mode == fresh ]] && ((!dry && EUID
 fi
 say() { printf '%s\n' "$*"; }
 short() { printf '%s' "${1//"$HOME"/\~}"; } # /home/you/x -> ~/x, for display only
+# the commit kawt was at before an update (or a --rollback): where --rollback goes
+keep_before() { ((dry)) || { mkdir -p "$state" && printf '%s\n' "$1" > "$state/before-update"; }; }
 commas() { local IFS=,; printf '%s' "$*" | sed 's/,/, /g'; } # a, b, c
 step() { printf '%s[%s]%s %s\n' "$acc" "$1" "$off" "$(short "$2")"; }
 note() { printf '       %s%s%s\n' "$dim" "$(short "$1")" "$off"; }
@@ -1277,6 +1283,7 @@ if [[ $mode == update ]]; then
     if ((behind == 0)) && [[ $(g rev-parse HEAD) != "$old" ]]; then
         # moved over to main just now: that was the update
         pass "kawt is at $(g log -1 --format='%h')"
+        keep_before "$old"
         exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
     fi
     if ((behind == 0)); then
@@ -1296,6 +1303,7 @@ if [[ $mode == update ]]; then
             else
                 mkdir -p "$state" && printf '%s\n' "$ref" > "$seen"
             fi
+            keep_before "$prev"
             exec "$repo/install.sh" --updated="$prev" "${fwd[@]}"
         fi
         pass "kawt is up to date ($(g log -1 --format='%h, %cr'))"
@@ -1322,7 +1330,71 @@ if [[ $mode == update ]]; then
     fi
     g merge -q --ff-only '@{u}' || { fail "git merge failed" "see above"; exit 1; }
     pass "kawt is at $(g log -1 --format='%h')"
+    keep_before "$old"
     exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
+fi
+
+# ------------------------------------------------------------------ rollback
+# --rollback: back to the version before the last update, when the new one broke something and
+# the fix isn't out yet. Every update keeps the commit it came from ($state/before-update); this
+# goes back to it with git reset --keep (refused when files of the repo were changed here, as an
+# update is), then the installer of that version does the rest, as after an update: the shell
+# started again, hyprland's config read again. It keeps where it came from in turn: --rollback
+# once more goes forward again, and so does the next --update
+if [[ $mode == rollback ]]; then
+    if ((EUID == 0)); then
+        say "${red}run this as your own user, not as root${off} ${dim}(git would leave root's files in your clone)${off}"
+        exit 1
+    fi
+    banner "back"
+    ((dry)) && say "${dim}dry run: nothing will be changed${off}"
+    say ""
+    g() { GIT_TERMINAL_PROMPT=0 git -C "$repo" "$@"; }
+    if ! g rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        say "${red}$(short "$repo") isn't a git clone${off}, so kawt can't go back here"
+        exit 1
+    fi
+    back=$(cat "$state/before-update" 2> /dev/null)
+    if [[ ! $back =~ ^[0-9a-f]{40}$ ]] || ! g cat-file -e "$back^{commit}" 2> /dev/null; then
+        say "nothing to go back to: kawt keeps the version from before the last update (./install.sh --update), and there was none yet"
+        note "an older one by hand: git -C $(short "$repo") log --oneline, then git -C $(short "$repo") reset --keep <commit> and ./install.sh --update"
+        exit 1
+    fi
+    now=$(g rev-parse HEAD)
+    if [[ $now == "$back" ]]; then
+        pass "kawt is at that version already ($(g log -1 --format='%h, %cr'))"
+        exit 0
+    fi
+    changed=$(g status --porcelain --untracked-files=no)
+    if [[ -n $changed ]]; then
+        say "files of the repo were changed here:"
+        printf '%s\n' "$changed" | sed 's/^.../  /'
+        note "put them aside first (git -C $(short "$repo") stash), then again"
+        exit 1
+    fi
+    section "back to"
+    g log -1 --format='  %h  %s' "$back" | cut -c1-"$(cols)"
+    say "  ${dim}$(g log -1 --format='%cr' "$back"); now it's $(g log -1 --format='%h, %cr')${off}"
+    if g merge-base --is-ancestor "$back" HEAD 2> /dev/null; then
+        note "$(g rev-list --count "$back..HEAD") change(s) since then are left out, until the next update"
+    fi
+    say ""
+    if ! ask "go back?"; then
+        say "${dim}nothing was changed.${off}"
+        exit 0
+    fi
+    if ((dry)); then
+        note "would run: git reset --keep ${back:0:7}, then that version's install.sh for the rest"
+        exit 0
+    fi
+    g reset -q --keep "$back" || { fail "git reset failed" "see above"; exit 1; }
+    pass "kawt is at $(g log -1 --format='%h') again"
+    keep_before "$now"
+    fwd=(--rolled-back)
+    ((yes)) && fwd+=(--yes)
+    ((packages)) || fwd+=(--no-packages)
+    ((update)) || fwd+=(--no-update)
+    exec "$repo/install.sh" --updated="$now" "${fwd[@]}"
 fi
 
 # kawt's cursors (settings -> look -> cursor, services/Cursor.qml): the links kawt made in
@@ -2656,8 +2728,11 @@ if [[ -n $updated_from ]]; then
     ((nothing_new && !touched)) || say ""
     if ((nothing_new)); then
         say "${acc}kawt is up to date, and all it needs is here.${off}"
+    elif ((rolled)); then
+        say "${acc}kawt is back at $(git -C "$repo" log -1 --format='%h' 2> /dev/null).${off} ${dim}forward again: ./install.sh --rollback, or the next update${off}"
     else
         say "${acc}kawt is updated.${off} ${dim}all of what's new: git -C $(short "$repo") log --oneline ${updated_from:0:7}..${off}"
+        say "${dim}something wrong in it? ./install.sh --rollback goes back to ${updated_from:0:7}${off}"
     fi
     [[ -d $backup ]] && say "${dim}configs moved aside: $(short "$backup")${off}"
     exit 0
