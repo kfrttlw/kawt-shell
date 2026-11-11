@@ -649,11 +649,13 @@ tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 tools/net.sh -w          # which programs talk to the internet, live (the wifi panel's who's out, in a terminal)
 tools/qsb.sh             # builds the shaders again after a change (qt6-shadertools)
 python3 tools/cursors.py # draws kawt's cursors again after a change in it (--check, --preview sheet.png)
+tools/load-test.sh       # does kawt load? in a headless sway, every panel and window opened (sway, quickshell)
 ```
 
 The same check runs on every push and pull request (`.github/workflows/check.yml`), with
 `shellcheck` over the scripts, the Lua files' syntax and whether the cursors in the repo are what
-`tools/cursors.py` draws: what it can see without Hyprland.
+`tools/cursors.py` draws; and a second job loads kawt for real, in an Arch container with
+quickshell and a headless sway, every panel, window and settings page opened (`tools/load-test.sh`).
 
 ## License
 
