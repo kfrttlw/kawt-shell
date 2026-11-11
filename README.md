@@ -195,7 +195,7 @@ switch on the right), `Settings…` at the bottom, to the page it belongs to.
 - **network**: Wi-Fi on or off; the networks nearby, the one in use red, a lock on the ones
   with a password, `open` on the ones without; the last minute between `↓` and `↑`; ip,
   gateway, the band. `Who's on the net…` opens the system window there: every program talking
-  to the internet right now, with its connections and speed; `[kill]`, or `[offline]`: started
+  to the internet right now, with its connections and speed; **kill**, or **offline**: started
   from the launcher it gets no internet from then on (its own empty network, no root). `…`
   joins a hidden network by name
 - **sound**: the whole of it standing on the left, each app that plays beside it, mute; the
@@ -464,7 +464,7 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --help
 ```
 
-**Updating.** `./install.sh --update` (or `[update]` in settings → kawt, or
+**Updating.** `./install.sh --update` (or **Update** in settings → kawt, or
 `qs -c kawt-shell ipc call kawt update`): shows what's new, asks, `git pull`s, then the new
 installer adds what the new version needs for the parts you have (new packages, links), starts
 the shell again and reloads Hyprland. Optional packages new in that version are offered with
@@ -473,10 +473,10 @@ of your parts are there and that their libraries are: what `pacman -Dk` finds mi
 installed, and an AUR quickshell that can't load its own libraries (`ldd`) is built again. Your
 own things are outside the repo and stay as they are; changes made inside the repo stop it,
 with a list (`git stash` can put them aside). Knowing about a new version means asking github:
-`[check]` in settings → kawt does it once (`git fetch`), and kawt does it by itself once a
+**Check** in settings → kawt does it once (`git fetch`), and kawt does it by itself once a
 week, with a notification only when there's something new (stripes peeks out to say so too).
 "look for updates once a week" there switches that off: then nothing goes out unless you press
-`[check]`.
+**Check**.
 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it. Don't clone it
 into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
@@ -484,7 +484,7 @@ into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 **Needs:** `quickshell` `hyprland` `kitty` `ttf-ibmplex-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `hyprpicker` (the still screen for screenshots), `brightnessctl` on laptops.
 For the rest of the desktop: `pipewire-pulse` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `hyprpolkitagent` `playerctl` `noto-fonts-emoji`.
 Services kawt talks to: `networkmanager` (wifi), `pipewire` (sound, mic), `upower` (battery), `bluez` (bluetooth), and systemd-logind with `glib2` (`gdbus`, for locking before sleep).
-**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (more wise words for stripes), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (`[edit]` on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (`[text]` on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it).
+**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (more wise words for stripes), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (**Draw on it** on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (**Text** on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it).
 
 The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
 without it, only while `super + w` is open.
