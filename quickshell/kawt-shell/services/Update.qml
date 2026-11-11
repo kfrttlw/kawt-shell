@@ -21,6 +21,7 @@ Singleton {
     property int behind: -1 // new commits upstream; -1 = not asked yet
     property string news: "" // the newest of their titles
     property string status: ""
+    property bool failed: false // the last check got no answer (status says why)
     readonly property bool checking: checker.running
 
     // the weekly check found a version it hadn't told about yet
@@ -31,7 +32,8 @@ Singleton {
         if (!repo || checker.running)
             return;
         checker.auto = !!auto;
-        status = "asking the remote...";
+        status = Strings.t("updAsking");
+        failed = false;
         // the branch it follows gone from the remote (dev, merged and deleted): what main has
         // that this doesn't, which [update] moves it to (install.sh --update)
         checker.command = ["sh", "-c", 'cd "$1" || exit 1; export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"; git fetch -q --prune || exit 1; u="@{u}"; git rev-parse -q --verify "$u" > /dev/null || u=origin/main; git rev-list --count "HEAD..$u" && git rev-parse "$u" && git log --no-merges --format=%s -n 1 "HEAD..$u"', "sh", repo];
@@ -69,7 +71,8 @@ Singleton {
             const lines = out.trim().split("\n");
             if (code !== 0 || !/^\d+$/.test(lines[0] ?? "")) {
                 // the weekly one stays due: tried again next hour, quietly
-                root.status = "couldn't ask: no internet, or the branch follows no remote one";
+                root.status = Strings.t("updCouldnt");
+                root.failed = true;
                 return;
             }
             Settings.updateCheckedAt = Date.now();
@@ -77,7 +80,7 @@ Singleton {
             // a title can run to a paragraph: its start, cut at a word, fits a notification
             const title = lines[2] ?? "";
             root.news = root.behind === 0 ? "" : title.length <= 120 ? title : title.slice(0, 120).replace(/\s+\S*$/, "") + "…";
-            root.status = root.behind === 0 ? "up to date" : `${root.behind} new`;
+            root.status = root.behind === 0 ? Strings.t("updUpToDate") : Strings.t("updNew").arg(root.behind);
             // once per new upstream state: a version you skipped isn't brought up every week
             if (auto && root.behind > 0 && Settings.updateNotified !== lines[1]) {
                 Settings.updateNotified = lines[1];

@@ -54,7 +54,7 @@ ColumnLayout {
             visible: text !== ""
             wrapMode: Text.WordWrap
             text: Update.status + (Update.news ? `: ${Update.news}` : "")
-            color: Update.status.startsWith("couldn't") ? Colors.warn : Update.behind > 0 ? Colors.accent : Colors.dim
+            color: Update.failed ? Colors.warn : Update.behind > 0 ? Colors.accent : Colors.dim
         }
 
         // one small request to github a week; off: nothing goes out unless "check" is pressed

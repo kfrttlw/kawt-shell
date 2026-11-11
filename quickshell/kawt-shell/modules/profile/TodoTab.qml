@@ -497,7 +497,7 @@ RowLayout {
                                                 Layout.fillWidth: true
                                                 framed: false
                                                 prompt: "+"
-                                                placeholder: "a step"
+                                                placeholder: Strings.t("todoStep")
                                                 onAccepted: t => {
                                                     Todo.addSub(task.modelData.id, t);
                                                     text = "";
@@ -542,7 +542,7 @@ RowLayout {
 
                                                 Label {
                                                     visible: !note.text && !note.activeFocus
-                                                    text: "note..."
+                                                    text: Strings.t("todoNoteHint")
                                                     color: Colors.dim
                                                     font.pixelSize: Metrics.size(-1)
                                                 }
@@ -555,7 +555,7 @@ RowLayout {
                                             spacing: Metrics.spacing
 
                                             Label {
-                                                text: "every:"
+                                                text: Strings.t("todoEvery")
                                                 color: Colors.dim
                                             }
 

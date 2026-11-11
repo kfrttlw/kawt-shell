@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.config
 
 // What the machine has beyond the usual, for the profile's sys tab (scripts/hardware.sh): the
 // bios version, the battery's charge thresholds, the keyboard light, the power profile. Each only
@@ -87,7 +88,7 @@ Singleton {
 
         onExited: code => {
             // 126/127: pkexec said no (cancelled, or no polkit agent)
-            root.status = code === 0 ? "" : code === 126 || code === 127 ? "not changed: no password given" : "the battery didn't take it";
+            root.status = code === 0 ? "" : code === 126 || code === 127 ? Strings.t("chargeNoPassword") : Strings.t("chargeRefused");
             root.refresh();
         }
     }

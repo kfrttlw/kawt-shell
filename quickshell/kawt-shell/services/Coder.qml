@@ -113,7 +113,7 @@ Answer in the language of the user's task.`;
         if (!task || running || settling)
             return;
         if (!Settings.aiFolder) {
-            addStep({ kind: "error", text: "pick a project folder first: open the panel wide [<>] and set dir>" });
+            addStep({ kind: "error", text: Strings.t("coderNoFolder") });
             return;
         }
         if (convo.length === 0)
@@ -136,7 +136,7 @@ Answer in the language of the user's task.`;
         }
         sandboxWait.tries = 0;
         if (maxSteps > 0 && stepCount >= maxSteps) {
-            addStep({ kind: "info", text: `stopped after ${maxSteps} steps. say "go on" to continue` });
+            addStep({ kind: "info", text: Strings.t("coderMaxSteps").arg(maxSteps) });
             finish();
             return;
         }
@@ -162,11 +162,11 @@ Answer in the language of the user's task.`;
                 data = JSON.parse(xhr.responseText);
             } catch (e) {}
             if (xhr.status === 0) {
-                root.fail(Ai.useApi ? `can't reach ${Settings.apiUrl}` : "ollama is offline: sudo systemctl enable --now ollama");
+                root.fail(Ai.useApi ? Strings.t("aiNoteNoReach").arg(Settings.apiUrl) : Strings.t("aiNoteOllamaOff"));
             } else if (xhr.status >= 400 || !data) {
                 const err = data && data.error;
                 const msg = (err && err.message) || err || `http ${xhr.status}`;
-                root.fail(String(msg).includes("does not support tools") ? `${Ai.modelName} can't use tools. pick qwen2.5 / qwen2.5-coder / llama3.1+ in [models]` : `model error: ${msg}`);
+                root.fail(String(msg).includes("does not support tools") ? Strings.t("coderNoTools").arg(Ai.modelName) : Strings.t("aiNoteModelError").arg(msg));
             } else {
                 root.handleReply(Ai.useApi ? (data.choices && data.choices[0] && data.choices[0].message) : data.message);
             }
@@ -258,7 +258,7 @@ Answer in the language of the user's task.`;
     // the model answered: its thoughts, maybe some tool calls
     function handleReply(msg: var): void {
         if (!msg) {
-            fail("empty answer from the model");
+            fail(Strings.t("coderEmpty"));
             return;
         }
         let text = (msg.content || "").trim();
@@ -291,7 +291,7 @@ Answer in the language of the user's task.`;
             turn.tool_calls = rawCalls;
         convo = [...convo, turn];
         if (calls.length === 0) {
-            addStep({ kind: "answer", text: text || "(no answer)" });
+            addStep({ kind: "answer", text: text || Strings.t("coderNoAnswer") });
             finish();
             return;
         }
@@ -671,12 +671,12 @@ Answer in the language of the user's task.`;
             if (code !== 0)
                 failed++;
             if (--left === 0)
-                addStep({ kind: "info", text: `undo: ${n} file${n === 1 ? "" : "s"} put back${failed ? ` (${failed} step${failed === 1 ? "" : "s"} failed: a file there may be as it is now)` : ""}` });
+                addStep({ kind: "info", text: Strings.t("coderUndone").arg(Strings.count(n, "file")) + (failed ? Strings.t("coderUndoFailed").arg(failed) : "") });
         };
         for (const c of todo)
             takeBack(c, end);
         if (left === 0)
-            addStep({ kind: "info", text: "undo: nothing to put back" });
+            addStep({ kind: "info", text: Strings.t("coderUndoNothing") });
     }
 
     // one file of [changes] back as it was before the agent's first change to it. The changes
@@ -688,14 +688,14 @@ Answer in the language of the user's task.`;
             return;
         restoreFile(c.folder, c.path, c, code => {
             if (code !== 0) {
-                addStep({ kind: "error", text: `${c.path} couldn't be put back: ${problem(code)}` });
+                addStep({ kind: "error", text: Strings.t("coderCantPutBack").arg(c.path).arg(problem(code)) });
                 return;
             }
             const ch = Object.assign({}, changedFiles);
             delete ch[key];
             changedFiles = ch;
             history = history.filter(h => h.after || h.folder !== c.folder || h.path !== c.path).map(h => h.after && h.folder === c.folder && h.paths.includes(c.path) ? Object.assign({}, h, { paths: h.paths.filter(x => x !== c.path) }) : h).filter(h => !h.after || h.paths.length > 0);
-            addStep({ kind: "info", text: `undo: ${c.path} put back` });
+            addStep({ kind: "info", text: Strings.t("coderUndone").arg(c.path) });
         });
     }
 
@@ -741,17 +741,17 @@ Answer in the language of the user's task.`;
             if (r.since === 0) {
                 // still taking the picture: nothing ran
                 runner.run = null;
-                setStep(r.stepId, { status: "error", text: "stopped" });
+                setStep(r.stepId, { status: "error", text: Strings.t("coderStopped") });
             } else if (runner.running) {
                 // sandbox.sh takes the TERM: it stops the command and still looks after it; then
                 // what it changed is read as always (ranDone)
-                setStep(r.stepId, { status: "running", text: "stopping" });
+                setStep(r.stepId, { status: "running", text: Strings.t("coderStopping") });
                 runner.running = false;
             }
             // ended already: what it changed is being read, and kept; the model isn't told
         }
         if (was)
-            addStep({ kind: "info", text: "stopped" });
+            addStep({ kind: "info", text: Strings.t("coderStopped") });
         finish();
     }
 

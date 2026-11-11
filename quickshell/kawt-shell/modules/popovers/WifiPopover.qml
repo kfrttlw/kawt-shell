@@ -17,6 +17,7 @@ Popover {
 
     property var pskTarget: null // secured network waiting for a password
     property string status: ""
+    property bool failed: false // status is a failure
     property bool hiddenAsk: false // the lines for a hidden network are open
     property string hiddenSsid: "" // its name, typed: now the password is asked
     readonly property int rowHeight: Metrics.fontSize + 9
@@ -127,6 +128,7 @@ Popover {
 
                             function onConnectionFailed(reason: int): void {
                                 root.status = Strings.t("wifiFailed").arg(ConnectionFailReason.toString(reason));
+                                root.failed = true;
                                 // saved password is wrong/missing -> ask for it (don't call pick(): it would retry a known net forever)
                                 if (reason === ConnectionFailReason.NoSecrets) {
                                     root.pskTarget = row.modelData;
@@ -293,6 +295,7 @@ Popover {
                     if (!root.pskTarget || text.length === 0)
                         return;
                     root.status = Strings.t("connectingTo").arg(root.pskTarget.name);
+                    root.failed = false;
                     root.pskTarget.connectWithPsk(text);
                     root.pskTarget = null;
                     psk.text = "";
@@ -354,7 +357,7 @@ Popover {
             Layout.fillWidth: true
             elide: Text.ElideRight
             text: shown
-            color: shown.startsWith(Strings.t("wifiFailed").split("%1")[0]) ? Colors.warn : Colors.dim
+            color: (Wifi.hiddenStatus ? Wifi.hiddenFailed : root.failed) ? Colors.warn : Colors.dim
             font.pixelSize: Metrics.size(-2)
         }
     }

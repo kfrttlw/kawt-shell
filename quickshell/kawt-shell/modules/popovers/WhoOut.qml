@@ -73,7 +73,7 @@ ColumnLayout {
 
     Label {
         visible: NetWho.ready && NetWho.apps.length === 0 && NetWho.others === 0
-        text: "nothing goes out right now"
+        text: Strings.t("whoNothing")
         color: Colors.dim
     }
 
@@ -142,7 +142,7 @@ ColumnLayout {
 
                 PushButton {
                     minWidth: 0
-                    text: root.armed ? "sure? kill" : "kill"
+                    text: root.armed ? Strings.t("whoKillSure") : Strings.t("whoKill")
                     active: root.armed
                     onClicked: {
                         if (!root.armed) {
@@ -162,7 +162,7 @@ ColumnLayout {
 
                     minWidth: 0
 
-                    text: "offline"
+                    text: Strings.t("whoOfflineBtn")
                     active: entry && Apps.offline.includes(entry)
                     onClicked: root.offline(row.app)
                 }
@@ -170,7 +170,7 @@ ColumnLayout {
                 Label {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    text: "close it · no internet from its next start"
+                    text: Strings.t("whoOfflineNote")
                     color: Colors.dim
                     font.pixelSize: Metrics.size(-2)
                 }
@@ -201,7 +201,7 @@ ColumnLayout {
         Label {
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: "system services (sudo tools/net.sh)"
+            text: Strings.t("whoSystem")
             color: Colors.dim
         }
     }
