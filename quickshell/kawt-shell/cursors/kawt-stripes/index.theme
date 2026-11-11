@@ -1,0 +1,4 @@
+[Icon Theme]
+Name=kawt-stripes
+Comment=kawt's cursor: the face cut in kawt's bars, like the logo (tools/cursors.py)
+Inherits=Adwaita

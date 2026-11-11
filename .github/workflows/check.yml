@@ -30,6 +30,10 @@ jobs:
       - name: shellcheck
         run: shellcheck -S warning $(git ls-files '*.sh')
 
+      # the cursor files in the repo are what tools/cursors.py draws (drawn again after a change)
+      - name: cursors
+        run: python3 tools/cursors.py --check
+
       # a mistake in kawt.lua isn't loud: hyprland skips the file (pcall) and kawt's keys are gone
       - name: lua syntax
         run: |

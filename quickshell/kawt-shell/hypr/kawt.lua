@@ -260,6 +260,20 @@ try("theme colors", function()
     end
 end)
 
+-- kawt's cursor (settings -> look -> cursor), in the environment of programs started from now on
+-- (the old X11 ones read only this). kawt hands it to Hyprland itself, with hyprctl setcursor
+-- (services/Cursor.qml); none picked there: nothing here, yours stays
+try("cursor", function()
+    local colors = dofile(os.getenv("HOME") .. "/.local/state/kawt/theme/hyprland_colors.lua")
+    if colors.cursor then
+        local size = tostring(colors.cursor_size or 24)
+        hl.env("XCURSOR_THEME", colors.cursor)
+        hl.env("XCURSOR_SIZE", size)
+        hl.env("HYPRCURSOR_THEME", colors.cursor)
+        hl.env("HYPRCURSOR_SIZE", size)
+    end
+end)
+
 -- a hard shadow a few pixels to the right and
 -- below every window, like an old system's (kawt's own windows draw theirs). Not on an
 -- old machine. The offset in a call of its own: if your Hyprland reads it differently, the

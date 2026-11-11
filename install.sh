@@ -1324,6 +1324,26 @@ if [[ $mode == update ]]; then
     exec "$repo/install.sh" --updated="$old" "${fwd[@]}"
 fi
 
+# kawt's cursors (settings -> look -> cursor, services/Cursor.qml): the links kawt made in
+# ~/.local/share/icons go, and the cursor there was before kawt's comes back, for hyprland and gtk
+# (settings.json keeps it as cursorWas: "name size")
+cursor_back() {
+    local icons=${XDG_DATA_HOME:-$HOME/.local/share}/icons t was="" name size
+    for t in kawt-stripes kawt-terminal; do
+        [[ -L $icons/$t ]] && run rm -- "$icons/$t" && step "rm" "$icons/$t (link)"
+    done
+    command -v gsettings > /dev/null || return 0
+    [[ $(gsettings get org.gnome.desktop.interface cursor-theme 2> /dev/null) == "'kawt-"* ]] || return 0
+    [[ -f $state/settings.json ]] && was=$(grep -o '"cursorWas": *"[^"]*"' "$state/settings.json" | sed 's/.*: *"//; s/"$//')
+    name=${was% *} size=${was##* }
+    [[ -n $name && $name != kawt-* ]] || name=default
+    [[ $size =~ ^[0-9]+$ ]] || size=24
+    run gsettings reset org.gnome.desktop.interface cursor-theme
+    run gsettings reset org.gnome.desktop.interface cursor-size
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && run hyprctl setcursor "$name" "$size" > /dev/null
+    step "edit" "the cursor: $name again"
+}
+
 # ------------------------------------------------------------------ uninstall
 if [[ $mode == uninstall ]]; then
     banner "uninstalling"
@@ -1364,6 +1384,7 @@ if [[ $mode == uninstall ]]; then
         run gsettings reset org.gnome.desktop.interface gtk-theme
         step "edit" "gtk: its own theme and icons again"
     fi
+    cursor_back
 
     undo_old_zsh_setup
     if [[ -f $zshrc ]] && grep -F "$marker_zsh" "$zshrc" > /dev/null; then
@@ -1471,6 +1492,7 @@ if [[ $mode == fresh ]]; then
         run gsettings reset org.gnome.desktop.interface gtk-theme
         step "edit" "gtk: its own theme and icons until kawt sets them again"
     fi
+    cursor_back
 
     # hyprland: kawt's standard config goes whole; a config of your own keeps all but kawt's lines
     if [[ -f $hypr_lua ]] && loads_kawt "$hypr_lua" "$marker_std"; then
