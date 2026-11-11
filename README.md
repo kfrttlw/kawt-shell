@@ -325,6 +325,7 @@ Once per login a bios-like check list runs (`kawt bios 1.0 ·` your machine: cpu
 | theme export | a theme switch recolors open terminals and GTK apps live and rewrites colors for kitty, Hyprland's borders, GTK, foot, alacritty, shell scripts and kawt's folder icons; terminal colors as `crt`, `soft` or `vivid` |
 | fastfetch | `kawt · arch linux` on top, then the system in full words, memory and disk as bars; your system's logo in its own colors (or the theme's), kawt in blocks, the trackpoint, kawt in stripes, or a picture (stripes, `~/.face`, one of yours) dithered in the theme's tones, drawn by kitty; a narrow window gets the small logo. Nothing that says who or where you are, safe to screenshot |
 | prompt | zsh: the folder inverted like a bios's chosen line, the git branch on grey, a failed command's code on red, `>` in red where you type; hints from history, typos marked |
+| a crash | kawt runs under a small keeper (`scripts/keep.sh`): it starts again a second later, and if the screen was locked it locks again at once; five crashes in two minutes and it stays off, Hyprland says so. `qs kill -c kawt-shell` stops it for good |
 | old machine | settings → look: no blur, shadows or animations, graphs half as often, no visualizer (a T60, an X200); `scanlines` for faint tube lines |
 | keys | `super + /`: every key of the desktop in a window, tabs **kawt · Hyprland · Inside kawt**, a search across all three |
 | also | night light (`hyprsunset`), volume per app, brightness (on a desktop the monitors' own, over DDC/CI), the keyboard layout (one per window if you like), a theme of your own (`super + w` → Theme → New…, a little desktop drawn in its colors as you type) |
@@ -623,6 +624,7 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   hypr/preset.lua        kawt's standard Hyprland config (with hypr/hyprland.lua + hypr/user.lua)
   hypr/nvidia.lua        Hyprland's environment for an nvidia card (the installer adds it on a yes)
   hypr/login.sh          starts Hyprland from the console: at login on tty1 or with `start`
+  scripts/keep.sh        keeps kawt running: started again after a crash (Hyprland starts this, not qs itself)
   zsh/kawt.zsh-theme     prompt           (sourced from ~/.zshrc)
   zsh/starter.zshrc      a first ~/.zshrc (copied only if you have none)
 kitty/kitty.conf         terminal         -> ~/.config/kitty/kitty.conf
