@@ -6,7 +6,8 @@
   - a property named like one an Item already has, left / x / visible...
                                                  ("Cannot override FINAL property", Qt 6.10+)
   - kawt's words (config/Strings.qml): a line without its comma, a key used
-    with Strings.t("...") that one of the two languages doesn't have
+    with Strings.t("...") that one of the two languages doesn't have, a word
+    given more or fewer .arg(...) than it has places (%1, %2...)
 Run from anywhere, best before every commit:
     python3 tools/check.py
 Exits 1 if something is wrong."""
@@ -131,6 +132,7 @@ for dirpath, _, files in os.walk("."):
 # kawt's words: both dictionaries whole, every line but the last with its comma
 words = open(os.path.join("config", "Strings.qml"), encoding="utf-8").read()
 langs = {}
+places = {}  # (dictionary, word) -> how many places it has: %1, %2...
 for name in ("enWords", "ruWords"):
     m = re.search(name + r": \(\{\n(.*?)\n    \}\)", words, re.S)
     if not m:
@@ -143,15 +145,37 @@ for name in ("enWords", "ruWords"):
             print(f"config/Strings.qml: {name}: no comma after {l.strip()[:40]}")
             problems += 1
     langs[name] = set(re.findall(r"^\s+(\w+):", m.group(1), re.M))
+    for key, value in re.findall(r'^\s+(\w+): ("(?:[^"\\]|\\.)*")', m.group(1), re.M):
+        places[(name, key)] = len(set(re.findall(r"%\d", value)))
+
+
+def args_after(src, at):
+    """how many .arg(...) follow at `at`, each with whatever is in its brackets"""
+    n = 0
+    while src.startswith(".arg(", at):
+        depth, at = 1, at + 5
+        while at < len(src) and depth:
+            depth += {"(": 1, ")": -1}.get(src[at], 0)
+            at += 1
+        n += 1
+    return n
+
+
 for dirpath, _, files in os.walk("."):
     for f in files:
         if not f.endswith(".qml") or f == "Strings.qml":
             continue
         path = os.path.join(dirpath, f)
-        for key in re.findall(r'Strings\.t\("(\w+)"\)', open(path, encoding="utf-8").read()):
+        src = open(path, encoding="utf-8").read()
+        for m in re.finditer(r'Strings\.t\("(\w+)"\)', src):
+            key = m.group(1)
+            given = args_after(src, m.end())
             for name, keys in langs.items():
                 if key not in keys:
                     print(f"{path}: \"{key}\" is missing in {name}")
+                    problems += 1
+                elif given and places.get((name, key)) != given:
+                    print(f"{path}: \"{key}\" gets {given} .arg() but has {places.get((name, key))} places in {name}")
                     problems += 1
 
 print(f"{problems} problem(s)" if problems else "all checks ok")

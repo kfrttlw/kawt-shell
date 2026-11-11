@@ -20,6 +20,7 @@ case $1 in
         pct=""
         for b in $buses; do
             # "VCP 10 C 50 100": the current value and the most it goes to
+            # shellcheck disable=SC2046 # split into its words on purpose
             set -- $(ddcutil --bus "$b" getvcp 10 --brief 2> /dev/null)
             [ "$1" = VCP ] && [ "${5:-0}" -gt 0 ] 2> /dev/null || continue
             echo "$b $5" >> "$found.new"

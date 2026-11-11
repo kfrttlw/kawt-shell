@@ -16,6 +16,7 @@ command -v ffmpeg > /dev/null || exit 1
 rgb() {
     printf '%d %d %d' "0x$(echo "$1" | cut -c2-3)" "0x$(echo "$1" | cut -c4-5)" "0x$(echo "$1" | cut -c6-7)"
 }
+# shellcheck disable=SC2046 # six numbers, split on purpose
 set -- $(rgb "$lo") $(rgb "$hi")
 r0=$1 g0=$2 b0=$3 r1=$4 g1=$5 b1=$6
 

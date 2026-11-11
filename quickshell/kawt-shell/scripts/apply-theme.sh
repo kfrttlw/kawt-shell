@@ -22,6 +22,7 @@ while [ $# -ge 2 ]; do
     case $name in
         @pts)
             for p in /dev/pts/[0-9]*; do
+                # shellcheck disable=SC3067 # -O: dash and bash both have it
                 [ -O "$p" ] && [ -w "$p" ] && printf '%s' "$content" > "$p" 2>/dev/null
             done
             ;;
