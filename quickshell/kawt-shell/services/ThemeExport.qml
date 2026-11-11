@@ -113,11 +113,6 @@ Singleton {
         function onLiteChanged(): void {
             root.apply(true, !Settings.lite);
         }
-
-        // the windows' hard shadow (raised frames) comes or goes: hyprland reads its config again
-        function onFramesChanged(): void {
-            root.apply(true, true);
-        }
     }
 
     Connections {
