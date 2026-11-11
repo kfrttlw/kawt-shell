@@ -18,8 +18,10 @@ Popover {
     id: root
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
-    readonly property list<PwNode> sinks: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
-    readonly property list<PwNode> streams: Pipewire.nodes.values.filter(n => n.isStream && n.audio)
+    // plain arrays, not list<PwNode>: a ScriptModel takes only those (qt won't assign a typed list
+    // to its values, and the list stayed empty)
+    readonly property var sinks: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
+    readonly property var streams: Pipewire.nodes.values.filter(n => n.isStream && n.audio)
 
     name: "volume"
     title: Strings.t("soundTitle")
