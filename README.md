@@ -622,13 +622,16 @@ install.sh
 ## Development
 
 ```sh
-python3 tools/check.py   # catches the mistakes that stop the shell from loading
+python3 tools/check.py   # catches the mistakes that stop the shell from loading (and kawt's words: both languages, their %1)
 ./doctor.sh              # where the "theme -> files -> apps" chain breaks on this machine
 ./colortest.sh           # which kind of terminal color something uses
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 tools/net.sh -w          # which programs talk to the internet, live (the wifi panel's who's out, in a terminal)
 tools/qsb.sh             # builds the shaders again after a change (qt6-shadertools)
 ```
+
+The same check runs on every push and pull request (`.github/workflows/check.yml`), with
+`shellcheck` over the scripts and the Lua files' syntax: what it can see without Hyprland.
 
 ## License
 

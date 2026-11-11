@@ -58,6 +58,7 @@ fi
 if [[ -f $config/quickshell/kawt-shell/shell.qml ]]; then
     good "config: $(readlink -f "$config/quickshell/kawt-shell")"
 else
+    # shellcheck disable=SC2088 # words to read: ~ as it's written
     fail "~/.config/quickshell/kawt-shell is missing or a broken link" "run ./install.sh"
 fi
 
@@ -189,6 +190,7 @@ fi
 for tool in wf-recorder:recording ffmpeg:"wallpaper theme" grim:screenshots slurp:"area selection" cliphist:"clipboard history"; do
     command -v "${tool%%:*}" > /dev/null && good "${tool%%:*}" || fail "${tool%%:*} is missing (${tool#*:})" "sudo pacman -S ${tool%%:*}"
 done
+# shellcheck disable=SC2010 # only whether there's anything in it: the names don't matter
 if ls /sys/class/bluetooth 2> /dev/null | grep -q .; then
     if systemctl is-active --quiet bluetooth 2> /dev/null; then
         good "bluetooth service is running"

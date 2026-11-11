@@ -119,12 +119,17 @@ pkgs_shell=(quickshell hyprland ttf-ibmplex-mono-nerd papirus-icon-theme libnoti
 #   playerctl                   play / pause / next keys while kawt isn't running
 #   noto-fonts-emoji            emoji instead of empty boxes
 pkgs_shell+=(pipewire-pulse pipewire-alsa xdg-desktop-portal-hyprland xdg-desktop-portal-gtk hyprpolkitagent playerctl noto-fonts-emoji)
+# shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_hypr=()
+# shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_kitty=(kitty)
+# shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_zsh=(zsh git zsh-autosuggestions zsh-syntax-highlighting)
+# shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_fastfetch=(fastfetch)
 # thunar: its drives and trash (gvfs), pictures' thumbnails (tumbler); adw-gtk3, the gtk theme
 # that takes kawt's colors; dconf keeps the gtk settings; xdg-utils makes thunar open folders
+# shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_files=(thunar gvfs tumbler "adw-gtk-theme|adw-gtk3" dconf xdg-utils)
 pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
@@ -300,6 +305,7 @@ choose() {
         printf '\e[%dA' "$n" > /dev/tty
     done
     cursor_back
+    # shellcheck disable=SC2034 # chosen is the caller's variable (local -n)
     chosen=$cur
 }
 
@@ -598,10 +604,14 @@ monitors_arrange() {
             left | right)
                 # the lit one changes places with its neighbour that's on
                 i=${on[cur]}
+                # (one line of plain assignments: bash makes them left to right, so t is set
+                # before it's read; shellcheck takes them for the prefix of a command)
                 if [[ $k == left ]] && ((cur > 0)); then
+                    # shellcheck disable=SC2097,SC2098
                     t=${mon_rules[i]} mon_rules[i]=${mon_rules[on[cur - 1]]} mon_rules[on[cur - 1]]=$t
                     cur=$((cur - 1))
                 elif [[ $k == right ]] && ((cur < ${#on[@]} - 1)); then
+                    # shellcheck disable=SC2097,SC2098
                     t=${mon_rules[i]} mon_rules[i]=${mon_rules[on[cur + 1]]} mon_rules[on[cur + 1]]=$t
                     cur=$((cur + 1))
                 fi
@@ -717,6 +727,7 @@ monitors_ask() {
 }
 
 # what was picked, in one line: "DP-1 2560x1440@164.96 at 0x0 x1, HDMI-A-1 off"
+# shellcheck disable=SC2178,SC2128 # out is a string here, this function's own (other functions have an array of that name)
 monitors_said() {
     local r n mode pos scale turned out=""
     if ((mon_auto)); then

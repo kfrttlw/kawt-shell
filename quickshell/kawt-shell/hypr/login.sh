@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # kawt: Hyprland from the text console (tty) a machine without a login screen boots to.
 # install.sh asks how you want it and adds one line for that:
 #   by itself   ~/.zprofile (or ~/.bash_profile) reads this file at every login: on tty1
