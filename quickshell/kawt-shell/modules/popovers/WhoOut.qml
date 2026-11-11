@@ -18,14 +18,14 @@ import qs.utils
 //   no net: [firefox x] [steam x]
 //   kawt itself: one git fetch a week (the update check)
 //
-// A new connection turns its program red until the next look. [kill] asks once more, then the
-// program is asked to quit; [offline]: started from the launcher or the dock it gets no internet
+// A new connection turns its program red until the next look. kill asks once more, then the
+// program is asked to quit; offline: started from the launcher or the dock it gets no internet
 // from then on (ctrl+o in the launcher does the same)
 ColumnLayout {
     id: root
 
     property string opened: "" // the program whose [!] is open
-    property bool armed: false // [kill] pressed once: once more and it's asked to quit
+    property bool armed: false // kill pressed once: once more and it's asked to quit
     property string status: ""
     readonly property real charW: Metrics.fontSize * 0.6
 

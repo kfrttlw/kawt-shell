@@ -68,7 +68,7 @@ Singleton {
     readonly property int fileLimit: 20000 // characters per attached file
     property var files: [] // paths inside Settings.aiFolder, relative
     property var attachments: [] // [{ path (relative), text }] going with the next message
-    // a picture going with the next message (a screenshot's [ask]): a copy in ~/.cache/kawt/ai,
+    // a picture going with the next message (a screenshot's Ask AI): a copy in ~/.cache/kawt/ai,
     // sent to Settings.aiVisionModel (or the chat's model) as base64, read only when it goes.
     // The chats file keeps the path, not the picture
     property string image: ""
@@ -195,7 +195,7 @@ Singleton {
 
     // ---- pictures
 
-    // a screenshot's [ask]: copied out of the shots' folder (those go after an hour), then the
+    // a screenshot's Ask AI: copied out of the shots' folder (those go after an hour), then the
     // panel opens with it waiting for your question
     function askAbout(path: string): void {
         if (!path)
@@ -583,7 +583,7 @@ Singleton {
 
     // ------------------------------------------------------------------ your tasks
 
-    // [x] tasks in the chat (Settings.aiTodo): the todo list goes along with every question, so
+    // my tasks in the chat (Settings.aiTodo): the todo list goes along with every question, so
     // "what's on tomorrow?" can be answered. Only the open ones, only to the model you use (a
     // local one stays on the machine). Tasks it proposes come back as "+ task: ..." lines, and
     // the answer gets an [add] for them (modules/sidebar/ChatLine.qml)

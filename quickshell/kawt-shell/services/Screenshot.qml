@@ -15,14 +15,14 @@ import qs.utils
 // With the tools installed (each optional, its button only shows with it):
 //   hyprpicker   the screen stands still while an area is picked (Settings.screenshotFreeze)
 //   satty        [edit]: arrows, boxes, text, blur, in the shot itself (or swappy)
-//   tesseract    [text]: the text in the shot, onto the clipboard (the languages it has)
+//   tesseract    Text: the text in the shot, onto the clipboard (the languages it has)
 Singleton {
     id: root
 
     // ---- the optional tools, looked for once
     property bool canFreeze: false
     property string editor: "" // "satty" | "swappy" | ""
-    property string ocrLangs: "" // "eng+rus": what tesseract has of the useful ones; "" = no [text]
+    property string ocrLangs: "" // "eng+rus": what tesseract has of the useful ones; "" = no Text
     property bool editing: editJob.running // the preview waits meanwhile
     property bool reading: textJob.running
     property string textStatus: "" // "text copied (3 lines)", "no text found"
@@ -43,7 +43,7 @@ Singleton {
         }
     }
 
-    // [edit]: the editor saves over the waiting shot; the preview shows the result
+    // Draw on it: the editor saves over the waiting shot; the preview shows the result
     function edit(): void {
         if (!shot || !editor || editJob.running)
             return;

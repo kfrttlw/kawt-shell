@@ -4,7 +4,7 @@ import qs.config
 import qs.components
 import qs.services
 
-// [changes] in the coder: every file the agent changed this session, by edit or by command,
+// Changes in the coder: every file the agent changed this session, by edit or by command,
 // each as one diff from how it was before the agent's first change to it to now:
 //   -- 3 files changed, from before the agent to now --
 //   ~ src/app.py                                    +4 −1   [undo]
@@ -14,7 +14,7 @@ import qs.services
 //     + new
 //   + tests/new.txt                                  new    [undo]
 //   - old.log                                        gone   [undo]
-// [undo] on one puts back that file alone (the [undo] under the steps, all of them). Made only
+// Undo on one puts back that file alone (the Undo under the steps, all of them). Made only
 // while it's open, in coder mode. A diff is read when its file comes into view, and again when
 // the file is changed once more: only those, as they wait in line with the agent's own jobs (a
 // build may have changed hundreds).

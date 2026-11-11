@@ -26,7 +26,7 @@ PanelWindow {
     readonly property int tab: Panels.aiTab
     readonly property bool coder: Settings.aiMode === "coder"
     property var catalogOpen: null // null: decide by itself (open while no model is installed)
-    property bool changesOpen: false // coder: [changes] instead of the steps
+    property bool changesOpen: false // coder: Changes instead of the steps
     readonly property bool catalogShown: catalogOpen === null ? Ai.online && Ai.models.length === 0 : catalogOpen
     // a short, curated list with the download size
     readonly property var catalog: [
@@ -456,7 +456,7 @@ PanelWindow {
                 }
             }
 
-            // [changes]: every file it changed, as diffs (made only while open)
+            // Changes: every file it changed, as diffs (made only while open)
             Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true

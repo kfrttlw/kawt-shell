@@ -168,7 +168,7 @@ end)
 
 -- Apps you picked in settings -> windows: floating from the start, in the middle, at the
 -- size the app asks for (not stretched by the layout). kawt writes the list; none yet: nothing
--- what kawt writes for windows (settings -> windows, the bar's [tile] / [float]): read once,
+-- what kawt writes for windows (settings -> windows, the bar's Tile / Free, like KDE): read once,
 -- for the two blocks below
 local windows_file = (function()
     local state = os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")
@@ -185,7 +185,7 @@ try("windows at their own size", function()
     end
 end)
 
--- Floating desks (the bar's [tile] / [float], super + ctrl + v): every window opens floating
+-- Floating desks (the bar's Tile / Free, like KDE, super + ctrl + v): every window opens floating
 -- there, wider than tall, in the middle, as on KDE; each next one a step down and right, as old
 -- systems opened them (services/Hypr.qml placeOf). kawt writes the desks to the same file, with
 -- the size for that desk's screen, and floats the ones you move in

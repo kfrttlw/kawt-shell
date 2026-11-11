@@ -135,7 +135,7 @@ Singleton {
         };
     }
 
-    // ---- floating desks, like KDE (the bar's [tile] / [float], super + ctrl + v, the start
+    // ---- floating desks, like KDE (the bar's Tile / Free, like KDE, super + ctrl + v, the start
     // menu's desks): every window of such a desk floats, where you put it, at any size.
     // hypr/kawt.lua makes a rule for each desk in windows.lua, so a new window opens floating
     // there, wider than tall, in the middle, each next one a step down and right; one moved in
@@ -204,7 +204,7 @@ Singleton {
     }
 
     // the marks live only while kawt runs: started again, every window floating on a floating
-    // desk counts as the desk's (but for the classes that float anyway), so [tile] tiles it
+    // desk counts as the desk's (but for the classes that float anyway), so Tile tiles it
     function markAgain(): void {
         afterRefresh(() => {
             if (!Settings.loaded || windows.some(w => w.lastIpcObject?.floating === undefined))
@@ -444,7 +444,7 @@ Singleton {
         for (const c of floating)
             if (!/[\x00-\x1f]/.test(c))
                 lines.push(`    ${rule(c)},`);
-        // and the floating desks (the bar's [tile] / [float]), each with the size a new window
+        // and the floating desks (the bar's Tile / Free, like KDE), each with the size a new window
         // gets there (its screen's)
         const desks = floatDesks.filter(id => Number.isInteger(id) && id > 0).map(id => {
             const size = sizeIn(roomOf(Hyprland.workspaces.values.find(w => w.id === id)?.monitor ?? Hyprland.focusedMonitor));

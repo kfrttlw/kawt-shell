@@ -6,7 +6,7 @@ import qs.config
 
 // Idle: the screen locks after Settings.idleLock minutes without input (0 = never).
 // Apps that ask to keep the screen on (a video, a call) hold it off, and so does caffeine:
-// [caf] in the bar keeps the screen on until it's switched off again. Caffeine is not saved
+// caffeine in the bar keeps the screen on until it's switched off again. Caffeine is not saved
 // on purpose: after a restart the machine locks itself again.
 //   qs -c kawt-shell ipc call kawt caffeine
 //

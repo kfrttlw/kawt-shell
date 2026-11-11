@@ -307,7 +307,7 @@ Variants {
             }
         }
 
-        // the faint lines of an old tube over everything (cfg -> look -> scanlines)
+        // the faint lines of an old tube over everything (settings -> look -> scanlines)
         Lazy {
             when: Settings.scanlines
 
