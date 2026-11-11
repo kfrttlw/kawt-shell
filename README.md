@@ -471,6 +471,7 @@ prompt, fastfetch) and lists what to install yourself; quickshell itself: see
 ./install.sh --uninstall     # remove the links and lines, put your old configs back
 ./install.sh --fresh         # from scratch: all of kawt's setup to a backup, then every question again
 ./install.sh --update        # kawt itself, see below
+./install.sh --rollback      # back to the version before the last update (again: forward)
 ./install.sh --check         # is everything it needs installed? only says (doctor.sh asks too)
 ./install.sh --monitors      # your monitors: auto, or each one by hand (mode, position, scale)
 ./install.sh --help
@@ -489,6 +490,11 @@ with a list (`git stash` can put them aside). Knowing about a new version means 
 week, with a notification only when there's something new (stripes peeks out to say so too).
 "look for updates once a week" there switches that off: then nothing goes out unless you press
 **Check**.
+
+An update broke something, and the fix isn't out yet? `./install.sh --rollback` goes back to the
+version before it (every update keeps which one that was), with the shell started again and
+Hyprland's config read again; once more and it goes forward again, and so does the next update.
+It works from a console too, when the desktop itself is what broke.
 
 Keep the clone somewhere permanent (like `~/kawt`): the configs point into it. Don't clone it
 into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
