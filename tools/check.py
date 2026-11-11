@@ -5,6 +5,8 @@
   - JavaScript newer than Qt's engine            (matchAll, flatMap, ...)
   - a property named like one an Item already has, left / x / visible...
                                                  ("Cannot override FINAL property", Qt 6.10+)
+  - a Connections handler for a signal one of kawt's singletons doesn't have
+    (a setting renamed or gone: qt only warns, at run time)
   - kawt's words (config/Strings.qml): a line without its comma, a key used
     with Strings.t("...") that one of the two languages doesn't have, a word
     given more or fewer .arg(...) than it has places (%1, %2...)
@@ -128,6 +130,43 @@ for dirpath, _, files in os.walk("."):
             if m and not (root_type in not_items and len(m.group(1)) == 4):
                 print(f"{path}:{n}: a property named {m.group(2)}: every Item has one already (Cannot override FINAL property)")
                 problems += 1
+
+# a handler in Connections { target: Settings } (or another of kawt's singletons) for a signal it
+# doesn't have: a setting renamed or gone leaves it behind, and qt only warns at run time
+def block(src, at):
+    """the text from the { at `at` to its }"""
+    depth, i = 0, at
+    while i < len(src):
+        depth += {"{": 1, "}": -1}.get(src[i], 0)
+        i += 1
+        if depth == 0:
+            break
+    return src[at:i]
+
+
+signals = {}
+for d in ("config", "services"):
+    for f in os.listdir(d):
+        if f.endswith(".qml"):
+            src = re.sub(r"//.*", "", open(os.path.join(d, f), encoding="utf-8").read())
+            props = re.findall(r"\bproperty\s+[\w<>.]+\s+(\w+)", src)
+            sigs = re.findall(r"^\s*signal\s+(\w+)", src, re.M)
+            signals[f[:-4]] = {f"on{p[0].upper()}{p[1:]}Changed" for p in props} | {f"on{s[0].upper()}{s[1:]}" for s in sigs}
+for dirpath, _, files in os.walk("."):
+    for f in files:
+        if not f.endswith(".qml"):
+            continue
+        path = os.path.join(dirpath, f)
+        src = re.sub(r"//.*", "", open(path, encoding="utf-8").read())
+        for m in re.finditer(r"\bConnections\s*\{", src):
+            body = block(src, m.end() - 1)
+            t = re.search(r"^\s*target:\s*(\w+)\s*$", body, re.M)
+            if not t or t.group(1) not in signals:
+                continue
+            for h in re.findall(r"function\s+(on\w+)\s*\(", body):
+                if h not in signals[t.group(1)]:
+                    print(f"{path}: Connections on {t.group(1)} has {h}, but {t.group(1)} has no such signal")
+                    problems += 1
 
 # kawt's words: both dictionaries whole, every line but the last with its comma
 words = open(os.path.join("config", "Strings.qml"), encoding="utf-8").read()
