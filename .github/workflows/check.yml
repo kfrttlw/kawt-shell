@@ -35,16 +35,6 @@ jobs:
       - name: cursors
         run: python3 tools/cursors.py --check
 
-      # a mistake in kawt.lua isn't loud: hyprland skips the file (pcall) and kawt's keys are gone
-      - name: lua syntax
-        run: |
-          # the runner's package list can be stale and its mirror can miss a moment: fresh, and again
-          for i in 1 2 3; do
-            sudo apt-get update -qq > /dev/null && sudo apt-get install -y -qq --no-install-recommends lua5.4 > /dev/null && break
-            [ "$i" = 3 ] && exit 1
-            sleep 10
-          done
-          for f in $(git ls-files '*.lua'); do luac5.4 -p "$f" || exit 1; done
 
   # the shell really loaded: quickshell in an arch container, kawt in a headless sway, every
   # panel, window and page opened over ipc; what qt says didn't load fails it (tools/load-test.sh)
@@ -55,7 +45,7 @@ jobs:
     steps:
       - name: packages
         run: |
-          pacman -Syu --noconfirm --needed git sway dbus ttf-dejavu wl-clipboard > /dev/null
+          pacman -Syu --noconfirm --needed git sway dbus ttf-dejavu wl-clipboard lua > /dev/null
           # arch's sway carries a file capability (realtime priority), which a container won't run:
           # a plain copy of it, first in PATH
           install -m 755 /usr/bin/sway /usr/local/bin/sway
@@ -73,6 +63,13 @@ jobs:
           qs --version
 
       - uses: actions/checkout@v5
+
+      # a mistake in kawt.lua isn't loud: hyprland skips the file (pcall) and kawt's keys are
+      # gone. Here, not in the first job: lua comes with the packages above, nothing more to fetch
+      - name: lua syntax
+        run: |
+          find quickshell -name '*.lua' | while read -r f; do luac -p "$f" || exit 1; done
+          echo "lua ok: $(find quickshell -name '*.lua' | wc -l) files"
 
       - name: kawt loads
         run: |
