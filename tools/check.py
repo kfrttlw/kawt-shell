@@ -5,6 +5,8 @@
   - JavaScript newer than Qt's engine            (matchAll, flatMap, ...)
   - a property named like one an Item already has, left / x / visible...
                                                  ("Cannot override FINAL property", Qt 6.10+)
+  - an ipc call (a key in hypr/, a script) with another number of words than its function
+    takes: quickshell refuses it and the key does nothing
   - a Connections handler for a signal one of kawt's singletons doesn't have
     (a setting renamed or gone: qt only warns, at run time)
   - kawt's words (config/Strings.qml): a line without its comma, a key used
@@ -15,6 +17,7 @@ Run from anywhere, best before every commit:
 Exits 1 if something is wrong."""
 import os
 import re
+import shlex
 import sys
 
 shell = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "quickshell", "kawt-shell")
@@ -166,6 +169,32 @@ for dirpath, _, files in os.walk("."):
             for h in re.findall(r"function\s+(on\w+)\s*\(", body):
                 if h not in signals[t.group(1)]:
                     print(f"{path}: Connections on {t.group(1)} has {h}, but {t.group(1)} has no such signal")
+                    problems += 1
+
+# an ipc call (a key in hypr/, a script) with another number of words than its function in
+# services/Panels.qml takes: quickshell refuses it ("Too few arguments") and the key does nothing
+panels = open(os.path.join("services", "Panels.qml"), encoding="utf-8").read()
+handler = panels[panels.index("IpcHandler {"):]
+takes = {m.group(1): len([a for a in m.group(2).split(",") if a.strip()]) for m in re.finditer(r"function (\w+)\(([^)]*)\)", handler)}
+repo_root = os.path.join("..", "..")
+for dirpath, dirs, files in os.walk(repo_root):
+    dirs[:] = [d for d in dirs if d != ".git"]
+    for f in files:
+        if not f.endswith((".lua", ".conf", ".sh")):
+            continue
+        path = os.path.join(dirpath, f)
+        for n, line in enumerate(open(path, encoding="utf-8", errors="replace"), 1):
+            if line.strip().startswith(("--", "#")):
+                continue
+            found = re.findall(r'kawt \.\. "([^"]*)"', line) + re.findall(r"\$kawt ([^#\n]*)", line) + re.findall(r"ipc call kawt ([^|;&)\n]*)", line)
+            for c in found:
+                c = re.split(r"\s+\d*[<>]", c.split("||")[0])[0]  # no fallback after ||, no redirections
+                try:
+                    words = shlex.split(c)
+                except ValueError:
+                    continue
+                if words and words[0] in takes and len(words) - 1 != takes[words[0]]:
+                    print(f"{os.path.relpath(path, repo_root)}:{n}: kawt {' '.join(words)}: {words[0]} takes {takes[words[0]]} word(s) after it, quickshell refuses another number")
                     problems += 1
 
 # kawt's words: both dictionaries whole, every line but the last with its comma

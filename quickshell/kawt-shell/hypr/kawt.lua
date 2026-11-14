@@ -82,9 +82,9 @@ try("binds", function()
     bind(mod .. " + I", hl.dsp.exec_cmd(kawt .. "toggle today")) -- today: tasks, notes, the focus timer
     bind(mod .. " + L", hl.dsp.exec_cmd(kawt .. "lock")) -- lock screen
     bind(mod .. " + slash", hl.dsp.exec_cmd(kawt .. "toggle keys")) -- this list of keys
-    bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar")) -- hide / show the bar (hidden, it peeks out at the edge)
+    bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar toggle")) -- hide / show the bar (hidden, it peeks out at the edge)
     bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shut down…: power off, restart, sleep, log out, lock
-    bind(mod .. " + CTRL + V", hl.dsp.exec_cmd(kawt .. "desk")) -- this desk: windows floating, like KDE <-> tiled
+    bind(mod .. " + CTRL + V", hl.dsp.exec_cmd(kawt .. "desk toggle")) -- this desk: windows floating, like KDE <-> tiled
     bind(mod .. " + H", hl.dsp.exec_cmd(kawt .. "companion call")) -- call stripes out of the corner (again: let her go)
     -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in settings ->
     -- media, saved to the folder from there and copied at once)
