@@ -195,6 +195,68 @@ ColumnLayout {
         }
     }
 
+    // the terminal's font: kitty's, written by services/KittyFont.qml; open terminals change at once
+    Group {
+        title: Strings.t("termGroup")
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3
+            columnSpacing: 20
+            rowSpacing: 8
+            enabled: KittyFont.kawtKitty
+            opacity: enabled ? 1 : 0.5
+
+            Repeater {
+                model: KittyFont.fonts
+
+                Check {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.alignment: Qt.AlignTop
+                    radio: true
+                    text: modelData.name
+                    note: Strings.t(`term_${modelData.id}`)
+                    checked: KittyFont.shown === modelData.id
+                    onToggled: KittyFont.pick(modelData.id, "auto")
+                }
+            }
+        }
+
+        // its sizes: a pixel font's only where its pixels are the screen's
+        Flow {
+            Layout.fillWidth: true
+            visible: KittyFont.kawtKitty
+            spacing: 12
+
+            Label {
+                text: Strings.t("termSize")
+            }
+
+            Repeater {
+                model: KittyFont.sizesOf(KittyFont.shown)
+
+                Check {
+                    required property real modelData
+
+                    radio: true
+                    text: `${modelData} ${KittyFont.fontOf(KittyFont.shown).unit}`
+                    checked: KittyFont.shownSize === modelData
+                    onToggled: KittyFont.pick(KittyFont.shown, modelData)
+                }
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            text: !KittyFont.kawtKitty ? Strings.t("termNotKawt") : KittyFont.missing === "kawt" ? Strings.t("termMissingKawt") : KittyFont.missing ? Strings.t("termMissing").arg(KittyFont.missing) : KittyFont.fontOf(KittyFont.shown).unit === "px" ? Strings.t("termPixelNote").arg(KittyFont.shownScale) : Strings.t("termSmoothNote")
+            color: KittyFont.missing ? Colors.warn : Colors.dim
+        }
+    }
+
     Group {
         title: Strings.t("language")
 

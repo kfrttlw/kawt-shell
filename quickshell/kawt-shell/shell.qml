@@ -62,6 +62,7 @@ ShellRoot {
         Hypr.lua; // keeps the special workspace in the bar up to date
         Rates.wanted; // once: a monitor running slower than it can (services/Rates.qml)
         Cursor.theme; // kawt's cursor to hyprland, if one is picked (settings -> look)
+        KittyFont.font; // kitty's pixel font written again when the screen's scale changes
         if (Settings.updateAuto)
             Update.repo; // the weekly update check (one git fetch to github; off in settings -> kawt)
     }
