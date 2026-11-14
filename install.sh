@@ -42,12 +42,13 @@ backup=$state/backups/$stamp
 
 qs_dst=$config/quickshell/kawt-shell
 kitty_dst=$config/kitty/kitty.conf
-# kawt's pixel font (Departure Mono, in the repo) for gtk apps and kitty: the shell loads it on
-# its own, these find it through fontconfig. A link, like the configs: a git pull updates it
+# kawt's fonts (in the repo: Departure Mono, the shell's; kawt VGA, a terminal's) for gtk apps
+# and kitty: the shell loads its own, these find them through fontconfig. A link, like the
+# configs: a git pull updates them
 fonts_dst=${XDG_DATA_HOME:-$HOME/.local/share}/fonts/kawt
-# kitty in kawt's font too, if you said so: kitty.conf reads kawt-*.conf at its end
+# kitty's font, picked here or in settings -> look -> terminal: kitty.conf reads kawt-*.conf at
+# its end, scripts/kitty-font.sh writes this one
 kitty_font=$config/kitty/kawt-font.conf
-kitty_font_on=0
 fastfetch_dst=$config/fastfetch/config.jsonc
 fastfetch_src=$state/theme/fastfetch.jsonc # rewritten by kawt on every theme switch
 # gtk apps (thunar, the "open file" windows) in kawt's colors, its folder icons: links into
@@ -1566,6 +1567,8 @@ if [[ $mode == fresh ]]; then
         step "edit" "gtk: its own theme and icons until kawt sets them again"
     fi
     mouse_cursor_back
+    # kitty's font, if kawt wrote it: asked again
+    [[ -f $kitty_font ]] && grep -q '^# kawt' "$kitty_font" && stash "$kitty_font"
 
     # hyprland: kawt's standard config goes whole; a config of your own keeps all but kawt's lines
     if [[ -f $hypr_lua ]] && loads_kawt "$hypr_lua" "$marker_std"; then
@@ -1730,21 +1733,28 @@ want() { # want <part id>: is it picked?
     return 1
 }
 
-# kitty in kawt's pixel font too? Not by default. A pixel font is sharp at its own size or twice
-# it, nothing between: big, 22 px (16.5 pt at 96 dpi), or small, 11 px (8.25 pt), as old
-# terminals were (too small on most screens now). Asked once: the answer is the file being there
-kitty_font_pt=""
+# kitty's font: kitty.conf's smooth IBM Plex, or an old one. A pixel font is sharp only where each
+# of its pixels is one of the screen's: scripts/kitty-font.sh works the size out for the screen's
+# scale (kawt again, when the scale changes). Asked on a new install and on --fresh (which takes
+# kawt's file away), not when the file is there: that was answered, or picked in the settings
+# since (settings -> look -> terminal changes it any time)
+kitty_font_id="" kitty_font_name="" kitty_font_pkg=""
 if want kitty && [[ -z $preset && ! -f $kitty_font ]] && [[ $mode != update ]] && can_ask; then
     section "kitty"
-    say "kitty's font: ${dim}kawt's pixel font is sharp at 11 or 22 px only${off}"
-    say "${dim}  ↑↓ move · enter pick${off}"
+    say "kitty's font: ${dim}a pixel one at the sizes it's sharp at on your screen${off}"
+    say "${dim}  ↑↓ move · enter pick · settings -> look -> terminal changes it later${off}"
     kitty_c=0
-    choose kitty_c "the usual|IBM Plex Mono, 14 pt, smooth (recommended)" \
-        "pixel, big|Departure Mono, 22 px (16.5 pt), sharp" \
-        "pixel, small|Departure Mono, 11 px (8.25 pt), as old terminals were: small"
+    choose kitty_c "the usual|IBM Plex Mono, smooth, any size (recommended)" \
+        "kawt VGA|the IBM PC's text mode, 8 x 16 pixels, sharp; comes with kawt" \
+        "Terminus|the linux console's, sharp at many sizes (its д и look like g u)" \
+        "Big Blue Terminal|DOS, fat pixels, sharp" \
+        "IBM 3270|IBM's mainframe terminal, smooth"
     case $kitty_c in
-        1) kitty_font_on=1 kitty_font_pt=16.5 ;;
-        2) kitty_font_on=1 kitty_font_pt=8.25 ;;
+        1) kitty_font_id=vga kitty_font_name="kawt VGA" ;;
+        2) kitty_font_id=terminus kitty_font_name=Terminus kitty_font_pkg=ttf-terminus-nerd ;;
+        3) kitty_font_id=bigblue kitty_font_name="Big Blue Terminal" kitty_font_pkg=ttf-bigblueterminal-nerd ;;
+        4) kitty_font_id=3270 kitty_font_name="IBM 3270" kitty_font_pkg=ttf-3270-nerd ;;
+        *) kitty_font_id=plex kitty_font_name="IBM Plex Mono" ;;
     esac
 fi
 
@@ -1966,6 +1976,7 @@ for id in shell hypr kitty zsh fastfetch extras files; do
 done
 want shell && compgen -G "/sys/class/backlight/*" > /dev/null && wanted+=(brightnessctl)
 [[ $wall_mode == awww ]] && wanted+=("awww|swww")
+[[ -n $kitty_font_pkg ]] && wanted+=("$kitty_font_pkg")
 # [text] on a screenshot reads english, and your language when tesseract knows it (ru_RU -> rus)
 tess_lang() {
     case ${LC_ALL:-${LANG:-}} in
@@ -2125,6 +2136,9 @@ human() {
     case $1 in
         quickshell) echo "quickshell (see quickshell.org)" ;;
         ttf-ibmplex-mono-nerd) echo "IBM Plex Mono as a Nerd Font (BlexMono Nerd Font)" ;;
+        ttf-terminus-nerd) echo "Terminus as a Nerd Font (Terminess Nerd Font)" ;;
+        ttf-bigblueterminal-nerd) echo "Big Blue Terminal as a Nerd Font (BigBlueTermPlus Nerd Font)" ;;
+        ttf-3270-nerd) echo "IBM 3270 as a Nerd Font (3270 Nerd Font)" ;;
         papirus-icon-theme) echo "Papirus icons" ;;
         "adw-gtk-theme|adw-gtk3" | adw-gtk-theme) echo "the adw-gtk3 gtk theme" ;;
         libnotify) echo "notify-send (libnotify)" ;;
@@ -2288,7 +2302,7 @@ case $hypr_from in
     hypr) printf '  %-9s %s\n' "hyprland" "hyprland's own starting config" ;;
 esac
 ((mon_auto && !mon_again)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
-((kitty_font_on)) && printf '  %-9s %s\n' "kitty" "kawt's pixel font, $kitty_font_pt pt  ${dim}($(short "$kitty_font"))${off}"
+[[ -n $kitty_font_id ]] && printf '  %-9s %s\n' "kitty" "$kitty_font_name  ${dim}($(short "$kitty_font"))${off}"
 if ((nv_cfg || nv_driver)); then
     printf '  %-9s %s\n' "nvidia" "$( ((nv_cfg)) && printf 'hyprland env')$( ((nv_cfg && nv_driver)) && printf ' + ')$( ((nv_driver)) && printf 'the driver %s(a reboot after)%s' "$dim" "$off")"
 fi
@@ -2480,12 +2494,14 @@ if want shell; then
 fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
-    # 11 px is 8.25 pt at 96 dpi: the font's own size, sharp; 22 px (16.5 pt) twice it
-    if ((kitty_font_on)); then
+    # its font, as picked above, at the size that's sharp on this screen
+    if [[ -n $kitty_font_id ]]; then
         if ((dry)); then
-            note "would write $kitty_font (Departure Mono, $kitty_font_pt pt)"
+            note "would write $kitty_font ($kitty_font_name)"
+        elif said=$(sh "$repo/quickshell/kawt-shell/scripts/kitty-font.sh" "$kitty_font_id" auto 2>&1); then
+            step "make" "$kitty_font ($kitty_font_name, $(sed -n '1s/^# kawt-font: [^ ]* \([^ ]*\).*/\1/p' "$kitty_font") $([[ $kitty_font_id == plex || $kitty_font_id == 3270 ]] && echo pt || echo px))"
         else
-            printf '# kawt: its pixel font in kitty (./install.sh wrote it; delete this file for the usual one)\n# sharp at 8.25 (11 px) or 16.5 (22 px) only\nfont_family      Departure Mono\nfont_size        %s\nmodify_font      cell_height 100%%\n' "$kitty_font_pt" > "$kitty_font" && step "make" "$kitty_font (kawt's font in kitty)"
+            warn "kitty's font not written${said:+: $said}" "settings -> look -> terminal"
         fi
     fi
 fi

@@ -1,0 +1,14 @@
+kawt VGA (KawtVGA-Regular.ttf, KawtVGA-Bold.ttf)
+
+The pixels: the IBM VGA 8x16 text mode font, with latin, greek and cyrillic added, as BDF by
+farsil: https://github.com/farsil/ibmfonts (bdf/iv8x16u.bdf), "BDF conversion (c) 2016 farsil,
+license: CC BY-SA 4.0".
+
+Changed by kawt-shell (tools/vgafont.py): made a TrueType font, each pixel a square on a grid of
+one screen pixel at 16 px, so that kitty can use it; a bold drawn from it (each pixel twice, the
+second one to the right).
+
+Both are under the Creative Commons Attribution-ShareAlike 4.0 International license:
+https://creativecommons.org/licenses/by-sa/4.0/
+You may share and adapt them, also commercially, if you give credit as above, say what you
+changed, and share what you make from them under the same license.

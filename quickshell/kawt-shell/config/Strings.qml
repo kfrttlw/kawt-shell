@@ -925,7 +925,19 @@ Singleton {
         startLogo: "Start button",
         startLogoAuto: "The system's",
         startLogoFound: "%1: kawt has its logo. Picked by hand, another one stays",
-        startLogoNone: "%1: kawt has no logo for it, kawt's block stands there. Pick one by hand if yours is one of these"
+        startLogoNone: "%1: kawt has no logo for it, kawt's block stands there. Pick one by hand if yours is one of these",
+        termGroup: "Terminal font (kitty)",
+        term_plex: "smooth, any size: the usual",
+        term_vga: "the IBM PC's text mode, 8 × 16: every pixel sharp. Comes with kawt",
+        term_terminus: "the linux console's, sharp at many sizes; its д and и look like g and u",
+        term_bigblue: "DOS, fat pixels",
+        term_3270: "IBM's mainframe terminal, smooth",
+        termSize: "Size",
+        termPixelNote: "only the sizes where each of the font's pixels is one of the screen's (scale %1), so nothing is blurred. Open terminals change at once; a font_size in ~/.config/kitty/user.conf wins over this",
+        termSmoothNote: "open terminals change at once; a font_size in ~/.config/kitty/user.conf wins over this",
+        termMissing: "not installed: sudo pacman -S %1, then pick it again",
+        termMissingKawt: "kawt's fonts aren't where fontconfig looks: ./install.sh --update links them",
+        termNotKawt: "kitty's config (~/.config/kitty/kitty.conf) isn't kawt's: kawt leaves kitty alone"
     })
 
     readonly property var ruWords: ({
@@ -1834,6 +1846,18 @@ Singleton {
         startLogo: "Кнопка «Пуск»",
         startLogoAuto: "Своей системы",
         startLogoFound: "%1: у kawt есть её логотип. Выбранный вручную останется",
-        startLogoNone: "%1: для неё у kawt логотипа нет, стоит блок kawt. Если твоя система из этих, выбери вручную"
+        startLogoNone: "%1: для неё у kawt логотипа нет, стоит блок kawt. Если твоя система из этих, выбери вручную",
+        termGroup: "Шрифт терминала (kitty)",
+        term_plex: "гладкий, любой размер: обычный",
+        term_vga: "текстовый режим IBM PC, 8 × 16: каждый пиксель чёткий. Идёт с kawt",
+        term_terminus: "консоль linux, чёткий на многих размерах; д и и в нём похожи на g и u",
+        term_bigblue: "DOS, жирные пиксели",
+        term_3270: "терминал мейнфреймов IBM, гладкий",
+        termSize: "Размер",
+        termPixelNote: "только размеры, где каждый пиксель шрифта ложится на пиксель экрана (масштаб %1), поэтому без мути. Открытые терминалы меняются сразу; font_size в ~/.config/kitty/user.conf главнее",
+        termSmoothNote: "открытые терминалы меняются сразу; font_size в ~/.config/kitty/user.conf главнее",
+        termMissing: "не установлен: sudo pacman -S %1, потом выбери снова",
+        termMissingKawt: "шрифты kawt не там, где их ищет fontconfig: ./install.sh --update их подключит",
+        termNotKawt: "конфиг kitty (~/.config/kitty/kitty.conf) не от kawt: kawt его не трогает"
     })
 }
