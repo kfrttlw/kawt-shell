@@ -594,6 +594,9 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
   `dark` (or `light`) uses it for both; `face`, `hi` and `lo` give the raised frames their own
   colors (otherwise they come from the rest). Something wrong in the file: `super + w` says what
 - **hyprland**: `~/.config/hypr/user.lua` (see the installer part above)
+- **kitty**: `~/.config/kitty/user.conf`, read last, so it wins (`font_size 16`, another font...).
+  `kitty.conf` itself is kawt's, linked from the repo; kawt's pixel font, if you took it, is in
+  `kawt-font.conf` (sharp at `8.25` or `16.5` only)
 
 Nothing has to be set in the environment. The icon theme is picked in `shell.qml`
 (`//@ pragma IconTheme Papirus-Dark`); to use another one, set `QS_ICON_THEME` for the `qs`
