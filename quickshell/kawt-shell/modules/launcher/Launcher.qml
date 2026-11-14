@@ -31,8 +31,12 @@ PanelWindow {
 
     required property ShellScreen forScreen
     readonly property bool open: Panels.isOpen("launcher", forScreen)
-    readonly property int maxRows: 8
-    readonly property int rowHeight: Metrics.fontSize + 11
+    // roomy: a list to read at a glance, the field in big letters (as wide as the old one was
+    // and a third more; ten rows)
+    readonly property int maxRows: 10
+    readonly property int rowHeight: Metrics.fontSize + 19
+    readonly property int iconSize: Math.min(rowHeight - 6, Math.round(24 * Metrics.scale))
+    readonly property int bigFont: Metrics.times(1.7)
 
     readonly property var modes: [
         { prefix: "", name: "modeApps", icon: "apps" },
@@ -258,11 +262,11 @@ PanelWindow {
 
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.height * 0.18)
-        width: Math.min(Math.round(600 * Metrics.scale), root.width - Metrics.padding * 2)
+        width: Math.min(Math.round(820 * Metrics.scale), root.width - Metrics.padding * 2)
         height: chrome + body.implicitHeight
         title: Strings.t("runTitle")
         icon: "search"
-        pad: 6
+        pad: 8
         status: root.hints
         onCloseClicked: Panels.close()
 
@@ -283,6 +287,7 @@ PanelWindow {
                 spacing: 6
 
                 Label {
+                    font.pixelSize: root.bigFont
                     text: Strings.t("runOpen")
                 }
 
@@ -290,6 +295,8 @@ PanelWindow {
                     id: input
 
                     Layout.fillWidth: true
+                    implicitHeight: root.bigFont + 12
+                    fontSize: root.bigFont
                     prompt: ""
                     placeholder: Strings.t("runPlaceholder")
                     shiftEnter: true
@@ -361,7 +368,7 @@ PanelWindow {
                 Rectangle {
                     id: modeBox
 
-                    Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 17) + 22
+                    Layout.preferredWidth: Math.round(root.bigFont * 0.62 * 14) + drop.width + 12
                     Layout.fillHeight: true
                     color: Colors.well
 
@@ -370,10 +377,11 @@ PanelWindow {
                     }
 
                     Label {
-                        x: 5
+                        x: 8
                         width: drop.x - x - 4
                         anchors.verticalCenter: parent.verticalCenter
                         elide: Text.ElideRight
+                        font.pixelSize: root.bigFont
                         text: Strings.t(root.modes[Math.max(0, root.modeIndex)].name)
                     }
 
@@ -386,7 +394,7 @@ PanelWindow {
                         anchors.topMargin: 2
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 2
-                        width: 16
+                        width: Math.round(root.bigFont * 1.1)
                         dir: "down"
                         down: root.modesOpen
                         onClicked: root.modesOpen = !root.modesOpen
@@ -444,28 +452,31 @@ PanelWindow {
                             id: appIcon
 
                             visible: row.modelData.appName !== undefined
-                            x: 4
+                            x: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 16
-                            height: 16
+                            width: root.iconSize
+                            height: root.iconSize
                             icon: row.modelData.appIcon ?? ""
                             name: row.modelData.appName ?? ""
                             colored: true
                         }
 
+                        // kawt's own pixel ones: whole pixels, 16 (or 32) in the middle of the icon's room
                         PixIcon {
                             visible: row.modelData.icon !== undefined
-                            x: 4
+                            x: 8 + Math.floor((root.iconSize - width) / 2)
                             anchors.verticalCenter: parent.verticalCenter
+                            size: root.iconSize >= 32 ? 32 : 16
                             name: row.modelData.icon ?? ""
                         }
 
                         Label {
                             visible: row.modelData.glyph !== undefined
-                            x: 2
-                            width: 20
+                            x: 8
+                            width: root.iconSize
                             horizontalAlignment: Text.AlignHCenter
                             anchors.verticalCenter: parent.verticalCenter
+                            font.pixelSize: Math.round(root.iconSize * 0.8)
                             text: row.modelData.glyph ?? ""
                         }
 
@@ -473,8 +484,8 @@ PanelWindow {
                         Label {
                             id: words
 
-                            x: 28
-                            width: Math.min(implicitWidth, parent.width - x - (note.text ? note.implicitWidth + 16 : 6) - (marks.visible ? marks.implicitWidth + 6 : 0))
+                            x: root.iconSize + 20
+                            width: Math.min(implicitWidth, parent.width - x - (note.text ? note.implicitWidth + 20 : 10) - (marks.visible ? marks.implicitWidth + 6 : 0))
                             anchors.verticalCenter: parent.verticalCenter
                             elide: Text.ElideRight
                             textFormat: row.modelData.kind === "app" ? Text.StyledText : Text.PlainText
@@ -500,7 +511,7 @@ PanelWindow {
                             id: note
 
                             anchors.right: parent.right
-                            anchors.rightMargin: 6
+                            anchors.rightMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.min(implicitWidth, row.width * 0.4)
                             elide: Text.ElideRight

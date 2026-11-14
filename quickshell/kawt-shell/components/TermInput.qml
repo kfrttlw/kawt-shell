@@ -16,6 +16,7 @@ Item {
     property string placeholder: ""
     property bool framed: true // false: a bare line, like a tty's (the lock)
     property color promptColor: Colors.accent
+    property int fontSize: Metrics.fontSize // what's typed (and the prompt); the placeholder stays small
     property var completions: []
     property var highlight: []
     readonly property string suggestion: {
@@ -51,6 +52,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: root.framed ? 6 : 0
         anchors.verticalCenter: parent.verticalCenter
+        font.pixelSize: root.fontSize
         text: root.prompt
         color: root.promptColor
     }
@@ -67,7 +69,7 @@ Item {
         color: Colors.fg
         font.family: Metrics.fontFamily
         renderType: Metrics.pixel ? Text.NativeRendering : Text.QtRendering
-        font.pixelSize: Metrics.fontSize
+        font.pixelSize: root.fontSize
         selectByMouse: true
         selectionColor: Colors.accent
         selectedTextColor: Colors.bg
@@ -89,10 +91,12 @@ Item {
 
         cursorDelegate: BlockCursor {
             visible: input.activeFocus
+            width: Math.round(root.fontSize * 0.6)
         }
 
         Label {
             visible: !input.text && !input.activeFocus
+            anchors.verticalCenter: parent.verticalCenter
             text: root.placeholder
             color: Colors.dim
         }
@@ -101,6 +105,7 @@ Item {
         Label {
             visible: root.suggestion !== "" && input.activeFocus && input.cursorPosition === input.text.length
             x: input.contentWidth
+            font.pixelSize: root.fontSize
             text: root.suggestion.slice(input.text.length)
             color: root.highlight.includes(root.suggestion) ? Colors.accent : Colors.dim
             opacity: 0.7
