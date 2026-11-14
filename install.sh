@@ -1736,7 +1736,7 @@ want() { # want <part id>: is it picked?
 # kitty's font: kawt Term (Terminus, the linux console's, with russian д и й в; in the repo) by
 # default, kitty.conf's smooth IBM Plex, or another old one. A pixel font is sharp only where
 # each of its pixels is one of the screen's: scripts/kitty-font.sh works the size out for the
-# screen's scale (kawt again, when the scale changes): 18 px on a screen at 1. Asked on a new
+# screen's scale (kawt again, when the scale changes): 16 px on a screen at 1. Asked on a new
 # install and on --fresh (which takes kawt's file away), not when the file is there: that was
 # answered, or picked in the settings since (settings -> look -> terminal changes it any time)
 kitty_font_id="" kitty_font_name="" kitty_font_pkg=""
@@ -1747,7 +1747,7 @@ if want kitty && [[ ! -f $kitty_font ]] && [[ $mode != update ]]; then
         say "kitty's font: ${dim}a pixel one at the size it's sharp at on your screen${off}"
         say "${dim}  ↑↓ move · enter pick · settings -> look -> terminal changes it later${off}"
         kitty_c=0
-        choose kitty_c "kawt Term|Terminus, the linux console's, with russian letters: sharp, 18 px (recommended)" \
+        choose kitty_c "kawt Term|Terminus, the linux console's, with russian letters: sharp, 16 px (recommended)" \
             "IBM Plex Mono|smooth, any size: kitty.conf's own" \
             "kawt VGA|the IBM PC's text mode, 8 x 16 pixels, sharp" \
             "Big Blue Terminal|DOS, fat pixels, sharp" \

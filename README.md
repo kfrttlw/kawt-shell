@@ -411,7 +411,7 @@ setup to a backup, every question again).
   ("DP-1 runs at 60 Hz, it can do 165") and offers to set it. Again any time:
   `./install.sh --monitors`
 - kawt's fonts linked into `~/.local/share/fonts/kawt` for GTK apps and kitty, and kitty's font
-  asked: kawt Term at 18 px (the default), IBM Plex Mono, or another old one, the pixel ones at
+  asked: kawt Term at 16 px (the default), IBM Plex Mono, or another old one, the pixel ones at
   the size that's sharp on your screen (`~/.config/kitty/kawt-font.conf`, settings → look →
   terminal any time; see below). Asked again on `--fresh`
 - the first wallpaper, on a new install: kawt in stripes, the sunset, stripes herself, the bars,
@@ -599,7 +599,8 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
   - **kawt Term**, the default: Terminus, the linux console's font, drawn pixel by pixel at nine
     sizes (12 to 32 px), with the printed russian д и й в instead of its handwritten ones ("иду
     в дом" read "ugy B gom"); comes with kawt (`tools/termfont.py` redraws them from Terminus'
-    own capitals). 18 px on a screen at scale 1, about what IBM Plex is at 14 pt
+    own capitals). 16 px on a screen at scale 1, its classic size: the letters about as big as
+    IBM Plex's at 11 pt, kitty's usual size (18 px: as Plex at 12 pt)
   - **IBM Plex Mono**: smooth, any size
   - **kawt VGA**: the IBM PC's text mode, 8 × 16 pixels, latin, greek and cyrillic; comes with
     kawt (`tools/vgafont.py` makes it a font kitty takes: each pixel a square)
