@@ -1400,7 +1400,7 @@ fi
 # kawt's cursors (settings -> look -> cursor, services/Cursor.qml): the links kawt made in
 # ~/.local/share/icons go, and the cursor there was before kawt's comes back, for hyprland and gtk
 # (settings.json keeps it as cursorWas: "name size")
-cursor_back() {
+mouse_cursor_back() {
     local icons=${XDG_DATA_HOME:-$HOME/.local/share}/icons t was="" name size
     for t in kawt-stripes kawt-terminal; do
         [[ -L $icons/$t ]] && run rm -- "$icons/$t" && step "rm" "$icons/$t (link)"
@@ -1457,7 +1457,7 @@ if [[ $mode == uninstall ]]; then
         run gsettings reset org.gnome.desktop.interface gtk-theme
         step "edit" "gtk: its own theme and icons again"
     fi
-    cursor_back
+    mouse_cursor_back
 
     undo_old_zsh_setup
     if [[ -f $zshrc ]] && grep -F "$marker_zsh" "$zshrc" > /dev/null; then
@@ -1565,7 +1565,7 @@ if [[ $mode == fresh ]]; then
         run gsettings reset org.gnome.desktop.interface gtk-theme
         step "edit" "gtk: its own theme and icons until kawt sets them again"
     fi
-    cursor_back
+    mouse_cursor_back
 
     # hyprland: kawt's standard config goes whole; a config of your own keeps all but kawt's lines
     if [[ -f $hypr_lua ]] && loads_kawt "$hypr_lua" "$marker_std"; then

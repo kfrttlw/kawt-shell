@@ -246,5 +246,26 @@ for dirpath, _, files in os.walk("."):
                     print(f"{path}: \"{key}\" gets {given} .arg() but has {places.get((name, key))} places in {name}")
                     problems += 1
 
+# a shell function made twice in one script: the second one quietly replaces the first for every
+# call after it (install.sh had two cursor_back: the mouse cursor's took over the terminal's)
+for dirpath, dirs, files in os.walk(repo_root):
+    dirs[:] = [d for d in dirs if not d.startswith(".")]
+    for f in files:
+        path = os.path.join(dirpath, f)
+        try:
+            src = open(path, encoding="utf-8").read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        if not (f.endswith(".sh") or re.match(r"#!\S*(/| )(ba)?sh\b", src)):
+            continue
+        made = {}
+        for m in re.finditer(r"^(?:function\s+)?([A-Za-z_][\w-]*)\s*\(\)\s*\{", src, re.M):
+            line = src.count("\n", 0, m.start()) + 1
+            if m.group(1) in made:
+                print(f"{os.path.relpath(path, repo_root)}:{line}: {m.group(1)}() made again (first at line {made[m.group(1)]}): the second replaces the first")
+                problems += 1
+            else:
+                made[m.group(1)] = line
+
 print(f"{problems} problem(s)" if problems else "all checks ok")
 sys.exit(1 if problems else 0)
