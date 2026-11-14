@@ -40,12 +40,16 @@ Scope {
     property point dragBy: Qt.point(0, 0)
     property bool banding: false
     property rect band: Qt.rect(0, 0, 0, 0)
+    property var bandBase: ({}) // what stays picked under the band (ctrl held at its start)
     // The keyboard. Hyprland gives it to any layer that may take it as soon as the pointer
     // crosses it (follow_mouse), and the desktop lies under every gap between the windows: a
     // terminal just opened lost its keys to the desktop at the first move of the mouse. So the
     // desktop asks for the keyboard only once you click on it (engaged: enter, del, F2, the
     // arrows), takes it at once (grabbing: a moment exclusive, then on demand, which hyprland
-    // leaves with it), and lets go of it as soon as it goes to a window
+    // leaves with it), and lets go of it as soon as it goes to a window.
+    // Taken when the button comes up, not when it goes down: a layer turning exclusive makes
+    // hyprland let go of every mouse button held (takeKeyboardFocus), so a band (or a drag)
+    // begun at the press ended a frame later, and only a second press quick enough drew one
     property bool engaged: false
     property bool grabbing: false
 
@@ -223,7 +227,7 @@ Scope {
     }
 
     function selectIn(r: rect): void {
-        const s = {};
+        const s = Object.assign({}, bandBase);
         for (const e of entries) {
             const c = cellRect(e.key);
             if (c.x + 16 < r.x + r.width && c.x + c.width - 16 > r.x && c.y + 4 < r.y + r.height && c.y + c.height - 10 > r.y)
@@ -414,9 +418,6 @@ Scope {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onPressed: mouse => {
-                // a right click's menu takes the keyboard itself
-                if (mouse.button !== Qt.RightButton)
-                    root.engage();
                 keys.forceActiveFocus();
                 root.renaming = "";
                 if (mouse.button === Qt.RightButton) {
@@ -426,6 +427,7 @@ Scope {
                 }
                 if (!(mouse.modifiers & Qt.ControlModifier))
                     root.selected = {};
+                root.bandBase = root.selected;
                 from = Qt.point(mouse.x, mouse.y);
                 root.band = Qt.rect(mouse.x, mouse.y, 0, 0);
                 root.banding = true;
@@ -436,7 +438,12 @@ Scope {
                 root.band = Qt.rect(Math.min(from.x, mouse.x), Math.min(from.y, mouse.y), Math.abs(mouse.x - from.x), Math.abs(mouse.y - from.y));
                 root.selectIn(root.band);
             }
-            onReleased: root.banding = false
+            // the keyboard now (a right click's menu takes it itself)
+            onReleased: mouse => {
+                root.banding = false;
+                if (mouse.button === Qt.LeftButton)
+                    root.engage();
+            }
         }
 
         Rectangle {
@@ -578,6 +585,8 @@ Scope {
 
                 // the name: white with a shadow on any wallpaper; picked: on the light
                 Rectangle {
+                    id: tag
+
                     visible: root.renaming !== icon.key
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: pic.y + pic.height + 4
@@ -635,17 +644,23 @@ Scope {
                 MouseArea {
                     id: area
 
-                    // the picture and the name, not the whole cell: between icons is the desktop
+                    // the picture and the name, not the whole cell: between icons (and beside a
+                    // short name) is the desktop, where a band starts
                     x: 6
                     width: parent.width - 12
                     height: pic.y + pic.height + 4 + (Metrics.fontSize + 3) * 2
+                    containmentMask: QtObject {
+                        function contains(p: point): bool {
+                            const x = p.x + area.x, y = p.y + area.y;
+                            const inside = r => x >= r.x && x < r.x + r.width && y >= r.y && y < r.y + r.height;
+                            return inside(pic) || (tag.visible && inside(tag));
+                        }
+                    }
                     enabled: root.renaming !== icon.key
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     cursorShape: Qt.PointingHandCursor
                     onPressed: mouse => {
-                        if (mouse.button !== Qt.RightButton)
-                            root.engage();
                         keys.forceActiveFocus();
                         root.renaming = "";
                         if (mouse.button === Qt.RightButton) {
@@ -670,7 +685,9 @@ Scope {
                         if (root.dragging)
                             root.dragBy = d;
                     }
-                    onReleased: {
+                    onReleased: mouse => {
+                        if (mouse.button === Qt.LeftButton)
+                            root.engage(); // the keyboard now: see engaged, at the top
                         if (!root.dragging)
                             return;
                         root.dropMoved();
