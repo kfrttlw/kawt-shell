@@ -86,6 +86,7 @@ Singleton {
     property alias fetchLogo: adapter.fetchLogo
     property alias iconStyle: adapter.iconStyle
     property alias deskIcons: adapter.deskIcons
+    property alias startLogo: adapter.startLogo
     property alias cursorStyle: adapter.cursorStyle
     property alias cursorSize: adapter.cursorSize
     property alias cursorWas: adapter.cursorWas
@@ -276,6 +277,7 @@ Singleton {
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" | "picture" (utils/themegen.js)
             property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)
             property string iconStyle: "classic" // folders, the bin and files in thunar and on the desktop: "classic" (painted, utils/classicicons.js) | "pixel" (in the theme's colors, utils/folders.js)
+            property string startLogo: "auto" // the start button's logo: "auto" the system's, if kawt has one (services/Distro.qml) | "kawt" kawt's block | "arch" "debian" "gentoo" "fedora" "ubuntu" "nixos" "manjaro"
             property bool deskIcons: true // ~/Desktop's files on the desktop, with the home folder and the bin (modules/desktop)
             property string cursorStyle: "" // the mouse cursor: "" the system's (kawt doesn't touch it) | "stripes" | "terminal" (services/Cursor.qml)
             property int cursorSize: 1 // kawt's cursor, every pixel 1 to 4 times (24 to 96 px)

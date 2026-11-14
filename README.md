@@ -98,6 +98,11 @@ windows the buttons give up their titles first, then the rest go into `+3 ▼`.
 <img src="assets/start-menu.png" alt="the start menu: a search, the pinned apps, All programs, Today, System, Settings, Help, AI, stripes, Shut down" width="34%">
 </p>
 
+The kawt button shows your system's logo when kawt has one: **Arch, Debian, Gentoo, Fedora,
+Ubuntu, NixOS, Manjaro**, drawn in kawt's pixels and lit in the theme's light like its own red
+block, which stands there for every other system. Settings → bar → start button picks one by
+hand (a system that says it's another, or a taste of your own).
+
 **The start menu** (the kawt button, `super + d`): a search on top, your pinned apps, then
 **All programs** (by kind, a cascade the old way), **Today**, **System**, **Settings**, **Help
 and keys**, **AI**, **stripes**, and **Shut down…** at the bottom. Typing searches at once;
