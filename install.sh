@@ -1730,13 +1730,22 @@ want() { # want <part id>: is it picked?
     return 1
 }
 
-# kitty in kawt's pixel font too? Not by default: it's small (11 px, 8.25 pt), as old terminals
-# were. Asked once: the answer is the file being there or not
+# kitty in kawt's pixel font too? Not by default. A pixel font is sharp at its own size or twice
+# it, nothing between: big, 22 px (16.5 pt at 96 dpi), or small, 11 px (8.25 pt), as old
+# terminals were (too small on most screens now). Asked once: the answer is the file being there
+kitty_font_pt=""
 if want kitty && [[ -z $preset && ! -f $kitty_font ]] && [[ $mode != update ]] && can_ask; then
     section "kitty"
-    printf '%s %s[y/N]%s ' "kawt's pixel font in kitty too? (Departure Mono, small: 8.25 pt)" "$dim" "$off" > /dev/tty
-    IFS= read -r answer < /dev/tty
-    [[ $answer == [yYдД]* ]] && kitty_font_on=1
+    say "kitty's font: ${dim}kawt's pixel font is sharp at 11 or 22 px only${off}"
+    say "${dim}  ↑↓ move · enter pick${off}"
+    kitty_c=0
+    choose kitty_c "the usual|IBM Plex Mono, 14 pt, smooth (recommended)" \
+        "pixel, big|Departure Mono, 22 px (16.5 pt), sharp" \
+        "pixel, small|Departure Mono, 11 px (8.25 pt), as old terminals were: small"
+    case $kitty_c in
+        1) kitty_font_on=1 kitty_font_pt=16.5 ;;
+        2) kitty_font_on=1 kitty_font_pt=8.25 ;;
+    esac
 fi
 
 if ((packages)) && [[ -z $preset ]] && can_ask; then
@@ -2279,7 +2288,7 @@ case $hypr_from in
     hypr) printf '  %-9s %s\n' "hyprland" "hyprland's own starting config" ;;
 esac
 ((mon_auto && !mon_again)) || printf '  %-9s %s\n' "monitors" "$(monitors_said)"
-((kitty_font_on)) && printf '  %-9s %s\n' "kitty" "kawt's pixel font, 8.25 pt  ${dim}($(short "$kitty_font"))${off}"
+((kitty_font_on)) && printf '  %-9s %s\n' "kitty" "kawt's pixel font, $kitty_font_pt pt  ${dim}($(short "$kitty_font"))${off}"
 if ((nv_cfg || nv_driver)); then
     printf '  %-9s %s\n' "nvidia" "$( ((nv_cfg)) && printf 'hyprland env')$( ((nv_cfg && nv_driver)) && printf ' + ')$( ((nv_driver)) && printf 'the driver %s(a reboot after)%s' "$dim" "$off")"
 fi
@@ -2471,12 +2480,12 @@ if want shell; then
 fi
 if want kitty; then
     link "$repo/kitty/kitty.conf" "$kitty_dst" || { fail "could not link $kitty_dst"; failed=1; }
-    # 11 px is 8.25 pt at 96 dpi: the font's own size, sharp
+    # 11 px is 8.25 pt at 96 dpi: the font's own size, sharp; 22 px (16.5 pt) twice it
     if ((kitty_font_on)); then
         if ((dry)); then
-            note "would write $kitty_font (Departure Mono, 8.25 pt)"
+            note "would write $kitty_font (Departure Mono, $kitty_font_pt pt)"
         else
-            printf '# kawt: its pixel font in kitty (./install.sh wrote it; delete this file for the usual one)\nfont_family      Departure Mono\nfont_size        8.25\nmodify_font      cell_height 100%%\n' > "$kitty_font" && step "make" "$kitty_font (kawt's font in kitty)"
+            printf '# kawt: its pixel font in kitty (./install.sh wrote it; delete this file for the usual one)\n# sharp at 8.25 (11 px) or 16.5 (22 px) only\nfont_family      Departure Mono\nfont_size        %s\nmodify_font      cell_height 100%%\n' "$kitty_font_pt" > "$kitty_font" && step "make" "$kitty_font (kawt's font in kitty)"
         fi
     fi
 fi
