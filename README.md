@@ -37,8 +37,9 @@ color** (the same, in a color you type, pick or take off the screen, on a backgr
 you like), each dark or light (`super + shift + w`), and your own ([below](#your-own-look)). How
 much color the last two take: **calm** (only the light), **strong** (the greys tinted) or
 **full** (everything in it: windows, title bars, the bar, the terminals, and the wallpaper drawn
-in it). Everything follows: GTK apps and thunar, kitty and other terminals, Hyprland's borders,
-fastfetch, the prompt.
+in it). Everything follows: GTK apps and thunar, Qt apps (through the GTK theme), kitty and
+other terminals, Hyprland's borders, fastfetch, the prompt; and the system's dark or light, which
+Firefox, Chromium and Electron apps go by (Silver is light, the rest dark).
 
 The words are in [Departure Mono](https://departuremono.com), a pixel font drawn on an 11 px
 grid (SIL OFL, it comes with kawt in `fonts/`), sharp at 11 and 22. Long text (notes, the ai's

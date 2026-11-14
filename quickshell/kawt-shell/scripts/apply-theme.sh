@@ -7,9 +7,12 @@
 #   @hyprkeyword content is "option value" lines, set at once with hyprctl keyword (hyprland.conf:
 #               no reload needed)
 #   @clean      content is a folder under <dir>: removed (the icons of a look no longer picked)
-#   @gtk        content is "dark" or "light" (+ " live" on a switch): the gtk theme to match, set
-#               only where install.sh linked ~/.config/gtk-3.0/gtk.css to kawt's; live, open gtk
-#               apps read their colors and icons again (gtk does that when the theme changes)
+#   @gtk        content is "dark" or "light" (+ " live" on a switch). Always: the system's dark or
+#               light (color-scheme, what the settings portal tells firefox, chromium, electron
+#               apps, gtk4 and qt ones). Where install.sh linked ~/.config/gtk-3.0/gtk.css to
+#               kawt's, also the gtk theme to match (qt apps follow it: hypr/kawt.lua); live,
+#               open gtk apps read their colors and icons again (gtk does that when the theme
+#               changes)
 
 dir=$1
 shift
@@ -41,14 +44,16 @@ while [ $# -ge 2 ]; do
             done
             ;;
         @gtk)
-            css=${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/gtk.css
-            [ -L "$css" ] && [ "$(readlink -f "$css")" = "$(readlink -f "$dir/gtk-3.css")" ] || continue
             command -v gsettings > /dev/null || continue
             s=org.gnome.desktop.interface
             case $content in
                 light*) theme=adw-gtk3 scheme=default ;;
                 *) theme=adw-gtk3-dark scheme=prefer-dark ;;
             esac
+            # dark or light everywhere that asks (only when it changes: each set tells every app)
+            [ "$(gsettings get $s color-scheme 2> /dev/null)" = "'$scheme'" ] || gsettings set $s color-scheme "$scheme"
+            css=${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/gtk.css
+            [ -L "$css" ] && [ "$(readlink -f "$css")" = "$(readlink -f "$dir/gtk-3.css")" ] || continue
             case $content in
                 *live) # off and on again: the same name wouldn't make them look
                     gsettings set $s gtk-theme Adwaita
@@ -56,7 +61,6 @@ while [ $# -ge 2 ]; do
                     ;;
             esac
             gsettings set $s gtk-theme "$theme"
-            gsettings set $s color-scheme "$scheme"
             [ -d "${XDG_DATA_HOME:-$HOME/.local/share}/icons/kawt" ] && gsettings set $s icon-theme kawt
             ;;
         /*)
