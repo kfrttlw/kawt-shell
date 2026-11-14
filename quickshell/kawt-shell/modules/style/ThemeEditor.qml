@@ -27,7 +27,7 @@ Item {
 
     readonly property var cur: work[side] ?? ({})
     readonly property bool kawts: !isNew && !!Colors.fixed[name]
-    readonly property string nameError: !isNew ? "" : !/^[a-z0-9-]{1,24}$/.test(name) ? Strings.t("teNameChars") : ["thinkpad", "wallpaper", "black", "white"].includes(name) ? Strings.t("teNameKawts") : Colors.themes[name] ? Strings.t("teNameTaken") : ""
+    readonly property string nameError: !isNew ? "" : !/^[a-z0-9-]{1,24}$/.test(name) ? Strings.t("teNameChars") : ["thinkpad", "wallpaper", "own", "black", "white"].includes(name) ? Strings.t("teNameKawts") : Colors.themes[name] ? Strings.t("teNameTaken") : ""
     // what each color is for, in the order they're asked
     readonly property var rows: [["bg", "teBg"], ["bar", "teBar"], ["fg", "teFg"], ["dim", "teDim"], ["border", "teBorder"], ["accent", "teAccent"], ["warn", "teWarn"], ["hoverFill", "teHover"]]
     // the frames from these colors, as config/Colors.qml makes them
@@ -78,9 +78,10 @@ Item {
         nameInput.input.selectAll();
     }
 
-    // the theme you're in; the wallpaper's is made again from the picture, so it's copied
+    // the theme you're in; the wallpaper's (and your color's) is made again from the picture (the
+    // color), so it's copied
     function openEdit(): void {
-        if (Colors.mode === "wallpaper") {
+        if (Colors.mode === "wallpaper" || Colors.mode === "own") {
             openNew();
             return;
         }

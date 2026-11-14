@@ -1,5 +1,5 @@
 #!/bin/sh
-# usage: dither.sh <picture> <out.png> <width> <height> <lo> <hi> <accent> <gamma>
+# usage: dither.sh <picture> <out.png> <width> <height> <lo> <hi> <accent> <gamma> [<key>]
 # A wallpaper the way an old screen would show it: the picture in the theme's few tones, mixed
 # by ordered (bayer) dithering, every dot two pixels big. Its bright reds (a sunset, a lamp) stay:
 # lit dots of the accent among the rest. ffmpeg only (kawt needs it anyway).
@@ -7,8 +7,14 @@
 #   lo hi         #rrggbb: what black and white become; the five tones lie between them
 #                 (dark themes: the background up to a dim ink; light ones: ink up to the paper)
 #   gamma         >1 darker, <1 lighter (how much of the picture sits in the shadows)
+#   key           #rrggbb: the picture's color that's lit in the accent (its reds when not given;
+#                 the wallpaper theme gives the picture's own color, a little wider around it)
 # exit 1: ffmpeg is missing or couldn't read the picture
-in=$1 out=$2 w=$3 h=$4 lo=$5 hi=$6 accent=$7 gamma=${8:-1}
+in=$1 out=$2 w=$3 h=$4 lo=$5 hi=$6 accent=$7 gamma=${8:-1} key=${9:-}
+case $key in
+    '#'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) near=0.2 ;;
+    *) key='#e03018' near=0.14 ;;
+esac
 command -v ffmpeg > /dev/null || exit 1
 [ -f "$in" ] || exit 1
 
@@ -47,7 +53,7 @@ ffmpeg -v error -nostdin -y -i "$in" -i "$tmp/palette.ppm" -filter_complex "\
 [0:v]scale=$w:$h:force_original_aspect_ratio=increase,crop=$w:$h,setsar=1,format=rgb24,split[a][b];\
 [a]format=gray,format=rgb24,lutrgb=r='$(lut $r0 $r1)':g='$(lut $g0 $g1)':b='$(lut $b0 $b1)'[tone];\
 [tone][1:v]paletteuse=dither=bayer:bayer_scale=2[dots];\
-[b]colorkey=0xe03018:0.14:0.07,format=rgba,alphaextract,negate[red];\
+[b]colorkey=0x$(echo "$key" | cut -c2-7):$near:0.07,format=rgba,alphaextract,negate[red];\
 color=c=black:s=${w}x$h,format=gray,geq=lum='$bayer'[threshold];\
 [red][threshold]blend=all_expr='if(gt(A*0.55\,B)\,255\,0)':shortest=1[hit];\
 color=c=0x$(echo "$accent" | cut -c2-7):s=${w}x$h,format=rgba[plane];\

@@ -4,8 +4,10 @@ import Quickshell
 import Quickshell.Io
 import "../utils/wallpalette.js" as WallPalette
 
-// kawt's themes: thinkpad (black and its one red light, or paper and ink) and wallpaper (the same,
-// lit in the wallpaper's color: utils/wallpalette.js). Each comes in a dark (black) and a light
+// kawt's themes: thinkpad (black and its one red light, or paper and ink), wallpaper (the same,
+// lit in the wallpaper's color: utils/wallpalette.js) and own (the same, in a color you give:
+// Settings.ownColor, and a background if you like, Settings.ownBg). How much of the color the last
+// two take: Settings.wallStrength (calm, strong, full). Each comes in a dark (black) and a light
 // (white: paper) variant; Settings.theme picks the theme, Settings.light the variant.
 //
 // Your own themes go to ~/.config/kawt/themes.json, not here (a git pull would take a change
@@ -25,10 +27,15 @@ import "../utils/wallpalette.js" as WallPalette
 Singleton {
     id: root
 
-    // the fixed themes, your own over them, plus "wallpaper" once a palette was taken from the
-    // wallpaper. That one is built from the analysed wallpaper + Settings.wallStrength, so
-    // changing the strength recolors at once, without looking at the picture again
-    readonly property var themes: (Settings.wallPalette?.version ?? 0) >= 4 ? Object.assign({}, fixed, custom, { wallpaper: WallPalette.build(Settings.wallPalette, Settings.wallStrength, fixed.thinkpad) }) : Object.assign({}, fixed, custom)
+    // the fixed themes, your own over them, "wallpaper" once a palette was taken from the
+    // wallpaper, and "own": your color. Those two are built from the analysed wallpaper (or the
+    // color) + Settings.wallStrength, so changing the strength recolors at once, without looking
+    // at the picture again
+    readonly property var wallTheme: (Settings.wallPalette?.version ?? 0) >= 4 ? WallPalette.build(Settings.wallPalette, Settings.wallStrength, fixed.thinkpad) : null
+    readonly property var ownTheme: WallPalette.build(null, Settings.wallStrength, fixed.thinkpad, { color: Settings.ownColor, bg: Settings.ownBg })
+    readonly property var themes: Object.assign({}, fixed, custom, wallTheme ? { wallpaper: wallTheme } : {}, { own: ownTheme })
+    // your background in the own theme: dark or light is its, both variants are the same
+    readonly property bool ownBgSet: /^#[0-9a-f]{6}$/i.test(Settings.ownBg)
 
     readonly property var fixed: ({
         // kawt's own: a black thinkpad, its one red light. Red is only for where you are and what's
@@ -98,7 +105,7 @@ Singleton {
         const out = {};
         for (const name of Object.keys(user)) {
             const t = user[name];
-            if (!/^[a-z0-9-]{1,24}$/.test(name) || name === "wallpaper" || !t || typeof t !== "object")
+            if (!/^[a-z0-9-]{1,24}$/.test(name) || name === "wallpaper" || name === "own" || !t || typeof t !== "object")
                 continue;
             const base = fixed[name] ?? fixed.thinkpad;
             let dark = Object.assign({}, base.dark, clean(t.dark));
@@ -248,9 +255,14 @@ Singleton {
     }
 
     // ---- the themes to pick, in order: black and white (the thinkpad theme, dark and light),
-    // the wallpaper's once one was looked at (in the variant you're in), then your own. The style
-    // window shows them all; the look page in settings and [ ] in the style window walk them
-    readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...names.filter(n => n !== "thinkpad").map(n => ({ name: n, theme: n, light: null }))]
+    // the wallpaper's once one was looked at, your color (both in the variant you're in), then
+    // your own themes. The style window shows them all; the look page in settings and [ ] in the
+    // style window walk them
+    readonly property var choices: [{ name: "black", theme: "thinkpad", light: false }, { name: "white", theme: "thinkpad", light: true }, ...["wallpaper", "own", ...names.filter(n => !["thinkpad", "wallpaper", "own"].includes(n))].filter(n => themes[n]).map(n => ({ name: n, theme: n, light: null }))]
+    // what a choice is called: kawt's by their names in the window, yours as you named them
+    function nameOf(c: var): string {
+        return ({ black: Strings.t("graphite"), white: Strings.t("silver"), wallpaper: Strings.t("fromWallpaper"), own: Strings.t("ownColor") })[c.name] ?? c.name;
+    }
     readonly property int chosen: choices.findIndex(c => isCurrent(c))
     readonly property string chosenName: choices[chosen]?.name ?? mode
 
