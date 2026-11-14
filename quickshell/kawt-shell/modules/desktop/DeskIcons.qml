@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
@@ -39,6 +40,27 @@ Scope {
     property point dragBy: Qt.point(0, 0)
     property bool banding: false
     property rect band: Qt.rect(0, 0, 0, 0)
+    // The keyboard. Hyprland gives it to any layer that may take it as soon as the pointer
+    // crosses it (follow_mouse), and the desktop lies under every gap between the windows: a
+    // terminal just opened lost its keys to the desktop at the first move of the mouse. So the
+    // desktop asks for the keyboard only once you click on it (engaged: enter, del, F2, the
+    // arrows), takes it at once (grabbing: a moment exclusive, then on demand, which hyprland
+    // leaves with it), and lets go of it as soon as it goes to a window
+    property bool engaged: false
+    property bool grabbing: false
+
+    function engage(): void {
+        engaged = true;
+        grabbing = true;
+        grabEnd.restart();
+    }
+
+    Timer {
+        id: grabEnd
+
+        interval: 150
+        onTriggered: root.grabbing = false
+    }
 
     // ---- what's there
     FolderListModel {
@@ -354,7 +376,15 @@ Scope {
 
         WlrLayershell.namespace: "kawt-desktop"
         WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.keyboardFocus: root.renaming !== "" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand
+        WlrLayershell.keyboardFocus: root.renaming !== "" || root.grabbing ? WlrKeyboardFocus.Exclusive : root.engaged ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
+        // the keyboard went to a window (one opened, one clicked): the desktop lets go of it
+        Item {
+            readonly property bool active: Window.active
+
+            onActiveChanged: if (!active && !root.grabbing && root.renaming === "")
+                root.engaged = false
+        }
 
         // under the bar's room, like the windows (the bar's exclusive zone)
         anchors.top: true
@@ -384,6 +414,9 @@ Scope {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onPressed: mouse => {
+                // a right click's menu takes the keyboard itself
+                if (mouse.button !== Qt.RightButton)
+                    root.engage();
                 keys.forceActiveFocus();
                 root.renaming = "";
                 if (mouse.button === Qt.RightButton) {
@@ -611,6 +644,8 @@ Scope {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     cursorShape: Qt.PointingHandCursor
                     onPressed: mouse => {
+                        if (mouse.button !== Qt.RightButton)
+                            root.engage();
                         keys.forceActiveFocus();
                         root.renaming = "";
                         if (mouse.button === Qt.RightButton) {
