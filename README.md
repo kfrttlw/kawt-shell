@@ -170,7 +170,7 @@ moved by its title, `_ □ ×` as on any window. Your day, in four tabs:
   task from a note
 - **focus**: a pomodoro (25/5 or 50/10) on a task or on nothing in particular; do not disturb
   while it works, stripes sits quietly, a notification at the end; rounds per day and a goal; it
-  carries on over a restart (`kawt focus` from a key or a script)
+  carries on over a restart (`kawt focus toggle` from a key or a script)
 
 <p align="center">
 <img src="assets/today-tabs.png" alt="the tasks tab with folders and boxes, the notes tab, the focus tab with its segments, and the system window's machine tab" width="100%">
@@ -545,9 +545,9 @@ Everything is also reachable over IPC, for your own binds or a timer:
 `kawt settings look|bar|screen|media|device|windows|kawt`, `kawt wallpaper next|prev|random|none|<path>`,
 `kawt suspend` (locks, then sleeps), `kawt caffeine`, `kawt idle <minutes>` (0 = never), `kawt night`,
 `kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`,
-`kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar [show|hide]`,
-`kawt desk [float|tile|cascade]`, `kawt companion pet|call|sleep|wake|focus|walk|home|toggle`,
-`kawt focus [stop|pause]`, `kawt welcome` (the first start's tour again), `kawt theme new|edit` (the theme editor), `kawt selection`, `kawt voice`.
+`kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar toggle|show|hide`,
+`kawt desk toggle|float|tile|cascade`, `kawt companion pet|call|sleep|wake|focus|walk|home|toggle`,
+`kawt focus toggle|stop|pause`, `kawt welcome` (the first start's tour again), `kawt theme new|edit` (the theme editor), `kawt selection`, `kawt voice`.
 The volume, mic, brightness and media ones are for the media keys. kawt's standard config binds
 them already; in a config of your own, remove your XF86 binds, then one line after the one that
 loads kawt: `kawt.media_keys()` in `hyprland.lua` (or, in an old `hyprland.conf`,

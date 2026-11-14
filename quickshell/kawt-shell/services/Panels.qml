@@ -22,9 +22,9 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt screenshot region|window|screen   (a preview asks copy / save)
 //   qs -c kawt-shell ipc call kawt record region|screen   (again: stop)
 //   qs -c kawt-shell ipc call kawt close
-//   qs -c kawt-shell ipc call kawt bar [show|hide]             (tucked away it peeks out at the edge)
+//   qs -c kawt-shell ipc call kawt bar toggle|show|hide        (tucked away it peeks out at the edge)
 //   qs -c kawt-shell ipc call kawt dnd
-//   qs -c kawt-shell ipc call kawt focus [stop|pause]          (the focus timer: a round, or off again)
+//   qs -c kawt-shell ipc call kawt focus toggle|stop|pause     (the focus timer: a round, or off again)
 //   qs -c kawt-shell ipc call kawt toggleLight
 //   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
 //   qs -c kawt-shell ipc call kawt clearNotifs
@@ -32,7 +32,9 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt companion pet|call|sleep|wake|focus|walk|home|toggle
 //   qs -c kawt-shell ipc call kawt selection                   (the ai on the text you marked)
 //   qs -c kawt-shell ipc call kawt voice                       (speak to the ai: again to stop)
-//   qs -c kawt-shell ipc call kawt desk [float|tile|cascade]   (this desk's windows floating <-> tiled)
+//   qs -c kawt-shell ipc call kawt desk toggle|float|tile|cascade   (this desk's windows floating <-> tiled)
+// Every call takes exactly the words its function has: quickshell refuses one more or one less
+// (tools/check.py looks at the keys in hypr/ and the scripts)
 Singleton {
     id: root
 

@@ -5,7 +5,7 @@ import Quickshell.Io
 import qs.config
 import qs.utils
 
-// The focus timer (profile -> focus and today, stripes' window, `kawt focus`): a stretch of
+// The focus timer (profile -> focus and today, stripes' window, `kawt focus toggle`): a stretch of
 // work, then a break. On a task of the todo list if you like, or on nothing in particular.
 //   while it works   do not disturb is on (back as it was after, unless you changed it meanwhile)
 //                    and stripes sits quietly: dnd keeps her from peeking out
@@ -70,7 +70,7 @@ Singleton {
         started();
     }
 
-    // stripes' [focus 25] and `kawt focus`: on, or off again
+    // stripes' [focus 25] and `kawt focus toggle`: on, or off again
     function toggle(): void {
         if (running)
             stop();
