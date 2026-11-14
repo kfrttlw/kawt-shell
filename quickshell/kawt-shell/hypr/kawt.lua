@@ -275,6 +275,16 @@ try("cursor", function()
     end
 end)
 
+-- Qt programs (KDE's, OBS, qBittorrent...) in the gtk theme, which kawt keeps in its colors, dark
+-- or light with it (scripts/apply-theme.sh), and gtk's "open file" windows: Qt's gtk3 platform
+-- theme (in qt itself, nothing to install). A Qt look of your own (qt6ct, kvantum: its
+-- QT_QPA_PLATFORMTHEME set before this file, or after it in user.lua) wins
+try("qt like gtk", function()
+    if (os.getenv("QT_QPA_PLATFORMTHEME") or "") == "" then
+        hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+    end
+end)
+
 -- a hard shadow a few pixels to the right and
 -- below every window, like an old system's (kawt's own windows draw theirs). Not on an
 -- old machine. The offset in a call of its own: if your Hyprland reads it differently, the
