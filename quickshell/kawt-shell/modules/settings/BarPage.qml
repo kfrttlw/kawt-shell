@@ -72,6 +72,37 @@ ColumnLayout {
         }
     }
 
+    // the start button's logo: the system's (kawt draws a few) or kawt's block, or one by hand
+    Group {
+        title: Strings.t("startLogo")
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 14
+
+            Repeater {
+                model: ["auto", "kawt", ...Distro.known]
+
+                Check {
+                    required property string modelData
+
+                    radio: true
+                    icon: modelData === "auto" ? Distro.logo : modelData === "kawt" ? "logo" : `distro-${modelData}`
+                    text: modelData === "auto" ? Strings.t("startLogoAuto") : modelData === "kawt" ? "kawt" : Distro.names[modelData]
+                    checked: Settings.startLogo === modelData
+                    onToggled: Settings.startLogo = modelData
+                }
+            }
+        }
+
+        Label {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            text: Distro.found ? Strings.t("startLogoFound").arg(Distro.name || Distro.names[Distro.found]) : Strings.t("startLogoNone").arg(Distro.name || "?")
+            color: Colors.dim
+        }
+    }
+
     Group {
         title: Strings.t("leftSide")
 

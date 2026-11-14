@@ -921,7 +921,11 @@ Singleton {
         cursorTerminal: "Terminal",
         cursorTerminalNote: "the console's: fat pixels, typing on a red block, busy: | / - \\",
         cursorSize: "Size",
-        cursorSizeNote: "every pixel 1 to 4 times, never blurred. Old X11 programs take it when they're started again"
+        cursorSizeNote: "every pixel 1 to 4 times, never blurred. Old X11 programs take it when they're started again",
+        startLogo: "Start button",
+        startLogoAuto: "The system's",
+        startLogoFound: "%1: kawt has its logo. Picked by hand, another one stays",
+        startLogoNone: "%1: kawt has no logo for it, kawt's block stands there. Pick one by hand if yours is one of these"
     })
 
     readonly property var ruWords: ({
@@ -1826,6 +1830,10 @@ Singleton {
         cursorTerminal: "Терминал",
         cursorTerminalNote: "как в консоли: толстые пиксели, ввод — красный блок, занят: | / - \\",
         cursorSize: "Размер",
-        cursorSizeNote: "каждый пиксель от 1 до 4 раз, без размытия. Старые X11-программы подхватят его после перезапуска"
+        cursorSizeNote: "каждый пиксель от 1 до 4 раз, без размытия. Старые X11-программы подхватят его после перезапуска",
+        startLogo: "Кнопка «Пуск»",
+        startLogoAuto: "Своей системы",
+        startLogoFound: "%1: у kawt есть её логотип. Выбранный вручную останется",
+        startLogoNone: "%1: для неё у kawt логотипа нет, стоит блок kawt. Если твоя система из этих, выбери вручную"
     })
 }
