@@ -87,6 +87,15 @@ case $mode in
             exit 4
         fi
         rm -f "$geofile" "$err"
+        # slurp's own frame (the box round the area, the shade, the size) can still be on the
+        # screen a moment after it quits, and grim took it along: a line at the edges of the
+        # shot. So first hyprland lets its layer go (0.5 s at most), then one frame more
+        i=0
+        while [ "$i" -lt 10 ] && hyprctl layers 2> /dev/null | grep -q 'namespace: selection'; do
+            sleep 0.05
+            i=$((i + 1))
+        done
+        sleep 0.05
         out=$(grim -g "$geo" "$file" 2>&1) || { echo "grim: ${out:-failed}"; exit 4; }
         ;;
     window)
