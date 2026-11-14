@@ -21,9 +21,9 @@ Singleton {
     // grid: the font's pixel, its sizes are whole times it; sizes: its own (terminus has a
     // bitmap for each), or the points offered for a smooth one (scripts/kitty-font.sh: the same)
     readonly property var fonts: [
+        { id: "term", name: "kawt Term", unit: "px", sizes: [12, 14, 16, 18, 20, 22, 24, 28, 32] },
         { id: "plex", name: "IBM Plex Mono", unit: "pt", sizes: [11, 12, 13, 14, 15, 16] },
         { id: "vga", name: "kawt VGA", unit: "px", grid: 16 },
-        { id: "terminus", name: "Terminus", unit: "px", sizes: [12, 14, 16, 18, 20, 22, 24, 28, 32] },
         { id: "bigblue", name: "Big Blue Terminal", unit: "px", grid: 12 },
         { id: "3270", name: "IBM 3270", unit: "pt", sizes: [12, 13, 14, 15, 16, 18] }
     ]
@@ -92,9 +92,10 @@ Singleton {
             const t = text();
             const m = t.match(/^# kawt-font: (\S+) ([0-9.]+)( auto)?/m);
             // the file of an older kawt (Departure Mono, 22 px: blurred by kitty's hinting): the
-            // pixel font now, sharp at the size the screen takes
+            // pixel font now, sharp at the size the screen takes. The package's Terminus, picked
+            // before kawt had its own: kawt's (the script takes "terminus" for it too)
             const old = !m && t.startsWith("# kawt: its pixel font in kitty");
-            root.font = m ? m[1] : old ? "vga" : "";
+            root.font = m ? (m[1] === "terminus" ? "term" : m[1]) : old ? "term" : "";
             root.size = m ? Number(m[2]) : 0;
             root.auto = old || !!(m && m[3]);
             if (old)

@@ -42,9 +42,9 @@ backup=$state/backups/$stamp
 
 qs_dst=$config/quickshell/kawt-shell
 kitty_dst=$config/kitty/kitty.conf
-# kawt's fonts (in the repo: Departure Mono, the shell's; kawt VGA, a terminal's) for gtk apps
-# and kitty: the shell loads its own, these find them through fontconfig. A link, like the
-# configs: a git pull updates them
+# kawt's fonts (in the repo: Departure Mono, the shell's; kawt Term and kawt VGA, kitty's) for
+# gtk apps and kitty: the shell loads its own, these find them through fontconfig. A link, like
+# the configs: a git pull updates them
 fonts_dst=${XDG_DATA_HOME:-$HOME/.local/share}/fonts/kawt
 # kitty's font, picked here or in settings -> look -> terminal: kitty.conf reads kawt-*.conf at
 # its end, scripts/kitty-font.sh writes this one
@@ -1733,29 +1733,32 @@ want() { # want <part id>: is it picked?
     return 1
 }
 
-# kitty's font: kitty.conf's smooth IBM Plex, or an old one. A pixel font is sharp only where each
-# of its pixels is one of the screen's: scripts/kitty-font.sh works the size out for the screen's
-# scale (kawt again, when the scale changes). Asked on a new install and on --fresh (which takes
-# kawt's file away), not when the file is there: that was answered, or picked in the settings
-# since (settings -> look -> terminal changes it any time)
+# kitty's font: kawt Term (Terminus, the linux console's, with russian д и й в; in the repo) by
+# default, kitty.conf's smooth IBM Plex, or another old one. A pixel font is sharp only where
+# each of its pixels is one of the screen's: scripts/kitty-font.sh works the size out for the
+# screen's scale (kawt again, when the scale changes): 18 px on a screen at 1. Asked on a new
+# install and on --fresh (which takes kawt's file away), not when the file is there: that was
+# answered, or picked in the settings since (settings -> look -> terminal changes it any time)
 kitty_font_id="" kitty_font_name="" kitty_font_pkg=""
-if want kitty && [[ -z $preset && ! -f $kitty_font ]] && [[ $mode != update ]] && can_ask; then
-    section "kitty"
-    say "kitty's font: ${dim}a pixel one at the sizes it's sharp at on your screen${off}"
-    say "${dim}  ↑↓ move · enter pick · settings -> look -> terminal changes it later${off}"
-    kitty_c=0
-    choose kitty_c "the usual|IBM Plex Mono, smooth, any size (recommended)" \
-        "kawt VGA|the IBM PC's text mode, 8 x 16 pixels, sharp; comes with kawt" \
-        "Terminus|the linux console's, sharp at many sizes (its д и look like g u)" \
-        "Big Blue Terminal|DOS, fat pixels, sharp" \
-        "IBM 3270|IBM's mainframe terminal, smooth"
-    case $kitty_c in
-        1) kitty_font_id=vga kitty_font_name="kawt VGA" ;;
-        2) kitty_font_id=terminus kitty_font_name=Terminus kitty_font_pkg=ttf-terminus-nerd ;;
-        3) kitty_font_id=bigblue kitty_font_name="Big Blue Terminal" kitty_font_pkg=ttf-bigblueterminal-nerd ;;
-        4) kitty_font_id=3270 kitty_font_name="IBM 3270" kitty_font_pkg=ttf-3270-nerd ;;
-        *) kitty_font_id=plex kitty_font_name="IBM Plex Mono" ;;
-    esac
+if want kitty && [[ ! -f $kitty_font ]] && [[ $mode != update ]]; then
+    kitty_font_id=term kitty_font_name="kawt Term"
+    if [[ -z $preset ]] && can_ask; then
+        section "kitty"
+        say "kitty's font: ${dim}a pixel one at the size it's sharp at on your screen${off}"
+        say "${dim}  ↑↓ move · enter pick · settings -> look -> terminal changes it later${off}"
+        kitty_c=0
+        choose kitty_c "kawt Term|Terminus, the linux console's, with russian letters: sharp, 18 px (recommended)" \
+            "IBM Plex Mono|smooth, any size: kitty.conf's own" \
+            "kawt VGA|the IBM PC's text mode, 8 x 16 pixels, sharp" \
+            "Big Blue Terminal|DOS, fat pixels, sharp" \
+            "IBM 3270|IBM's mainframe terminal, smooth"
+        case $kitty_c in
+            1) kitty_font_id=plex kitty_font_name="IBM Plex Mono" ;;
+            2) kitty_font_id=vga kitty_font_name="kawt VGA" ;;
+            3) kitty_font_id=bigblue kitty_font_name="Big Blue Terminal" kitty_font_pkg=ttf-bigblueterminal-nerd ;;
+            4) kitty_font_id=3270 kitty_font_name="IBM 3270" kitty_font_pkg=ttf-3270-nerd ;;
+        esac
+    fi
 fi
 
 if ((packages)) && [[ -z $preset ]] && can_ask; then
@@ -2136,7 +2139,6 @@ human() {
     case $1 in
         quickshell) echo "quickshell (see quickshell.org)" ;;
         ttf-ibmplex-mono-nerd) echo "IBM Plex Mono as a Nerd Font (BlexMono Nerd Font)" ;;
-        ttf-terminus-nerd) echo "Terminus as a Nerd Font (Terminess Nerd Font)" ;;
         ttf-bigblueterminal-nerd) echo "Big Blue Terminal as a Nerd Font (BigBlueTermPlus Nerd Font)" ;;
         ttf-3270-nerd) echo "IBM 3270 as a Nerd Font (3270 Nerd Font)" ;;
         papirus-icon-theme) echo "Papirus icons" ;;
