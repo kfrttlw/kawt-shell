@@ -28,6 +28,7 @@ try:
     from fontTools.ttLib.tables.O_S_2f_2 import Panose
 except ImportError:
     sys.exit("vgafont: needs fontTools (pip install fonttools)")
+from pixeltrace import trace
 
 SOURCE = "https://raw.githubusercontent.com/farsil/ibmfonts/master/bdf/iv8x16u.bdf"
 SHA256 = "a6265fb1ec9c560cc8a81da86531f98c0fdca724f96c4727794cb107ea277ff5"
@@ -78,48 +79,8 @@ def bold(cell: list[list[bool]]) -> list[list[bool]]:
 
 
 def outline(cell: list[list[bool]]):
-    """The pixels' outline, as closed paths of corner points (font units, y up), clockwise
-    around what's inked, as truetype wants: whole runs, no square per pixel."""
-    on = {(x, H - 1 - r) for r in range(H) for x in range(W) if cell[r][x]}  # (x, y) y up, from the bottom
-    edges: dict[tuple[int, int], list[tuple[int, int]]] = {}
-
-    def edge(a, b):
-        edges.setdefault(a, []).append(b)
-
-    # each side of an inked pixel with nothing next to it, walked with the ink on the right
-    for x, y in on:
-        if (x - 1, y) not in on:
-            edge((x, y), (x, y + 1))
-        if (x, y + 1) not in on:
-            edge((x, y + 1), (x + 1, y + 1))
-        if (x + 1, y) not in on:
-            edge((x + 1, y + 1), (x + 1, y))
-        if (x, y - 1) not in on:
-            edge((x + 1, y), (x, y))
-    paths = []
-    while edges:
-        start = min(edges)
-        path = [start]
-        here, came = start, None
-        while True:
-            nexts = edges[here]
-            if len(nexts) > 1 and came:
-                # two pixels touching only at a corner: turn right, so the paths never cross
-                dx, dy = here[0] - came[0], here[1] - came[1]
-                nexts.sort(key=lambda p: (p[0] - here[0]) * dy - (p[1] - here[1]) * dx, reverse=True)
-            to = nexts.pop(0)
-            if not nexts:
-                del edges[here]
-            came, here = here, to
-            if here == start:
-                break
-            path.append(here)
-        # corners only: points along a straight side go
-        n = len(path)
-        corners = [p for i, p in enumerate(path)
-                   if (path[i - 1][0] - p[0]) * (path[(i + 1) % n][1] - p[1]) != (path[i - 1][1] - p[1]) * (path[(i + 1) % n][0] - p[0])]
-        paths.append([(x * UNIT, (y - (H - ASCENT)) * UNIT) for x, y in corners])
-    return paths
+    """The pixels' outline in font units, y up from the baseline (tools/pixeltrace.py)."""
+    return [[(x * UNIT, (y - (H - ASCENT)) * UNIT) for x, y in path] for path in trace(cell)]
 
 
 def glyph_name(code: int) -> str:

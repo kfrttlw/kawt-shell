@@ -1,11 +1,12 @@
 #!/bin/sh
 # usage: kitty-font.sh <font> <size>|auto [<scale>]
 # kitty's font, from settings -> look -> terminal (services/KittyFont.qml) and ./install.sh:
-#   <font>   plex      IBM Plex Mono, smooth: kitty.conf's own                 <size> in points
-#            3270      IBM 3270, the mainframe terminal's, smooth              <size> in points
+#   <font>   term      kawt Term: Terminus, the linux console's, with russian д и й в
+#                      (fonts/, tools/termfont.py)                             <size> in pixels
+#            plex      IBM Plex Mono, smooth: kitty.conf's own                 <size> in points
 #            vga       kawt VGA, the IBM PC's text mode (fonts/, tools/vgafont.py)   <size> in pixels
-#            terminus  Terminus, the linux console's                           <size> in pixels
 #            bigblue   Big Blue Terminal, DOS                                  <size> in pixels
+#            3270      IBM 3270, the mainframe terminal's, smooth              <size> in points
 #   auto     the size nearest 19 of hyprland's pixels (plex at 14 pt is 18.7), at this scale; the
 #            file says so, and kawt picks it again when the scale changes
 #   <scale>  the screen's, as hyprland has it; not given: the biggest monitor's (hyprctl), or 1
@@ -17,6 +18,7 @@
 # Exit 3: kitty.conf isn't kawt's (the file would be read by nothing); 4: the font isn't
 # installed, "missing <package>" said.
 font=$1 size=$2 scale=${3:-}
+[ "$font" = terminus ] && font=term # the package's Terminus, picked before kawt had its own
 conf=${XDG_CONFIG_HOME:-$HOME/.config}/kitty
 file=$conf/kawt-font.conf
 
@@ -24,11 +26,11 @@ grep -qs 'globinclude kawt-\*\.conf' "$conf/kitty.conf" || exit 3
 
 case $font in
     # sizes: the ones it's sharp at (a pixel font: whole times its pixel); usual for a smooth one
+    term) family="kawt Term" unit=px pkg="" sizes="12 14 16 18 20 22 24 28 32" ;;
     plex) family="BlexMono Nerd Font Mono" unit=pt pkg=ttf-ibmplex-mono-nerd sizes=14 ;;
-    3270) family="3270 Nerd Font Mono" unit=pt pkg=ttf-3270-nerd sizes=15 ;;
     vga) family="kawt VGA" unit=px pkg="" sizes="16 32 48 64 80" ;;
-    terminus) family="Terminess Nerd Font Mono" unit=px pkg=ttf-terminus-nerd sizes="12 14 16 18 20 22 24 28 32" ;;
     bigblue) family="BigBlueTermPlus Nerd Font Mono" unit=px pkg=ttf-bigblueterminal-nerd sizes="12 24 36 48 60" ;;
+    3270) family="3270 Nerd Font Mono" unit=pt pkg=ttf-3270-nerd sizes=15 ;;
     *) echo "kitty-font: no font $font" >&2; exit 2 ;;
 esac
 case $size in auto) ;; '' | *[!0-9.]* | *.*.*) echo "kitty-font: size $size?" >&2; exit 2 ;; esac

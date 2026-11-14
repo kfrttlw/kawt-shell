@@ -411,9 +411,9 @@ setup to a backup, every question again).
   ("DP-1 runs at 60 Hz, it can do 165") and offers to set it. Again any time:
   `./install.sh --monitors`
 - kawt's fonts linked into `~/.local/share/fonts/kawt` for GTK apps and kitty, and kitty's font
-  asked: IBM Plex Mono, smooth (the usual), or an old one, the pixel ones at the size that's
-  sharp on your screen (`~/.config/kitty/kawt-font.conf`, settings → look → terminal any time;
-  see below). Asked again on `--fresh`
+  asked: kawt Term at 18 px (the default), IBM Plex Mono, or another old one, the pixel ones at
+  the size that's sharp on your screen (`~/.config/kitty/kawt-font.conf`, settings → look →
+  terminal any time; see below). Asked again on `--fresh`
 - the first wallpaper, on a new install: kawt in stripes, the sunset, stripes herself, the bars,
   or none (picked first when hyprpaper, swaybg or the like still draws yours)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
@@ -596,11 +596,13 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
   colors (otherwise they come from the rest). Something wrong in the file: `super + w` says what
 - **hyprland**: `~/.config/hypr/user.lua` (see the installer part above)
 - **kitty's font**: settings → look → terminal, open terminals change at once:
-  - **IBM Plex Mono**: smooth, any size, the usual
+  - **kawt Term**, the default: Terminus, the linux console's font, drawn pixel by pixel at nine
+    sizes (12 to 32 px), with the printed russian д и й в instead of its handwritten ones ("иду
+    в дом" read "ugy B gom"); comes with kawt (`tools/termfont.py` redraws them from Terminus'
+    own capitals). 18 px on a screen at scale 1, about what IBM Plex is at 14 pt
+  - **IBM Plex Mono**: smooth, any size
   - **kawt VGA**: the IBM PC's text mode, 8 × 16 pixels, latin, greek and cyrillic; comes with
     kawt (`tools/vgafont.py` makes it a font kitty takes: each pixel a square)
-  - **Terminus**: the linux console's, sharp at nine sizes; its д and и look like g and u
-    (`ttf-terminus-nerd`)
   - **Big Blue Terminal**: DOS, fat pixels (`ttf-bigblueterminal-nerd`)
   - **IBM 3270**: IBM's mainframe terminal, smooth (`ttf-3270-nerd`)
 
@@ -642,8 +644,9 @@ quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   modules/               what you see: the bar, the start menu, the panels, kawt's windows
                          (today, system, settings, wallpaper and theme), the lock, stripes
   components/            the parts they're made of (buttons, frames, fields, windows, icons)
-  fonts/                 Departure Mono (SIL OFL), kawt's pixel font; kawt VGA (CC BY-SA), a terminal's
-                         (made by tools/vgafont.py; -> ~/.local/share/fonts/kawt)
+  fonts/                 Departure Mono (SIL OFL), kawt's pixel font; kitty's: kawt Term (SIL OFL, made
+                         by tools/termfont.py) and kawt VGA (CC BY-SA, tools/vgafont.py)
+                         (-> ~/.local/share/fonts/kawt)
   cursors/               kawt's two cursors, XCursor (drawn by tools/cursors.py; -> ~/.local/share/icons once picked)
   data/                  the emoji list, stripes' picture for fastfetch
   shaders/               stripes (stripes.frag, built into stripes.frag.qsb)
@@ -686,6 +689,9 @@ quickshell and a headless sway, every panel, window and settings page opened (`t
 too, under the same license.
 Departure Mono (`quickshell/kawt-shell/fonts/`) is Helena Zhang's, under the
 [SIL Open Font License](quickshell/kawt-shell/fonts/OFL.txt).
+kawt Term (`quickshell/kawt-shell/fonts/KawtTerm-*.ttf`) is Terminus, Dimitar Toshkov Zhekov's
+(as TrueType by Tilman Blumenbach), with its russian д и й в redrawn by `tools/termfont.py`,
+under the [SIL Open Font License](quickshell/kawt-shell/fonts/TERM-LICENSE.txt).
 kawt VGA (`quickshell/kawt-shell/fonts/KawtVGA-*.ttf`) is IBM's VGA font as farsil's
 [ibmfonts](https://github.com/farsil/ibmfonts) has it (with latin, greek and cyrillic added), made
 a TrueType font by `tools/vgafont.py`, under [CC BY-SA 4.0](quickshell/kawt-shell/fonts/VGA-LICENSE.txt).
