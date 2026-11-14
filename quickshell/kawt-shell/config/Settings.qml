@@ -28,6 +28,8 @@ Singleton {
     property alias screenshotFreeze: adapter.screenshotFreeze
     property alias wallPalette: adapter.wallPalette
     property alias wallStrength: adapter.wallStrength
+    property alias ownColor: adapter.ownColor
+    property alias ownBg: adapter.ownBg
     property alias recordDir: adapter.recordDir
     property alias aiProvider: adapter.aiProvider
     property alias aiCtx: adapter.aiCtx
@@ -130,9 +132,21 @@ Singleton {
     // Then two settings went (5): recordAudio (recordSound says it all) and wifiStyle (the network
     // is switched off in settings -> bar, like any other part). `was` is the file as it was
     // written, where the ones that are no settings any more can still be read, this once
+    // Then (6) the wallpaper theme's strengths moved up one: "full" is everything in the color now,
+    // what it was is "strong", and the old "strong" (hardly off calm) went. Yours stays as it looked
     function newLook(was: var): void {
-        if (lookVersion >= 5)
+        if (lookVersion >= 6)
             return;
+        if (lookVersion < 5)
+            fiveLook(was);
+        if (wallStrength === "strong")
+            wallStrength = "calm";
+        else if (wallStrength === "full")
+            wallStrength = "strong";
+        lookVersion = 6;
+    }
+
+    function fiveLook(was: var): void {
         if (lookVersion < 4) {
             if (lookVersion < 2 && theme === "mono")
                 theme = "thinkpad";
@@ -152,7 +166,6 @@ Singleton {
             recordSound = "off";
         if (was?.wifiStyle === "hidden" && barShows("wifi"))
             toggleBar("wifi");
-        lookVersion = 5;
     }
 
     // settings.json as it was written, for newLook; {} when it can't be read
@@ -217,7 +230,9 @@ Singleton {
             property bool screenshotAsk: true // a preview in the corner asks: copy / save (services/Screenshot.qml); false = saved and copied at once
             property bool screenshotFreeze: true // the screen stands still while an area is picked (needs hyprpicker)
             property var wallPalette: ({}) // the wallpaper, analysed: { source, version, hue, sat, colorful, hues } (utils/wallpalette.js)
-            property string wallStrength: "calm" // how much of the wallpaper's color the wallpaper theme takes: "calm" (only its light) | "strong" | "full"
+            property string wallStrength: "calm" // how much of the color the wallpaper theme (and the own one) takes: "calm" (only its light) | "strong" (the greys tinted) | "full" (everything in it)
+            property string ownColor: "#2ec4b6" // the own theme's color: its light, and what the rest is tinted with (utils/wallpalette.js)
+            property string ownBg: "" // the own theme's background, #rrggbb; "" made from the color
             property string recordDir: "~/Videos/recordings"
             // ai (services/Ai.qml): provider, and how much the local model may take
             property string aiProvider: "ollama" // "ollama" | "api"

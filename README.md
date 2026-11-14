@@ -32,9 +32,13 @@ the only light, like the dot on a ThinkPad's lid: where you are, what's chosen, 
 
 Two themes of its own, picked in `super + w`: **Graphite** (a black ThinkPad) and **Silver**
 (the old grey, paper-light), and **From the wallpaper** (the same greys, lit in your wallpaper's
-own color instead of red), each dark or light (`super + shift + w`), and your own
-([below](#your-own-look)). Everything follows: GTK apps and thunar, kitty and other terminals,
-Hyprland's borders, fastfetch, the prompt.
+own color instead of red; or one of the other colors found in it, a click away) and **Own
+color** (the same, in a color you type, pick or take off the screen, on a background of yours if
+you like), each dark or light (`super + shift + w`), and your own ([below](#your-own-look)). How
+much color the last two take: **calm** (only the light), **strong** (the greys tinted) or
+**full** (everything in it: windows, title bars, the bar, the terminals, and the wallpaper drawn
+in it). Everything follows: GTK apps and thunar, kitty and other terminals, Hyprland's borders,
+fastfetch, the prompt.
 
 The words are in [Departure Mono](https://departuremono.com), a pixel font drawn on an 11 px
 grid (SIL OFL, it comes with kawt in `fonts/`), sharp at 11 and 22. Long text (notes, the ai's
@@ -576,8 +580,9 @@ Nothing in the repo has to be edited, so updates never fight with your changes:
   boot screen, scanlines, old machine; the bar at the top or the bottom, its height, and which
   parts it shows (one switched off still works on its key; a recording, a shared screen and
   caffeine always show while they're on)
-- **colors**: `New…` and `Edit…` on the theme tab of `super + w` make and change themes
-  without typing: a name, the colors of dark and light as hex (or picked off the screen with
+- **colors**: the quickest is **Own color** on the theme tab of `super + w`: one color, and
+  kawt makes the rest. For every color by hand, `New…`, `Edit…` (or the pencil, `All colors…`,
+  next to your color) make and change themes without typing: a name, the colors of dark and light as hex (or picked off the screen with
   hyprpicker), the bar's own color if it should differ. Graphite and Silver keep only what you
   change, reset gives kawt's back. It all goes to `~/.config/kawt/themes.json`, read again
   whenever it's saved, so it can be written by hand too. A new name is a new theme; `thinkpad`

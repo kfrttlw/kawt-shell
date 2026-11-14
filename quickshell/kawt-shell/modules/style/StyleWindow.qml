@@ -1,19 +1,24 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs.config
 import qs.components
 import qs.services
+import "../../utils/wallpalette.js" as WallPalette
 
 // Wallpaper and theme (super + w), like an old system's display properties: a real window
 // (components/AppWindow.qml) in three tabs.
 //   Wallpaper  the picked one big across the top, with a little bar in the theme over it; the
 //              folder's pictures in a grid under it; Browse…, Random, how it's shown
-//   Theme      the themes, a small picture of each in its own colors; dark or light; your own
-//              (New… / Edit…: ThemeEditor.qml over the window); the terminals' colors, fastfetch
+//   Theme      the themes, a small picture of each in its own colors; your color (the own
+//              theme: a color typed, picked or off the screen, a background if you like); how
+//              much color the wallpaper's and yours take, the other colors found in the
+//              wallpaper; dark or light; your own (New… / Edit… / All colors…: ThemeEditor.qml
+//              over the window); the terminals' colors, fastfetch
 //   Change     a new one every 15 min … 3 h, in order or at random, how it changes
 // OK sets the picked one and closes, Apply sets it, Cancel puts back what was on when it opened
-// (the wallpaper, the theme, dark or light). Keys: arrows pick, enter sets, r random, t dark /
+// (the wallpaper, the theme, dark or light, your color, how much color). Keys: arrows pick, enter sets, r random, t dark /
 // light, esc closes (as Cancel).
 AppWindow {
     id: root
@@ -23,6 +28,7 @@ AppWindow {
     property var before: ({}) // what was on when it opened: Cancel goes back to it
     property bool browsing: false // the folder line is open
     property int roomHeight: 1080 // the screen it opened on: looked at once, so it doesn't jump
+    readonly property int ownLabels: Math.round(Metrics.fontSize * 0.6 * 11) // "background", lined up
 
     name: "style"
     icon: "wallpaper"
@@ -30,8 +36,10 @@ AppWindow {
     bodyWidth: Math.round(640 * Metrics.scale)
     // room for the picture across the tab and two rows of the grid; less on a small screen
     bodyHeight: Math.min(Math.round(690 * Metrics.scale), roomHeight - Metrics.barHeight - 140)
-    // off the screen while a color is picked off it (the theme editor)
-    visible: !editor.picking
+    // off the screen while a color is picked off it (the theme editor, or your color here)
+    visible: !editor.picking && !picking
+    property bool picking: false // hyprpicker is out for your color (or its background: pickFor)
+    property string pickFor: "color"
 
     function name_(path: string): string {
         return path.split("/").pop().replace(/\.[^.]+$/, "");
@@ -57,10 +65,88 @@ AppWindow {
                 Settings.light = before.light;
             if (Settings.wallDither !== before.dither)
                 Settings.wallDither = before.dither;
+            if (Settings.wallStrength !== before.strength)
+                Settings.wallStrength = before.strength;
+            if (Settings.ownColor !== before.ownColor)
+                Settings.ownColor = before.ownColor;
+            if (Settings.ownBg !== before.ownBg)
+                Settings.ownBg = before.ownBg;
+            if (Settings.wallPalette?.pick !== before.pick && Settings.wallPalette?.source === before.wallpaper) {
+                const wp = Object.assign({}, Settings.wallPalette);
+                if (before.pick === undefined)
+                    delete wp.pick;
+                else
+                    wp.pick = before.pick;
+                Settings.wallPalette = wp;
+            }
             if (Settings.wallpaper !== before.wallpaper)
                 Wallpapers.set(before.wallpaper);
         }
         close();
+    }
+
+    // your color (or its background) as typed: #rrggbb, the # may be left out; an empty
+    // background is kawt's, made from the color
+    function setOwn(which: string, t: string): void {
+        t = bare(t);
+        const v = /^[0-9a-f]{6}$/.test(t) ? `#${t}` : which === "bg" && t === "" ? "" : null;
+        if (v === null)
+            return;
+        if (which === "bg" && Settings.ownBg !== v)
+            Settings.ownBg = v;
+        else if (which === "color" && Settings.ownColor !== v)
+            Settings.ownColor = v;
+    }
+
+    // a color off the screen: the window steps aside, hyprpicker freezes what's under it
+    function pickColor(which: string): void {
+        pickFor = which;
+        picking = true;
+        pickLater.restart();
+    }
+
+    Timer {
+        id: pickLater
+
+        interval: 200 // the window is off the screen by then
+        onTriggered: picker.running = true
+    }
+
+    Process {
+        id: picker
+
+        command: ["hyprpicker", "-n"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = /#?([0-9a-fA-F]{6})/.exec(text);
+                if (m)
+                    root.setOwn(root.pickFor, m[1]);
+            }
+        }
+        onExited: {
+            root.picking = false;
+            keys.forceActiveFocus();
+        }
+    }
+
+    // the fields follow your color however it changed (a swatch, the screen, Cancel)
+    Connections {
+        target: Settings
+
+        function onOwnColorChanged(): void {
+            if (root.bare(ownField.text) !== root.bare(Settings.ownColor))
+                ownField.text = root.bare(Settings.ownColor);
+        }
+
+        function onOwnBgChanged(): void {
+            if (root.bare(bgField.text) !== root.bare(Settings.ownBg))
+                bgField.text = root.bare(Settings.ownBg);
+        }
+    }
+
+    // "#2EC4B6 " -> "2ec4b6"
+    function bare(t: string): string {
+        return t.trim().replace(/^#/, "").toLowerCase();
     }
 
     function random(): void {
@@ -90,7 +176,7 @@ AppWindow {
     Component.onCompleted: {
         roomHeight = Quickshell.screens.find(s => s.name === Panels.focusedScreen)?.height ?? 1080;
         showTab(Panels.styleTab);
-        before = { wallpaper: Settings.wallpaper, theme: Settings.theme, light: Settings.light, dither: Settings.wallDither };
+        before = { wallpaper: Settings.wallpaper, theme: Settings.theme, light: Settings.light, dither: Settings.wallDither, strength: Settings.wallStrength, ownColor: Settings.ownColor, ownBg: Settings.ownBg, pick: Settings.wallPalette?.pick };
         Wallpapers.refresh();
         current = Math.max(0, Wallpapers.files.indexOf(Settings.wallpaper));
         previewSoon.restart();
@@ -564,7 +650,7 @@ AppWindow {
                                 horizontalAlignment: Text.AlignHCenter
                                 elide: Text.ElideRight
                                 // kawt's own by their names in the window (black: Graphite), yours as you named them
-                                text: ({ black: Strings.t("graphite"), white: Strings.t("silver"), wallpaper: Strings.t("fromWallpaper") })[tile.modelData.name] ?? tile.modelData.name
+                                text: Colors.nameOf(tile.modelData)
                                 color: tile.isCurrent ? Colors.onAccent : Colors.fg
                             }
                         }
@@ -587,15 +673,221 @@ AppWindow {
                 }
             }
 
-            // dark or light (black and white are that already); the wallpaper theme's strength
+            // your color: its light (a square of it, typed, kawt's few a click away, off the screen) and
+            // a background if you like; the pencil: every color by hand, as a theme of yours
             Group {
-                title: Strings.t("themeShade")
+                visible: Colors.mode === "own"
+                title: Strings.t("ownColor")
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Label {
+                        Layout.preferredWidth: root.ownLabels
+                        text: Strings.t("ownLight")
+                    }
+
+                    Rectangle {
+                        implicitWidth: ownField.implicitHeight
+                        implicitHeight: ownField.implicitHeight
+                        color: Settings.ownColor
+
+                        Bevel {
+                            style: "sunk"
+                        }
+                    }
+
+                    TermInput {
+                        id: ownField
+
+                        Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 9) + 30
+                        prompt: "#"
+                        promptColor: Colors.dim
+                        Component.onCompleted: text = root.bare(Settings.ownColor)
+                        onTextChanged: root.setOwn("color", text)
+                    }
+
+                    PushButton {
+                        visible: Screenshot.canFreeze // hyprpicker is there
+                        minWidth: 0
+                        text: Strings.t("fromScreen")
+                        onClicked: root.pickColor("color")
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    BarBox {
+                        implicitHeight: Metrics.fontSize + 13
+                        plain: false
+                        onClicked: editor.openNew()
+
+                        PixIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: "edit"
+                        }
+
+                        Label {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Strings.t("allColors")
+                        }
+                    }
+                }
+
+                Row {
+                    Layout.leftMargin: root.ownLabels + ownField.implicitHeight + 12
+                    spacing: 5
+
+                    Repeater {
+                        model: editor.lights
+
+                        Rectangle {
+                            required property string modelData
+                            readonly property bool isIt: Settings.ownColor.toLowerCase() === modelData
+
+                            width: Metrics.fontSize + 5
+                            height: width
+                            color: modelData
+                            border.width: isIt ? 2 : 0
+                            border.color: Colors.fg
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Settings.ownColor = parent.modelData
+                            }
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Label {
+                        Layout.preferredWidth: root.ownLabels
+                        text: Strings.t("ownBg")
+                    }
+
+                    Rectangle {
+                        implicitWidth: bgField.implicitHeight
+                        implicitHeight: bgField.implicitHeight
+                        color: Colors.bg
+
+                        Bevel {
+                            style: "sunk"
+                        }
+                    }
+
+                    TermInput {
+                        id: bgField
+
+                        Layout.preferredWidth: Math.round(Metrics.fontSize * 0.6 * 9) + 30
+                        prompt: "#"
+                        promptColor: Colors.dim
+                        placeholder: Strings.t("ownBgAuto")
+                        Component.onCompleted: text = root.bare(Settings.ownBg)
+                        onTextChanged: root.setOwn("bg", text)
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: Strings.t("ownBgNote")
+                        color: Colors.dim
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: Strings.t("ownRest")
+                    color: Colors.dim
+                }
+            }
+
+            // how much of the color the wallpaper's theme and yours take; the wallpaper's other
+            // colors, a click away
+            Group {
+                visible: Colors.mode === "wallpaper" || Colors.mode === "own"
+                title: Strings.t("strengthGroup")
 
                 RowLayout {
                     spacing: 16
 
                     Repeater {
-                        model: Colors.mode !== "thinkpad" ? [[false, "darkWord"], [true, "lightWord"]] : []
+                        model: [["calm", "wallCalm"], ["strong", "wallStrong"], ["full", "wallFull"]]
+
+                        Check {
+                            required property var modelData
+
+                            radio: true
+                            text: Strings.t(modelData[1])
+                            checked: Settings.wallStrength === modelData[0]
+                            onToggled: Settings.wallStrength = modelData[0]
+                        }
+                    }
+                }
+
+                Label {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: Strings.t(({ strong: "wallStrongNote", full: "wallFullNote" })[Settings.wallStrength] ?? "wallCalmNote")
+                    color: Colors.dim
+                }
+
+                RowLayout {
+                    readonly property var hues: Settings.wallPalette?.hues ?? []
+
+                    visible: Colors.mode === "wallpaper" && hues.length > 1
+                    spacing: 6
+
+                    Label {
+                        text: Strings.t("wallFound")
+                    }
+
+                    Repeater {
+                        model: parent.hues
+
+                        Rectangle {
+                            required property real modelData
+                            readonly property bool isIt: WallPalette.hueOf(Settings.wallPalette) === modelData
+
+                            implicitWidth: Metrics.fontSize + 7
+                            implicitHeight: implicitWidth
+                            color: WallPalette.swatch(modelData)
+                            border.width: isIt ? 2 : 0
+                            border.color: Colors.fg
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Settings.wallPalette = Object.assign({}, Settings.wallPalette, { pick: parent.modelData })
+                            }
+                        }
+                    }
+
+                    Label {
+                        text: Strings.t("wallFoundNote")
+                        color: Colors.dim
+                    }
+                }
+            }
+
+            // dark or light (black and white are that already; your color on a background of
+            // yours is what the background is)
+            Group {
+                title: Strings.t("themeShade")
+
+                RowLayout {
+                    readonly property bool fixedShade: Colors.mode === "thinkpad" || (Colors.mode === "own" && Colors.ownBgSet)
+
+                    spacing: 16
+
+                    Repeater {
+                        model: !parent.fixedShade ? [[false, "darkWord"], [true, "lightWord"]] : []
 
                         Check {
                             required property var modelData
@@ -608,26 +900,9 @@ AppWindow {
                     }
 
                     Label {
-                        visible: Colors.mode === "thinkpad"
-                        text: Strings.t("thinkpadShade")
+                        visible: parent.fixedShade
+                        text: Colors.mode === "thinkpad" ? Strings.t("thinkpadShade") : Strings.t("ownShadeNote")
                         color: Colors.dim
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Repeater {
-                        model: Colors.mode === "wallpaper" ? [["calm", "wallCalm"], ["strong", "wallStrong"], ["full", "wallFull"]] : []
-
-                        Check {
-                            required property var modelData
-
-                            radio: true
-                            text: Strings.t(modelData[1])
-                            checked: Settings.wallStrength === modelData[0]
-                            onToggled: Settings.wallStrength = modelData[0]
-                        }
                     }
                 }
             }
@@ -652,7 +927,7 @@ AppWindow {
 
                 PushButton {
                     minWidth: 0
-                    text: Colors.mode === "wallpaper" ? Strings.t("themeEditCopy") : Strings.t("themeEdit")
+                    text: Colors.mode === "wallpaper" || Colors.mode === "own" ? Strings.t("themeEditCopy") : Strings.t("themeEdit")
                     onClicked: editor.openEdit()
                 }
             }

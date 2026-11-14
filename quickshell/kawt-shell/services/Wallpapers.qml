@@ -88,8 +88,33 @@ Singleton {
 
     // the copy: the picture in five tones between lo and hi (black and white become them) and
     // its reds in the accent. Dark themes go from the background up to a dim ink, light ones from
-    // ink up to the paper: a wallpaper stays behind the windows either way
-    readonly property var tones: Colors.light ? ({ lo: Colors.mix(Colors.bg, Colors.fg, 0.85), hi: Colors.bg, gamma: 1 }) : ({ lo: Colors.bg, hi: Colors.mix(Colors.bg, Colors.fg, 0.85), gamma: 1.3 })
+    // ink up to the paper: a wallpaper stays behind the windows either way. A theme that's all in
+    // its color ("full", utils/wallpalette.js: tinted) draws it in that color too: from the
+    // background up to the light (or down to it, on paper), a brighter picture
+    readonly property bool tinted: Colors.palette.tinted === true
+    readonly property var tones: {
+        const bg = Colors.bg, fg = Colors.fg, ink = Colors.mix(Colors.accent, fg, Colors.darkBg ? 0.45 : 0.5);
+        if (Colors.darkBg)
+            return tinted ? { lo: bg, hi: ink, gamma: 1 } : { lo: bg, hi: Colors.mix(bg, fg, 0.85), gamma: 1.3 };
+        return { lo: tinted ? ink : Colors.mix(bg, fg, 0.85), hi: bg, gamma: 1 };
+    }
+    // the picture's own color that's lit in the accent: its reds in kawt's red themes; in the
+    // wallpaper's theme (and the own one) the color the theme took from it, so a purple picture
+    // keeps its purple glow. Only for the picture that was analysed ("": the reds)
+    function keyFor(path: string): string {
+        const wp = Settings.wallPalette;
+        if ((Colors.mode !== "wallpaper" && Colors.mode !== "own") || !wp?.colorful || wp.source !== path)
+            return "";
+        const h = Colors.mode === "wallpaper" ? WallPalette.hueOf(wp) : wp.hue;
+        return WallPalette.hsl2hex(h, Math.max(0.6, Math.min(0.9, wp.sat)), 0.5);
+    }
+
+    // as dither.sh's last argument, when there's one (none: the copies made before are still
+    // the same ones, by their names)
+    function keyOf(path: string): var {
+        const k = keyFor(path);
+        return k ? [k] : [];
+    }
     // the dots are two pixels big: half the biggest screen, doubled back to it
     readonly property size ditherSize: {
         let w = 0, h = 0;
@@ -100,7 +125,7 @@ Singleton {
         return Qt.size(Math.ceil(w / 2) || 960, Math.ceil(h / 2) || 540);
     }
     readonly property string ditherDir: `${Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache"}/kawt/dither`
-    readonly property var ditherArgs: [ditherSize.width, ditherSize.height, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma)]
+    readonly property var ditherArgs: [ditherSize.width, ditherSize.height, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma), ...keyOf(Settings.wallpaper)]
     property string pendingTransition: ""
 
     // the picture, or its copy (made first if it isn't there yet: one per picture, theme and
@@ -158,7 +183,7 @@ Singleton {
             preview = path;
             return;
         }
-        const args = [480, 270, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma)];
+        const args = [480, 270, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma), ...keyOf(path)];
         previewOut = `${ditherDir}/preview-${Qt.md5([path, ...args].join("|"))}.png`;
         previewer.command = ["sh", "-c", '[ -s "$2" ] || { mkdir -p "${2%/*}" && sh "$0" "$@" && { cd "${2%/*}" && ls -t | tail -n +41 | xargs -r rm -f; }; } && [ -s "$2" ] && echo "$2"', `${Quickshell.shellDir}/scripts/dither.sh`, path, previewOut, ...args.map(String)];
         previewer.running = true;

@@ -36,7 +36,7 @@ ColumnLayout {
                     required property var modelData
                     readonly property var pal: (Colors.themes[modelData.theme] || {})[modelData.light === null ? Colors.variant : modelData.light ? "light" : "dark"] ?? {}
                     readonly property bool picked: Colors.isCurrent(modelData)
-                    readonly property string shownName: modelData.name === "black" ? Strings.t("graphite") : modelData.name === "white" ? Strings.t("silver") : modelData.name === "wallpaper" ? Strings.t("fromWallpaper") : modelData.name
+                    readonly property string shownName: Colors.nameOf(modelData)
 
                     width: 140
                     height: 96
