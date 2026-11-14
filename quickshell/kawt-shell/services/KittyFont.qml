@@ -8,11 +8,11 @@ import qs.utils
 // kitty's font (settings -> look -> terminal). scripts/kitty-font.sh writes it into
 // ~/.config/kitty/kawt-font.conf, which kawt's kitty.conf reads after its own, and every open kitty
 // takes it at once. That file is the one place the choice lives (./install.sh asks it there too):
-// its first line, "# kawt-font: vga 32", is read back here. No file: kitty.conf's, plex at 14 pt.
+// its first line, "# kawt-font: vga 32", is read back here. No file: kitty.conf's, plex at 11 pt.
 // A pixel font is sharp only when each of its pixels is one of the screen's: its sizes are in
 // screen pixels, the points worked out from the screen's scale; when the scale changes (another
 // monitor, another scale), the file is written again for it. A font just picked comes at "auto":
-// the size nearest 19 of hyprland's pixels (plex at 14 pt is 18.7), at the scale there is then
+// the size nearest 16 of hyprland's pixels (as tall as plex at 11 pt), at the scale there is then
 // (the installer's pick too).
 Singleton {
     id: root
@@ -40,7 +40,7 @@ Singleton {
     property real size: 0
     property bool auto: false // the size follows the scale (picked with the font, not by hand)
     readonly property string shown: font || "plex"
-    readonly property real shownSize: font ? size : 14
+    readonly property real shownSize: font ? size : 11
     property bool kawtKitty: false // kitty.conf is kawt's: it reads kawt-font.conf
     property string missing: "" // the package of the font asked for last, when it isn't installed
     property var asked: null // [font, size] waiting while the script still runs

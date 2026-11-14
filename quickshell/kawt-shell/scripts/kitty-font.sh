@@ -7,7 +7,8 @@
 #            vga       kawt VGA, the IBM PC's text mode (fonts/, tools/vgafont.py)   <size> in pixels
 #            bigblue   Big Blue Terminal, DOS                                  <size> in pixels
 #            3270      IBM 3270, the mainframe terminal's, smooth              <size> in points
-#   auto     the size nearest 19 of hyprland's pixels (plex at 14 pt is 18.7), at this scale; the
+#   auto     the size nearest 16 of hyprland's pixels (Terminus' own; the letters as tall as
+#            plex's at 11 pt, kitty's usual size), at this scale; the
 #            file says so, and kawt picks it again when the scale changes
 #   <scale>  the screen's, as hyprland has it; not given: the biggest monitor's (hyprctl), or 1
 # A pixel font is sharp only when each of its pixels is one of the screen's: <size> is in the
@@ -27,10 +28,10 @@ grep -qs 'globinclude kawt-\*\.conf' "$conf/kitty.conf" || exit 3
 case $font in
     # sizes: the ones it's sharp at (a pixel font: whole times its pixel); usual for a smooth one
     term) family="kawt Term" unit=px pkg="" sizes="12 14 16 18 20 22 24 28 32" ;;
-    plex) family="BlexMono Nerd Font Mono" unit=pt pkg=ttf-ibmplex-mono-nerd sizes=14 ;;
+    plex) family="BlexMono Nerd Font Mono" unit=pt pkg=ttf-ibmplex-mono-nerd sizes=11 ;;
     vga) family="kawt VGA" unit=px pkg="" sizes="16 32 48 64 80" ;;
     bigblue) family="BigBlueTermPlus Nerd Font Mono" unit=px pkg=ttf-bigblueterminal-nerd sizes="12 24 36 48 60" ;;
-    3270) family="3270 Nerd Font Mono" unit=pt pkg=ttf-3270-nerd sizes=15 ;;
+    3270) family="3270 Nerd Font Mono" unit=pt pkg=ttf-3270-nerd sizes=12 ;;
     *) echo "kitty-font: no font $font" >&2; exit 2 ;;
 esac
 case $size in auto) ;; '' | *[!0-9.]* | *.*.*) echo "kitty-font: size $size?" >&2; exit 2 ;; esac
@@ -46,9 +47,9 @@ esac
 auto=""
 if [ "$size" = auto ]; then
     auto=" auto"
-    # the nearest to 19 of hyprland's pixels (a smooth one: its usual size)
+    # the nearest to 16 of hyprland's pixels (a smooth one: its usual size)
     size=$(echo "$sizes" | awk -v s="$scale" -v u="$unit" '{
-        for (i = 1; i <= NF; i++) { d = (u == "px" ? $i / s : 19) - 19; if (d < 0) d = -d
+        for (i = 1; i <= NF; i++) { d = (u == "px" ? $i / s : 16) - 16; if (d < 0) d = -d
             if (i == 1 || d < bd) { bd = d; b = $i } }
         print b }')
 fi
@@ -75,7 +76,7 @@ fi
 
 new=$(
     printf '# kawt-font: %s %s%s\n' "$font" "$size" "$auto"
-    printf '# kawt: settings -> look -> terminal writes this file (gone: kitty.conf, plex 14 pt)\n'
+    printf '# kawt: settings -> look -> terminal writes this file (gone: kitty.conf, plex 11 pt)\n'
     printf '%s\n' "$why"
     printf 'font_family      %s\n' "$family"
     printf 'bold_font        auto\n'
