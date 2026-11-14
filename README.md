@@ -406,7 +406,8 @@ setup to a backup, every question again).
   ("DP-1 runs at 60 Hz, it can do 165") and offers to set it. Again any time:
   `./install.sh --monitors`
 - kawt's pixel font (Departure Mono) linked into `~/.local/share/fonts/kawt` for GTK apps, and,
-  if you say so, for kitty too (small: 8.25 pt; `~/.config/kitty/kawt-font.conf`)
+  if you say so, for kitty too: big, 22 px, or small, 11 px, the two sizes it's sharp at
+  (`~/.config/kitty/kawt-font.conf`); otherwise kitty has IBM Plex Mono at 14 pt
 - the first wallpaper, on a new install: kawt in stripes, the sunset, stripes herself, the bars,
   or none (picked first when hyprpaper, swaybg or the like still draws yours)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
