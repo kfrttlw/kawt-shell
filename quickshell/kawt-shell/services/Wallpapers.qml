@@ -16,6 +16,8 @@ import "../utils/wallpalette.js" as WallPalette
 // the folder or a random one, with awww's transition picked there (crt: drawn in from the top).
 // Dithered (Settings.wallDither, on by default): what's on screen is a copy in the theme's few
 // tones, made by scripts/dither.sh, and made again when the theme changes.
+// Videos (and moving gifs) are live wallpapers: their first frame is the wallpaper here, like a
+// picture, and services/LiveWall.qml plays them over it while the desktop is seen.
 Singleton {
     id: root
 
@@ -136,10 +138,19 @@ Singleton {
             shown = "";
             return;
         }
+        if (!Settings.wallDither && LiveWall.isLive(path)) {
+            // a live one as it is: its first frame, a picture, under the player
+            const poster = `${ditherDir}/poster-${Qt.md5([path, ditherSize.width, ditherSize.height].join("|"))}.png`;
+            pendingTransition = transition;
+            ditherer.command = ["sh", "-c", '[ -s "$2" ] || sh "$0" poster "$1" "$2" "$3" "$4" > /dev/null; [ -s "$2" ] && echo "$2"', LiveWall.script, path, poster, String(ditherSize.width * 2), String(ditherSize.height * 2)];
+            ditherer.running = true;
+            return;
+        }
         if (!Settings.wallDither) {
             display(path, transition);
             return;
         }
+        // (a live one: its first frame, dithered)
         const out = `${ditherDir}/${Qt.md5([path, ...ditherArgs].join("|"))}.png`;
         pendingTransition = transition;
         ditherer.command = ["sh", "-c", '[ -s "$2" ] || { mkdir -p "${2%/*}" && sh "$0" "$@" && { cd "${2%/*}" && ls -t | tail -n +31 | xargs -r rm -f; }; } && [ -s "$2" ] && echo "$2"', `${Quickshell.shellDir}/scripts/dither.sh`, path, out, ...ditherArgs.map(String)];
@@ -179,8 +190,15 @@ Singleton {
 
     function makePreview(path: string): void {
         previewFor = path;
-        if (!path || !Settings.wallDither) {
+        if (!path || (!Settings.wallDither && !LiveWall.isLive(path))) {
             preview = path;
+            return;
+        }
+        if (!Settings.wallDither) {
+            // a live one: its first frame
+            previewOut = `${ditherDir}/preview-${Qt.md5(path)}.png`;
+            previewer.command = ["sh", "-c", '[ -s "$2" ] || sh "$0" poster "$1" "$2" 480 270 > /dev/null; [ -s "$2" ] && echo "$2"', LiveWall.script, path, previewOut];
+            previewer.running = true;
             return;
         }
         const args = [480, 270, String(tones.lo), String(tones.hi), String(Colors.accent), String(tones.gamma), ...keyOf(path)];
@@ -377,7 +395,7 @@ Singleton {
     Process {
         id: finder
 
-        command: ["find", "-L", root.dir, "-maxdepth", "2", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", "-o", "-iname", "*.bmp", ")"]
+        command: ["find", "-L", root.dir, "-maxdepth", "2", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", "-o", "-iname", "*.bmp", ...[].concat(...LiveWall.kinds.map(k => ["-o", "-iname", `*.${k}`])), ")"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.files = text.split("\n").filter(l => l).sort((a, b) => a.localeCompare(b));

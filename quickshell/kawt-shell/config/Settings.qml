@@ -84,6 +84,7 @@ Singleton {
     property alias wallpaperTransition: adapter.wallpaperTransition
     property alias wallpaperBy: adapter.wallpaperBy
     property alias wallDither: adapter.wallDither
+    property alias liveOnBattery: adapter.liveOnBattery
     property alias themeTerminals: adapter.themeTerminals
     property alias fetchLogo: adapter.fetchLogo
     property alias iconStyle: adapter.iconStyle
@@ -288,6 +289,7 @@ Singleton {
             property string wallpaperTransition: "crt" // with awww: "crt" | "fade" | "grow" | "random" | "none" (scripts/wallpaper.sh)
             property string wallpaperBy: "" // who draws it: "" awww (or swww) if it's there, kawt if not | "kawt" kawt even with awww there
             property bool wallDither: true // the wallpaper in the theme's few tones, dithered like an old screen (scripts/dither.sh); off: the picture as it is
+            property bool liveOnBattery: false // a live wallpaper plays on battery too (services/LiveWall.qml); off: its still frame
             property bool themeTerminals: true // recolor open terminals on theme change
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" | "picture" (utils/themegen.js)
             property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)

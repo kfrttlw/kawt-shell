@@ -74,6 +74,18 @@ bars, stripes herself, the trackpoint, a sunset, an old prompt, graph paper. The
 them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
 delete it and it stays gone) and asks which one to start with, or none if you have your own.
 
+**Live wallpapers:** a video (mp4, webm, mkv, mov) or a moving gif in the same folder is picked
+like a picture, with a ▶ on it in `super + w`. [mpvpaper](https://github.com/GhostNaN/mpvpaper)
+plays it (in the installer's extras), as little as it can: its first frame is the wallpaper under
+it, a picture like any other, and it plays under any windows, tiled or floating; only while one
+is maximized or fullscreen (on every screen) the player is closed, no memory at all, and goes
+on where it was once that's over. Not on
+battery (unless you switch **On battery too** on), behind the lock, or with under 1 GB of memory
+free. What plays is a light copy made once: cut to the screen, 24 frames a second, silent, two
+minutes at most; in the theme's tones at half the screen's size, its dots doubled by the player,
+like the pictures (made again on a theme switch). Switch **In the theme's tones** off and it
+plays as it is.
+
 <p align="center">
 <img src="assets/wallpaper-pack.png" alt="kawt's twelve wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, stripes standing on a line dark and light, graph paper, the trackpoint, an old prompt, a speaker grille, pinstripes" width="100%">
 </p>
@@ -514,7 +526,7 @@ into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 **Needs:** `quickshell` `hyprland` `kitty` `ttf-ibmplex-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `hyprpicker` (the still screen for screenshots), `brightnessctl` on laptops.
 For the rest of the desktop: `pipewire-pulse` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `hyprpolkitagent` `playerctl` `noto-fonts-emoji`.
 Services kawt talks to: `networkmanager` (wifi), `pipewire` (sound, mic), `upower` (battery), `bluez` (bluetooth), and systemd-logind with `glib2` (`gdbus`, for locking before sleep).
-**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (more wise words for stripes), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (**Draw on it** on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (**Text** on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it).
+**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (more wise words for stripes), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (**Draw on it** on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (**Text** on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it), `mpvpaper` (live wallpapers).
 
 The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
 without it, only while `super + w` is open.

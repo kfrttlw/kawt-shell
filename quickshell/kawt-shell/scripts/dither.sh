@@ -1,8 +1,11 @@
 #!/bin/sh
 # usage: dither.sh <picture> <out.png> <width> <height> <lo> <hi> <accent> <gamma> [<key>]
+#        dither.sh <video> <out.mkv> ...                              the same, a live wallpaper
 # A wallpaper the way an old screen would show it: the picture in the theme's few tones, mixed
 # by ordered (bayer) dithering, every dot two pixels big. Its bright reds (a sunset, a lamp) stay:
 # lit dots of the accent among the rest. ffmpeg only (kawt needs it anyway).
+# Into an .mkv: a video, the whole of it (two minutes at most) the same way, 24 frames a second,
+# silent, at <width> x <height> itself (the player doubles the dots: scripts/live.sh)
 #   width height  the screen's half: the dots are doubled to it
 #   lo hi         #rrggbb: what black and white become; the five tones lie between them
 #                 (dark themes: the background up to a dim ink; light ones: ink up to the paper)
@@ -46,16 +49,35 @@ lut() { echo "$1+($2-$1)*pow(val/255\\,$gamma)"; }
 b2() { echo "(2*($1+$2-2*$1*$2)+$2)"; }
 bayer="(4*$(b2 'mod(X\,2)' 'mod(Y\,2)')+$(b2 'mod(floor(X/2)\,2)' 'mod(floor(Y/2)\,2)')+0.5)*16"
 
+# a picture: one frame, every dot doubled; a video: all of them (the bayer pattern worked out
+# once, not for each frame), its dots left to the player, small and quick to play
+case $out in
+    *.mkv)
+        set -- -t 120 -i "$in"
+        rate=fps=24,
+        once="trim=end_frame=1,"
+        again=",loop=loop=-1:size=1"
+        last=""
+        set -- "$@" -an -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv444p -g 48
+        ;;
+    *)
+        set -- -i "$in"
+        rate="" once="" again=""
+        last=",scale=iw*2:ih*2:flags=neighbor"
+        set -- "$@" -frames:v 1
+        ;;
+esac
+
 # the picture cut to the screen's shape; in grey, laid on the line from lo to hi, dithered into
 # the five tones. Its reds: a mask, against the same bayer pattern, so at most every other dot
-# in a red patch is the accent (a lit dot pattern, not a flat shape); every dot then doubled
-ffmpeg -v error -nostdin -y -i "$in" -i "$tmp/palette.ppm" -filter_complex "\
-[0:v]scale=$w:$h:force_original_aspect_ratio=increase,crop=$w:$h,setsar=1,format=rgb24,split[a][b];\
+# in a red patch is the accent (a lit dot pattern, not a flat shape)
+ffmpeg -v error -nostdin -y -i "$tmp/palette.ppm" "$@" -filter_complex "\
+[1:v]${rate}scale=$w:$h:force_original_aspect_ratio=increase,crop=$w:$h,setsar=1,format=rgb24,split[a][b];\
 [a]format=gray,format=rgb24,lutrgb=r='$(lut $r0 $r1)':g='$(lut $g0 $g1)':b='$(lut $b0 $b1)'[tone];\
-[tone][1:v]paletteuse=dither=bayer:bayer_scale=2[dots];\
+[tone][0:v]paletteuse=dither=bayer:bayer_scale=2[dots];\
 [b]colorkey=0x$(echo "$key" | cut -c2-7):$near:0.07,format=rgba,alphaextract,negate[red];\
-color=c=black:s=${w}x$h,format=gray,geq=lum='$bayer'[threshold];\
+color=c=black:s=${w}x$h:r=24,${once}format=gray,geq=lum='$bayer'${again}[threshold];\
 [red][threshold]blend=all_expr='if(gt(A*0.55\,B)\,255\,0)':shortest=1[hit];\
 color=c=0x$(echo "$accent" | cut -c2-7):s=${w}x$h,format=rgba[plane];\
 [plane][hit]alphamerge[lit];\
-[dots][lit]overlay=format=rgb:shortest=1,scale=iw*2:ih*2:flags=neighbor" -frames:v 1 "$out" || exit 1
+[dots][lit]overlay=format=rgb:shortest=1$last" "$out" || exit 1
