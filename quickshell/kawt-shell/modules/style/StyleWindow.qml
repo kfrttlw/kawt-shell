@@ -471,6 +471,35 @@ AppWindow {
                                     cell.thumbMissing = true
                             }
 
+                            // a live one: a pixel ▶ in the corner
+                            Rectangle {
+                                visible: LiveWall.isLive(cell.modelData)
+                                x: 8
+                                y: 8
+                                width: 16
+                                height: 14
+                                color: Colors.deep
+                                border.color: Colors.fg
+                                border.width: 1
+
+                                Row {
+                                    anchors.centerIn: parent
+
+                                    Repeater {
+                                        model: [7, 5, 3, 1]
+
+                                        Rectangle {
+                                            required property int modelData
+
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 1
+                                            height: modelData
+                                            color: Colors.accent
+                                        }
+                                    }
+                                }
+                            }
+
                             Label {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -526,24 +555,42 @@ AppWindow {
                         onClicked: Wallpapers.set("")
                     }
 
+                    // in the theme's tones (dotted), or the picture as it is
+                    Switch {
+                        Layout.topMargin: 8
+                        text: Strings.t("wallDithered")
+                        checked: Settings.wallDither
+                        onToggled: Settings.wallDither = !Settings.wallDither
+                    }
+
+                    // a live one: what it does now, and on battery
                     Label {
-                        Layout.topMargin: 6
-                        text: Strings.t("wallShown")
+                        readonly property bool shows: LiveWall.isLive(root.picked) || LiveWall.live
+
+                        visible: shows
+                        Layout.topMargin: 8
+                        text: Strings.t("liveWord")
                         color: Colors.dim
                     }
 
-                    Check {
-                        radio: true
-                        text: Strings.t("wallDithered")
-                        checked: Settings.wallDither
-                        onToggled: Settings.wallDither = true
+                    Label {
+                        Layout.fillWidth: true
+                        visible: LiveWall.isLive(root.picked) || LiveWall.live
+                        wrapMode: Text.Wrap
+                        text: {
+                            if (!LiveWall.live || root.picked !== Settings.wallpaper)
+                                return Strings.t("liveApply");
+                            // no reason to be still: it plays (or starts in a moment)
+                            return Strings.t(({ missing: "liveMissing", making: "liveMaking", failed: "liveFailed", memory: "liveMemory", battery: "liveBattery", covered: "liveCovered" })[LiveWall.still] ?? "livePlaying");
+                        }
+                        color: LiveWall.still === "missing" || LiveWall.still === "failed" ? Colors.warn : Colors.fg
                     }
 
-                    Check {
-                        radio: true
-                        text: Strings.t("wallAsIs")
-                        checked: !Settings.wallDither
-                        onToggled: Settings.wallDither = false
+                    Switch {
+                        visible: LiveWall.isLive(root.picked) || LiveWall.live
+                        text: Strings.t("liveOnBattery")
+                        checked: Settings.liveOnBattery
+                        onToggled: Settings.liveOnBattery = !Settings.liveOnBattery
                     }
                 }
             }

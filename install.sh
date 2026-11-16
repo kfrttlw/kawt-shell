@@ -110,7 +110,7 @@ parts=(
     "kitty|kitty|the terminal, in the theme's colors"
     "zsh|zsh prompt| ~/dir  branch  then > to type, hints from history, typos marked"
     "fastfetch|fastfetch|short system info with your system's logo"
-    "extras|extras|ollama (ai), cava, fortune, night light, power, screenshot tools, qalc, sandbox, voice"
+    "extras|extras|ollama (ai), cava, fortune, night light, power, screenshot tools, qalc, sandbox, voice, live wallpapers"
     "files|thunar|the file manager; gtk apps in kawt's colors, its folders in kawt's look"
 )
 # packages per part; "a|b" = the first of them the repos have
@@ -134,7 +134,7 @@ pkgs_fastfetch=(fastfetch)
 # that takes kawt's colors; dconf keeps the gtk settings; xdg-utils makes thunar open folders
 # shellcheck disable=SC2034 # read as pkgs_$id (declare -n, 3. packages)
 pkgs_files=(thunar gvfs tumbler "adw-gtk-theme|adw-gtk3" dconf xdg-utils)
-pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp)
+pkgs_extras=(ollama cava fortune-mod hyprsunset power-profiles-daemon satty tesseract tesseract-data-eng libqalculate wtype bubblewrap whisper-cpp mpvpaper)
 # extras for a machine without a backlight (a desktop): the monitors' own brightness
 pkgs_desktop=(ddcutil)
 
@@ -2018,6 +2018,7 @@ about() {
         tesseract | tesseract-data-*) echo "[text] on screenshots" ;;
         libqalculate) echo "= in the launcher: units, currencies, dates" ;;
         wtype) echo "emoji from the launcher typed in, not only copied" ;;
+        mpvpaper) echo "live wallpapers: a video as the wallpaper (super + w)" ;;
         bubblewrap) echo "the coder runs commands you approve in a sandbox (no network, only the project)" ;;
         whisper-cpp) echo "speak to the ai panel (super + alt + v), written down on this machine" ;;
         ddcutil) echo "the monitors' own brightness, from the bar (no backlight here)" ;;
