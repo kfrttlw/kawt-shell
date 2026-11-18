@@ -581,7 +581,7 @@ AppWindow {
                             if (!LiveWall.live || root.picked !== Settings.wallpaper)
                                 return Strings.t("liveApply");
                             // no reason to be still: it plays (or starts in a moment)
-                            return Strings.t(({ missing: "liveMissing", making: "liveMaking", failed: "liveFailed", memory: "liveMemory", battery: "liveBattery", covered: "liveCovered" })[LiveWall.still] ?? "livePlaying");
+                            return Strings.t(({ missing: "liveMissing", making: "liveMaking", failed: "liveFailed", memory: "liveMemory", battery: "liveBattery", covered: Settings.liveThrifty ? "liveCoveredThrifty" : "liveCovered" })[LiveWall.still] ?? "livePlaying");
                         }
                         color: LiveWall.still === "missing" || LiveWall.still === "failed" ? Colors.warn : Colors.fg
                     }
@@ -591,6 +591,15 @@ AppWindow {
                         text: Strings.t("liveOnBattery")
                         checked: Settings.liveOnBattery
                         onToggled: Settings.liveOnBattery = !Settings.liveOnBattery
+                    }
+
+                    Switch {
+                        Layout.fillWidth: true
+                        visible: LiveWall.isLive(root.picked) || LiveWall.live
+                        text: Strings.t("liveThrifty")
+                        note: Strings.t("liveThriftyNote")
+                        checked: Settings.liveThrifty
+                        onToggled: Settings.liveThrifty = !Settings.liveThrifty
                     }
                 }
             }

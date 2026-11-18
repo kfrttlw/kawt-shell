@@ -11,8 +11,9 @@ import qs.config
 //   - its first frame is always the wallpaper under it (services/Wallpapers.qml: in the theme's
 //     tones or as it is, like a picture), and that's all there is while it doesn't play
 //   - it plays with any windows over it, tiled or floating, and stops only while every screen
-//     has one maximized or fullscreen (or a scratchpad) over it: then the player isn't paused
-//     but closed (no memory at all), and goes on where it was when the desktop shows again
+//     has one maximized or fullscreen (or a scratchpad) over it; thrifty (Settings.liveThrifty),
+//     only while some screen shows an empty desktop. Stopped, the player isn't paused but closed
+//     (no memory at all), and goes on where it was when the desktop shows again
 //   - not on battery (Settings.liveOnBattery), nor behind the lock, the screen off, or with less
 //     than 1 GB of memory left
 //   - what plays is a light copy, made once (scripts/live.sh): cut to the screen, 24 frames a
@@ -48,11 +49,12 @@ Singleton {
     property string failed: "" // ffmpeg couldn't make this one: the still stays
 
     // a desktop is seen: some screen has no window maximized or fullscreen on the workspace it
-    // shows (nor a scratchpad over it)
+    // shows (thrifty: no window at all), nor a scratchpad over it
     readonly property bool seen: Hyprland.monitors.values.some(m => !covered(m))
 
     function covered(m: var): bool {
-        return !!m.lastIpcObject?.specialWorkspace?.name || (m.activeWorkspace?.toplevels?.values ?? []).some(w => !!w.lastIpcObject?.fullscreen);
+        const wins = m.activeWorkspace?.toplevels?.values ?? [];
+        return !!m.lastIpcObject?.specialWorkspace?.name || (Settings.liveThrifty ? wins.length > 0 : wins.some(w => !!w.lastIpcObject?.fullscreen));
     }
 
     // hyprland tells which windows are fullscreen only when asked: asked after each change that
