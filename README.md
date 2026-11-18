@@ -79,7 +79,8 @@ like a picture, with a ▶ on it in `super + w`. [mpvpaper](https://github.com/G
 plays it (in the installer's extras), as little as it can: its first frame is the wallpaper under
 it, a picture like any other, and it plays under any windows, tiled or floating; only while one
 is maximized or fullscreen (on every screen) the player is closed, no memory at all, and goes
-on where it was once that's over. Not on
+on where it was once that's over. **Thrifty** (a switch in `super + w`): only on an empty
+desktop. Not on
 battery (unless you switch **On battery too** on), behind the lock, or with under 1 GB of memory
 free. What plays is a light copy made once: cut to the screen, 24 frames a second, silent, two
 minutes at most; in the theme's tones at half the screen's size, its dots doubled by the player,
