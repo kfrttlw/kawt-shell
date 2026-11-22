@@ -331,7 +331,7 @@ Singleton {
     // Reminders: one timer, set for the next one to the second. The clock's tick only checks
     // whether that one is overdue: the timer runs on the machine's own count, which stops during
     // a sleep, and the shell clock may have been moved (Settings.timeOffset)
-    // a reminder went off (stripes peeks out with it too)
+    // a reminder went off
     signal dueNow(string text)
 
     readonly property real nextDue: tasks.filter(t => !t.done && !t.notified && t.due > 0).reduce((m, t) => Math.min(m, t.due), Infinity)

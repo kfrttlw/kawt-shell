@@ -223,7 +223,7 @@ Item {
                 spacing: 6
 
                 Label {
-                    text: Strings.t("herName")
+                    text: Strings.t("teName")
                 }
 
                 TermInput {

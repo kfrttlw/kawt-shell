@@ -16,8 +16,8 @@
 #   ./install.sh --fresh         from scratch, as on a new machine: everything kawt set up (its
 #                                configs, hyprland's, its lines in .zshrc and the like, its settings,
 #                                what it remembered not to ask) goes to the backup, the caches away,
-#                                then the install asks everything again. Your todo, notes, ai chats
-#                                and companion stay, unless you say otherwise
+#                                then the install asks everything again. Your todo, notes and ai
+#                                chats stay, unless you say otherwise
 #   ./install.sh --update        kawt itself: git pull, then what the new version needs; up to date,
 #                                it still makes sure all its packages and their libraries are there.
 #                                Right after a git pull by hand (a version from before --update):
@@ -1530,7 +1530,7 @@ fi
 #                own only loses kawt's lines (it's asked about again: keep it or kawt's standard)
 #   lines        the prompt in .zshrc, hyprland at login, the start command
 #   kawt's state settings, the launcher's counts and pins, the theme files, what it was told not
-#                to ask again; todo, notes, ai chats and key, the companion: kept unless you say no
+#                to ask again; todo, notes, ai chats and key: kept unless you say no
 #   caches       thumbnails, dithered wallpapers: made again when they're needed
 #   system       networkmanager's internet check and i2c-dev at boot, if kawt set them (sudo):
 #                taken back, so they're asked about again
@@ -1546,7 +1546,7 @@ if [[ $mode == fresh ]]; then
         [[ $answer == [yYдД]* ]] || { say "nothing changed."; exit 0; }
     fi
     keep_own=1
-    ask "keep your todo, notes, ai chats (and the api key) and the companion?" 1 || keep_own=0
+    ask "keep your todo, notes and ai chats (and the api key)?" 1 || keep_own=0
 
     section "clearing"
     # kawt itself, so it doesn't write its settings back while they're moved
@@ -1591,7 +1591,7 @@ if [[ $mode == fresh ]]; then
 
     # kawt's state: what's yours stays (if you said so), the rest to the backup. The backups
     # themselves and this run's log stay where they are
-    own=" todo.json notes.json notes.txt chats.json secrets.json companion.json "
+    own=" todo.json notes.json notes.txt chats.json secrets.json "
     for f in "$state"/* "$state"/.[!.]*; do
         [[ -e $f || -L $f ]] || continue
         name=${f##*/}
@@ -2483,7 +2483,7 @@ fi
 if want shell && [[ ! -d $HOME/Pictures/wallpapers ]]; then
     run mkdir -p "$HOME/Pictures/wallpapers" && step "make" "$HOME/Pictures/wallpapers (put wallpapers here: super + w picks them)"
 fi
-# and kawt's own in it: kawt in stripes, stripes herself, the trackpoint, a sunset...
+# and kawt's own in it: kawt in stripes, the trackpoint, a sunset...
 if want shell; then
     if [[ -L $walls_dst && $(resolve "$walls_dst") == "$(resolve "$repo/wallpapers")" ]]; then
         step " ok " "$walls_dst"
@@ -2559,14 +2559,14 @@ fi
 # on at its next start (it reads walls_first once), or now if it's running
 first_wallpaper() {
     local c=0 other f path
-    local files=(kawt-stripes-dark horizon companion-dark zebra-dark "")
+    local files=(kawt-stripes-dark horizon trackpoint zebra-dark "")
     other=$(wall_program) && c=4
     if can_ask; then
         section "wallpaper"
-        say "${dim}  kawt's own to start with (super + w: all twelve) · ↑↓ move · enter pick${off}"
+        say "${dim}  kawt's own to start with (super + w: all ten) · ↑↓ move · enter pick${off}"
         CHOOSE_AT=$c choose c "kawt in stripes|black, the red block" \
             "horizon|a red sun setting in bars" \
-            "companion|stripes, standing at the bottom" \
+            "trackpoint|the red nub on black" \
             "zebra|black and white bars" \
             "none|$([[ -n $other ]] && echo "$other draws yours" || echo "later, in super + w")"
     fi

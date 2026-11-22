@@ -423,7 +423,7 @@ const LOGOS = {
 // fastfetch in kawt's look: "kawt · arch linux" on top, a line, then the system in full words,
 // keys in the dim color, values in the text color, memory and disk as bars [■■■······]. The logo:
 // the system's own in its own colors (the standard), the same in the theme's, one of kawt's
-// (above), or a picture (stripes, ~/.face, one of yours) in the theme's tones, dithered as the
+// (above), or a picture (the trackpoint, ~/.face, one of yours) in the theme's tones, dithered as the
 // wallpapers are (services/ThemeExport.qml makes it), drawn with kitty's graphics. Where the
 // terminal can't draw pictures, and in a window under 90 columns, zsh's fastfetch takes the
 // system's own (small) logo instead (zsh/kawt.zsh-theme). Colors are the theme's own (24-bit),

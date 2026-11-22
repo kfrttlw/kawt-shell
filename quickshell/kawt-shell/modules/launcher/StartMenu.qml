@@ -9,7 +9,7 @@ import qs.services
 // The start menu, under the bar's kawt button: one way into everything, each thing in one place.
 // A band with kawt's name on the left; on the right the search (type at once: it searches), the
 // pinned apps, "All programs ►" (a real cascade, by the apps' categories), the homes (Today,
-// System, Settings, Help, the AI, stripes) and "Shut down…".
+// System, Settings, Help, the AI) and "Shut down…".
 // Typed: the list becomes results, the programs, then "more" (run it, ask the AI). The launcher's
 // prefixes (! > = ? $ : ; .) go on in the launcher in the middle (Launcher.qml), all of them.
 // Keys: ↑ ↓ pick, → opens the cascade, ← closes it, enter starts, esc closes.
@@ -31,8 +31,7 @@ PanelWindow {
         { kind: "window", icon: "chart", text: Strings.t("system"), window: "system", tab: "sys" },
         { kind: "window", icon: "gear", text: Strings.t("settings"), key: "super+,", window: "settings", tab: "" },
         { kind: "panel", icon: "help", text: Strings.t("help"), key: "super+/", panel: "keys" },
-        { kind: "ai", icon: "ai", text: Strings.t("ai"), key: "super+a" },
-        { kind: "panel", icon: "stripes", text: "stripes", key: "super+h", panel: "home" }
+        { kind: "ai", icon: "ai", text: Strings.t("ai"), key: "super+a" }
     ]
     readonly property var found: query.trim() && !prefixed ? Apps.search(query).slice(0, 8) : []
     readonly property var lines: {
