@@ -568,24 +568,6 @@ var icons = {
         "kkkkkkkkkkkkkkkk",
         "................"
     ],
-    "stripes": [
-        "................",
-        "....kkkkkkkk....",
-        "...kddddddddk.g.",
-        "..kwwwwwwwwwwk..",
-        "g.kddkkkkkkddk..",
-        "..kwkllllllkwk..",
-        "..kdklrllrlkdk.g",
-        "..kwkllllllkwk..",
-        ".gkdkllggllkdk..",
-        ".kwwwk....kwwwk.",
-        ".kddddkkkkddddk.",
-        "kwwwwwwkkwwwwwwk",
-        "kddddddddddddddk",
-        "kkkkkkkkkkkkkkkk",
-        "................",
-        "................"
-    ],
     "chat": [
         "................",
         ".....kkkkkk.....",

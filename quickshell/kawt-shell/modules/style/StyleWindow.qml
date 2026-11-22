@@ -1039,14 +1039,14 @@ AppWindow {
                     }
                 }
 
-                // the picture: stripes, ~/.face, or a file of yours, in the theme's tones
+                // the picture: the trackpoint, ~/.face, or a file of yours, in the theme's tones
                 RowLayout {
                     Layout.fillWidth: true
                     visible: Settings.fetchLogo === "picture"
                     spacing: 14
 
                     Repeater {
-                        model: [["", "stripes"], ["face", "~/.face"], ["own", "fetchOwnFile"]]
+                        model: [["", "trackpoint"], ["face", "~/.face"], ["own", "fetchOwnFile"]]
 
                         Check {
                             required property var modelData

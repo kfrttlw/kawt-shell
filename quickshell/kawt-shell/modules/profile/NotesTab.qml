@@ -15,7 +15,7 @@ import "../popovers"
 //     all       6  │ ┌───────────────────────────────────────────────┐
 //   + folder       │ │ kawt ideas                                    │  read: # headings bold,
 //                  │ │ [x] quick switches on top                     │  - [ ] boxes tick with a
-//                  │ │ [ ] focus timer with stripes                  │  click; a click elsewhere
+//                  │ │ [ ] focus timer for the essay                 │  click; a click elsewhere
 //                  │ └───────────────────────────────────────────────┘  writes in it
 //                  │ [pin] [make a task]  notes ideas         [delete]
 RowLayout {

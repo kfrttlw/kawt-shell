@@ -60,7 +60,7 @@ step() {
     sleep 0.6
 }
 # the panels under the bar, the run box, the start menu, the others
-for p in launcher menu tray power keys calendar player volume brightness battery mic bluetooth wifi notifs home; do
+for p in launcher menu tray power keys calendar player volume brightness battery mic bluetooth wifi notifs; do
     step toggle "$p"
     ipc close
 done
@@ -76,8 +76,7 @@ for t in sys top net power; do step window system "$t"; done
 for t in wall theme change; do step window style "$t"; done
 for p in look bar screen media device windows kawt; do step settings "$p"; done
 step theme new
-# stripes out of the corner, the lock (a test one: it opens by itself)
-step companion call
+# the lock (a test one: it opens by itself)
 step lockTest
 sleep 2
 kill -0 "$qs_pid" 2> /dev/null && echo alive > "$TMPD/alive"

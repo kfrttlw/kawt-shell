@@ -8,7 +8,7 @@ import qs.config
 // Which popover / sidebar is open, and on which screen.
 // Only one popover can be open at a time; the sidebar is independent.
 //
-//   qs -c kawt-shell ipc call kawt toggle launcher|menu|style|tray|today|system|settings|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs|home
+//   qs -c kawt-shell ipc call kawt toggle launcher|menu|style|tray|today|system|settings|power|keys|calendar|player|volume|brightness|battery|mic|bluetooth|wifi|notifs
 //   qs -c kawt-shell ipc call kawt window today|system|style <tab>   (today todo notes focus · sys top net power · wall theme change)
 //   qs -c kawt-shell ipc call kawt theme new|edit                    (the theme editor)
 //   qs -c kawt-shell ipc call kawt sidebar
@@ -29,7 +29,6 @@ import qs.config
 //   qs -c kawt-shell ipc call kawt wallpaper next|prev|random|none|<path>
 //   qs -c kawt-shell ipc call kawt clearNotifs
 //   qs -c kawt-shell ipc call kawt update                      (a terminal with ./install.sh --update)
-//   qs -c kawt-shell ipc call kawt companion pet|call|sleep|wake|focus|walk|home|toggle
 //   qs -c kawt-shell ipc call kawt selection                   (the ai on the text you marked)
 //   qs -c kawt-shell ipc call kawt voice                       (speak to the ai: again to stop)
 //   qs -c kawt-shell ipc call kawt desk toggle|float|tile|cascade   (this desk's windows floating <-> tiled)
@@ -184,8 +183,8 @@ Singleton {
         }
     }
 
-    // the first start: stripes says hello and shows around, once, a moment after the
-    // shell is up (and not over something already open, or the lock)
+    // the first start: a hello and a short tour, once, a moment after the shell is up (and not
+    // over something already open, or the lock)
     Timer {
         running: Settings.loaded && !Settings.welcomed && !root.locked && root.current === ""
         interval: 2500
@@ -356,15 +355,10 @@ Singleton {
             root.openWindow("style", "theme");
         }
 
-        // the first start's hello and tour again (modules/companion/WelcomePopover.qml)
+        // the first start's hello and tour again (modules/help/WelcomePopover.qml)
         function welcome(): void {
             root.screen = root.focusedScreen;
             root.current = "welcome";
-        }
-
-        // stripes (services/Companion.qml) from a key or a script: call is super + h
-        function companion(arg: string): void {
-            Companion.command(arg || "pet");
         }
 
         // the desk you're on: its windows floating, like KDE, or tiled (services/Hypr.qml);

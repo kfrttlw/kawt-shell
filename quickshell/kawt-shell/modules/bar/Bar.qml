@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.config
 import qs.components
@@ -17,7 +16,6 @@ import "../profile"
 import "../power"
 import "../help"
 import "../shot"
-import "../companion"
 import "../settings"
 import "../desktop"
 
@@ -42,11 +40,6 @@ Variants {
         readonly property bool tucked: Settings.barHidden && !peeking
         readonly property bool panelOpen: Panels.current !== "" && Panels.screen === modelData.name
         readonly property bool focusedHere: modelData.name === Panels.focusedScreen
-        // no window on this screen's workspace (nor a scratchpad over it): stripes may walk there.
-        // Not while her window is open or she's next to the coder: she's there then
-        readonly property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(modelData)
-        readonly property bool emptyDesk: (hyprMonitor?.activeWorkspace?.toplevels?.values?.length ?? 1) === 0 && !(hyprMonitor?.lastIpcObject?.specialWorkspace?.name)
-        readonly property bool companionOut: focusedHere && emptyDesk && Companion.onDesk && Panels.current !== "home" && !(Panels.sidebarOpen && Settings.aiMode === "coder")
 
         WlrLayershell.exclusionMode: Settings.barHidden ? ExclusionMode.Ignore : ExclusionMode.Auto
         onPanelOpenChanged: if (!panelOpen && !edge.hovered)
@@ -420,16 +413,6 @@ Variants {
             }
         }
 
-        Lazy {
-            when: Panels.isOpen("home", root.modelData)
-
-            HerPopover {
-                forScreen: root.modelData
-                anchorItem: start
-                barWindow: root
-            }
-        }
-
         // the first start's hello and tour (Panels opens it once)
         Lazy {
             when: Panels.isOpen("welcome", root.modelData)
@@ -440,30 +423,11 @@ Variants {
             }
         }
 
-        // the files on the desktop, on the main screen (the one at 0, 0): under stripes, made first
+        // the files on the desktop, on the main screen (the one at 0, 0)
         Lazy {
             when: Settings.deskIcons && root.modelData === (Quickshell.screens.find(s => s.x === 0 && s.y === 0) ?? Quickshell.screens[0])
 
             DeskIcons {
-                forScreen: root.modelData
-            }
-        }
-
-        // stripes out on an empty desktop, and in the corner: peeking when something happens
-        // while she's nowhere on the screen, or called (super + h; services/Companion.qml)
-        Lazy {
-            when: root.companionOut
-
-            DeskWindow {
-                forScreen: root.modelData
-            }
-        }
-
-        Lazy {
-            when: root.focusedHere && (Companion.peeking || Companion.called) && Companion.enabled
-            linger: 300
-
-            PeekWindow {
                 forScreen: root.modelData
             }
         }

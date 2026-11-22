@@ -5,7 +5,6 @@ import Quickshell.Wayland
 import qs.config
 import qs.components
 import qs.services
-import "../companion"
 
 // Right-side ai panel (super + a), a kawt window at the edge: □ makes it wide (most of the
 // screen, with the files column), × closes it. Tabs:
@@ -342,14 +341,6 @@ PanelWindow {
             }
 
             // ------------------------------------------------------------ coder
-            // stripes, keeping the coder company
-            CoderBuddy {
-                Layout.topMargin: Metrics.spacing
-                visible: root.tab === 0 && root.coder && Companion.enabled
-                forScreen: root.forScreen
-                origin: Qt.point(root.onLeft ? 0 : root.forScreen.width - root.width, 0)
-            }
-
             // kawt's red block and what's going on, wide only; narrow gets one line
             CoderLight {
                 Layout.fillWidth: true

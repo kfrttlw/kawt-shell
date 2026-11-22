@@ -5,12 +5,11 @@ import Quickshell.Io
 import qs.config
 import qs.utils
 
-// The focus timer (profile -> focus and today, stripes' window, `kawt focus toggle`): a stretch of
-// work, then a break. On a task of the todo list if you like, or on nothing in particular.
+// The focus timer (profile -> focus and today, `kawt focus toggle`): a stretch of work, then a
+// break. On a task of the todo list if you like, or on nothing in particular.
 //   while it works   do not disturb is on (back as it was after, unless you changed it meanwhile)
-//                    and stripes sits quietly: dnd keeps her from peeking out
-//   at the end       a notification ("3 of 4 today") and stripes says it; the break runs by
-//                    itself, after it the next round waits for you
+//   at the end       a notification ("3 of 4 today"); the break runs by itself, after it the
+//                    next round waits for you
 // Each finished round is counted per day in ~/.local/state/kawt/focus.json (the week's chart),
 // with what's running now: a restart of kawt (or of the machine) carries on where it was.
 // Times are the machine's own (Date.now), not the shell clock: moving that doesn't stretch a round.
@@ -55,7 +54,7 @@ Singleton {
         return out;
     }
 
-    // a round ended: "work" (one more done) or "break"; the companion answers
+    // a round ended: "work" (one more done) or "break"
     signal ended(string what)
     signal started
 
@@ -70,7 +69,7 @@ Singleton {
         started();
     }
 
-    // stripes' [focus 25] and `kawt focus toggle`: on, or off again
+    // `kawt focus toggle`: on, or off again
     function toggle(): void {
         if (running)
             stop();

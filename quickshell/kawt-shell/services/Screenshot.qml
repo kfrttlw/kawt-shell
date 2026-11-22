@@ -113,7 +113,7 @@ Singleton {
     property bool copied: false
     property bool stopping: false // the run being stopped for a new press: its end isn't news
 
-    // a shot was taken (the companion goes "click!")
+    // a shot was taken
     signal taken
 
     function take(m: string): void {

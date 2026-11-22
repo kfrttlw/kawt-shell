@@ -10,7 +10,7 @@
 --
 -- Nothing has to be changed in this file (an update would stop at a change here). After the
 -- line that loads it, in your own config (hyprland.lua, or user.lua with kawt's standard one):
---   kawt.unbind("SUPER + H")   frees one of the keys below, for a bind of your own
+--   kawt.unbind("SUPER + I")   frees one of the keys below, for a bind of your own
 --   kawt.media_keys()          the volume, brightness and player keys through kawt (see below)
 
 -- what your own config gets: the table `kawt`. (Below it the word is the command kawt's keys
@@ -85,7 +85,6 @@ try("binds", function()
     bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(kawt .. "bar toggle")) -- hide / show the bar (hidden, it peeks out at the edge)
     bind(mod .. " + Escape", hl.dsp.exec_cmd(kawt .. "toggle power")) -- shut down…: power off, restart, sleep, log out, lock
     bind(mod .. " + CTRL + V", hl.dsp.exec_cmd(kawt .. "desk toggle")) -- this desk: windows floating, like KDE <-> tiled
-    bind(mod .. " + H", hl.dsp.exec_cmd(kawt .. "companion call")) -- call stripes out of the corner (again: let her go)
     -- screenshots: a preview in the corner asks copy / save (or, with "ask" off in settings ->
     -- media, saved to the folder from there and copied at once)
     bind("Print", hl.dsp.exec_cmd(kawt .. "screenshot region")) -- screenshot of an area

@@ -4,7 +4,7 @@
 
 A [Quickshell](https://quickshell.org) shell for Hyprland that looks like an old system: a taskbar<br>
 with a start button, raised buttons, real windows with a title bar and `_ □ ×`, message boxes.<br>
-The configs that go with it come along (kitty, zsh, fastfetch, thunar, GTK), and so does **stripes**, who lives in it.<br>
+The configs that go with it come along (kitty, zsh, fastfetch, thunar, GTK).<br>
 <sub>graphite and one red light, like a ThinkPad · the pixel font Departure Mono · english, or russian in settings</sub>
 
 [![kawt 1.0](https://img.shields.io/badge/kawt-1.0-e2231a?style=flat-square&labelColor=0c0c0c)](#install)
@@ -14,7 +14,7 @@ The configs that go with it come along (kitty, zsh, fastfetch, thunar, GTK), and
 [![ai: on this machine](https://img.shields.io/badge/ai-on_this_machine-d8d6d0?style=flat-square&labelColor=0c0c0c)](https://ollama.com)
 [![license GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-d8d6d0?style=flat-square&labelColor=0c0c0c)](LICENSE)
 
-**[install](#install)** · [look](#look) · [the bar and the start menu](#the-bar-and-the-start-menu) · [desks](#floating-desks) · [your day](#your-day) · [panels](#the-panels) · [stripes](#stripes) · [ai](#ai) · [lock](#lock-and-boot) · [the rest](#the-rest) · [keys](#keys)
+**[install](#install)** · [look](#look) · [the bar and the start menu](#the-bar-and-the-start-menu) · [desks](#floating-desks) · [your day](#your-day) · [panels](#the-panels) · [ai](#ai) · [lock](#lock-and-boot) · [the rest](#the-rest) · [keys](#keys)
 
 </div>
 
@@ -69,8 +69,8 @@ tells GTK. Back to the system's, the one you had comes back.
 <sub>Stripes and Terminal: arrow, hand, typing, busy, help, copy, crosshair, move, resize, not allowed</sub>
 </p>
 
-Twelve wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
-bars, stripes herself, the trackpoint, a sunset, an old prompt, graph paper. The installer puts
+Ten wallpapers of its own come with it, in the same tones: kawt in stripes, black and white
+bars, the trackpoint, a sunset, an old prompt, graph paper, a speaker grille, pinstripes. The installer puts
 them in `~/Pictures/wallpapers/kawt` (a link into the repo: a `git pull` brings new ones;
 delete it and it stays gone) and asks which one to start with, or none if you have your own.
 
@@ -88,7 +88,7 @@ like the pictures (made again on a theme switch). Switch **In the theme's tones*
 plays as it is.
 
 <p align="center">
-<img src="assets/wallpaper-pack.png" alt="kawt's twelve wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, stripes standing on a line dark and light, graph paper, the trackpoint, an old prompt, a speaker grille, pinstripes" width="100%">
+<img src="assets/wallpaper-pack.png" alt="kawt's ten wallpapers: kawt in stripes dark and light, black and white bars, a red sun setting in bars, the trackpoint, an old prompt, graph paper, a speaker grille, pinstripes" width="100%">
 </p>
 
 <div align="center">
@@ -123,7 +123,7 @@ hand (a system that says it's another, or a taste of your own).
 
 **The start menu** (the kawt button, `super + d`): a search on top, your pinned apps, then
 **All programs** (by kind, a cascade the old way), **Today**, **System**, **Settings**, **Help
-and keys**, **AI**, **stripes**, and **Shut down…** at the bottom. Typing searches at once;
+and keys**, **AI**, and **Shut down…** at the bottom. Typing searches at once;
 `enter` on something not found runs it, or asks the ai.
 
 <p align="center">
@@ -192,7 +192,7 @@ moved by its title, `_ □ ×` as on any window. Your day, in four tabs:
   tick with a click), a click writes in it; pinned ones on top; a note from the clipboard, or a
   task from a note
 - **focus**: a pomodoro (25/5 or 50/10) on a task or on nothing in particular; do not disturb
-  while it works, stripes sits quietly, a notification at the end; rounds per day and a goal; it
+  while it works, a notification at the end; rounds per day and a goal; it
   carries on over a restart (`kawt focus toggle` from a key or a script)
 
 <p align="center">
@@ -247,35 +247,6 @@ bottom): the app in the title (an urgent one's title red), its icon big, its own
 
 kawt itself stays quiet on the net: one `git fetch` a week to know about updates (off in
 settings → kawt), nothing else unless you ask (the ai on an api you picked, `ollama pull`).
-
-## stripes
-
-<p align="center">
-<img src="assets/stripes.gif" alt="stripes, a stain of glitching data in a girl's outline, in her three looks: stripes, red, ink; on black and on paper" width="72%">
-</p>
-
-**stripes** lives in kawt: a stain of glitching data in a girl's outline. Noise eats her edges,
-she boils inside, her hair runs off in blurred strands every way; only the eyes are sharp, and
-they follow the pointer. Three looks: **stripes** (cut in kawt's bars), **red**, **ink**. By
-default she picks herself (stripes when calm, red when busy: music, the coder, a recording; ink
-at night and asleep) and changes through a glitch. On a light theme she's ink and red ink on
-paper. She's a small shader on a 72 x 108 grid, stretched soft, at 12 frames a second, and only
-while she's on the screen.
-
-- **on an empty desktop** she walks along the bottom edge, dances to music and falls asleep when
-  nothing happens for a while; a window opens and she goes. Click her to talk (asleep: she wakes
-  up), drag her along the edge, double click: away for an hour
-- **out of the corner** she peeks when the battery gets low, the charger comes, a screenshot is
-  taken, the recording starts, a reminder rings, a new kawt is out; never over a fullscreen
-  window or in do not disturb. `super + h` calls her out of the corner, and lets her go again
-- **next to the coder** she thinks, types, and puts kawt's red block over her head when a diff
-  waits for you
-- she keeps the **focus timer** with you, and on the first start **shows you around** (english
-  or russian)
-
-Start → stripes is her window: her look, whether an empty desktop is hers, a pomodoro, her
-name, your own phrases for her (said when you click her), wise words now and then (`fortune-mod`
-gives her more, in english). Off in settings → kawt: then nothing runs for her.
 
 ## AI
 
@@ -346,7 +317,7 @@ Once per login a bios-like check list runs (`kawt bios 1.0 ·` your machine: cpu
 | osd | a raised plate with red segments for the volume and the brightness; the charger in or out shows the battery; low battery at 20 / 10 / 5% |
 | notifications | kawt is the daemon: a history, do not disturb, keeps what the app asks for (`notify-send -t`, `-e` transient, replace tags) |
 | theme export | a theme switch recolors open terminals and GTK apps live and rewrites colors for kitty, Hyprland's borders, GTK, foot, alacritty, shell scripts and kawt's folder icons; terminal colors as `crt`, `soft` or `vivid` |
-| fastfetch | `kawt · arch linux` on top, then the system in full words, memory and disk as bars; your system's logo in its own colors (or the theme's), kawt in blocks, the trackpoint, kawt in stripes, or a picture (stripes, `~/.face`, one of yours) dithered in the theme's tones, drawn by kitty; a narrow window gets the small logo. Nothing that says who or where you are, safe to screenshot |
+| fastfetch | `kawt · arch linux` on top, then the system in full words, memory and disk as bars; your system's logo in its own colors (or the theme's), kawt in blocks, the trackpoint, kawt in stripes, or a picture (the trackpoint, `~/.face`, one of yours) dithered in the theme's tones, drawn by kitty; a narrow window gets the small logo. Nothing that says who or where you are, safe to screenshot |
 | prompt | zsh: the folder inverted like a bios's chosen line, the git branch on grey, a failed command's code on red, `>` in red where you type; hints from history, typos marked |
 | a crash | kawt runs under a small keeper (`scripts/keep.sh`): it starts again a second later, and if the screen was locked it locks again at once; five crashes in two minutes and it stays off, Hyprland says so. `qs kill -c kawt-shell` stops it for good |
 | old machine | settings → look: no blur, shadows or animations, graphs half as often, no visualizer (a T60, an X200); `scanlines` for faint tube lines |
@@ -373,7 +344,7 @@ cd ~/kawt
 
 A menu asks which system this is (it guesses: Arch-based or not) and what to install
 (arrows, space, enter). Then it shows the plan, and after a yes it does it; on the first start
-stripes says hello. It never runs as root (it asks for sudo itself, only for pacman), and
+a short tour shows the few things worth knowing. It never runs as root (it asks for sudo itself, only for pacman), and
 running it again is safe. `./install.sh --fresh` starts over as on a new machine (all of kawt's
 setup to a backup, every question again).
 
@@ -406,7 +377,7 @@ setup to a backup, every question again).
   and everything of your own goes to `~/.config/hypr/user.lua` (made once, never replaced):
   monitors, layouts, mouse speed, `preset.terminal = "foot"` (and `files`, `browser`), any
   setting again (the last one counts). A key bound twice does both, so free a standard one
-  first: `preset.unbind("SUPER + B")` (kawt's own keys: `kawt.unbind("SUPER + H")`), then bind
+  first: `preset.unbind("SUPER + B")` (kawt's own keys: `kawt.unbind("SUPER + I")`), then bind
   yours. Each part of the standard config runs
   in its own `pcall`: one that doesn't fit your Hyprland version is skipped, not the rest.
   Your old `hyprland.lua` goes to the backup (`user.lua` says where); `--uninstall` puts it
@@ -432,7 +403,7 @@ setup to a backup, every question again).
   asked: kawt Term at 16 px (the default), IBM Plex Mono, or another old one, the pixel ones at
   the size that's sharp on your screen (`~/.config/kitty/kawt-font.conf`, settings → look →
   terminal any time; see below). Asked again on `--fresh`
-- the first wallpaper, on a new install: kawt in stripes, the sunset, stripes herself, the bars,
+- the first wallpaper, on a new install: kawt in stripes, the sunset, the trackpoint, the bars,
   or none (picked first when hyprpaper, swaybg or the like still draws yours)
 - an NVIDIA card: offers Hyprland's environment for it (`hypr/nvidia.lua`: video decoding on
   the gpu, OpenGL through nvidia; not on a hybrid laptop, where the intel / amd gpu draws) and,
@@ -512,7 +483,7 @@ installed, and an AUR quickshell that can't load its own libraries (`ldd`) is bu
 own things are outside the repo and stay as they are; changes made inside the repo stop it,
 with a list (`git stash` can put them aside). Knowing about a new version means asking github:
 **Check** in settings → kawt does it once (`git fetch`), and kawt does it by itself once a
-week, with a notification only when there's something new (stripes peeks out to say so too).
+week, with a notification only when there's something new.
 "look for updates once a week" there switches that off: then nothing goes out unless you press
 **Check**.
 
@@ -527,7 +498,7 @@ into `~/.config/quickshell/kawt-shell` itself; the installer refuses that.
 **Needs:** `quickshell` `hyprland` `kitty` `ttf-ibmplex-mono-nerd` `papirus-icon-theme` `libnotify` `grim` `slurp` `wl-clipboard` `cliphist` `wf-recorder` (brings `ffmpeg`), `hyprpicker` (the still screen for screenshots), `brightnessctl` on laptops.
 For the rest of the desktop: `pipewire-pulse` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `hyprpolkitagent` `playerctl` `noto-fonts-emoji`.
 Services kawt talks to: `networkmanager` (wifi), `pipewire` (sound, mic), `upower` (battery), `bluez` (bluetooth), and systemd-logind with `glib2` (`gdbus`, for locking before sleep).
-**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (more wise words for stripes), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (**Draw on it** on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (**Text** on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it), `mpvpaper` (live wallpapers).
+**Optional:** `zsh` + `git` (prompt), `zsh-autosuggestions` + `zsh-syntax-highlighting` (hints and typo marks in the prompt), `fortune-mod` (a new motto every time, in the profile), `ollama` (ai panel), `awww`/`swww` (wallpapers), `cava` (real sound bars next to the player), `power-profiles-daemon`, `hyprsunset` (night light), `satty` (**Draw on it** on screenshots), `tesseract` + `tesseract-data-eng` / `-rus` (**Text** on screenshots), `libqalculate` (units and currencies in the `=` calculator), `wtype` (emoji typed in), `bubblewrap` (the coder runs commands in a sandbox), `whisper-cpp` (speaking to the ai), `ddcutil` on a desktop (the monitors' brightness; the installer loads `i2c-dev` for it), `mpvpaper` (live wallpapers).
 
 The wallpaper theme measures each new wallpaper with `ffmpeg` (it comes with `wf-recorder`);
 without it, only while `super + w` is open.
@@ -552,7 +523,6 @@ without it, only while `super + w` is open.
 | `super + i` | today: tasks, notes, the focus timer |
 | `super + ,` | settings |
 | `super + ctrl + v` | this desk: floating like KDE ↔ tiled |
-| `super + h` | call stripes out of the corner (again: let her go) |
 | `super + l` | lock screen (it also locks by itself: before sleep, and after 10 idle minutes; any time or off in settings → screen) |
 | `super + /` | help and keys: a window with every key (read from `hypr/kawt.lua`, then the binds of your config that end with a `-- comment`: `hyprland.lua`, or `user.lua` and the standard config), and the ones inside kawt; typing finds |
 | `super + shift + b` | tuck the bar away / back |
@@ -571,7 +541,7 @@ Everything is also reachable over IPC, for your own binds or a timer:
 `kawt suspend` (locks, then sleeps), `kawt caffeine`, `kawt idle <minutes>` (0 = never), `kawt night`,
 `kawt volume up|down|mute`, `kawt mic mute`, `kawt brightness up|down|<percent>`,
 `kawt media toggle|next|prev|back|forward` (the player the bar shows), `kawt bar toggle|show|hide`,
-`kawt desk toggle|float|tile|cascade`, `kawt companion pet|call|sleep|wake|focus|walk|home|toggle`,
+`kawt desk toggle|float|tile|cascade`,
 `kawt focus toggle|stop|pause`, `kawt welcome` (the first start's tour again), `kawt theme new|edit` (the theme editor), `kawt selection`, `kawt voice`.
 The volume, mic, brightness and media ones are for the media keys. kawt's standard config binds
 them already; in a config of your own, remove your XF86 binds, then one line after the one that
@@ -579,9 +549,9 @@ loads kawt: `kawt.media_keys()` in `hyprland.lua` (or, in an old `hyprland.conf`
 `source = ~/.config/quickshell/kawt-shell/hypr/kawt-media.conf`). Through kawt, the osd shows at
 once.
 
-One of kawt's keys is taken by something of yours (`super + h` and `super + l` move the focus
-in many configs)? Free it after the line that loads kawt, then bind your own:
-`kawt.unbind("SUPER + H")` in `hyprland.lua` or `user.lua` (`unbind = SUPER, H` in an old
+One of kawt's keys is taken by something of yours (`super + l` moves the focus in many
+configs)? Free it after the line that loads kawt, then bind your own:
+`kawt.unbind("SUPER + L")` in `hyprland.lua` or `user.lua` (`unbind = SUPER, L` in an old
 `hyprland.conf`). The key list (`super + /`) follows. What the key did stays on its ipc call,
 for another key.
 
@@ -645,7 +615,6 @@ only by you, never in the repo.
 - `~/.config/kawt/themes.json`: your own themes
 - `~/.local/state/kawt/todo.json`, `notes.json`, `focus.json`, `chats.json`: your tasks, notes,
   focus rounds and ai chats (`./install.sh --fresh` keeps them unless you say no)
-- `~/.local/state/kawt/companion.json`: stripes' own (when you met, the phrases you gave her)
 - `~/.local/state/kawt/launcher.json`: pinned apps, how often you start each, the ones without
   internet
 - `~/.local/state/kawt/windows.lua`: what kawt tells Hyprland about windows (the apps that
@@ -660,16 +629,15 @@ only by you, never in the repo.
 ```
 quickshell/kawt-shell/   the shell        -> ~/.config/quickshell/kawt-shell
   config/                settings, themes, sizes
-  services/              what kawt knows and does (wifi, sound, todo, the ai, stripes...)
+  services/              what kawt knows and does (wifi, sound, todo, the ai...)
   modules/               what you see: the bar, the start menu, the panels, kawt's windows
-                         (today, system, settings, wallpaper and theme), the lock, stripes
+                         (today, system, settings, wallpaper and theme), the lock
   components/            the parts they're made of (buttons, frames, fields, windows, icons)
   fonts/                 Departure Mono (SIL OFL), kawt's pixel font; kitty's: kawt Term (SIL OFL, made
                          by tools/termfont.py) and kawt VGA (CC BY-SA, tools/vgafont.py)
                          (-> ~/.local/share/fonts/kawt)
   cursors/               kawt's two cursors, XCursor (drawn by tools/cursors.py; -> ~/.local/share/icons once picked)
-  data/                  the emoji list, stripes' picture for fastfetch
-  shaders/               stripes (stripes.frag, built into stripes.frag.qsb)
+  data/                  the emoji list, the trackpoint picture for fastfetch
   scripts/               the shell scripts kawt runs
   hypr/kawt.lua          Hyprland binds   (loaded from hyprland.lua; kawt.conf for an old hyprland.conf,
                          kawt-media.conf its media keys, if you want them through kawt)
@@ -693,7 +661,6 @@ python3 tools/check.py   # catches the mistakes that stop the shell from loading
 ./colortest.sh           # which kind of terminal color something uses
 tools/mem.sh -w          # how much ram and gpu memory kawt takes, live
 tools/net.sh -w          # which programs talk to the internet, live (the wifi panel's who's out, in a terminal)
-tools/qsb.sh             # builds the shaders again after a change (qt6-shadertools)
 python3 tools/cursors.py # draws kawt's cursors again after a change in it (--check, --preview sheet.png)
 tools/load-test.sh       # does kawt load? in a headless sway, every panel and window opened (sway, quickshell)
 ```

@@ -109,14 +109,8 @@ Singleton {
     property alias floatDesks: adapter.floatDesks
     property alias barHidden: adapter.barHidden
     property alias layoutPerWindow: adapter.layoutPerWindow
-    property alias companion: adapter.companion
     property alias micAlways: adapter.micAlways
     property alias btAlways: adapter.btAlways
-    property alias companionMode: adapter.companionMode
-    property alias companionLook: adapter.companionLook
-    property alias companionName: adapter.companionName
-    property alias companionLang: adapter.companionLang
-    property alias companionQuotes: adapter.companionQuotes
     property alias welcomed: adapter.welcomed
     property alias ratesAsked: adapter.ratesAsked
     property alias updateAuto: adapter.updateAuto
@@ -136,16 +130,23 @@ Singleton {
     // written, where the ones that are no settings any more can still be read, this once
     // Then (6) the wallpaper theme's strengths moved up one: "full" is everything in the color now,
     // what it was is "strong", and the old "strong" (hardly off calm) went. Yours stays as it looked
+    // Then (7) the companion went, and her two wallpapers with her: one of them on, kawt in stripes
+    // (dark or light the same) instead of an empty screen
     function newLook(was: var): void {
-        if (lookVersion >= 6)
+        if (lookVersion >= 7)
             return;
         if (lookVersion < 5)
             fiveLook(was);
-        if (wallStrength === "strong")
-            wallStrength = "calm";
-        else if (wallStrength === "full")
-            wallStrength = "strong";
-        lookVersion = 6;
+        if (lookVersion < 6) {
+            if (wallStrength === "strong")
+                wallStrength = "calm";
+            else if (wallStrength === "full")
+                wallStrength = "strong";
+        }
+        const gone = /\/companion-(dark|light)\.png$/.exec(wallpaper);
+        if (gone)
+            wallpaper = wallpaper.replace(/companion-(dark|light)\.png$/, `kawt-stripes-${gone[1]}.png`);
+        lookVersion = 7;
     }
 
     function fiveLook(was: var): void {
@@ -294,7 +295,7 @@ Singleton {
             property bool liveThrifty: false // a live wallpaper plays only on an empty desktop; off: under any windows, still only behind a fullscreen one
             property bool themeTerminals: true // recolor open terminals on theme change
             property string fetchLogo: "distro" // fastfetch's logo: "distro" (your system's, in its own colors) | "distro-tinted" (in the theme's) | "kawt" | "trackpoint" | "stripes" | "picture" (utils/themegen.js)
-            property string fetchPicture: "" // the picture logo's: "" stripes, "face" ~/.face, or a file (services/ThemeExport.qml)
+            property string fetchPicture: "" // the picture logo's: "" the trackpoint, "face" ~/.face, or a file (services/ThemeExport.qml)
             property string iconStyle: "classic" // folders, the bin and files in thunar and on the desktop: "classic" (painted, utils/classicicons.js) | "pixel" (in the theme's colors, utils/folders.js)
             property string startLogo: "auto" // the start button's logo: "auto" the system's, if kawt has one (services/Distro.qml) | "kawt" kawt's block | "arch" "debian" "gentoo" "fedora" "ubuntu" "nixos" "manjaro"
             property bool deskIcons: true // ~/Desktop's files on the desktop, with the home folder and the bin (modules/desktop)
@@ -316,16 +317,9 @@ Singleton {
             property var floatClasses: [] // window classes that float at their own size (settings -> windows)
             property var floatDesks: [] // desks whose windows all float, like KDE's (the bar's Tile / Free, like KDE, super + ctrl + v; services/Hypr.qml)
             property bool layoutPerWindow: false // each window keeps its own keyboard layout; new ones start with the first (services/Keyboard.qml)
-            // the companion, stripes (services/Companion.qml): the start menu's "stripes" (super + h on her) is her window
             property bool micAlways: false // the mic in the tray even while nothing listens (modules/bar/MicButton.qml)
             property bool btAlways: false // bluetooth in the tray even with nothing connected (modules/bar/BtButton.qml)
-            property bool companion: true // off: no walks, no peeks, nothing runs for her
-            property string companionMode: "walk" // "walk" (an empty desktop is hers) | "home" (she keeps off it)
-            property string companionLook: "mood" // "mood" (she picks) | "red" | "ink" | "stripes"
-            property string companionName: "" // "" = stripes
-            property string companionLang: "en" // "en" | "ru": what she says
-            property bool companionQuotes: true // wise words now and then on a click (fortune-mod's too, in english)
-            property bool welcomed: false // the first start's hello and short tour was shown (modules/companion/WelcomePopover.qml)
+            property bool welcomed: false // the first start's hello and short tour was shown (modules/help/WelcomePopover.qml)
             property bool ratesAsked: false // a monitor slower than it can be was asked about, once (services/Rates.qml)
             // kawt's own updates (services/Update.qml): Check asks github once
             property bool updateAuto: true // and once a week by itself (one git fetch); off: only Check

@@ -12,7 +12,7 @@ import qs.services
 AppWindow {
     id: root
 
-    // the screen it opened on, for what its pages open in turn (the style window, stripes...)
+    // the screen it opened on, for what its pages open in turn (the style window...)
     property ShellScreen forScreen: null
     property int page: 0
     // the pages, in the list's order (each its own file here)

@@ -55,12 +55,12 @@ Singleton {
         fetchPicture();
     }
 
-    // ---- fastfetch's picture logo (Settings.fetchLogo "picture"): stripes, ~/.face or a file of
+    // ---- fastfetch's picture logo (Settings.fetchLogo "picture"): the trackpoint, ~/.face or a file of
     // yours, in the theme's tones and dots as the wallpapers are, made again on each theme switch
     readonly property string fetchPng: `${dir}/fetch.png`
     readonly property string fetchSource: {
         const p = Settings.fetchPicture, home = Quickshell.env("HOME");
-        return p === "" ? `${Quickshell.shellDir}/data/stripes.png` : p === "face" ? `${home}/.face` : p.replace(/^~(?=\/|$)/, home);
+        return p === "" ? `${Quickshell.shellDir}/data/trackpoint.png` : p === "face" ? `${home}/.face` : p.replace(/^~(?=\/|$)/, home);
     }
 
     function fetchPicture(): void {

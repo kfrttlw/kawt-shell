@@ -5,7 +5,7 @@ import qs.config
 import qs.components
 import qs.services
 
-// Settings -> Updates and kawt: the version, updates, stripes, the ai, the tour and the keys
+// Settings -> Updates and kawt: the version, updates, the ai, the tour and the keys
 ColumnLayout {
     id: page
 
@@ -65,29 +65,6 @@ ColumnLayout {
             note: Strings.t("autoUpdateNote")
             checked: Settings.updateAuto
             onToggled: Settings.updateAuto = !Settings.updateAuto
-        }
-    }
-
-    Group {
-        title: "stripes"
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
-
-            Check {
-                Layout.fillWidth: true
-                text: Settings.companion ? `${Strings.t("companionOn")}: ${Companion.name}` : Strings.t("companionOn")
-                note: Strings.t("companionNote")
-                checked: Settings.companion
-                onToggled: Settings.companion = !Settings.companion
-            }
-
-            PushButton {
-                visible: Settings.companion
-                text: Strings.t("herWindow")
-                onClicked: Panels.toggle("home", page.forScreen ?? Quickshell.screens[0])
-            }
         }
     }
 

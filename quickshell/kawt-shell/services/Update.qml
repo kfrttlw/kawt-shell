@@ -7,8 +7,8 @@ import qs.utils
 
 // kawt's own updates (settings -> kawt). Knowing whether there's a new version means
 // asking github: Check does that once (git fetch), and Settings.updateAuto (on by default)
-// does it by itself once a week, saying so in a notification only when there's something new
-// (stripes hops out to say so). Off: nothing goes out unless Check is pressed. Update
+// does it by itself once a week, saying so in a notification only when there's something new.
+// Off: nothing goes out unless Check is pressed. Update
 // opens a terminal with ./install.sh --update, which shows what's new and asks before it
 // changes anything (and may need sudo for a new package).
 //   qs -c kawt-shell ipc call kawt update
